@@ -9,7 +9,6 @@
     "packages/*"
   ],
   "scripts": {
-    "build:shared": "npm run build -w @maris-nails/shared",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

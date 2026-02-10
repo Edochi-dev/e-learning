@@ -10,4 +10,9 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+
+  @Get('courses')
+  getCourses(): Course[] {
+    return this.appService.getCourses();
+  }
 }
