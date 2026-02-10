@@ -1,0 +1,12 @@
+# Dependencias
+node_modules/
+
+# Builds de producción
+dist/
+build/
+
+# Variables de entorno
+.env
+
+# Logs de errores
+*.log
