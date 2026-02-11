@@ -20,7 +20,7 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                 <span>←</span> Volver al listado
             </Link>
 
-            <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
+            <div className="course-details-card">
                 <h1 style={{ fontFamily: 'var(--font-heading)', color: 'var(--primary-color)', fontSize: '2.5rem', marginBottom: '1rem' }}>{course.title}</h1>
 
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>

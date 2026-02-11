@@ -18,6 +18,24 @@
   /* Elegante */
   --font-body: 'Inter', sans-serif;
   /* Moderna y legible */
+  /* Moderna y legible */
+}
+
+[data-theme='dark'] {
+  --primary-color: #e879f9;
+  /* Magenta más brillante para fondo oscuro */
+  --secondary-color: #4a044e;
+  /* Fondo oscuro morado */
+  --text-dark: #f9fafb;
+  /* Texto casi blanco */
+  --text-light: #d1d5db;
+  /* Texto gris claro */
+  --bg-color: #111827;
+  /* Gris muy oscuro (casi negro) */
+  --card-bg: #1f2937;
+  /* Gris oscuro para tarjetas */
+  --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  /* Sombra más fuerte */
 }
 
 body {
@@ -276,6 +294,25 @@ body {
   background-color: #f3f4f6;
 }
 
+[data-theme='dark'] .lesson-card {
+  background-color: var(--card-bg);
+  border-color: #374151;
+}
+
+[data-theme='dark'] .lesson-card:hover {
+  background-color: #374151;
+}
+
+[data-theme='dark'] .lesson-duration {
+  background-color: #374151;
+  color: var(--text-dark);
+}
+
+[data-theme='dark'] .empty-lessons {
+  background-color: var(--card-bg);
+  border-color: #374151;
+}
+
 .lesson-info {
   display: flex;
   align-items: center;
@@ -316,4 +353,25 @@ body {
   color: var(--text-light);
   font-style: italic;
   border: 1px dashed #d1d5db;
+}
+
+.footer {
+  background-color: #fdf2f8;
+  padding: 3rem 0;
+  margin-top: 4rem;
+  text-align: center;
+  color: var(--text-light);
+}
+
+[data-theme='dark'] .footer {
+  background-color: #1a101f;
+  /* Darker purple */
+  color: var(--text-light);
+}
+
+.course-details-card {
+  background-color: var(--card-bg);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
 }
