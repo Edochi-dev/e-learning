@@ -246,3 +246,74 @@ body {
   text-align: center;
   margin-top: 2rem;
 }
+
+.lessons-section {
+  margin-top: 3rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 2rem;
+}
+
+.lessons-title {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  color: var(--text-dark);
+  margin-bottom: 1.5rem;
+}
+
+.lesson-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f9fafb;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e5e7eb;
+  transition: background-color 0.2s;
+}
+
+.lesson-card:hover {
+  background-color: #f3f4f6;
+}
+
+.lesson-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lesson-icon {
+  color: var(--primary-color);
+  font-size: 1.2rem;
+}
+
+.lesson-title {
+  font-weight: 500;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.lesson-description {
+  font-size: 0.9rem;
+  color: var(--text-light);
+  margin: 0.25rem 0 0 0;
+}
+
+.lesson-duration {
+  font-family: monospace;
+  background-color: #e5e7eb;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: var(--text-dark);
+}
+
+.empty-lessons {
+  text-align: center;
+  padding: 2rem;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  color: var(--text-light);
+  font-style: italic;
+  border: 1px dashed #d1d5db;
+}

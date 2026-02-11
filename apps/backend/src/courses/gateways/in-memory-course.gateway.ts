@@ -11,6 +11,11 @@ export class InMemoryCourseGateway implements CourseGateway {
             price: 50,
             description: 'Aprende desde cero a poner uñas acrílicas.',
             isLive: true,
+            lessons: [
+                { id: 'l1', title: 'Introducción a materiales', description: 'Conoce todo lo necesario para empezar.', duration: '15:00' },
+                { id: 'l2', title: 'Preparación de la uña natural', description: 'Pasos vitales para evitar desprendimientos.', duration: '20:00' },
+                { id: 'l3', title: 'Aplicación de tips', description: 'Técnica correcta de pegado y limado.', duration: '25:00' },
+            ]
         },
         {
             id: '2',
@@ -18,6 +23,7 @@ export class InMemoryCourseGateway implements CourseGateway {
             price: 80,
             description: 'Técnicas de mano alzada y 3D.',
             isLive: false,
+            lessons: [] // Curso sin lecciones aún
         },
         {
             id: '3',
@@ -25,6 +31,10 @@ export class InMemoryCourseGateway implements CourseGateway {
             price: 120,
             description: 'La técnica más limpia y precisa.',
             isLive: true,
+            lessons: [
+                { id: 'l1', title: 'Uso del torno', description: 'Fresas y velocidades seguras.', duration: '40:00' },
+                { id: 'l2', title: 'Corte de cutícula', description: 'Tijera vs Alicate.', duration: '30:00' },
+            ]
         },
     ];
 
@@ -33,6 +43,10 @@ export class InMemoryCourseGateway implements CourseGateway {
     }
 
     findOne(id: string): Course | null {
-        return this.courses.find((course) => course.id === id) || null;
+        const course = this.courses.find((course) => course.id === id) || null;
+        if (course) {
+            console.log(`[InMemoryGateway] Found course ${id} with ${course.lessons?.length || 0} lessons`);
+        }
+        return course;
     }
 }

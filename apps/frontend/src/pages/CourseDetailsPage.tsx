@@ -37,6 +37,33 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                 </p>
 
                 <button className="btn-primary">Inscribirme Ahora</button>
+
+                <div className="lessons-section">
+                    <h2 className="lessons-title">Contenido del Curso</h2>
+
+                    {course.lessons && course.lessons.length > 0 ? (
+                        <div className="lessons-list">
+                            {course.lessons.map((lesson) => (
+                                <div key={lesson.id} className="lesson-card">
+                                    <div className="lesson-content">
+                                        <div className="lesson-info">
+                                            <span className="lesson-icon">▶</span>
+                                            <div>
+                                                <h4 className="lesson-title">{lesson.title}</h4>
+                                                <p className="lesson-description">{lesson.description}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span className="lesson-duration">{lesson.duration}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="empty-lessons">
+                            Próximamente se añadirán las lecciones 🚧
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
