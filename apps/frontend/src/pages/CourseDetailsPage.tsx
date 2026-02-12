@@ -44,7 +44,12 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                     {course.lessons && course.lessons.length > 0 ? (
                         <div className="lessons-list">
                             {course.lessons.map((lesson) => (
-                                <div key={lesson.id} className="lesson-card">
+                                <Link
+                                    to={`/courses/${course.id}/lessons/${lesson.id}`}
+                                    key={lesson.id}
+                                    className="lesson-card"
+                                    style={{ textDecoration: 'none', color: 'inherit', display: 'flex' }}
+                                >
                                     <div className="lesson-content">
                                         <div className="lesson-info">
                                             <span className="lesson-icon">▶</span>
@@ -55,7 +60,7 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                                         </div>
                                     </div>
                                     <span className="lesson-duration">{lesson.duration}</span>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     ) : (

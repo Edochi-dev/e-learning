@@ -12,9 +12,9 @@ export class InMemoryCourseGateway implements CourseGateway {
             description: 'Aprende desde cero a poner uñas acrílicas.',
             isLive: true,
             lessons: [
-                { id: 'l1', title: 'Introducción a materiales', description: 'Conoce todo lo necesario para empezar.', duration: '15:00' },
-                { id: 'l2', title: 'Preparación de la uña natural', description: 'Pasos vitales para evitar desprendimientos.', duration: '20:00' },
-                { id: 'l3', title: 'Aplicación de tips', description: 'Técnica correcta de pegado y limado.', duration: '25:00' },
+                { id: 'l1', title: 'Introducción a materiales', description: 'Conoce todo lo necesario para empezar.', duration: '15:00', videoUrl: 'https://www.youtube.com/embed/jfKfPfyJRdk' },
+                { id: 'l2', title: 'Preparación de la uña natural', description: 'Pasos vitales para evitar desprendimientos.', duration: '20:00', videoUrl: 'https://www.youtube.com/embed/5qap5aO4i9A' },
+                { id: 'l3', title: 'Aplicación de tips', description: 'Técnica correcta de pegado y limado.', duration: '25:00', videoUrl: 'https://www.youtube.com/embed/tgbNymZ7vqY' },
             ]
         },
         {
@@ -32,8 +32,8 @@ export class InMemoryCourseGateway implements CourseGateway {
             description: 'La técnica más limpia y precisa.',
             isLive: true,
             lessons: [
-                { id: 'l1', title: 'Uso del torno', description: 'Fresas y velocidades seguras.', duration: '40:00' },
-                { id: 'l2', title: 'Corte de cutícula', description: 'Tijera vs Alicate.', duration: '30:00' },
+                { id: 'l1', title: 'Uso del torno', description: 'Fresas y velocidades seguras.', duration: '40:00', videoUrl: 'https://www.youtube.com/embed/jfKfPfyJRdk' },
+                { id: 'l2', title: 'Corte de cutícula', description: 'Tijera vs Alicate.', duration: '30:00', videoUrl: 'https://www.youtube.com/embed/5qap5aO4i9A' },
             ]
         },
     ];

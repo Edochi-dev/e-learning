@@ -5,6 +5,7 @@ import { HttpCourseGateway } from './gateways/HttpCourseGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HomePage } from './pages/HomePage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
+import { LessonPage } from './pages/LessonPage';
 import { useTheme } from './hooks/useTheme';
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage gateway={courseGateway} />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
         </Routes>
       </main>
 

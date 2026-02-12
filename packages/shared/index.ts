@@ -5,6 +5,7 @@ export interface Lesson {
     title: string;
     description: string;
     duration: string; // Ej: "10:00", "1h 30m"
+    videoUrl: string; // URL del video (YouTube embed o MP4)
 }
 
 export interface Course {
