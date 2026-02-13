@@ -1,6 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourse } from '../hooks/useCourse';
+import { VideoPlayer } from '../components/VideoPlayer';
 
 interface LessonPageProps {
     gateway: CourseGateway;
@@ -28,23 +29,11 @@ export const LessonPage = ({ gateway }: LessonPageProps) => {
                     <span>←</span> Volver al curso
                 </Link>
 
-                <div className="video-player-container" style={{
-                    position: 'relative',
-                    paddingBottom: '56.25%', /* 16:9 Aspect Ratio */
-                    height: 0,
-                    backgroundColor: '#000',
-                    borderRadius: '16px',
-                    overflow: 'hidden',
-                    marginBottom: '1.5rem',
-                    boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-                }}>
-                    <iframe
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <VideoPlayer
                         src={currentLesson.videoUrl || 'https://www.youtube.com/embed/jfKfPfyJRdk'}
                         title={currentLesson.title}
-                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    ></iframe>
+                    />
                 </div>
 
                 <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', marginBottom: '0.5rem' }}>{currentLesson.title}</h1>
