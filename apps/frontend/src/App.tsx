@@ -6,6 +6,7 @@ import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HomePage } from './pages/HomePage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
+import { ThemeSwitch } from './components/ThemeSwitch';
 import { useTheme } from './hooks/useTheme';
 
 function App() {
@@ -25,14 +26,7 @@ function App() {
             <Link to="/">Cursos</Link>
             <a href="#">Sobre Mí</a>
             <a href="#">Contacto</a>
-            <button
-              onClick={toggleTheme}
-              className="btn-secondary"
-              style={{ marginLeft: '1rem', border: 'none', fontSize: '1.2rem', padding: '0.5rem' }}
-              aria-label="Toggle Dark Mode"
-            >
-              {theme === 'light' ? '🌙' : '☀️'}
-            </button>
+            <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
             <a href="#" className="btn-primary" style={{ padding: '0.5rem 1rem', marginLeft: '1rem', color: 'white' }}>Campus Virtual</a>
           </nav>
         </div>
