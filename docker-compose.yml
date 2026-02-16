@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine  # Usamos la versión ligera (Alpine)
+    container_name: mn_postgres
+    restart: always
+    ports:
+      - "5432:5432"  # Puerto externo : Puerto interno
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123  # En producción esto iría en variables de entorno, para dev está ok
+      POSTGRES_DB: maris_nails_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # <--- ESTO ES LA CLAVE DE LA PERSISTENCIA
+
+volumes:
+  postgres_data:  # Aquí se guardarán tus usuarios y cursos aunque apagues el PC
