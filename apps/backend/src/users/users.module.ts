@@ -5,6 +5,7 @@ import { UsersService } from './users.service';
 import { UserGateway } from './gateways/user.gateway';
 import { UsersController } from './users.controller';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
+import { LoginUserUseCase } from './use-cases/login-user.use-case';
 
 @Module({
     imports: [TypeOrmModule.forFeature([User])],
@@ -15,6 +16,7 @@ import { RegisterUserUseCase } from './use-cases/register-user.use-case';
             useClass: UsersService,
         },
         RegisterUserUseCase,
+        LoginUserUseCase,
         // Si necesitas usar UsersService directamente en algún lado, también puedes proveerlo,
         // pero idealmente deberías inyectar UserGateway.
         UsersService,
