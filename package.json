@@ -18,13 +18,16 @@
   "dependencies": {
     "@nestjs/config": "^4.0.3",
     "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/typeorm": "^11.0.0",
     "bcrypt": "^6.0.0",
+    "passport-jwt": "^4.0.1",
     "pg": "^8.18.0",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0"
+    "@types/bcrypt": "^6.0.0",
+    "@types/passport-jwt": "^4.0.1"
   }
 }

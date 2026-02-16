@@ -1,4 +1,5 @@
-import { Controller, Post, Body, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -21,5 +22,11 @@ export class UsersController {
     @HttpCode(HttpStatus.OK)
     async login(@Body() loginUserDto: LoginUserDto): Promise<{ user: User; token: string }> {
         return this.loginUserUseCase.execute(loginUserDto);
+    }
+
+    @Get('me')
+    @UseGuards(AuthGuard('jwt'))
+    async me(@Req() req: any): Promise<User> {
+        return req.user;
     }
 }
