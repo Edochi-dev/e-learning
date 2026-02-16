@@ -19,7 +19,7 @@ export class UsersController {
 
     @Post('login')
     @HttpCode(HttpStatus.OK)
-    async login(@Body() loginUserDto: LoginUserDto): Promise<User> {
+    async login(@Body() loginUserDto: LoginUserDto): Promise<{ user: User; token: string }> {
         return this.loginUserUseCase.execute(loginUserDto);
     }
 }

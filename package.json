@@ -17,6 +17,7 @@
   "type": "commonjs",
   "dependencies": {
     "@nestjs/config": "^4.0.3",
+    "@nestjs/jwt": "^11.0.2",
     "@nestjs/serve-static": "^5.0.4",
     "@nestjs/typeorm": "^11.0.0",
     "bcrypt": "^6.0.0",
