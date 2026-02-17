@@ -6,8 +6,8 @@ import { CourseGateway } from '../gateways/course.gateway';
 export class FindOneCourseUseCase {
     constructor(private readonly courseGateway: CourseGateway) { }
 
-    execute(id: string): Course {
-        const course = this.courseGateway.findOne(id);
+    async execute(id: string): Promise<Course> {
+        const course = await this.courseGateway.findOne(id);
         if (!course) {
             throw new NotFoundException(`Course with id ${id} not found`);
         }

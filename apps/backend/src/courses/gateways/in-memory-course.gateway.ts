@@ -38,11 +38,16 @@ export class InMemoryCourseGateway implements CourseGateway {
         },
     ];
 
-    findAll(): Course[] {
+    async create(course: Course): Promise<Course> {
+        this.courses.push(course);
+        return course;
+    }
+
+    async findAll(): Promise<Course[]> {
         return this.courses;
     }
 
-    findOne(id: string): Course | null {
+    async findOne(id: string): Promise<Course | null> {
         const course = this.courses.find((course) => course.id === id) || null;
         if (course) {
             console.log(`[InMemoryGateway] Found course ${id} with ${course.lessons?.length || 0} lessons`);

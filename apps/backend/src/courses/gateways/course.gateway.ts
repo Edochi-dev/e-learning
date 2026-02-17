@@ -1,6 +1,7 @@
 import { Course } from '@maris-nails/shared';
 
 export abstract class CourseGateway {
-    abstract findAll(): Course[];
-    abstract findOne(id: string): Course | null;
+    abstract create(course: Course): Promise<Course>;
+    abstract findAll(): Promise<Course[]>;
+    abstract findOne(id: string): Promise<Course | null>;
 }
