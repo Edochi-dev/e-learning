@@ -9,6 +9,7 @@ import { UserGateway } from './gateways/user.gateway';
 import { UsersController } from './users.controller';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { LoginUserUseCase } from './use-cases/login-user.use-case';
+import { FindAllUsersUseCase } from './use-cases/find-all-users.use-case';
 import { TokenGateway } from './gateways/token.gateway';
 import { JwtTokenService } from './jwt-token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -38,7 +39,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
         },
         JwtStrategy,
         RegisterUserUseCase,
+        JwtStrategy,
+        RegisterUserUseCase,
         LoginUserUseCase,
+        FindAllUsersUseCase, // Nuevo caso de uso
         JwtTokenService,
         UsersService,
     ],
