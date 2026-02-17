@@ -16,6 +16,7 @@ export class RegisterUserUseCase {
 
         const newUser = new User();
         newUser.email = dto.email;
+        newUser.fullName = dto.fullName;
 
         // Encriptar contraseña (con 10 salt rounds)
         const salt = await bcrypt.genSalt(10);

@@ -17,6 +17,7 @@ async function bootstrap() {
         const hashedPassword = await bcrypt.hash('admin123', 10);
         await userGateway.create({
             email: adminEmail,
+            fullName: 'Administrador Principal',
             password: hashedPassword,
             role: UserRole.ADMIN,
         } as any);

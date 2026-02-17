@@ -3,22 +3,22 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { HttpCourseGateway } from './gateways/HttpCourseGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
+import { HttpAuthGateway } from './gateways/HttpAuthGateway';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
+import { LoginPage } from './pages/LoginPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { useTheme } from './hooks/useTheme';
 
-function App() {
-  // Instanciamos Gateways
+function AppContent() {
+  const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme(new LocalStorageThemeGateway());
   const courseGateway = useMemo(() => new HttpCourseGateway('http://localhost:3000'), []);
-  const themeGateway = useMemo(() => new LocalStorageThemeGateway(), []);
-
-  // Hooks
-  const { theme, toggleTheme } = useTheme(themeGateway);
 
   return (
-    <BrowserRouter>
+    <>
       <header className="header">
         <div className="container nav">
           <Link to="/" className="logo">Mari's Nails Academy 💅</Link>
@@ -27,7 +27,18 @@ function App() {
             <a href="#">Sobre Mí</a>
             <a href="#">Contacto</a>
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
-            <a href="#" className="btn-primary" style={{ padding: '0.5rem 1rem', marginLeft: '1rem', color: 'white' }}>Campus Virtual</a>
+            {user ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <span style={{ fontSize: '0.9rem' }}>Hola, {user.fullName}</span>
+                <button onClick={logout} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', marginLeft: '1rem', color: 'white' }}>
+                Ingresar
+              </Link>
+            )}
           </nav>
         </div>
       </header>
@@ -35,6 +46,7 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage gateway={courseGateway} />} />
+          <Route path="/login" element={<LoginPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
         </Routes>
@@ -45,6 +57,18 @@ function App() {
           <p>© {new Date().getFullYear()} Mari's Nails Academy. Todos los derechos reservados.</p>
         </div>
       </footer>
+    </>
+  );
+}
+
+function App() {
+  const authGateway = useMemo(() => new HttpAuthGateway('http://localhost:3000'), []);
+
+  return (
+    <BrowserRouter>
+      <AuthProvider gateway={authGateway}>
+        <AppContent />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

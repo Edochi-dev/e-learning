@@ -16,3 +16,20 @@ export interface Course {
     isLive: boolean; // True si es en vivo, False si es grabado
     lessons: Lesson[];
 }
+
+export interface User {
+    id: string;
+    email: string;
+    fullName: string;
+    roles: string[];
+}
+
+export interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+export interface AuthResponse {
+    access_token: string;
+    user: User;
+}

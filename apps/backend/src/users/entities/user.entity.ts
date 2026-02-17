@@ -14,6 +14,9 @@ export class User {
     @Column({ unique: true }) // No pueden haber dos alumnos con el mismo correo
     email: string;
 
+    @Column()
+    fullName: string;
+
     @Column() // Aquí guardaremos la contraseña (¡encriptada más adelante!)
     password: string;
 
