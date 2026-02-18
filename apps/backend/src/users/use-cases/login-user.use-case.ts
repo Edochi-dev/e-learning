@@ -23,7 +23,12 @@ export class LoginUserUseCase {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        const payload = { sub: user.id, email: user.email, role: user.role };
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            role: user.role,
+            fullName: user.fullName
+        };
         const token = this.tokenGateway.sign(payload);
 
         return { user, token };

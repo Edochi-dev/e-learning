@@ -17,11 +17,17 @@ export interface Course {
     lessons: Lesson[];
 }
 
+// Este enum define los roles permitidos en tu academia
+export enum UserRole {
+    ADMIN = 'admin',
+    STUDENT = 'student',
+}
+
 export interface User {
     id: string;
     email: string;
     fullName: string;
-    roles: string[];
+    role: UserRole;
 }
 
 export interface LoginCredentials {
@@ -32,4 +38,12 @@ export interface LoginCredentials {
 export interface AuthResponse {
     access_token: string;
     user: User;
+}
+
+export interface CreateCoursePayload {
+    title: string;
+    price: number;
+    description: string;
+    isLive: boolean;
+    // lessons?: Lesson[]; 
 }

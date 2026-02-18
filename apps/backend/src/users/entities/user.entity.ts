@@ -1,10 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
-
-// Este enum define los roles permitidos en tu academia
-export enum UserRole {
-    ADMIN = 'admin',
-    STUDENT = 'student',
-}
+import { UserRole } from '@maris-nails/shared';
 
 @Entity('users') // Esto le dice a TypeORM que cree una tabla llamada "users"
 export class User {

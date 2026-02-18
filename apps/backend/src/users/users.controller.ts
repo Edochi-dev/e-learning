@@ -7,7 +7,7 @@ import { LoginUserUseCase } from './use-cases/login-user.use-case';
 import { User } from './entities/user.entity';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { UserRole } from './entities/user.entity';
+import { UserRole } from '@maris-nails/shared';
 import { FindAllUsersUseCase } from './use-cases/find-all-users.use-case';
 
 @Controller('users')

@@ -7,7 +7,7 @@ import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '@maris-nails/shared';
 
 @Controller('courses')
 export class CoursesController {

@@ -2,25 +2,17 @@ import { useState, useEffect } from 'react';
 import type { Theme, ThemeGateway } from '../gateways/ThemeGateway';
 
 export const useTheme = (gateway: ThemeGateway) => {
-    const [theme, setTheme] = useState<Theme>('light');
-
-    useEffect(() => {
-        // 1. Intentar recuperar del Gateway
+    // Inicializar estado lazy para evitar re-renderizados o efectos side-effects en render
+    const [theme, setTheme] = useState<Theme>(() => {
         const savedTheme = gateway.getTheme();
+        if (savedTheme) return savedTheme;
 
-        // 2. Si no hay nada guardado, usar preferencia del sistema
-        if (!savedTheme) {
-            try {
-                const systemPrefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-                setTheme(systemPrefersDark ? 'dark' : 'light');
-            } catch (e) {
-                console.warn('matchMedia not supported', e);
-                setTheme('light');
-            }
-        } else {
-            setTheme(savedTheme);
+        // Si no hay guardado, intentar detectar preferencia
+        if (typeof window !== 'undefined' && window.matchMedia) {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         }
-    }, [gateway]);
+        return 'light';
+    });
 
     useEffect(() => {
         // 3. Aplicar efecto al DOM cuando cambia el tema

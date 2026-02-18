@@ -22,6 +22,10 @@ export class HttpAuthGateway implements AuthGateway {
             throw new Error(error.message || `Login failed: ${response.statusText}`);
         }
 
-        return response.json();
+        const data = await response.json();
+        return {
+            access_token: data.token, // El backend devuelve "token", el frontend espera "access_token"
+            user: data.user,
+        };
     }
 }

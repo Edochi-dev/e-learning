@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { UserGateway } from '../users/gateways/user.gateway';
-import { UserRole } from '../users/entities/user.entity';
+import { UserRole } from '@maris-nails/shared';
 import * as bcrypt from 'bcrypt';
 
 async function bootstrap() {

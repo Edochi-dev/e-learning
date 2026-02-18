@@ -1,6 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole } from '../entities/user.entity';
+import { User } from '../entities/user.entity';
+import { UserRole } from '@maris-nails/shared';
 import { UserGateway } from '../gateways/user.gateway';
 import { CreateUserDto } from '../dto/create-user.dto';
 

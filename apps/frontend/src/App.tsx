@@ -11,6 +11,10 @@ import { LessonPage } from './pages/LessonPage';
 import { LoginPage } from './pages/LoginPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { useTheme } from './hooks/useTheme';
+import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { CreateCoursePage } from './pages/admin/CreateCoursePage';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { UserRole } from '@maris-nails/shared';
 
 function AppContent() {
   const { user, logout } = useAuth();
@@ -27,6 +31,11 @@ function AppContent() {
             <a href="#">Sobre Mí</a>
             <a href="#">Contacto</a>
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
+            {user?.role === UserRole.ADMIN && (
+              <Link to="/admin" style={{ marginRight: '1rem', fontWeight: 'bold' }}>
+                Panel Admin
+              </Link>
+            )}
             {user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 <span style={{ fontSize: '0.9rem' }}>Hola, {user.fullName}</span>
@@ -49,6 +58,12 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
+
+          {/* Rutas de Administración Protegidas */}
+          <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/courses/new" element={<CreateCoursePage />} />
+          </Route>
         </Routes>
       </main>
 

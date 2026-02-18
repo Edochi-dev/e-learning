@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { UserRole } from '@maris-nails/shared';
 
 export const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -15,6 +16,20 @@ export const LoginPage = () => {
 
         try {
             await login({ email, password });
+
+            // Verificar si hay token para redirección basada en roles
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                try {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    if (payload.role === UserRole.ADMIN) {
+                        navigate('/admin');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Error parsing token for redirect', e);
+                }
+            }
             navigate('/');
         } catch (err: any) {
             setError('Credenciales inválidas. Por favor intenta de nuevo.');
