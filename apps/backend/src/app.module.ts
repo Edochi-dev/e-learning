@@ -30,10 +30,10 @@ import { User } from './users/entities/user.entity';
       synchronize: true, // SOLO PARA DESARROLLO
     }),
 
-    // 3. Servidor de videos
+    // 3. Archivos estáticos (videos, miniaturas, etc.)
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/videos',
+      serveRoot: '/static',
     }),
 
     // 4. Módulos de negocio

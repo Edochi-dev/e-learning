@@ -45,5 +45,11 @@ export interface CreateCoursePayload {
     price: number;
     description: string;
     isLive: boolean;
-    // lessons?: Lesson[]; 
+}
+
+export interface CreateLessonPayload {
+    title: string;
+    description: string;
+    duration: string;
+    videoUrl: string;
 }

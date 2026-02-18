@@ -1,4 +1,4 @@
-import type { Course } from '@maris-nails/shared';
+import type { Course, Lesson, CreateLessonPayload } from '@maris-nails/shared';
 import type { CourseGateway } from './CourseGateway';
 
 export class HttpCourseGateway implements CourseGateway {
@@ -39,5 +39,36 @@ export class HttpCourseGateway implements CourseGateway {
             throw new Error(error.message || `Failed to create course: ${response.statusText}`);
         }
         return response.json();
+    }
+
+    async addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson> {
+        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(lesson),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to add lesson: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async removeLesson(courseId: string, lessonId: string, token: string): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to remove lesson: ${response.statusText}`);
+        }
     }
 }

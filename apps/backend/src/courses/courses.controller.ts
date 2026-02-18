@@ -1,13 +1,15 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Course } from '@maris-nails/shared';
+import { Course, Lesson, UserRole } from '@maris-nails/shared';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { CreateLessonDto } from './dto/create-lesson.dto';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
+import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
+import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
-import { UserRole } from '@maris-nails/shared';
 
 @Controller('courses')
 export class CoursesController {
@@ -15,6 +17,8 @@ export class CoursesController {
     private readonly findAllCoursesUseCase: FindAllCoursesUseCase,
     private readonly findOneCourseUseCase: FindOneCourseUseCase,
     private readonly createCourseUseCase: CreateCourseUseCase,
+    private readonly addLessonUseCase: AddLessonUseCase,
+    private readonly removeLessonUseCase: RemoveLessonUseCase,
   ) { }
 
   @Post()
@@ -32,5 +36,22 @@ export class CoursesController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Course> {
     return this.findOneCourseUseCase.execute(id);
+  }
+
+  @Post(':id/lessons')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async addLesson(
+    @Param('id') courseId: string,
+    @Body() createLessonDto: CreateLessonDto,
+  ): Promise<Lesson> {
+    return this.addLessonUseCase.execute(courseId, createLessonDto);
+  }
+
+  @Delete(':courseId/lessons/:lessonId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async removeLesson(@Param('lessonId') lessonId: string): Promise<void> {
+    return this.removeLessonUseCase.execute(lessonId);
   }
 }
