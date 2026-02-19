@@ -60,3 +60,10 @@ export interface UpdateCoursePayload {
     description?: string;
     isLive?: boolean;
 }
+
+export interface UpdateLessonPayload {
+    title?: string;
+    description?: string;
+    duration?: string;
+    videoUrl?: string;
+}

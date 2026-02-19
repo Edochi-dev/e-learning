@@ -88,4 +88,26 @@ export class HttpCourseGateway implements CourseGateway {
             throw new Error(error.message || `Failed to remove lesson: ${response.statusText}`);
         }
     }
+
+    /**
+     * Actualiza una lección existente via PATCH.
+     * Solo envía los campos que cambien (actualización parcial).
+     * El backend se encarga de limpiar archivos huérfanos si el videoUrl cambió.
+     */
+    async updateLesson(courseId: string, lessonId: string, data: any, token: string): Promise<Lesson> {
+        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to update lesson: ${response.statusText}`);
+        }
+        return response.json();
+    }
 }

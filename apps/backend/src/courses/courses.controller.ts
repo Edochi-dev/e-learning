@@ -4,15 +4,29 @@ import { Course, Lesson, UserRole } from '@maris-nails/shared';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
+import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
+import { UpdateLessonUseCase } from './use-cases/update-lesson.use-case';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
+/**
+ * CoursesController — El punto de entrada HTTP
+ *
+ * Este archivo es el "adaptador" entre HTTP y la lógica de negocio.
+ * Su trabajo es:
+ * 1. Recibir requests HTTP (con decoradores como @Get, @Post, @Patch)
+ * 2. Validar datos de entrada (con DTOs)
+ * 3. Delegar al Use Case correspondiente
+ * 4. Retornar la respuesta
+ *
+ * ¡Nota que NO hay lógica de negocio aquí! Solo recibe y delega.
+ */
 @Controller('courses')
 export class CoursesController {
   constructor(
@@ -22,7 +36,12 @@ export class CoursesController {
     private readonly updateCourseUseCase: UpdateCourseUseCase,
     private readonly addLessonUseCase: AddLessonUseCase,
     private readonly removeLessonUseCase: RemoveLessonUseCase,
+    private readonly updateLessonUseCase: UpdateLessonUseCase,
   ) { }
+
+  // ==========================================
+  // Endpoints de Cursos
+  // ==========================================
 
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -51,6 +70,10 @@ export class CoursesController {
     return this.updateCourseUseCase.execute(id, updateCourseDto);
   }
 
+  // ==========================================
+  // Endpoints de Lecciones
+  // ==========================================
+
   @Post(':id/lessons')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -59,6 +82,26 @@ export class CoursesController {
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<Lesson> {
     return this.addLessonUseCase.execute(courseId, createLessonDto);
+  }
+
+  /**
+   * PATCH /courses/:courseId/lessons/:lessonId
+   *
+   * Usamos PATCH (no PUT) porque estamos haciendo una actualización PARCIAL.
+   * El admin puede enviar solo los campos que quiera cambiar.
+   *
+   * Protección:
+   * - AuthGuard('jwt'): requiere token JWT válido → 401 si no hay token
+   * - RolesGuard + @Roles(ADMIN): requiere rol admin → 403 si no es admin
+   */
+  @Patch(':courseId/lessons/:lessonId')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateLesson(
+    @Param('lessonId') lessonId: string,
+    @Body() updateLessonDto: UpdateLessonDto,
+  ): Promise<Lesson> {
+    return this.updateLessonUseCase.execute(lessonId, updateLessonDto);
   }
 
   @Delete(':courseId/lessons/:lessonId')
