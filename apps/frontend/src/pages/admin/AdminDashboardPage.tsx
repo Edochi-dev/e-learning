@@ -68,6 +68,39 @@ export const AdminDashboardPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+
+                <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                    <h3>Editar Cursos</h3>
+                    <p>Modifica título, precio o descripción de un curso.</p>
+                    {isLoading ? (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cargando cursos...</p>
+                    ) : courses.length === 0 ? (
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No hay cursos aún.</p>
+                    ) : (
+                        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {courses.map(course => (
+                                <Link
+                                    key={course.id}
+                                    to={`/admin/courses/${course.id}/edit`}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        padding: '0.5rem 0.75rem',
+                                        borderRadius: '6px',
+                                        border: '1px solid var(--border-color)',
+                                        textDecoration: 'none',
+                                        color: 'inherit',
+                                        fontSize: '0.9rem',
+                                    }}
+                                >
+                                    <span>{course.title}</span>
+                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>✏️ Editar →</span>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

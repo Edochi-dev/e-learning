@@ -41,6 +41,23 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
+    async update(id: string, data: any, token: string): Promise<Course> {
+        const response = await fetch(`${this.baseUrl}/courses/${id}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to update course: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
     async addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
             method: 'POST',

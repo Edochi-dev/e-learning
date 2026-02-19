@@ -30,6 +30,16 @@ export class CoursesRepository implements CourseGateway {
         });
     }
 
+    async update(id: string, data: Partial<Course>): Promise<Course> {
+        const course = await this.findOne(id);
+        if (!course) {
+            throw new NotFoundException(`Course with id ${id} not found`);
+        }
+
+        Object.assign(course, data);
+        return this.courseRepository.save(course);
+    }
+
     async addLesson(courseId: string, lessonData: Partial<Lesson>): Promise<Lesson> {
         const course = await this.findOne(courseId);
         if (!course) {

@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Course, Lesson, UserRole } from '@maris-nails/shared';
 import { CreateCourseDto } from './dto/create-course.dto';
+import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
+import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -17,6 +19,7 @@ export class CoursesController {
     private readonly findAllCoursesUseCase: FindAllCoursesUseCase,
     private readonly findOneCourseUseCase: FindOneCourseUseCase,
     private readonly createCourseUseCase: CreateCourseUseCase,
+    private readonly updateCourseUseCase: UpdateCourseUseCase,
     private readonly addLessonUseCase: AddLessonUseCase,
     private readonly removeLessonUseCase: RemoveLessonUseCase,
   ) { }
@@ -36,6 +39,16 @@ export class CoursesController {
   @Get(':id')
   async findOne(@Param('id') id: string): Promise<Course> {
     return this.findOneCourseUseCase.execute(id);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async update(
+    @Param('id') id: string,
+    @Body() updateCourseDto: UpdateCourseDto,
+  ): Promise<Course> {
+    return this.updateCourseUseCase.execute(id, updateCourseDto);
   }
 
   @Post(':id/lessons')

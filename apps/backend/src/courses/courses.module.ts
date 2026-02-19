@@ -4,6 +4,7 @@ import { CoursesController } from './courses.controller';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
+import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { CourseGateway } from './gateways/course.gateway';
@@ -18,6 +19,7 @@ import { Lesson } from './entities/lessons.entity';
     FindAllCoursesUseCase,
     FindOneCourseUseCase,
     CreateCourseUseCase,
+    UpdateCourseUseCase,
     AddLessonUseCase,
     RemoveLessonUseCase,
     {
