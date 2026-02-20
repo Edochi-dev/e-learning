@@ -33,6 +33,7 @@ export const LessonPage = ({ gateway }: LessonPageProps) => {
                     <VideoPlayer
                         src={currentLesson.videoUrl || 'https://www.youtube.com/embed/jfKfPfyJRdk'}
                         title={currentLesson.title}
+                        lessonId={currentLesson.id}
                     />
                 </div>
 

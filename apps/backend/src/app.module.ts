@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config'; // Para el .env
@@ -9,6 +9,8 @@ import { AppService } from './app.service';
 import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
+import { VideosModule } from './videos/videos.module';
+import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 
 @Module({
   imports: [
@@ -30,7 +32,8 @@ import { User } from './users/entities/user.entity';
       synchronize: true, // SOLO PARA DESARROLLO
     }),
 
-    // 3. Archivos estáticos (videos, miniaturas, etc.)
+    // 3. Archivos estáticos (miniaturas, imágenes, etc.)
+    // NOTA: Los videos ya NO se sirven aquí, se sirven por /videos/stream con token firmado
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/static',
@@ -39,8 +42,19 @@ import { User } from './users/entities/user.entity';
     // 4. Módulos de negocio
     CoursesModule,
     UsersModule,
+    VideosModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule implements NestModule {
+  /**
+   * El middleware se ejecuta ANTES que ServeStaticModule.
+   * Así bloqueamos el acceso a videos sin conflicto de headers.
+   */
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(BlockVideoStaticMiddleware)
+      .forRoutes('/static/videos/*');
+  }
+}

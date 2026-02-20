@@ -59,7 +59,11 @@ function AppContent() {
           <Route path="/" element={<HomePage gateway={courseGateway} />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
-          <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
+
+          {/* Ruta de lección protegida — requiere estar logueado */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
+          </Route>
 
           {/* Rutas de Administración Protegidas */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
