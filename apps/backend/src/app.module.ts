@@ -1,8 +1,9 @@
 import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { ConfigModule } from '@nestjs/config'; // Para el .env
-import { TypeOrmModule } from '@nestjs/typeorm'; // Para Postgres
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -29,17 +30,22 @@ import { BlockVideoStaticMiddleware } from './videos/block-video-static.middlewa
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       entities: [User],
-      synchronize: true, // SOLO PARA DESARROLLO
+      synchronize: false,
+      migrations: [join(__dirname, 'database/migrations/*.js')],
+      migrationsRun: true,
     }),
 
-    // 3. Archivos estáticos (miniaturas, imágenes, etc.)
+    // 3. Rate limiting global (aplicado selectivamente en controladores)
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+
+    // 4. Archivos estáticos (miniaturas, imágenes, etc.)
     // NOTA: Los videos ya NO se sirven aquí, se sirven por /videos/stream con token firmado
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/static',
     }),
 
-    // 4. Módulos de negocio
+    // 5. Módulos de negocio
     CoursesModule,
     UsersModule,
     VideosModule,

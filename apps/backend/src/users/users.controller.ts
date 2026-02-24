@@ -1,5 +1,6 @@
 import { Controller, Post, Body, HttpCode, HttpStatus, Get, UseGuards, Req } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -18,13 +19,19 @@ export class UsersController {
         private readonly findAllUsersUseCase: FindAllUsersUseCase,
     ) { }
 
+    // Máximo 5 registros por minuto por IP para frenar registro masivo
     @Post()
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { ttl: 60000, limit: 5 } })
     async create(@Body() createUserDto: CreateUserDto): Promise<User> {
         return this.registerUserUseCase.execute(createUserDto);
     }
 
+    // Máximo 10 intentos de login por minuto por IP para frenar brute force
     @Post('login')
     @HttpCode(HttpStatus.OK)
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { ttl: 60000, limit: 10 } })
     async login(@Body() loginUserDto: LoginUserDto): Promise<{ user: User; token: string }> {
         return this.loginUserUseCase.execute(loginUserDto);
     }
