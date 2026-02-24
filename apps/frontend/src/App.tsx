@@ -6,6 +6,7 @@ import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { HomePage } from './pages/HomePage';
+import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
 import { LoginPage } from './pages/LoginPage';
@@ -29,9 +30,9 @@ function AppContent() {
         <div className="container nav">
           <Link to="/" className="logo">Mari's Nails Academy 💅</Link>
           <nav className="nav-links">
-            <Link to="/">Cursos</Link>
-            <a href="#">Sobre Mí</a>
-            <a href="#">Contacto</a>
+            <Link to="/catalogo">Catálogo</Link>
+            <Link to="/#sobre-mi">Sobre Mí</Link>
+            <a href="https://wa.me/525512345678" target="_blank" rel="noreferrer">Contacto</a>
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
             {user?.role === UserRole.ADMIN && (
               <Link to="/admin" style={{ marginRight: '1rem', fontWeight: 'bold' }}>
@@ -57,6 +58,7 @@ function AppContent() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage gateway={courseGateway} />} />
+          <Route path="/catalogo" element={<CatalogPage gateway={courseGateway} />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
 
