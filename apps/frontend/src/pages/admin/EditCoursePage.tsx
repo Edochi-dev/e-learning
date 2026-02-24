@@ -69,80 +69,80 @@ export const EditCoursePage: React.FC = () => {
     };
 
     if (isLoading) {
-        return <div className="container" style={{ padding: '2rem' }}>Cargando curso...</div>;
+        return <div className="admin-page"><div className="admin-loading">Cargando curso...</div></div>;
     }
 
     return (
-        <div className="container" style={{ padding: '2rem', maxWidth: '600px', margin: '0 auto' }}>
-            <Link to="/admin" style={{ color: 'var(--primary-color)', textDecoration: 'none', marginBottom: '1rem', display: 'inline-block' }}>
-                ← Volver al Panel
-            </Link>
+        <div className="admin-page" style={{ maxWidth: '640px' }}>
+            <Link to="/admin" className="back-link">← Volver al Panel</Link>
 
-            <h1>Editar Curso</h1>
+            <div className="admin-form">
+                <h1>Editar Curso</h1>
+                <p className="admin-form-subtitle">Modifica los datos del curso y guarda los cambios.</p>
 
-            {error && <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
+                {error && <div className="alert alert-error">⚠️ {error}</div>}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div>
-                    <label htmlFor="title" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Título</label>
-                    <input
-                        type="text"
-                        id="title"
-                        name="title"
-                        value={formData.title}
-                        onChange={handleChange}
-                        required
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
-                    />
-                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="title">Título</label>
+                        <input
+                            type="text"
+                            id="title"
+                            name="title"
+                            value={formData.title}
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
 
-                <div>
-                    <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Descripción</label>
-                    <textarea
-                        id="description"
-                        name="description"
-                        value={formData.description}
-                        onChange={handleChange}
-                        required
-                        rows={4}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
-                    />
-                </div>
+                    <div className="form-group">
+                        <label htmlFor="description">Descripción</label>
+                        <textarea
+                            id="description"
+                            name="description"
+                            value={formData.description}
+                            onChange={handleChange}
+                            required
+                            rows={4}
+                        />
+                    </div>
 
-                <div>
-                    <label htmlFor="price" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Precio (USD)</label>
-                    <input
-                        type="number"
-                        id="price"
-                        name="price"
-                        value={formData.price}
-                        onChange={handleChange}
-                        required
-                        min="0"
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' }}
-                    />
-                </div>
+                    <div className="form-group">
+                        <label htmlFor="price">Precio (USD)</label>
+                        <input
+                            type="number"
+                            id="price"
+                            name="price"
+                            value={formData.price}
+                            onChange={handleChange}
+                            required
+                            min="0"
+                        />
+                    </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <input
-                        type="checkbox"
-                        id="isLive"
-                        name="isLive"
-                        checked={formData.isLive}
-                        onChange={handleChange}
-                    />
-                    <label htmlFor="isLive">¿Es un curso en vivo?</label>
-                </div>
+                    <div className="form-group">
+                        <div className="checkbox-group">
+                            <input
+                                type="checkbox"
+                                id="isLive"
+                                name="isLive"
+                                checked={formData.isLive}
+                                onChange={handleChange}
+                            />
+                            <label htmlFor="isLive">¿Es un curso en vivo?</label>
+                        </div>
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-primary"
-                    style={{ marginTop: '0.5rem', width: '100%', padding: '0.75rem' }}
-                >
-                    {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
-                </button>
-            </form>
+                    <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="btn-primary"
+                        style={{ width: '100%', marginTop: '0.5rem' }}
+                    >
+                        {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                    </button>
+                </form>
+            </div>
         </div>
     );
 };

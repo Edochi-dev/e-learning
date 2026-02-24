@@ -7,17 +7,11 @@ import type { Course, Lesson, CreateLessonPayload, UpdateLessonPayload } from '@
 /**
  * ManageLessonsPage — Página de gestión de lecciones
  *
- * Esta página permite al administrador:
+ * Permite al administrador:
  * 1. VER las lecciones existentes de un curso
- * 2. AGREGAR nuevas lecciones (formulario inferior)
- * 3. EDITAR lecciones existentes (edición inline al hacer click en "Editar")
+ * 2. AGREGAR nuevas lecciones
+ * 3. EDITAR lecciones (edición inline)
  * 4. ELIMINAR lecciones (con confirmación)
- *
- * La edición inline funciona así:
- * - Se guarda el ID de la lección que se está editando en `editingLessonId`
- * - Se muestra un formulario pre-poblado con los datos actuales
- * - Al guardar, se envía solo lo que cambió al backend via PATCH
- * - El backend se encarga automáticamente de limpiar archivos huérfanos
  */
 export const ManageLessonsPage: React.FC = () => {
     const { courseId } = useParams<{ courseId: string }>();
@@ -111,10 +105,6 @@ export const ManageLessonsPage: React.FC = () => {
 
     // --- Handlers para EDITAR lección ---
 
-    /**
-     * Activar edición inline: guarda el ID de la lección y
-     * pre-pobla el formulario de edición con los datos actuales.
-     */
     const startEditing = (lesson: Lesson) => {
         setEditingLessonId(lesson.id);
         setEditFormData({
@@ -157,102 +147,72 @@ export const ManageLessonsPage: React.FC = () => {
     // --- Render ---
 
     if (isLoading) {
-        return <div className="container" style={{ padding: '2rem' }}>Cargando curso...</div>;
+        return <div className="admin-page"><div className="admin-loading">Cargando curso...</div></div>;
     }
 
     if (!course) {
-        return <div className="container" style={{ padding: '2rem' }}>Curso no encontrado.</div>;
+        return <div className="admin-page"><div className="admin-loading">Curso no encontrado.</div></div>;
     }
 
-    const inputStyle = { width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid var(--border-color)' };
-
     return (
-        <div className="container" style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <Link to="/admin" style={{ color: 'var(--primary-color)', textDecoration: 'none', marginBottom: '1rem', display: 'inline-block' }}>
-                ← Volver al Panel
-            </Link>
+        <div className="admin-page" style={{ maxWidth: '860px' }}>
+            <Link to="/admin" className="back-link">← Volver al Panel</Link>
 
-            <h1>Lecciones de: {course.title}</h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem' }}>{course.description}</p>
+            <div className="admin-header">
+                <h1>Lecciones de: {course.title}</h1>
+                <p>{course.description}</p>
+            </div>
 
-            {error && <div style={{ backgroundColor: '#fee2e2', color: '#b91c1c', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{error}</div>}
-            {successMessage && <div style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem' }}>{successMessage}</div>}
+            {error && <div className="alert alert-error">⚠️ {error}</div>}
+            {successMessage && <div className="alert alert-success">✅ {successMessage}</div>}
 
             {/* Lista de lecciones existentes */}
-            <section style={{ marginBottom: '2rem' }}>
+            <div className="admin-section">
                 <h2>Lecciones ({course.lessons?.length || 0})</h2>
                 {(!course.lessons || course.lessons.length === 0) ? (
-                    <p style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>Este curso aún no tiene lecciones.</p>
+                    <div className="admin-empty">Este curso aún no tiene lecciones.</div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div className="admin-lesson-list">
                         {course.lessons.map((lesson: Lesson, index: number) => (
-                            <div
-                                key={lesson.id}
-                                className="card"
-                                style={{
-                                    padding: '1rem',
-                                    border: '1px solid var(--border-color)',
-                                    borderRadius: '8px',
-                                }}
-                            >
-                                {/* ¿Estamos editando ESTA lección? */}
+                            <div key={lesson.id} className="admin-lesson-item">
                                 {editingLessonId === lesson.id ? (
-                                    // --- FORMULARIO DE EDICIÓN INLINE ---
+                                    /* Formulario de edición inline */
                                     <form onSubmit={handleUpdateLesson} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                        <input type="text" name="title" value={editFormData.title} onChange={handleEditChange} placeholder="Título" style={inputStyle} required />
-                                        <textarea name="description" value={editFormData.description} onChange={handleEditChange} placeholder="Descripción" rows={2} style={inputStyle} required />
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                                            <input type="text" name="duration" value={editFormData.duration} onChange={handleEditChange} placeholder="Duración" style={inputStyle} required />
-                                            <input type="text" name="videoUrl" value={editFormData.videoUrl} onChange={handleEditChange} placeholder="URL del Video" style={inputStyle} required />
+                                        <div className="form-group" style={{ marginBottom: 0 }}>
+                                            <input type="text" name="title" value={editFormData.title} onChange={handleEditChange} placeholder="Título" required />
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                            <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
+                                        <div className="form-group" style={{ marginBottom: 0 }}>
+                                            <textarea name="description" value={editFormData.description} onChange={handleEditChange} placeholder="Descripción" rows={2} required />
+                                        </div>
+                                        <div className="form-row">
+                                            <input type="text" name="duration" value={editFormData.duration} onChange={handleEditChange} placeholder="Duración" required />
+                                            <input type="text" name="videoUrl" value={editFormData.videoUrl} onChange={handleEditChange} placeholder="URL del Video" required />
+                                        </div>
+                                        <div className="admin-actions">
+                                            <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
                                                 {isSubmitting ? 'Guardando...' : '💾 Guardar'}
                                             </button>
-                                            <button type="button" onClick={cancelEditing} style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', backgroundColor: 'transparent', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer' }}>
+                                            <button type="button" onClick={cancelEditing} className="btn-cancel">
                                                 Cancelar
                                             </button>
                                         </div>
                                     </form>
                                 ) : (
-                                    // --- VISTA NORMAL ---
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div>
-                                            <strong>{index + 1}. {lesson.title}</strong>
-                                            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0.25rem 0' }}>
-                                                {lesson.description}
-                                            </p>
-                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                                                ⏱ {lesson.duration} | 🎬 {lesson.videoUrl}
-                                            </span>
+                                    /* Vista normal */
+                                    <div className="admin-lesson-view">
+                                        <div className="admin-lesson-info">
+                                            <h4>{index + 1}. {lesson.title}</h4>
+                                            <p>{lesson.description}</p>
+                                            <div className="admin-lesson-meta">
+                                                <span>⏱ {lesson.duration}</span>
+                                                <span>🎬 {lesson.videoUrl}</span>
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
-                                            <button
-                                                onClick={() => startEditing(lesson)}
-                                                style={{
-                                                    backgroundColor: '#2563eb',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '0.5rem 1rem',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem',
-                                                }}
-                                            >
+                                        <div className="admin-actions">
+                                            <button onClick={() => startEditing(lesson)} className="btn-edit">
                                                 ✏️ Editar
                                             </button>
-                                            <button
-                                                onClick={() => handleRemoveLesson(lesson.id)}
-                                                style={{
-                                                    backgroundColor: '#dc2626',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    padding: '0.5rem 1rem',
-                                                    borderRadius: '6px',
-                                                    cursor: 'pointer',
-                                                    fontSize: '0.85rem',
-                                                }}
-                                            >
+                                            <button onClick={() => handleRemoveLesson(lesson.id)} className="btn-delete">
                                                 Eliminar
                                             </button>
                                         </div>
@@ -262,38 +222,42 @@ export const ManageLessonsPage: React.FC = () => {
                         ))}
                     </div>
                 )}
-            </section>
+            </div>
 
             {/* Formulario para agregar lección */}
-            <section>
-                <h2>Agregar Nueva Lección</h2>
-                <form onSubmit={handleAddLesson} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <div>
-                        <label htmlFor="title" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Título</label>
-                        <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required placeholder="Ej: Introducción a materiales" style={inputStyle} />
-                    </div>
+            <div className="admin-section">
+                <div className="admin-form">
+                    <h2 style={{ borderBottom: 'none', paddingBottom: 0, marginBottom: '0.25rem' }}>Agregar Nueva Lección</h2>
+                    <p className="admin-form-subtitle">Completa los datos de la nueva lección.</p>
 
-                    <div>
-                        <label htmlFor="description" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Descripción</label>
-                        <textarea id="description" name="description" value={formData.description} onChange={handleChange} required rows={3} placeholder="Descripción de la lección..." style={inputStyle} />
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                            <label htmlFor="duration" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Duración</label>
-                            <input type="text" id="duration" name="duration" value={formData.duration} onChange={handleChange} required placeholder="Ej: 15:00" style={inputStyle} />
+                    <form onSubmit={handleAddLesson}>
+                        <div className="form-group">
+                            <label htmlFor="title">Título</label>
+                            <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} required placeholder="Ej: Introducción a materiales" />
                         </div>
-                        <div>
-                            <label htmlFor="videoUrl" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>URL del Video</label>
-                            <input type="text" id="videoUrl" name="videoUrl" value={formData.videoUrl} onChange={handleChange} required placeholder="https://... o ruta local" style={inputStyle} />
-                        </div>
-                    </div>
 
-                    <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ marginTop: '0.5rem', width: '100%', justifyContent: 'center', padding: '0.75rem' }}>
-                        {isSubmitting ? 'Agregando...' : 'Agregar Lección'}
-                    </button>
-                </form>
-            </section>
+                        <div className="form-group">
+                            <label htmlFor="description">Descripción</label>
+                            <textarea id="description" name="description" value={formData.description} onChange={handleChange} required rows={3} placeholder="Descripción de la lección..." />
+                        </div>
+
+                        <div className="form-row" style={{ marginBottom: '1.25rem' }}>
+                            <div>
+                                <label htmlFor="duration">Duración</label>
+                                <input type="text" id="duration" name="duration" value={formData.duration} onChange={handleChange} required placeholder="Ej: 15:00" />
+                            </div>
+                            <div>
+                                <label htmlFor="videoUrl">URL del Video</label>
+                                <input type="text" id="videoUrl" name="videoUrl" value={formData.videoUrl} onChange={handleChange} required placeholder="https://... o ruta local" />
+                            </div>
+                        </div>
+
+                        <button type="submit" disabled={isSubmitting} className="btn-primary" style={{ width: '100%' }}>
+                            {isSubmitting ? 'Agregando...' : 'Agregar Lección'}
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     );
 };

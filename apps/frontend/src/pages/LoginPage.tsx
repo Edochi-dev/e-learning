@@ -37,28 +37,43 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="container" style={{ maxWidth: '400px', marginTop: '4rem' }}>
+        <div className="container" style={{ maxWidth: '440px', marginTop: '5rem', marginBottom: '3rem' }}>
             <div className="card">
-                <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', color: 'var(--primary-color)' }}>
-                    Iniciar Sesión
-                </h2>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                    <span style={{ fontSize: '3rem' }}>💅</span>
+                    <h2 style={{
+                        marginTop: '0.75rem',
+                        marginBottom: '0.25rem',
+                        fontSize: '1.8rem',
+                        background: 'linear-gradient(135deg, var(--primary), var(--gold))',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                    }}>
+                        Iniciar Sesión
+                    </h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                        Accede a tus cursos y clases
+                    </p>
+                </div>
 
                 {error && (
                     <div style={{
-                        backgroundColor: '#fee2e2',
-                        color: '#b91c1c',
-                        padding: '0.75rem',
-                        borderRadius: '0.5rem',
-                        marginBottom: '1rem',
-                        fontSize: '0.875rem'
+                        background: 'linear-gradient(135deg, #fff0f0, #ffe8e8)',
+                        color: '#c0392b',
+                        padding: '0.85rem 1rem',
+                        borderRadius: 'var(--radius-md)',
+                        marginBottom: '1.25rem',
+                        fontSize: '0.85rem',
+                        border: '1px solid rgba(192, 57, 43, 0.12)',
+                        fontWeight: 500,
                     }}>
-                        {error}
+                        ⚠️ {error}
                     </div>
                 )}
 
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div>
-                        <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
                             Email
                         </label>
                         <input
@@ -67,13 +82,12 @@ export const LoginPage = () => {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}
                             placeholder="tu@email.com"
                         />
                     </div>
 
                     <div>
-                        <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>
+                        <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
                             Contraseña
                         </label>
                         <input
@@ -82,7 +96,6 @@ export const LoginPage = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}
                             placeholder="••••••••"
                         />
                     </div>
@@ -90,7 +103,7 @@ export const LoginPage = () => {
                     <button
                         type="submit"
                         className="btn-primary"
-                        style={{ marginTop: '1rem', width: '100%', justifyContent: 'center' }}
+                        style={{ marginTop: '0.5rem', width: '100%', padding: '0.95rem' }}
                     >
                         Ingresar
                     </button>

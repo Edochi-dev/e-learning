@@ -23,44 +23,42 @@ export const AdminDashboardPage: React.FC = () => {
     }, []);
 
     return (
-        <div className="container" style={{ padding: '2rem' }}>
-            <h1>Panel de Administración</h1>
-            <div style={{ marginTop: '2rem', display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))' }}>
-                <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+        <div className="admin-page">
+            <div className="admin-header">
+                <h1>Panel de Administración</h1>
+                <p>Gestiona tus cursos, lecciones y contenido desde aquí.</p>
+            </div>
+
+            <div className="admin-grid">
+                {/* Crear Curso */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">✨</div>
                     <h3>Crear Curso</h3>
-                    <p>Agrega un nuevo curso a la plataforma.</p>
-                    <Link to="/admin/courses/new" className="button" style={{ display: 'inline-block', marginTop: '1rem' }}>
+                    <p>Agrega un nuevo curso a la plataforma con título, descripción y precio.</p>
+                    <Link to="/admin/courses/new" className="btn-primary" style={{ width: '100%', textAlign: 'center' }}>
                         Crear Nuevo Curso
                     </Link>
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                {/* Gestionar Lecciones */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">📚</div>
                     <h3>Gestionar Lecciones</h3>
                     <p>Agrega o elimina lecciones de tus cursos.</p>
                     {isLoading ? (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cargando cursos...</p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cargando cursos...</p>
                     ) : courses.length === 0 ? (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No hay cursos aún. Crea uno primero.</p>
+                        <div className="admin-empty">No hay cursos aún. Crea uno primero.</div>
                     ) : (
-                        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className="admin-course-links">
                             {courses.map(course => (
                                 <Link
                                     key={course.id}
                                     to={`/admin/courses/${course.id}/lessons`}
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '0.5rem 0.75rem',
-                                        borderRadius: '6px',
-                                        border: '1px solid var(--border-color)',
-                                        textDecoration: 'none',
-                                        color: 'inherit',
-                                        fontSize: '0.9rem',
-                                    }}
+                                    className="admin-course-link"
                                 >
                                     <span>{course.title}</span>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                                    <span className="admin-course-link-meta">
                                         {course.lessons?.length || 0} lecciones →
                                     </span>
                                 </Link>
@@ -69,33 +67,25 @@ export const AdminDashboardPage: React.FC = () => {
                     )}
                 </div>
 
-                <div className="card" style={{ padding: '1.5rem', border: '1px solid var(--border-color)', borderRadius: '8px' }}>
+                {/* Editar Cursos */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">✏️</div>
                     <h3>Editar Cursos</h3>
-                    <p>Modifica título, precio o descripción de un curso.</p>
+                    <p>Modifica título, precio o descripción de un curso existente.</p>
                     {isLoading ? (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Cargando cursos...</p>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cargando cursos...</p>
                     ) : courses.length === 0 ? (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>No hay cursos aún.</p>
+                        <div className="admin-empty">No hay cursos aún.</div>
                     ) : (
-                        <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <div className="admin-course-links">
                             {courses.map(course => (
                                 <Link
                                     key={course.id}
                                     to={`/admin/courses/${course.id}/edit`}
-                                    style={{
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        padding: '0.5rem 0.75rem',
-                                        borderRadius: '6px',
-                                        border: '1px solid var(--border-color)',
-                                        textDecoration: 'none',
-                                        color: 'inherit',
-                                        fontSize: '0.9rem',
-                                    }}
+                                    className="admin-course-link"
                                 >
                                     <span>{course.title}</span>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>✏️ Editar →</span>
+                                    <span className="admin-course-link-meta">Editar →</span>
                                 </Link>
                             ))}
                         </div>
