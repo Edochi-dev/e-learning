@@ -31,4 +31,10 @@ export abstract class CourseGateway {
      * nos aseguramos de que ninguna otra lección lo necesite.
      */
     abstract isVideoUrlReferenced(videoUrl: string, excludeLessonId: string): Promise<boolean>;
+
+    /**
+     * Recibe un array de IDs de lecciones en el nuevo orden deseado
+     * y actualiza el campo `order` de cada una en la base de datos.
+     */
+    abstract reorderLessons(courseId: string, lessonIds: string[]): Promise<void>;
 }

@@ -19,6 +19,9 @@ export class Lesson implements ILesson {
     @Column()
     videoUrl: string;
 
+    @Column({ default: 0 })
+    order: number;
+
     @ManyToOne(() => Course, (course) => course.lessons)
     course: Course;
 }

@@ -40,6 +40,7 @@ export class CoursesRepository implements CourseGateway {
         return this.courseRepository.findOne({
             where: { id },
             relations: ['lessons'],
+            order: { lessons: { order: 'ASC' } }, // Siempre devolver lecciones ordenadas
         });
     }
 
@@ -63,8 +64,10 @@ export class CoursesRepository implements CourseGateway {
             throw new NotFoundException(`Course with id ${courseId} not found`);
         }
 
+        // La nueva lección va al final: su order es igual al total actual de lecciones
         const lesson = this.lessonRepository.create({
             ...lessonData,
+            order: course.lessons?.length ?? 0,
             course,
         });
         return this.lessonRepository.save(lesson);
@@ -99,6 +102,21 @@ export class CoursesRepository implements CourseGateway {
 
         Object.assign(lesson, data);
         return this.lessonRepository.save(lesson);
+    }
+
+    /**
+     * Actualiza el campo `order` de cada lección según la posición en el array.
+     * lessonIds[0] → order 0, lessonIds[1] → order 1, etc.
+     *
+     * Promise.all() ejecuta todas las actualizaciones en PARALELO para ser eficiente.
+     * No tiene sentido esperar a que termine una para empezar la otra.
+     */
+    async reorderLessons(_courseId: string, lessonIds: string[]): Promise<void> {
+        await Promise.all(
+            lessonIds.map((lessonId, index) =>
+                this.lessonRepository.update(lessonId, { order: index }),
+            ),
+        );
     }
 
     /**

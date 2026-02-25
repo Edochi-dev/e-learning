@@ -12,6 +12,8 @@ import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { UpdateLessonUseCase } from './use-cases/update-lesson.use-case';
+import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
+import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 
@@ -37,6 +39,7 @@ export class CoursesController {
     private readonly addLessonUseCase: AddLessonUseCase,
     private readonly removeLessonUseCase: RemoveLessonUseCase,
     private readonly updateLessonUseCase: UpdateLessonUseCase,
+    private readonly reorderLessonsUseCase: ReorderLessonsUseCase,
   ) { }
 
   // ==========================================
@@ -82,6 +85,23 @@ export class CoursesController {
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<Lesson> {
     return this.addLessonUseCase.execute(courseId, createLessonDto);
+  }
+
+  /**
+   * PATCH /courses/:courseId/lessons/reorder
+   *
+   * DEBE ir ANTES que /:lessonId. NestJS evalúa las rutas en orden de declaración:
+   * si /:lessonId viniera primero, capturaría "reorder" como un UUID y fallaría.
+   * Las rutas estáticas siempre deben declararse antes que las dinámicas del mismo nivel.
+   */
+  @Patch(':courseId/lessons/reorder')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async reorderLessons(
+    @Param('courseId') courseId: string,
+    @Body() dto: ReorderLessonsDto,
+  ): Promise<void> {
+    return this.reorderLessonsUseCase.execute(courseId, dto.lessonIds);
   }
 
   /**
