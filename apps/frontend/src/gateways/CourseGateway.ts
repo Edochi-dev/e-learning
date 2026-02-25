@@ -20,4 +20,5 @@ export interface CourseGateway {
     addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson>;
     removeLesson(courseId: string, lessonId: string, token: string): Promise<void>;
     updateLesson(courseId: string, lessonId: string, data: UpdateLessonPayload, token: string): Promise<Lesson>;
+    reorderLessons(courseId: string, lessonIds: string[], token: string): Promise<void>;
 }

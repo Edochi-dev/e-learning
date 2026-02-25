@@ -110,4 +110,20 @@ export class HttpCourseGateway implements CourseGateway {
         }
         return response.json();
     }
+
+    async reorderLessons(courseId: string, lessonIds: string[], token: string): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/reorder`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ lessonIds }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to reorder lessons: ${response.statusText}`);
+        }
+    }
 }

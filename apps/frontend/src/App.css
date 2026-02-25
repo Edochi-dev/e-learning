@@ -1220,6 +1220,76 @@ input:checked+.slider .icon-moon {
   gap: 1rem;
 }
 
+/* Drag handle — el icono que dispara el arrastre */
+.drag-handle {
+  cursor: grab;
+  font-size: 1.2rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  flex-shrink: 0;
+  user-select: none; /* Evita que el texto se seleccione al arrastrar */
+  touch-action: none; /* Necesario para que funcione en móvil con @dnd-kit */
+  transition: color 0.15s ease;
+}
+
+.drag-handle:hover {
+  color: var(--primary);
+  background: var(--surface-2, rgba(232, 67, 147, 0.08));
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* ── Panel colapsable "Agregar Nueva Lección" ── */
+
+.add-lesson-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--primary);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.add-lesson-toggle:hover {
+  background: var(--surface-2, rgba(232, 67, 147, 0.06));
+  border-color: var(--primary);
+}
+
+.add-lesson-toggle-icon {
+  font-size: 1.1rem;
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+
+.add-lesson-toggle-icon.open {
+  transform: rotate(45deg);
+}
+
+/* El panel usa max-height para la animación de acordeón.
+   overflow: hidden es lo que "recorta" el contenido mientras colapsa. */
+.add-lesson-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+}
+
+.add-lesson-panel.open {
+  /* Valor suficientemente grande para cualquier formulario.
+     max-height no puede ser 'auto' en transitions — necesita un número. */
+  max-height: 700px;
+}
+
 .admin-lesson-info h4 {
   font-family: var(--font-body);
   font-size: 1rem;
