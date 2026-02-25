@@ -44,7 +44,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                 <div className="catalog-featured__content">
                                     <p className="catalog-featured__tag">Programa destacado</p>
                                     <span className="catalog-featured__badge">
-                                        {featured.isLive ? 'Clase en vivo' : 'Clase grabada'}
+                                        {featured.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Clase grabada'}
                                     </span>
                                     <h2>{featured.title}</h2>
                                     <p className="catalog-featured__desc">
@@ -70,7 +70,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                         </div>
                                         <div className="catalog-card__body">
                                             <span className="catalog-card__badge">
-                                                {course.isLive ? 'Clase en vivo' : 'Clase grabada'}
+                                                {course.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Clase grabada'}
                                             </span>
                                             <h3 className="catalog-card__title">{course.title}</h3>
                                             <p className="catalog-card__desc">

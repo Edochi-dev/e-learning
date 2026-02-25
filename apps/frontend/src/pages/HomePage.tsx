@@ -122,7 +122,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                         <div className="preview-card__visual" aria-hidden="true">💅</div>
                                         <div className="preview-card__body">
                                             <span className="preview-card__badge">
-                                                {course.isLive ? 'Clase en vivo' : 'Grabado'}
+                                                {course.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Grabado'}
                                             </span>
                                             <h3 className="preview-card__title">{course.title}</h3>
                                             <p className="preview-card__desc">

@@ -24,11 +24,6 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                 <h1 style={{ fontFamily: 'var(--font-heading)', color: 'var(--primary-color)', fontSize: '2.5rem', marginBottom: '1rem' }}>{course.title}</h1>
 
                 <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                    {course.isLive ? (
-                        <span className="badge badge-live">EN VIVO 🔴</span>
-                    ) : (
-                        <span className="badge badge-recorded">CLASE GRABADA 📼</span>
-                    )}
                     <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>${course.price}</span>
                 </div>
 
@@ -59,7 +54,13 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                                             </div>
                                         </div>
                                     </div>
-                                    <span className="lesson-duration">{lesson.duration}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                                        {lesson.isLive
+                                            ? <span className="badge badge-live">EN VIVO 🔴</span>
+                                            : <span className="badge badge-recorded">GRABADO 📼</span>
+                                        }
+                                        <span className="lesson-duration">{lesson.duration}</span>
+                                    </div>
                                 </Link>
                             ))}
                         </div>

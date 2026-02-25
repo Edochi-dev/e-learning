@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsBoolean } from 'class-validator';
 
 export class CreateLessonDto {
     @IsString()
@@ -12,4 +12,7 @@ export class CreateLessonDto {
 
     @IsString()
     videoUrl: string;
+
+    @IsBoolean()
+    isLive: boolean;
 }

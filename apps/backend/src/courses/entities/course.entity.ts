@@ -16,9 +16,6 @@ export class Course implements ICourse {
     @Column('text')
     description: string;
 
-    @Column({ default: false })
-    isLive: boolean;
-
     @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
     lessons: Lesson[];
 }

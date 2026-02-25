@@ -1242,6 +1242,24 @@ input:checked+.slider .icon-moon {
   cursor: grabbing;
 }
 
+/* Badge de modalidad en la vista admin de lección */
+.lesson-mode-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.lesson-mode-badge.live {
+  background: rgba(220, 38, 38, 0.12);
+  color: #dc2626;
+}
+.lesson-mode-badge.recorded {
+  background: rgba(100, 116, 139, 0.12);
+  color: var(--text-muted);
+}
+
 /* ── Panel colapsable "Agregar Nueva Lección" ── */
 
 .add-lesson-toggle {

@@ -25,9 +25,6 @@ export class CreateCourseDto {
     @IsString()
     description: string;
 
-    @IsBoolean()
-    isLive: boolean;
-
     @IsArray()
     @ValidateNested({ each: true })
     @Type(() => CreateLessonDto)

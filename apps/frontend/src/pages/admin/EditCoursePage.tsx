@@ -94,6 +94,10 @@ function SortableLessonItem({
                         <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
                         <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
                     </div>
+                    <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
+                        <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
+                        <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
+                    </div>
                     <div className="admin-actions">
                         <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
                             {isSubmittingLesson ? 'Guardando...' : '💾 Guardar'}
@@ -120,6 +124,9 @@ function SortableLessonItem({
                         <div className="admin-lesson-meta">
                             <span>⏱ {lesson.duration}</span>
                             <span>🎬 {lesson.videoUrl}</span>
+                            <span className={`lesson-mode-badge ${lesson.isLive ? 'live' : 'recorded'}`}>
+                                {lesson.isLive ? '🔴 En vivo' : '📼 Grabado'}
+                            </span>
                         </div>
                     </div>
                     <div className="admin-actions">
@@ -166,7 +173,6 @@ export const EditCoursePage: React.FC = () => {
         title: '',
         description: '',
         price: 0,
-        isLive: false,
     });
 
     // Estado del panel "Agregar lección" (cerrado por defecto)
@@ -179,6 +185,7 @@ export const EditCoursePage: React.FC = () => {
         description: '',
         duration: '',
         videoUrl: '',
+        isLive: false,
     });
 
     // Estado de la edición inline de lecciones
@@ -188,6 +195,7 @@ export const EditCoursePage: React.FC = () => {
         description: '',
         duration: '',
         videoUrl: '',
+        isLive: false,
     });
 
     // Configuración de sensores de dnd-kit:
@@ -213,7 +221,6 @@ export const EditCoursePage: React.FC = () => {
                 title: data.title,
                 description: data.description,
                 price: data.price,
-                isLive: data.isLive,
             });
         } catch (err: any) {
             setError(err.message || 'Error al cargar el curso');
@@ -294,8 +301,11 @@ export const EditCoursePage: React.FC = () => {
     // --- Handlers de lecciones: CREAR ---
 
     const handleLessonChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setLessonForm(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        setLessonForm(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+        }));
     };
 
     const handleAddLesson = async (e: React.FormEvent) => {
@@ -306,7 +316,7 @@ export const EditCoursePage: React.FC = () => {
         setSuccessMessage(null);
         try {
             await courseGateway.addLesson(courseId, lessonForm, token);
-            setLessonForm({ title: '', description: '', duration: '', videoUrl: '' });
+            setLessonForm({ title: '', description: '', duration: '', videoUrl: '', isLive: false });
             setIsAddingLesson(false); // Cerrar el panel tras agregar
             setSuccessMessage('¡Lección agregada exitosamente!');
             await loadCourse();
@@ -342,14 +352,18 @@ export const EditCoursePage: React.FC = () => {
             description: lesson.description,
             duration: lesson.duration,
             videoUrl: lesson.videoUrl,
+            isLive: lesson.isLive,
         });
     };
 
     const cancelEditing = () => setEditingLessonId(null);
 
     const handleEditLessonChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target;
-        setEditLessonForm(prev => ({ ...prev, [name]: value }));
+        const { name, value, type } = e.target;
+        setEditLessonForm(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
+        }));
     };
 
     const handleUpdateLesson = async (e: React.FormEvent) => {
@@ -404,12 +418,6 @@ export const EditCoursePage: React.FC = () => {
                     <div className="form-group">
                         <label htmlFor="price">Precio (USD)</label>
                         <input type="number" id="price" name="price" value={courseForm.price} onChange={handleCourseChange} required min="0" />
-                    </div>
-                    <div className="form-group">
-                        <div className="checkbox-group">
-                            <input type="checkbox" id="isLive" name="isLive" checked={courseForm.isLive} onChange={handleCourseChange} />
-                            <label htmlFor="isLive">¿Es un curso en vivo?</label>
-                        </div>
                     </div>
                     <button type="submit" disabled={isSubmittingCourse} className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
                         {isSubmittingCourse ? 'Guardando...' : 'Guardar Cambios del Curso'}
@@ -501,7 +509,14 @@ export const EditCoursePage: React.FC = () => {
                                     <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
                                 </div>
                             </div>
-                            <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
+                            <div className="form-group">
+                                <div className="checkbox-group">
+                                    <input type="checkbox" id="lesson-isLive" name="isLive" checked={lessonForm.isLive} onChange={handleLessonChange} />
+                                    <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
+                                </div>
+                            </div>
+
+                        <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
                                 {isSubmittingLesson ? 'Agregando...' : 'Agregar Lección'}
                             </button>
                         </form>

@@ -16,7 +16,6 @@ export const CreateCoursePage: React.FC = () => {
         title: '',
         description: '',
         price: 0,
-        isLive: false,
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -95,19 +94,6 @@ export const CreateCoursePage: React.FC = () => {
                             min="0"
                             placeholder="49.99"
                         />
-                    </div>
-
-                    <div className="form-group">
-                        <div className="checkbox-group">
-                            <input
-                                type="checkbox"
-                                id="isLive"
-                                name="isLive"
-                                checked={formData.isLive}
-                                onChange={handleChange}
-                            />
-                            <label htmlFor="isLive">¿Es un curso en vivo?</label>
-                        </div>
                     </div>
 
                     <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '0.5rem' }}>

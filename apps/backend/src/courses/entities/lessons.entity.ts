@@ -22,6 +22,9 @@ export class Lesson implements ILesson {
     @Column({ default: 0 })
     order: number;
 
+    @Column({ default: false })
+    isLive: boolean;
+
     @ManyToOne(() => Course, (course) => course.lessons)
     course: Course;
 }
