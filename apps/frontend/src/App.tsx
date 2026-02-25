@@ -14,7 +14,6 @@ import { ThemeSwitch } from './components/ThemeSwitch';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
-import { ManageLessonsPage } from './pages/admin/ManageLessonsPage';
 import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
@@ -71,7 +70,6 @@ function AppContent() {
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage />} />
-            <Route path="/admin/courses/:courseId/lessons" element={<ManageLessonsPage />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage />} />
           </Route>
         </Routes>

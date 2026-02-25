@@ -17,11 +17,17 @@ export interface Course {
     lessons: Lesson[];
 }
 
-// Este enum define los roles permitidos en tu academia
-export enum UserRole {
-    ADMIN = 'admin',
-    STUDENT = 'student',
-}
+// Este objeto define los roles permitidos en tu academia.
+// Usamos "const + as const" en lugar de "enum" porque TypeScript moderno
+// (con erasableSyntaxOnly) exige que todo el código sea borrable al compilar.
+export const UserRole = {
+    ADMIN: 'admin',
+    STUDENT: 'student',
+} as const;
+
+// Este type reconstruye la unión de valores: 'admin' | 'student'
+// Permite usar UserRole como tipo (role: UserRole) igual que antes.
+export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 export interface User {
     id: string;

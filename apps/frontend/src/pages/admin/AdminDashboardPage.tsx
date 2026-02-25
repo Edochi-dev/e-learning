@@ -26,7 +26,7 @@ export const AdminDashboardPage: React.FC = () => {
         <div className="admin-page">
             <div className="admin-header">
                 <h1>Panel de Administración</h1>
-                <p>Gestiona tus cursos, lecciones y contenido desde aquí.</p>
+                <p>Gestiona tus cursos y contenido desde aquí.</p>
             </div>
 
             <div className="admin-grid">
@@ -40,38 +40,11 @@ export const AdminDashboardPage: React.FC = () => {
                     </Link>
                 </div>
 
-                {/* Gestionar Lecciones */}
-                <div className="admin-card">
-                    <div className="admin-card-icon">📚</div>
-                    <h3>Gestionar Lecciones</h3>
-                    <p>Agrega o elimina lecciones de tus cursos.</p>
-                    {isLoading ? (
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cargando cursos...</p>
-                    ) : courses.length === 0 ? (
-                        <div className="admin-empty">No hay cursos aún. Crea uno primero.</div>
-                    ) : (
-                        <div className="admin-course-links">
-                            {courses.map(course => (
-                                <Link
-                                    key={course.id}
-                                    to={`/admin/courses/${course.id}/lessons`}
-                                    className="admin-course-link"
-                                >
-                                    <span>{course.title}</span>
-                                    <span className="admin-course-link-meta">
-                                        {course.lessons?.length || 0} lecciones →
-                                    </span>
-                                </Link>
-                            ))}
-                        </div>
-                    )}
-                </div>
-
                 {/* Editar Cursos */}
                 <div className="admin-card">
                     <div className="admin-card-icon">✏️</div>
                     <h3>Editar Cursos</h3>
-                    <p>Modifica título, precio o descripción de un curso existente.</p>
+                    <p>Modifica los datos del curso y gestiona sus lecciones desde un solo lugar.</p>
                     {isLoading ? (
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Cargando cursos...</p>
                     ) : courses.length === 0 ? (
@@ -85,7 +58,9 @@ export const AdminDashboardPage: React.FC = () => {
                                     className="admin-course-link"
                                 >
                                     <span>{course.title}</span>
-                                    <span className="admin-course-link-meta">Editar →</span>
+                                    <span className="admin-course-link-meta">
+                                        {course.lessons?.length || 0} lecciones →
+                                    </span>
                                 </Link>
                             ))}
                         </div>
