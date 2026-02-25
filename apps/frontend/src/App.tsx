@@ -10,6 +10,7 @@ import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
@@ -46,9 +47,14 @@ function AppContent() {
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', marginLeft: '1rem', color: 'white' }}>
-                Ingresar
-              </Link>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
+                <Link to="/register" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
+                  Registrarse
+                </Link>
+                <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', color: 'white' }}>
+                  Ingresar
+                </Link>
+              </div>
             )}
           </nav>
         </div>
@@ -59,6 +65,7 @@ function AppContent() {
           <Route path="/" element={<HomePage gateway={courseGateway} />} />
           <Route path="/catalogo" element={<CatalogPage gateway={courseGateway} />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
 
           {/* Ruta de lección protegida — requiere estar logueado */}

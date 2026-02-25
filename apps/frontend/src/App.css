@@ -1242,6 +1242,31 @@ input:checked+.slider .icon-moon {
   cursor: grabbing;
 }
 
+/* ── Formulario de Registro ── */
+
+/* Advertencia del certificado — fondo gold/amber suave */
+.certificate-notice {
+  background: rgba(212, 165, 116, 0.12);
+  border: 1px solid rgba(212, 165, 116, 0.3);
+  border-radius: var(--radius-md);
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8rem;
+  color: #8b6914;
+  line-height: 1.5;
+  margin-top: 0.4rem;
+}
+
+/* Email ya en uso — mensajito suave bajo el campo */
+.email-taken-notice {
+  background: rgba(234, 88, 12, 0.08);
+  border: 1px solid rgba(234, 88, 12, 0.2);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8rem;
+  color: #c2410c;
+  margin-top: 0.35rem;
+}
+
 /* Badge de modalidad en la vista admin de lección */
 .lesson-mode-badge {
   font-size: 0.7rem;

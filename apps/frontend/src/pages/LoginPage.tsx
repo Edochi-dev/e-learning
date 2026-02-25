@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '@maris-nails/shared';
 
@@ -108,6 +108,19 @@ export const LoginPage = () => {
                         Ingresar
                     </button>
                 </form>
+
+                <p style={{
+                    textAlign: 'center',
+                    marginTop: '1.5rem',
+                    marginBottom: 0,
+                    fontSize: '0.875rem',
+                    color: 'var(--text-muted)',
+                }}>
+                    ¿No tienes cuenta?{' '}
+                    <Link to="/register" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                        Regístrate aquí
+                    </Link>
+                </p>
             </div>
         </div>
     );

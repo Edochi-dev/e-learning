@@ -1,4 +1,4 @@
-import type { LoginCredentials, AuthResponse } from '@maris-nails/shared';
+import type { LoginCredentials, AuthResponse, RegisterPayload, User } from '@maris-nails/shared';
 import type { AuthGateway } from './AuthGateway';
 
 export class HttpAuthGateway implements AuthGateway {
@@ -11,9 +11,7 @@ export class HttpAuthGateway implements AuthGateway {
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
         const response = await fetch(`${this.baseUrl}/users/login`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(credentials),
         });
 
@@ -27,5 +25,20 @@ export class HttpAuthGateway implements AuthGateway {
             access_token: data.token, // El backend devuelve "token", el frontend espera "access_token"
             user: data.user,
         };
+    }
+
+    async register(payload: RegisterPayload): Promise<User> {
+        const response = await fetch(`${this.baseUrl}/users`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al crear la cuenta');
+        }
+
+        return response.json();
     }
 }

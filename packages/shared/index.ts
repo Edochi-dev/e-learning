@@ -74,3 +74,9 @@ export interface UpdateLessonPayload {
     videoUrl?: string;
     isLive?: boolean;
 }
+
+export interface RegisterPayload {
+    fullName: string;
+    email: string;
+    password: string; // Se envía en texto plano; el backend lo hashea con bcrypt antes de guardar
+}

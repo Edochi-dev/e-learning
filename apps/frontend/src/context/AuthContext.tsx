@@ -1,11 +1,12 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
-import type { User, LoginCredentials } from '@maris-nails/shared';
+import type { User, LoginCredentials, RegisterPayload } from '@maris-nails/shared';
 import type { AuthGateway } from '../gateways/AuthGateway';
 
 interface AuthContextType {
     user: User | null;
     token: string | null;
     login: (credentials: LoginCredentials) => Promise<void>;
+    register: (payload: RegisterPayload) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -47,20 +48,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
     }, []);
 
     const login = async (credentials: LoginCredentials) => {
-        try {
-            const response = await gateway.login(credentials);
+        const response = await gateway.login(credentials);
 
-            if (!response.access_token) {
-                throw new Error('No access token received');
-            }
-
-            setToken(response.access_token);
-            setUser(response.user);
-            localStorage.setItem('access_token', response.access_token);
-        } catch (error) {
-            console.error('Login failed', error);
-            throw error;
+        if (!response.access_token) {
+            throw new Error('No access token received');
         }
+
+        setToken(response.access_token);
+        setUser(response.user);
+        localStorage.setItem('access_token', response.access_token);
+    };
+
+    /**
+     * register — Crea la cuenta y luego hace auto-login.
+     *
+     * Flujo en dos pasos:
+     *   1. POST /users → crea el usuario (backend hashea la contraseña con bcrypt)
+     *   2. POST /users/login → obtiene el JWT y setea el estado de sesión
+     *
+     * El resultado final es idéntico a si el usuario hubiera hecho login manualmente:
+     * queda autenticado sin necesidad de un segundo formulario.
+     *
+     * Importante: el confirmPassword NUNCA llega aquí; lo filtra el componente RegisterPage
+     * antes de llamar a esta función.
+     */
+    const register = async (payload: RegisterPayload) => {
+        await gateway.register(payload);
+        await login({ email: payload.email, password: payload.password });
     };
 
     const logout = () => {
@@ -74,9 +88,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             user,
             token,
             login,
+            register,
             logout,
             isAuthenticated: !!token,
-            isLoading
+            isLoading,
         }}>
             {children}
         </AuthContext.Provider>
