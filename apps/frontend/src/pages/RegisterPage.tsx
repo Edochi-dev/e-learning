@@ -67,7 +67,7 @@ export const RegisterPage = () => {
     };
 
     return (
-        <div className="container" style={{ maxWidth: '440px', marginTop: '5rem', marginBottom: '3rem' }}>
+        <div className="container" style={{ maxWidth: '520px', marginTop: '5rem', marginBottom: '3rem' }}>
             <div className="card">
                 {/* Encabezado */}
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -122,6 +122,21 @@ export const RegisterPage = () => {
                         <div className="certificate-notice">
                             📜 Este nombre aparecerá en tu certificado de aprobación. Escríbelo con cuidado, teniendo en cuenta las mayúsculas y tildes correctas.
                         </div>
+
+                        {/* Previsualización del certificado — se muestra desde la primera letra
+                            y se actualiza en tiempo real con cada tecla.
+                            fullName.trim() es falsy cuando está vacío, truthy en cuanto hay texto. */}
+                        {fullName.trim() && (
+                            <div className="certificate-preview">
+                                <p className="certificate-preview__label">✨ Vista previa de tu certificado</p>
+                                <hr className="certificate-preview__divider" />
+                                <p className="certificate-preview__granted">
+                                    Este certificado de aprobación se otorga a:
+                                </p>
+                                <p className="certificate-preview__name">{fullName}</p>
+                                <p className="certificate-preview__footer">Mari's Nails Academy 💅</p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Campo: Email */}

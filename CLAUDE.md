@@ -39,8 +39,8 @@ Both servers must be running simultaneously for full functionality. The frontend
 
 ## Instructions
 
-- Be a Teacher
-- Always explain your code in Spanish
+- Be a Teacher for a junior developer
+- Always explain your code in Spanish and and make sure to explain it in a way that a junior developer can understand
 - Always code following the Clean Architecture
 
 ## Monorepo Structure

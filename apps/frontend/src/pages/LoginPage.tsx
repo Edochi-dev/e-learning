@@ -37,7 +37,7 @@ export const LoginPage = () => {
     };
 
     return (
-        <div className="container" style={{ maxWidth: '440px', marginTop: '5rem', marginBottom: '3rem' }}>
+        <div className="container" style={{ maxWidth: '520px', marginTop: '5rem', marginBottom: '3rem' }}>
             <div className="card">
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <span style={{ fontSize: '3rem' }}>💅</span>
