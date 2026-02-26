@@ -2291,52 +2291,62 @@ input:checked+.slider .icon-moon {
   margin: 0;
 }
 
-/* Zona de crop: contenedor 16:9 con imagen draggable dentro */
+/* Zona de crop — react-easy-crop necesita un contenedor con position: relative
+   y altura definida. aspect-ratio: 16/9 calcula la altura desde el ancho. */
 .thumbnail-crop {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  overflow: hidden;
   border-radius: var(--radius);
+  overflow: hidden;
   border: 1px solid var(--border-strong);
-  cursor: grab;
-  user-select: none;
-  /* touch-action: none evita que el navegador haga scroll en móvil
-     mientras el usuario arrastra la imagen */
-  touch-action: none;
-  background: var(--surface);
+  background: #1a1a1a;
 }
 
-.thumbnail-crop--dragging {
-  cursor: grabbing;
+/* Barra de controles debajo del crop (zoom slider) */
+.thumbnail-crop__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
 }
 
-/* La imagen vive dentro del contenedor, posicionada absolutamente.
-   Su tamaño y traslación se controlan via JavaScript (style inline). */
-.thumbnail-crop__image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  /* pointer-events: none → el contenedor recibe el mousedown, no la imagen.
-     Sin esto, el drag nativo del navegador interferiría con el nuestro. */
-  pointer-events: none;
-  -webkit-user-drag: none;
+.thumbnail-crop__zoom-icon {
+  font-size: 1rem;
+  color: var(--text-muted);
+  line-height: 1;
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
 }
 
-/* Etiqueta flotante en la parte inferior del crop */
-.thumbnail-crop__hint {
-  position: absolute;
-  bottom: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.5);
-  color: #fff;
-  font-size: 0.75rem;
-  font-family: var(--font-body);
-  padding: 3px 12px;
+/* Slider de zoom con colores del design system */
+.thumbnail-crop__zoom-slider {
+  flex: 1;
+  appearance: none;
+  height: 4px;
   border-radius: 999px;
-  pointer-events: none;
-  white-space: nowrap;
+  background: var(--border-strong);
+  outline: none;
+  cursor: pointer;
+}
+
+.thumbnail-crop__zoom-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+}
+
+.thumbnail-crop__zoom-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+  border: none;
 }
 
 .thumbnail-uploader__remove {
