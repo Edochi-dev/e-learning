@@ -24,14 +24,26 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async create(course: any, token: string): Promise<Course> {
+    async create(course: any, token: string, thumbnail?: File): Promise<Course> {
+        // FormData permite enviar texto + archivo en el mismo request (multipart/form-data).
+        // IMPORTANTE: no agregar Content-Type manualmente. El browser lo pone solo
+        // con el "boundary" correcto que Multer necesita para parsear el cuerpo.
+        const body = new FormData();
+        body.append('title', course.title);
+        body.append('price', String(course.price));
+        body.append('description', course.description);
+        if (thumbnail) {
+            // 'thumbnail' debe coincidir con el nombre del campo en FileInterceptor('thumbnail')
+            body.append('thumbnail', thumbnail);
+        }
+
         const response = await fetch(`${this.baseUrl}/courses`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                // Solo el token de auth — sin Content-Type, el browser lo gestiona
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify(course),
+            body,
         });
 
         if (!response.ok) {

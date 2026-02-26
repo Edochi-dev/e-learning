@@ -2221,3 +2221,142 @@ input:checked+.slider .icon-moon {
     gap: 1.5rem;
   }
 }
+/* ============================================================================
+   ThumbnailUploader — Componente drag-and-drop para miniatura de curso
+   ============================================================================ */
+
+.thumbnail-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.thumbnail-uploader__label {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Área de drop: borde punteado con colores del design system */
+.thumbnail-uploader__drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1.5rem;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  text-align: center;
+  outline: none;
+}
+
+.thumbnail-uploader__drop-zone:hover,
+.thumbnail-uploader__drop-zone:focus {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.04);
+}
+
+/* Efecto visual cuando el usuario está arrastrando un archivo encima */
+.thumbnail-uploader__drop-zone--dragging {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.08);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.thumbnail-uploader__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.thumbnail-uploader__text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.thumbnail-uploader__link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.thumbnail-uploader__hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Zona de crop: contenedor 16:9 con imagen draggable dentro */
+.thumbnail-crop {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  cursor: grab;
+  user-select: none;
+  /* touch-action: none evita que el navegador haga scroll en móvil
+     mientras el usuario arrastra la imagen */
+  touch-action: none;
+  background: var(--surface);
+}
+
+.thumbnail-crop--dragging {
+  cursor: grabbing;
+}
+
+/* La imagen vive dentro del contenedor, posicionada absolutamente.
+   Su tamaño y traslación se controlan via JavaScript (style inline). */
+.thumbnail-crop__image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  /* pointer-events: none → el contenedor recibe el mousedown, no la imagen.
+     Sin esto, el drag nativo del navegador interferiría con el nuestro. */
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Etiqueta flotante en la parte inferior del crop */
+.thumbnail-crop__hint {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 0.75rem;
+  font-family: var(--font-body);
+  padding: 3px 12px;
+  border-radius: 999px;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.thumbnail-uploader__remove {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-body);
+  transition: color 0.2s;
+}
+
+.thumbnail-uploader__remove:hover {
+  color: var(--primary);
+}
+
+/* Mensaje de error */
+.thumbnail-uploader__error {
+  font-size: 0.82rem;
+  color: #e74c3c;
+  margin: 0;
+}

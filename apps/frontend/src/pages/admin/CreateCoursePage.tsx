@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { HttpCourseGateway } from '../../gateways/HttpCourseGateway';
+import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import type { CreateCoursePayload } from '@maris-nails/shared';
 
 const courseGateway = new HttpCourseGateway('http://localhost:3000');
@@ -11,6 +12,10 @@ export const CreateCoursePage: React.FC = () => {
     const { token } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    // useRef en lugar de useState: no necesitamos re-renderizar al cambiar el archivo.
+    // Solo necesitamos acceder al componente en el momento del submit para pedir
+    // el archivo ya recortado con getCroppedFile().
+    const thumbnailRef = useRef<ThumbnailUploaderHandle>(null);
 
     const [formData, setFormData] = useState<CreateCoursePayload>({
         title: '',
@@ -36,7 +41,10 @@ export const CreateCoursePage: React.FC = () => {
         setError(null);
 
         try {
-            await courseGateway.create(formData, token);
+            // Pedimos al componente hijo el archivo ya recortado con Canvas.
+            // Si el admin no subió imagen, getCroppedFile() devuelve null.
+            const croppedFile = await thumbnailRef.current?.getCroppedFile() ?? null;
+            await courseGateway.create(formData, token, croppedFile ?? undefined);
             navigate('/admin');
         } catch (err: any) {
             setError(err.message || 'Error al crear el curso');
@@ -94,6 +102,10 @@ export const CreateCoursePage: React.FC = () => {
                             min="0"
                             placeholder="49.99"
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <ThumbnailUploader ref={thumbnailRef} />
                     </div>
 
                     <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '0.5rem' }}>

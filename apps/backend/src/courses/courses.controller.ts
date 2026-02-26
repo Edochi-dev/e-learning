@@ -1,4 +1,8 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards,
+  UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Course, Lesson, UserRole } from '@maris-nails/shared';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -49,8 +53,27 @@ export class CoursesController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async create(@Body() createCourseDto: CreateCourseDto): Promise<Course> {
-    return this.createCourseUseCase.execute(createCourseDto);
+  // FileInterceptor('thumbnail') le dice a Multer que extraiga el campo 'thumbnail'
+  // de la petición multipart/form-data. Sin esto, el archivo se ignoraría.
+  @UseInterceptors(FileInterceptor('thumbnail'))
+  async create(
+    @Body() createCourseDto: CreateCourseDto,
+    // ParseFilePipe valida el archivo ANTES de que llegue al use case.
+    // fileIsRequired: false → el thumbnail es opcional (el admin puede no subir foto).
+    // MaxFileSizeValidator → rechaza archivos > 5 MB con HTTP 400.
+    // FileTypeValidator → rechaza cualquier MIME que no sea jpeg, png o webp.
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /image\/(jpeg|png|webp)/ }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    thumbnail?: Express.Multer.File,
+  ): Promise<Course> {
+    return this.createCourseUseCase.execute(createCourseDto, thumbnail);
   }
 
   @Get()

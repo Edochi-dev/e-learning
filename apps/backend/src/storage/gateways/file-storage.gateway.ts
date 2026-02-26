@@ -10,6 +10,17 @@
  */
 export abstract class FileStorageGateway {
     /**
+     * Guarda un archivo subido en una carpeta del almacenamiento.
+     * @param file   El archivo recibido por Multer (tiene .buffer, .originalname, .mimetype)
+     * @param folder Subcarpeta destino, ej: "thumbnails" o "videos"
+     * @returns      La URL pública del archivo guardado, ej: "/static/thumbnails/uuid.jpg"
+     *
+     * Nota para el alumno: este método retorna una PROMESA de string porque
+     * escribir en disco (o subir a S3) es una operación asíncrona — puede tardar.
+     */
+    abstract saveFile(file: Express.Multer.File, folder: string): Promise<string>;
+
+    /**
      * Elimina un archivo del almacenamiento.
      * @param filePath Ruta relativa del archivo (ej: "videos/clase1.mp4")
      */

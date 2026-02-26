@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { join } from 'path';
-import { unlink } from 'fs/promises';
+import { join, extname } from 'path';
+import { unlink, writeFile, mkdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { randomUUID } from 'crypto';
 import { FileStorageGateway } from './gateways/file-storage.gateway';
 
 /**
@@ -31,6 +32,33 @@ export class LocalFileStorageGateway implements FileStorageGateway {
      * __dirname apunta a dist/, así que subimos un nivel.
      */
     private readonly publicDir = join(__dirname, '..', 'public');
+
+    /**
+     * Guarda un archivo subido en la carpeta public/{folder}/ y retorna su URL pública.
+     *
+     * Ejemplo:
+     *   saveFile(file, 'thumbnails') → '/static/thumbnails/a1b2c3d4.jpg'
+     *
+     * ¿Por qué randomUUID() para el nombre?
+     * Si dos admins suben "portada.jpg" a la vez, sin UUID se pisarían.
+     * Con UUID cada archivo tiene un nombre irrepetible: "550e8400-e29b...jpg"
+     */
+    async saveFile(file: Express.Multer.File, folder: string): Promise<string> {
+        // extname('foto.jpg') → '.jpg'   extname('imagen.PNG') → '.PNG'
+        const ext = extname(file.originalname);
+        const filename = `${randomUUID()}${ext}`;
+
+        const destFolder = join(this.publicDir, folder);
+        const destPath = join(destFolder, filename);
+
+        // recursive: true crea la carpeta (y las intermedias) si no existen.
+        // Sin esto, si 'thumbnails/' no existe, lanzaría un error.
+        await mkdir(destFolder, { recursive: true });
+        await writeFile(destPath, file.buffer);
+
+        this.logger.log(`Archivo guardado: ${destPath}`);
+        return `/static/${folder}/${filename}`;
+    }
 
     /**
      * Convierte una URL como "/static/videos/clase1.mp4"

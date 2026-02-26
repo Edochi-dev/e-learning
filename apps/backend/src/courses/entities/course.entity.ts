@@ -16,6 +16,12 @@ export class Course implements ICourse {
     @Column('text')
     description: string;
 
+    // nullable: true porque los cursos viejos no tienen miniatura.
+    // Sin esto, la migración fallaría al intentar agregar una columna NOT NULL
+    // en una tabla que ya tiene filas.
+    @Column({ nullable: true })
+    thumbnailUrl: string;
+
     @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
     lessons: Lesson[];
 }

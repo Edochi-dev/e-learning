@@ -13,7 +13,7 @@ export interface CourseGateway {
     // Cursos
     findAll(): Promise<Course[]>;
     findOne(id: string): Promise<Course>;
-    create(course: CreateCoursePayload, token: string): Promise<Course>;
+    create(course: CreateCoursePayload, token: string, thumbnail?: File): Promise<Course>;
     update(id: string, data: UpdateCoursePayload, token: string): Promise<Course>;
 
     // Lecciones

@@ -15,6 +15,7 @@ export interface Course {
     title: string;
     price: number;
     description: string;
+    thumbnailUrl?: string;
     lessons: Lesson[];
 }
 
@@ -51,6 +52,7 @@ export interface CreateCoursePayload {
     title: string;
     price: number;
     description: string;
+    thumbnailUrl?: string;
 }
 
 export interface CreateLessonPayload {
@@ -65,6 +67,7 @@ export interface UpdateCoursePayload {
     title?: string;
     price?: number;
     description?: string;
+    thumbnailUrl?: string;
 }
 
 export interface UpdateLessonPayload {
