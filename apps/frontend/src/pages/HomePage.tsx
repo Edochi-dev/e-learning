@@ -2,6 +2,8 @@ import { Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
+const BACKEND_URL = 'http://localhost:3000';
+
 interface HomePageProps {
     gateway: CourseGateway;
 }
@@ -119,7 +121,12 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                             <div className="preview-grid">
                                 {previewCourses.map((course) => (
                                     <article key={course.id} className="preview-card">
-                                        <div className="preview-card__visual" aria-hidden="true">💅</div>
+                                        <div className="preview-card__visual" aria-hidden="true">
+                                            {course.thumbnailUrl
+                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                : '💅'
+                                            }
+                                        </div>
                                         <div className="preview-card__body">
                                             <span className="preview-card__badge">
                                                 {course.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Grabado'}

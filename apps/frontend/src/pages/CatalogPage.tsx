@@ -2,6 +2,10 @@ import { Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
+// El thumbnailUrl del backend es relativo (ej: "/static/thumbnails/uuid.jpg").
+// Necesitamos el origen del backend para construir la URL completa.
+const BACKEND_URL = 'http://localhost:3000';
+
 interface CatalogPageProps {
     gateway: CourseGateway;
 }
@@ -54,8 +58,13 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                         Ver Programa Completo
                                     </Link>
                                 </div>
+                                {/* aria-hidden="true": la imagen es decorativa porque el título
+                                    ya está en el h2 adyacente — no aporta info extra al lector de pantalla */}
                                 <div className="catalog-featured__visual" aria-hidden="true">
-                                    💅
+                                    {featured.thumbnailUrl
+                                        ? <img src={`${BACKEND_URL}${featured.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                        : '💅'
+                                    }
                                 </div>
                             </article>
                         )}
@@ -66,7 +75,10 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                 {rest.map((course) => (
                                     <article key={course.id} className="catalog-card">
                                         <div className="catalog-card__visual" aria-hidden="true">
-                                            💅
+                                            {course.thumbnailUrl
+                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                : '💅'
+                                            }
                                         </div>
                                         <div className="catalog-card__body">
                                             <span className="catalog-card__badge">

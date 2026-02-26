@@ -29,9 +29,15 @@ export class LocalFileStorageGateway implements FileStorageGateway {
 
     /**
      * Ruta absoluta al directorio "public/" del backend.
-     * __dirname apunta a dist/, así que subimos un nivel.
+     *
+     * ¡Ojo con __dirname! Su valor depende de dónde vive ESTE archivo:
+     *   - En dev:  src/storage/ → join('..', '..') → apps/backend/public/ ✓
+     *   - En prod: dist/storage/ → join('..', '..') → apps/backend/public/ ✓
+     *
+     * Solo subir un nivel daría apps/backend/src/public/ o apps/backend/dist/public/,
+     * que NO es donde ServeStaticModule sirve los archivos (él usa apps/backend/public/).
      */
-    private readonly publicDir = join(__dirname, '..', 'public');
+    private readonly publicDir = join(__dirname, '..', '..', 'public');
 
     /**
      * Guarda un archivo subido en la carpeta public/{folder}/ y retorna su URL pública.
