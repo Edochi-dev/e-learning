@@ -18,6 +18,7 @@ export abstract class CourseGateway {
     abstract findAll(): Promise<Course[]>;
     abstract findOne(id: string): Promise<Course | null>;
     abstract update(id: string, data: Partial<Course>): Promise<Course>;
+    abstract delete(id: string): Promise<void>;
 
     // --- Operaciones de Lecciones ---
     abstract addLesson(courseId: string, lesson: Partial<Lesson>): Promise<Lesson>;
@@ -26,11 +27,28 @@ export abstract class CourseGateway {
     abstract updateLesson(lessonId: string, data: Partial<Lesson>): Promise<Lesson>;
 
     /**
-     * Verifica si alguna OTRA lección (distinta a excludeLessonId) usa esta videoUrl.
-     * Esto es clave para la lógica de huérfanos: antes de borrar un archivo,
-     * nos aseguramos de que ninguna otra lección lo necesite.
+     * ¿Alguna OTRA lección (distinta a excludeLessonId) usa esta videoUrl?
+     *
+     * Se usa en UPDATE: la lección sigue existiendo en la DB mientras actualizamos,
+     * por eso hay que excluirla del conteo para no contarse a sí misma.
      */
     abstract isVideoUrlReferenced(videoUrl: string, excludeLessonId: string): Promise<boolean>;
+
+    /**
+     * ¿Alguna lección (cualquiera) usa este videoUrl?
+     *
+     * Se usa en DELETE: la lección/curso ya fue borrado de la DB antes de llamar esto,
+     * así que no hace falta excluir nada. Si alguien lo referencia, no es huérfano.
+     */
+    abstract isVideoUrlInUse(videoUrl: string): Promise<boolean>;
+
+    /**
+     * ¿Algún curso (cualquiera) usa esta thumbnailUrl?
+     *
+     * Mismo razonamiento que isVideoUrlInUse: se llama después de borrar el curso,
+     * así que no hace falta exclusión.
+     */
+    abstract isThumbnailUrlInUse(thumbnailUrl: string): Promise<boolean>;
 
     /**
      * Recibe un array de IDs de lecciones en el nuevo orden deseado

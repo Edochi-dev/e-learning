@@ -54,6 +54,24 @@ export class CoursesRepository implements CourseGateway {
         return this.courseRepository.save(course);
     }
 
+    /**
+     * Elimina un curso por su ID.
+     *
+     * Usamos delete() (SQL directo) porque la entidad Lesson tiene
+     * onDelete: 'CASCADE' en su @ManyToOne. Eso significa que la propia
+     * base de datos borra las lecciones asociadas automáticamente al
+     * recibir el DELETE del curso — sin pasar por el ORM.
+     *
+     * Esta es la solución más robusta: funciona con cualquier cliente
+     * (ORM, SQL directo, psql) porque el contrato vive en la DB, no en el código.
+     */
+    async delete(id: string): Promise<void> {
+        const result = await this.courseRepository.delete(id);
+        if (result.affected === 0) {
+            throw new NotFoundException(`Course with id ${id} not found`);
+        }
+    }
+
     // ==========================================
     // Operaciones de Lecciones
     // ==========================================
@@ -120,12 +138,10 @@ export class CoursesRepository implements CourseGateway {
     }
 
     /**
-     * ¿Alguna OTRA lección usa este videoUrl?
+     * ¿Alguna OTRA lección (distinta a excludeLessonId) usa este videoUrl?
      *
-     * La clave está en: where: { videoUrl, id: Not(excludeLessonId) }
-     * Esto dice: "busca lecciones con esta URL PERO que NO sean la lección
-     * que estamos editando". Si encontramos al menos una, retornamos true
-     * y NO borramos el archivo (otra lección lo necesita).
+     * Se usa en UPDATE: la lección sigue viva en la DB mientras actualizamos,
+     * por eso excluimos su propio ID para no contarse a sí misma.
      */
     async isVideoUrlReferenced(videoUrl: string, excludeLessonId: string): Promise<boolean> {
         const count = await this.lessonRepository.count({
@@ -134,6 +150,28 @@ export class CoursesRepository implements CourseGateway {
                 id: Not(excludeLessonId),
             },
         });
+        return count > 0;
+    }
+
+    /**
+     * ¿Alguna lección (cualquiera) usa este videoUrl?
+     *
+     * Se usa en DELETE: la lección ya fue borrada antes de llamar este método,
+     * así que no hay nada que excluir — una sola query sin condiciones extra.
+     */
+    async isVideoUrlInUse(videoUrl: string): Promise<boolean> {
+        const count = await this.lessonRepository.count({ where: { videoUrl } });
+        return count > 0;
+    }
+
+    /**
+     * ¿Algún curso (cualquiera) usa esta thumbnailUrl?
+     *
+     * Mismo principio: se llama después de borrar el curso de la DB,
+     * así que no necesitamos exclusión.
+     */
+    async isThumbnailUrlInUse(thumbnailUrl: string): Promise<boolean> {
+        const count = await this.courseRepository.count({ where: { thumbnailUrl } });
         return count > 0;
     }
 }

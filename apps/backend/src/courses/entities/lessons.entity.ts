@@ -25,6 +25,6 @@ export class Lesson implements ILesson {
     @Column({ default: false })
     isLive: boolean;
 
-    @ManyToOne(() => Course, (course) => course.lessons)
+    @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
     course: Course;
 }

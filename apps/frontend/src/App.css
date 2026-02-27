@@ -1046,11 +1046,21 @@ input:checked+.slider .icon-moon {
   margin-bottom: 1.25rem;
 }
 
-/* Course link items inside admin cards */
+/* Fila de curso: link de editar (izquierda) + botón eliminar (derecha) */
+.admin-course-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.5rem;
+}
+
+/* El link ocupa todo el espacio disponible menos el botón de eliminar */
 .admin-course-link {
+  flex: 1;
+  min-width: 0; /* evita overflow del texto largo */
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
   padding: 0.7rem 1rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -1069,10 +1079,58 @@ input:checked+.slider .icon-moon {
   box-shadow: var(--shadow-sm);
 }
 
+/* Evita que el título se desborde si es muy largo */
+.admin-course-link-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .admin-course-link-meta {
   font-size: 0.8rem;
   color: var(--text-muted);
   font-weight: 400;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Botón de eliminar — rojo desde el principio para comunicar peligro */
+.admin-course-delete {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #e74c3c;
+  background: rgba(231, 76, 60, 0.06);
+  color: #1a1a1a;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-course-delete:hover {
+  background: rgba(231, 76, 60, 0.14);
+}
+
+/* Estado de confirmación — fondo sólido rojo, texto blanco */
+.admin-course-delete--confirm {
+  background: #e74c3c;
+  border-color: #e74c3c;
+  color: #fff;
+  font-weight: 600;
+}
+
+.admin-course-delete--confirm:hover {
+  background: #c0392b;
+  border-color: #c0392b;
+}
+
+.admin-course-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admin-course-links {

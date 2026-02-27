@@ -15,6 +15,7 @@ export interface CourseGateway {
     findOne(id: string): Promise<Course>;
     create(course: CreateCoursePayload, token: string, thumbnail?: File): Promise<Course>;
     update(id: string, data: UpdateCoursePayload, token: string): Promise<Course>;
+    delete(id: string, token: string): Promise<void>;
 
     // Lecciones
     addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson>;

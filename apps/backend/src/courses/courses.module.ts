@@ -9,6 +9,7 @@ import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { UpdateLessonUseCase } from './use-cases/update-lesson.use-case';
 import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
+import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { CourseGateway } from './gateways/course.gateway';
 import { CoursesRepository } from './courses.repository';
 import { Course } from './entities/course.entity';
@@ -42,6 +43,7 @@ import { StorageModule } from '../storage/storage.module';
     RemoveLessonUseCase,
     UpdateLessonUseCase,
     ReorderLessonsUseCase,
+    DeleteCourseUseCase,
     {
       provide: CourseGateway,
       useClass: CoursesRepository,

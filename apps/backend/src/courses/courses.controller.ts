@@ -1,6 +1,7 @@
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, UseGuards,
   UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
+  HttpCode,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -17,6 +18,7 @@ import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
 import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { UpdateLessonUseCase } from './use-cases/update-lesson.use-case';
 import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
+import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -44,6 +46,7 @@ export class CoursesController {
     private readonly removeLessonUseCase: RemoveLessonUseCase,
     private readonly updateLessonUseCase: UpdateLessonUseCase,
     private readonly reorderLessonsUseCase: ReorderLessonsUseCase,
+    private readonly deleteCourseUseCase: DeleteCourseUseCase,
   ) { }
 
   // ==========================================
@@ -94,6 +97,22 @@ export class CoursesController {
     @Body() updateCourseDto: UpdateCourseDto,
   ): Promise<Course> {
     return this.updateCourseUseCase.execute(id, updateCourseDto);
+  }
+
+  /**
+   * DELETE /courses/:id — Elimina un curso completo.
+   *
+   * @HttpCode(204): responde con HTTP 204 No Content en lugar del 200 por defecto.
+   * El 204 es el código semánticamente correcto para DELETEs exitosos:
+   * "La operación fue exitosa y no hay nada que devolver."
+   * Retornar 200 con body vacío sería técnicamente incorrecto.
+   */
+  @Delete(':id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async delete(@Param('id') id: string): Promise<void> {
+    return this.deleteCourseUseCase.execute(id);
   }
 
   // ==========================================

@@ -70,6 +70,19 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
+    async delete(id: string, token: string): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/courses/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // 204 No Content es éxito — no hay body que parsear
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || `Failed to delete course: ${response.statusText}`);
+        }
+    }
+
     async addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
             method: 'POST',
