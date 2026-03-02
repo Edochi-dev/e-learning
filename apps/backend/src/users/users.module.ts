@@ -29,22 +29,16 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     ],
     controllers: [UsersController],
     providers: [
-        {
-            provide: UserGateway,
-            useClass: UsersService,
-        },
-        {
-            provide: TokenGateway,
-            useClass: JwtTokenService,
-        },
+        // Bindings Clean Architecture: abstract → concrete
+        // Los use cases inyectan el gateway abstracto, nunca la clase concreta
+        { provide: UserGateway,  useClass: UsersService },
+        { provide: TokenGateway, useClass: JwtTokenService },
+        // Estrategia de Passport (necesita estar aquí para que NestJS la registre)
         JwtStrategy,
-        RegisterUserUseCase,
-        JwtStrategy,
+        // Casos de uso
         RegisterUserUseCase,
         LoginUserUseCase,
-        FindAllUsersUseCase, // Nuevo caso de uso
-        JwtTokenService,
-        UsersService,
+        FindAllUsersUseCase,
     ],
     exports: [UserGateway],
 })
