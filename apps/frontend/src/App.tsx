@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { HttpCourseGateway } from './gateways/HttpCourseGateway';
+import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -11,7 +12,10 @@ import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { MyCoursesPage } from './pages/MyCoursesPage';
+import { AccountPage } from './pages/AccountPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
+import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
@@ -19,10 +23,16 @@ import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 
+const API_URL = 'http://localhost:3000';
+
 function AppContent() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme(new LocalStorageThemeGateway());
-  const courseGateway = useMemo(() => new HttpCourseGateway('http://localhost:3000'), []);
+  // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
+  // Si creáramos el gateway dentro del render sin useMemo, cada re-render crearía
+  // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
+  const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
+  const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
 
   return (
     <>
@@ -34,18 +44,10 @@ function AppContent() {
             <Link to="/#sobre-mi">Sobre Mí</Link>
             <a href="https://wa.me/525512345678" target="_blank" rel="noreferrer">Contacto</a>
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
-            {user?.role === UserRole.ADMIN && (
-              <Link to="/admin" style={{ marginRight: '1rem', fontWeight: 'bold' }}>
-                Panel Admin
-              </Link>
-            )}
+            {/* Si hay usuario: mostramos el menú desplegable con avatar */}
+            {/* Si no hay usuario: botones de registro e inicio de sesión */}
             {user ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ fontSize: '0.9rem' }}>Hola, {user.fullName}</span>
-                <button onClick={logout} className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}>
-                  Salir
-                </button>
-              </div>
+              <UserMenu />
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
                 <Link to="/register" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
@@ -68,9 +70,12 @@ function AppContent() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
 
-          {/* Ruta de lección protegida — requiere estar logueado */}
+          {/* Rutas protegidas — requieren estar logueado */}
           <Route element={<ProtectedRoute />}>
             <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
+            {/* Mis cursos y cuenta: solo accesibles si estás autenticado */}
+            <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
+            <Route path="/cuenta" element={<AccountPage />} />
           </Route>
 
           {/* Rutas de Administración Protegidas */}

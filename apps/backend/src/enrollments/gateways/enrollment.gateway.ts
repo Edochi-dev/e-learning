@@ -35,8 +35,24 @@ export abstract class EnrollmentGateway {
     // --- Progreso de Lecciones ---
 
     /**
-     * Retorna los IDs de las lecciones completadas por un usuario dentro de un curso.
-     * Requiere un JOIN entre lesson_progress y lessons para filtrar por courseId.
+     * Trae TODO el progreso del usuario en UNA sola query, agrupado por courseId.
+     *
+     * Retorna un Record (objeto clave-valor) donde:
+     *   - Clave   = courseId
+     *   - Valor   = array de lessonIds completadas en ese curso
+     *
+     * Ejemplo: { 'uuid-curso-A': ['uuid-l1', 'uuid-l2'], 'uuid-curso-B': ['uuid-l5'] }
+     *
+     * Úsalo cuando necesites el progreso de VARIOS cursos a la vez (ej: lista de mis cursos).
+     * Evita el problema N+1: siempre es 1 query sin importar cuántos cursos tenga el usuario.
+     */
+    abstract getCompletedLessonIdsByCourse(userId: string): Promise<Record<string, string[]>>;
+
+    /**
+     * Retorna los IDs de las lecciones completadas por un usuario dentro de un curso concreto.
+     *
+     * Úsalo cuando necesites el progreso de UN solo curso (ej: página de detalle del curso).
+     * Para listas de cursos, usa getCompletedLessonIdsByCourse() para evitar N+1.
      */
     abstract getCompletedLessonIds(userId: string, courseId: string): Promise<string[]>;
 

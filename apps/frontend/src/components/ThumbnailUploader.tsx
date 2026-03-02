@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import Cropper from 'react-easy-crop';
 import type { Area, Point } from 'react-easy-crop';
 
@@ -22,7 +22,7 @@ const ASPECT = 16 / 9;
  * Es decir, si la imagen mide 1920x1080 y el usuario encuadró la parte central,
  * pixelCrop podría ser { x: 200, y: 113, width: 1520, height: 855 }.
  */
-async function cropToFile(imageSrc: string, pixelCrop: Area, originalFile: File): Promise<File> {
+async function cropToFile(imageSrc: string, pixelCrop: Area, _originalFile: File): Promise<File> {
     // Cargamos la imagen en un objeto HTMLImageElement para poder dibujarla en Canvas
     const image = await new Promise<HTMLImageElement>((resolve, reject) => {
         const img = new Image();
@@ -47,7 +47,7 @@ async function cropToFile(imageSrc: string, pixelCrop: Area, originalFile: File)
         0, 0, pixelCrop.width, pixelCrop.height,
     );
 
-    const mimeType = originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
+    const mimeType = _originalFile.type === 'image/png' ? 'image/png' : 'image/jpeg';
     const ext = mimeType === 'image/png' ? 'png' : 'jpg';
 
     return new Promise((resolve, reject) => {
@@ -65,8 +65,7 @@ async function cropToFile(imageSrc: string, pixelCrop: Area, originalFile: File)
 // ─── Componente ───────────────────────────────────────────────────────────────
 export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, ref) => {
 
-    // Estado del archivo
-    const [originalFile, setOriginalFile] = useState<File | null>(null);
+    // Estado del archivo — solo objectUrl controla el render; el File se lee via ref
     const [objectUrl, setObjectUrl] = useState<string | null>(null);
 
     // Estado del crop — react-easy-crop los necesita como props controladas
@@ -105,7 +104,6 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
         if (objectUrl) URL.revokeObjectURL(objectUrl);
         const url = URL.createObjectURL(file);
 
-        setOriginalFile(file);
         setObjectUrl(url);
         setCrop({ x: 0, y: 0 });
         setZoom(1);
@@ -118,7 +116,6 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
 
     const handleRemove = () => {
         if (objectUrl) URL.revokeObjectURL(objectUrl);
-        setOriginalFile(null);
         setObjectUrl(null);
         setCrop({ x: 0, y: 0 });
         setZoom(1);

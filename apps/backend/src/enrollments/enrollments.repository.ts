@@ -54,14 +54,41 @@ export class EnrollmentsRepository implements EnrollmentGateway {
     }
 
     /**
+     * Trae TODO el progreso del usuario en UNA sola query y lo agrupa en JavaScript.
+     *
+     * El SQL trae filas planas como:
+     *   { courseId: 'uuid-A', lessonId: 'uuid-1' }
+     *   { courseId: 'uuid-A', lessonId: 'uuid-2' }
+     *   { courseId: 'uuid-B', lessonId: 'uuid-5' }
+     *
+     * El reduce() las convierte en un objeto agrupado:
+     *   { 'uuid-A': ['uuid-1', 'uuid-2'], 'uuid-B': ['uuid-5'] }
+     *
+     * ¿Qué hace reduce()?
+     *   Recorre el array acumulando resultados en un objeto vacío {}.
+     *   Por cada fila: si el courseId ya existe en el acumulador, añade el lessonId.
+     *   Si no existe, crea un array nuevo con ese lessonId.
+     *   acc[row.courseId] ??= []  →  "si no existe, inicializa como array vacío"
+     */
+    async getCompletedLessonIdsByCourse(userId: string): Promise<Record<string, string[]>> {
+        const rows = await this.lessonProgressRepository
+            .createQueryBuilder('lp')
+            .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
+            .where('lp."userId" = :userId', { userId })
+            .select('lp."lessonId"', 'lessonId')
+            .addSelect('l."courseId"', 'courseId')
+            .getRawMany<{ lessonId: string; courseId: string }>();
+
+        return rows.reduce<Record<string, string[]>>((acc, row) => {
+            acc[row.courseId] ??= [];
+            acc[row.courseId].push(row.lessonId);
+            return acc;
+        }, {});
+    }
+
+    /**
      * Devuelve los IDs de lecciones completadas por un usuario en un curso específico.
-     *
-     * Usamos QueryBuilder porque necesitamos un JOIN entre dos tablas que
-     * TypeORM no puede hacer automáticamente con el método find():
-     *   lesson_progress (tiene userId y lessonId)  →  JOIN  →  lessons (tiene courseId)
-     *
-     * getRawMany() devuelve objetos planos (no entidades), por eso usamos
-     * r.lessonId con el alias que definimos en .select('lp."lessonId"', 'lessonId').
+     * Para la vista de detalle de un único curso — no usar en listas (usa getByCourse).
      */
     async getCompletedLessonIds(userId: string, courseId: string): Promise<string[]> {
         const results = await this.lessonProgressRepository
@@ -70,7 +97,7 @@ export class EnrollmentsRepository implements EnrollmentGateway {
             .where('lp."userId" = :userId', { userId })
             .andWhere('l."courseId" = :courseId', { courseId })
             .select('lp."lessonId"', 'lessonId')
-            .getRawMany();
+            .getRawMany<{ lessonId: string }>();
 
         return results.map((r) => r.lessonId);
     }

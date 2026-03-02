@@ -27,46 +27,48 @@ export interface EnrollmentWithProgress {
  * El progreso se CALCULA aquí, en la capa de negocio, no en la DB ni en el frontend.
  *   progressPercent = (lecciones completadas / total lecciones) * 100
  *
- * Usamos Promise.all() para calcular el progreso de todos los cursos EN PARALELO.
- * Sin Promise.all(), esperaríamos cada curso uno por uno (más lento).
+ * Siempre hace exactamente 2 queries a la DB, sin importar cuántos cursos tenga el usuario:
+ *   1. findByUserWithCourses()         → matrículas + cursos + lecciones
+ *   2. getCompletedLessonIdsByCourse() → todo el progreso del usuario de una vez
+ *
+ * El .map() final es SÍNCRONO (no async, no await): solo reorganiza datos que
+ * ya están en memoria. No va a la red ni a la base de datos.
  */
 @Injectable()
 export class GetMyEnrollmentsUseCase {
     constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
 
     async execute(userId: string): Promise<EnrollmentWithProgress[]> {
+        // Query 1: matrículas con sus cursos y lecciones
         const enrollments = await this.enrollmentGateway.findByUserWithCourses(userId);
 
-        const results = await Promise.all(
-            enrollments.map(async (enrollment) => {
-                const completedIds = await this.enrollmentGateway.getCompletedLessonIds(
-                    userId,
-                    enrollment.courseId,
-                );
+        // Query 2: todo el progreso del usuario, agrupado por courseId
+        // Ej: { 'uuid-A': ['uuid-l1', 'uuid-l2'], 'uuid-B': ['uuid-l5'] }
+        const completedByCourse = await this.enrollmentGateway.getCompletedLessonIdsByCourse(userId);
 
-                const totalLessons = enrollment.course.lessons?.length ?? 0;
-                const completedLessons = completedIds.length;
-                const progressPercent =
-                    totalLessons > 0
-                        ? Math.round((completedLessons / totalLessons) * 100)
-                        : 0;
+        // Cálculo en memoria: rápido, sin más queries
+        return enrollments.map((enrollment) => {
+            const completedIds = completedByCourse[enrollment.courseId] ?? [];
+            const totalLessons = enrollment.course.lessons?.length ?? 0;
+            const completedLessons = completedIds.length;
+            const progressPercent =
+                totalLessons > 0
+                    ? Math.round((completedLessons / totalLessons) * 100)
+                    : 0;
 
-                return {
-                    enrollmentId: enrollment.id,
-                    enrolledAt: enrollment.enrolledAt,
-                    course: {
-                        id: enrollment.course.id,
-                        title: enrollment.course.title,
-                        description: enrollment.course.description,
-                        thumbnailUrl: enrollment.course.thumbnailUrl ?? null,
-                        totalLessons,
-                    },
-                    completedLessons,
-                    progressPercent,
-                };
-            }),
-        );
-
-        return results;
+            return {
+                enrollmentId: enrollment.id,
+                enrolledAt: enrollment.enrolledAt,
+                course: {
+                    id: enrollment.course.id,
+                    title: enrollment.course.title,
+                    description: enrollment.course.description,
+                    thumbnailUrl: enrollment.course.thumbnailUrl ?? null,
+                    totalLessons,
+                },
+                completedLessons,
+                progressPercent,
+            };
+        });
     }
 }
