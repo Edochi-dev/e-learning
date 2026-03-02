@@ -49,5 +49,8 @@ import { StorageModule } from '../storage/storage.module';
       useClass: CoursesRepository,
     },
   ],
+  // Exportamos CourseGateway para que otros módulos (como EnrollmentsModule)
+  // puedan inyectarlo en sus Use Cases sin tener que reimplementarlo.
+  exports: [CourseGateway],
 })
 export class CoursesModule { }

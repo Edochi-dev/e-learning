@@ -11,6 +11,7 @@ import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { VideosModule } from './videos/videos.module';
+import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 
 @Module({
@@ -49,6 +50,7 @@ import { BlockVideoStaticMiddleware } from './videos/block-video-static.middlewa
     CoursesModule,
     UsersModule,
     VideosModule,
+    EnrollmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
