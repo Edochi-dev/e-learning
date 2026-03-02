@@ -1,4 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { UserRole } from '@maris-nails/shared';
 
 @Entity('users') // Esto le dice a TypeORM que cree una tabla llamada "users"
@@ -12,7 +13,8 @@ export class User {
     @Column()
     fullName: string;
 
-    @Column() // Aquí guardaremos la contraseña (¡encriptada más adelante!)
+    @Exclude() // Nunca devolver este campo en las respuestas HTTP
+    @Column()
     password: string;
 
     @Column({
