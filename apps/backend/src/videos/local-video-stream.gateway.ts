@@ -1,7 +1,7 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { StreamableFile } from '@nestjs/common';
 import { createReadStream, existsSync, statSync } from 'fs';
-import { join, extname } from 'path';
+import { join, extname, sep } from 'path';
 import { VideoStreamGateway } from './gateways/video-stream.gateway';
 
 /**
@@ -30,6 +30,22 @@ export class LocalVideoStreamGateway implements VideoStreamGateway {
         '.mkv': 'video/x-matroska',
     };
 
+    /**
+     * Verifica que la ruta resuelta esté dentro del directorio público.
+     *
+     * path.join() ya normaliza los ".." (ej: join('/pub', '../../etc') → '/etc'),
+     * así que solo necesitamos comprobar que el resultado empiece con publicDir.
+     * Usamos publicDir + sep (el separador del SO: '/' en Linux, '\' en Windows)
+     * para evitar falsos positivos con directorios de nombre similar
+     * (ej: '/app/public2' no debe confundirse con '/app/public').
+     */
+    private assertPathIsSafe(absolutePath: string): void {
+        if (!absolutePath.startsWith(this.publicDir + sep)) {
+            this.logger.warn(`Path traversal bloqueado: "${absolutePath}"`);
+            throw new ForbiddenException('Acceso denegado');
+        }
+    }
+
     async getVideoStream(videoPath: string, range?: string): Promise<{
         stream: StreamableFile;
         headers: Record<string, string | number>;
@@ -37,6 +53,9 @@ export class LocalVideoStreamGateway implements VideoStreamGateway {
     }> {
         // Construimos la ruta absoluta al archivo
         const absolutePath = join(this.publicDir, videoPath);
+
+        // Verificamos que la ruta no escape del directorio autorizado
+        this.assertPathIsSafe(absolutePath);
 
         if (!existsSync(absolutePath)) {
             this.logger.warn(`Video no encontrado: ${absolutePath}`);
@@ -87,6 +106,9 @@ export class LocalVideoStreamGateway implements VideoStreamGateway {
 
     async videoExists(videoPath: string): Promise<boolean> {
         const absolutePath = join(this.publicDir, videoPath);
+        // Misma protección: no confirmamos ni negamos la existencia de archivos
+        // fuera del directorio autorizado
+        this.assertPathIsSafe(absolutePath);
         return existsSync(absolutePath);
     }
 }
