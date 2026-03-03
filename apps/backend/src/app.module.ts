@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import * as Joi from 'joi';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -20,6 +21,19 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     // 1. Cargamos las variables de entorno (.env)
     ConfigModule.forRoot({
       isGlobal: true,
+      validationSchema: Joi.object({
+        // Base de datos — todas obligatorias
+        DB_HOST:     Joi.string().required(),
+        DB_PORT:     Joi.number().integer().default(5432),
+        DB_USER:     Joi.string().required(),
+        DB_PASSWORD: Joi.string().required(),
+        DB_NAME:     Joi.string().required(),
+        // Autenticación — obligatoria y con longitud mínima para evitar secrets débiles
+        JWT_SECRET:  Joi.string().min(32).required(),
+        // Servidor — opcional, tiene default
+        PORT:        Joi.number().integer().default(3000),
+        FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
+      }),
     }),
 
     // 2. Conectamos TypeORM a PostgreSQL usando el .env
