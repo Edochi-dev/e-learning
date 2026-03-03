@@ -1,4 +1,5 @@
 import { Course, Lesson } from '@maris-nails/shared';
+import { PaginatedResult } from '../../common/types/paginated-result.type';
 
 /**
  * CourseGateway — Contrato abstracto para la capa de datos de Cursos
@@ -15,7 +16,7 @@ import { Course, Lesson } from '@maris-nails/shared';
 export abstract class CourseGateway {
     // --- Operaciones de Cursos ---
     abstract create(course: Course): Promise<Course>;
-    abstract findAll(): Promise<Course[]>;
+    abstract findAll(page: number, limit: number): Promise<PaginatedResult<Course>>;
     abstract findOne(id: string): Promise<Course | null>;
     abstract update(id: string, data: Partial<Course>): Promise<Course>;
     abstract delete(id: string): Promise<void>;

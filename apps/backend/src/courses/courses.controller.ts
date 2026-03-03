@@ -1,11 +1,12 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, UseGuards,
+  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
   UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-  HttpCode,
+  HttpCode, DefaultValuePipe, ParseIntPipe, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { Course, Lesson, UserRole } from '@maris-nails/shared';
+import { PaginatedResult } from '../common/types/paginated-result.type';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
@@ -80,8 +81,12 @@ export class CoursesController {
   }
 
   @Get()
-  async findAll(): Promise<Course[]> {
-    return this.findAllCoursesUseCase.execute();
+  async findAll(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
+  ): Promise<PaginatedResult<Course>> {
+    if (limit > 100) throw new BadRequestException('El límite máximo es 100 por página');
+    return this.findAllCoursesUseCase.execute(page, limit);
   }
 
   @Get(':id')

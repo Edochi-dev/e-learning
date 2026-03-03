@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { CourseGateway } from './gateways/course.gateway';
+import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
 
@@ -32,8 +33,13 @@ export class CoursesRepository implements CourseGateway {
         return this.courseRepository.save(newCourse);
     }
 
-    async findAll(): Promise<Course[]> {
-        return this.courseRepository.find({ relations: ['lessons'] });
+    async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
+        const [data, total] = await this.courseRepository.findAndCount({
+            relations: ['lessons'],
+            skip: (page - 1) * limit,
+            take: limit,
+        });
+        return { data, total, page, limit };
     }
 
     async findOne(id: string): Promise<Course | null> {
