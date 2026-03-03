@@ -1,4 +1,4 @@
-import { IsString, IsBoolean } from 'class-validator';
+import { IsString, IsBoolean, IsUrl } from 'class-validator';
 
 export class CreateLessonDto {
     @IsString()
@@ -10,7 +10,7 @@ export class CreateLessonDto {
     @IsString()
     duration: string;
 
-    @IsString()
+    @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
     videoUrl: string;
 
     @IsBoolean()
