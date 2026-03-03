@@ -8,12 +8,16 @@ export class HttpCourseGateway implements CourseGateway {
         this.baseUrl = baseUrl;
     }
 
+    // TODO: cuando se construya la UI de paginación, actualizar el contrato completo:
+    // CourseGateway.findAll(page, limit) → PaginatedResult<Course>
+    // y pasar total/page/limit al hook y las páginas.
     async findAll(): Promise<Course[]> {
         const response = await fetch(`${this.baseUrl}/courses`);
         if (!response.ok) {
             throw new Error(`Failed to fetch courses: ${response.statusText}`);
         }
-        return response.json();
+        const paginated = await response.json();
+        return paginated.data;
     }
 
     async findOne(id: string): Promise<Course> {
