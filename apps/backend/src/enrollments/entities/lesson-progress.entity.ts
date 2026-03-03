@@ -1,4 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Unique } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn, Unique, Index } from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Lesson } from '../../courses/entities/lessons.entity';
 
 /**
  * LessonProgress — Registra qué lecciones ha completado cada usuario.
@@ -17,17 +19,26 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, Unique } from
  *   Añadir enrollmentId aquí sería información redundante.
  */
 @Entity('lesson_progress')
-@Unique(['userId', 'lessonId'])
+@Unique('UQ_lesson_progress_userId_lessonId', ['userId', 'lessonId'])
 export class LessonProgress {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({ type: 'uuid' })
     userId: string;
 
-    @Column()
+    @Index('IDX_lesson_progress_lessonId')
+    @Column({ type: 'uuid' })
     lessonId: string;
 
     @CreateDateColumn()
     completedAt: Date;
+
+    @ManyToOne(() => User, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_lesson_progress_userId' })
+    user: User;
+
+    @ManyToOne(() => Lesson, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'lessonId', foreignKeyConstraintName: 'FK_lesson_progress_lessonId' })
+    lesson: Lesson;
 }

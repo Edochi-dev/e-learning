@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
 import { Lesson as ILesson } from '@maris-nails/shared';
 import { Course } from './course.entity';
 
@@ -25,6 +25,7 @@ export class Lesson implements ILesson {
     @Column({ default: false })
     isLive: boolean;
 
+    @Index()
     @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
     course: Course;
 }

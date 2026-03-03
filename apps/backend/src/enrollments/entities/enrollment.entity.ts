@@ -6,6 +6,7 @@ import {
     ManyToOne,
     JoinColumn,
     Unique,
+    Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Course } from '../../courses/entities/course.entity';
@@ -29,25 +30,26 @@ import { Course } from '../../courses/entities/course.entity';
  *   TypeORM es listo: usa la MISMA columna "userId" para ambos. No se duplica.
  */
 @Entity('enrollments')
-@Unique(['userId', 'courseId'])
+@Unique('UQ_enrollments_userId_courseId', ['userId', 'courseId'])
 export class Enrollment {
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
-    @Column()
+    @Column({ type: 'uuid' })
     userId: string;
 
-    @Column()
+    @Index('IDX_enrollment_courseId')
+    @Column({ type: 'uuid' })
     courseId: string;
 
     @CreateDateColumn()
     enrolledAt: Date;
 
     @ManyToOne(() => User, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_enrollments_userId' })
     user: User;
 
     @ManyToOne(() => Course, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'courseId' })
+    @JoinColumn({ name: 'courseId', foreignKeyConstraintName: 'FK_enrollments_courseId' })
     course: Course;
 }
