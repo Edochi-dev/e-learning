@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { HttpCourseGateway } from './gateways/HttpCourseGateway';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
+import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -20,6 +21,10 @@ import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
 import { EditCoursePage } from './pages/admin/EditCoursePage';
+import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
+import { CreateCertificateTemplatePage } from './pages/admin/CreateCertificateTemplatePage';
+import { GenerateCertificatesPage } from './pages/admin/GenerateCertificatesPage';
+import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 
@@ -33,6 +38,7 @@ function AppContent() {
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
   const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
   const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
+  const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
 
   return (
     <>
@@ -69,6 +75,7 @@ function AppContent() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
+          <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
 
           {/* Rutas protegidas — requieren estar logueado */}
           <Route element={<ProtectedRoute />}>
@@ -83,6 +90,9 @@ function AppContent() {
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage />} />
+            <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} />} />
           </Route>
         </Routes>
       </main>

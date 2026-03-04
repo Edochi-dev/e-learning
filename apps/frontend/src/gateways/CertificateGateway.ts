@@ -1,0 +1,63 @@
+/**
+ * CertificateGateway (Frontend) — Contrato para las operaciones de certificados
+ *
+ * Define QUÉ operaciones puede hacer el frontend con los certificados.
+ * La implementación concreta (HttpCertificateGateway) sabe CÓMO hacerlas via HTTP.
+ */
+
+export interface CertificateTemplate {
+    id: string;
+    name: string;
+    courseAbbreviation: string;
+    filePath: string;
+    pageWidth: number;
+    pageHeight: number;
+    namePositionX: number;
+    namePositionY: number;
+    nameFontSize: number;
+    nameColor: string;
+    qrPositionX: number;
+    qrPositionY: number;
+    qrSize: number;
+    fontFamily: string;
+    createdAt: string;
+}
+
+export interface Certificate {
+    id: string;
+    certificateNumber: string;
+    recipientName: string;
+    template: CertificateTemplate;
+    filePath: string;
+    issuedAt: string;
+}
+
+export interface GeneratedCertificateSummary {
+    id: string;
+    certificateNumber: string;
+    recipientName: string;
+}
+
+export interface TemplatePositions {
+    namePositionX: number;
+    namePositionY: number;
+    nameFontSize: number;
+    nameColor: string;
+    fontFamily: string;
+    qrPositionX: number;
+    qrPositionY: number;
+    qrSize: number;
+}
+
+export interface CertificateGateway {
+    // Admin
+    uploadTemplate(name: string, courseAbbreviation: string, file: File, token: string): Promise<CertificateTemplate>;
+    updateTemplatePositions(id: string, positions: TemplatePositions, token: string): Promise<CertificateTemplate>;
+    listTemplates(token: string): Promise<CertificateTemplate[]>;
+    generateBatch(templateId: string, names: string[], token: string): Promise<GeneratedCertificateSummary[]>;
+    listCertificates(token: string): Promise<Certificate[]>;
+    downloadBatch(ids: string[], token: string): Promise<Blob>;
+
+    // Público
+    getCertificate(id: string): Promise<Certificate>;
+}

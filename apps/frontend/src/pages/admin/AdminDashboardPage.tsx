@@ -145,6 +145,15 @@ export const AdminDashboardPage: React.FC = () => {
                         </div>
                     )}
                 </div>
+                {/* Certificados */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">🎓</div>
+                    <h3>Certificados</h3>
+                    <p>Sube plantillas y genera certificados con QR para tus alumnos presenciales.</p>
+                    <Link to="/admin/certificados" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                        Gestionar Certificados
+                    </Link>
+                </div>
             </div>
         </div>
     );

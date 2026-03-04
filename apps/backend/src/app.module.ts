@@ -13,6 +13,7 @@ import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { CertificatesModule } from './certificates/certificates.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
 
@@ -66,6 +67,7 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     UsersModule,
     VideosModule,
     EnrollmentsModule,
+    CertificatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
@@ -80,6 +82,6 @@ export class AppModule implements NestModule {
       .apply(BlockVideoStaticMiddleware)
       .forRoutes('/static/videos/*path')
       .apply(CrossOriginResourcePolicyMiddleware)
-      .forRoutes('/static/images/*path', '/static/thumbnails/*path', '/videos/stream');
+      .forRoutes('/static/images/*path', '/static/thumbnails/*path', '/videos/stream', '/static/certificates/*path');
   }
 }

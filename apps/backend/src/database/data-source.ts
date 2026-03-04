@@ -6,6 +6,8 @@ import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../courses/entities/lessons.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
 import { LessonProgress } from '../enrollments/entities/lesson-progress.entity';
+import { CertificateTemplate } from '../certificates/entities/certificate-template.entity';
+import { Certificate } from '../certificates/entities/certificate.entity';
 
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema';
 import { Migration1771952849166 } from './migrations/1771952849166-Migration';
@@ -17,6 +19,8 @@ import { AddEnrollmentsAndProgress1772200000000 } from './migrations/17722000000
 import { Migration1772577517212 } from './migrations/1772577517212-Migration';
 import { AddFkIndexes1772577517213 } from './migrations/1772577517213-AddFkIndexes';
 import { Migration1772578665651 } from './migrations/1772578665651-Migration';
+import { Migration1772652147495 } from './migrations/1772652147495-Migration';
+import { Migration1772656342794 } from './migrations/1772656342794-Migration';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -27,7 +31,7 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USER || 'postgres',
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'mn_db',
-    entities: [User, Course, Lesson, Enrollment, LessonProgress],
+    entities: [User, Course, Lesson, Enrollment, LessonProgress, CertificateTemplate, Certificate],
     migrations: [
         InitialSchema1740000000000,
         Migration1771952849166,
@@ -39,5 +43,7 @@ export const AppDataSource = new DataSource({
         Migration1772577517212,
         AddFkIndexes1772577517213,
         Migration1772578665651,
+        Migration1772652147495,
+        Migration1772656342794,
     ],
 });
