@@ -23,7 +23,7 @@ import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 
-const API_URL = 'http://localhost:3000';
+const API_URL = import.meta.env.VITE_API_URL;
 
 function AppContent() {
   const { user } = useAuth();
@@ -97,7 +97,7 @@ function AppContent() {
 }
 
 function App() {
-  const authGateway = useMemo(() => new HttpAuthGateway('http://localhost:3000'), []);
+  const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
 
   return (
     <BrowserRouter>
