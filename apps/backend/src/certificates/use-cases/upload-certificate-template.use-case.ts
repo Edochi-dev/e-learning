@@ -50,6 +50,7 @@ export class UploadCertificateTemplateUseCase {
             filePath,
             pageWidth,
             pageHeight,
+            paperFormat: dto.paperFormat,
         });
     }
 }

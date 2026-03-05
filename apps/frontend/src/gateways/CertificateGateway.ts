@@ -20,6 +20,7 @@ export interface CertificateTemplate {
     qrPositionY: number;
     qrSize: number;
     fontFamily: string;
+    paperFormat: string;
     createdAt: string;
 }
 
@@ -51,7 +52,7 @@ export interface TemplatePositions {
 
 export interface CertificateGateway {
     // Admin
-    uploadTemplate(name: string, courseAbbreviation: string, file: File, token: string): Promise<CertificateTemplate>;
+    uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File, token: string): Promise<CertificateTemplate>;
     updateTemplatePositions(id: string, positions: TemplatePositions, token: string): Promise<CertificateTemplate>;
     listTemplates(token: string): Promise<CertificateTemplate[]>;
     generateBatch(templateId: string, names: string[], token: string): Promise<GeneratedCertificateSummary[]>;

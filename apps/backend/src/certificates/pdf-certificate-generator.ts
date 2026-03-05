@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as fs from 'fs';
+import * as path from 'path';
 import { CertificateGeneratorGateway, GenerateCertificateParams } from './gateways/certificate-generator.gateway';
+
+// fontkit permite incrustar fuentes TTF/OTF custom en los PDFs generados por pdf-lib.
+// Usamos require() porque @pdf-lib/fontkit es un módulo CJS y su export por defecto
+// es el objeto fontkit directamente.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const fontkitModule = require('@pdf-lib/fontkit');
+const fontkit = fontkitModule.default ?? fontkitModule;
 
 /**
  * PdfCertificateGenerator — Implementación concreta de CertificateGeneratorGateway
@@ -10,12 +18,21 @@ import { CertificateGeneratorGateway, GenerateCertificateParams } from './gatewa
  * - El nombre del destinatario como texto en la posición indicada
  * - El QR como imagen PNG en la posición indicada
  *
+ * Soporte de fuentes:
+ * - Si fontFamily coincide con una clave de StandardFonts de pdf-lib → se usa directamente.
+ * - De lo contrario, se busca el archivo `<fontFamily>.ttf` en la carpeta `fonts/`
+ *   junto a este archivo compilado (copiada allí por nest-cli.json assets).
+ * - Si el archivo no existe, cae a Helvetica como último recurso.
+ *
  * El sistema de coordenadas de pdf-lib tiene el origen (0,0) en la esquina
  * inferior-izquierda del PDF. Por eso convertimos las coordenadas del frontend
  * (que vienen desde la esquina superior-izquierda) a coordenadas PDF.
  */
 @Injectable()
 export class PdfCertificateGenerator implements CertificateGeneratorGateway {
+    // Ruta a la carpeta de fuentes TTF (se copia de src/ a dist/ via nest-cli.json assets)
+    private readonly fontsDir = path.join(__dirname, 'fonts');
+
     async generate(params: GenerateCertificateParams): Promise<Buffer> {
         const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, qrPosition, qrSize } = params;
 
@@ -28,16 +45,14 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Incrustamos el QR como imagen PNG
         const qrImage = await pdfDoc.embedPng(qrBuffer);
 
-        // Incrustamos la fuente seleccionada.
-        // StandardFonts es un enum de pdf-lib. Si el valor no existe, caemos a Helvetica.
-        const fontKey = (fontFamily ?? 'Helvetica') as keyof typeof StandardFonts;
-        const font = await pdfDoc.embedFont(StandardFonts[fontKey] ?? StandardFonts.Helvetica);
+        // Incrustamos la fuente: primero intentamos fuente custom TTF, luego StandardFonts
+        const font = await this.embedFont(pdfDoc, fontFamily ?? 'Helvetica');
 
         // Convertimos color hex a RGB normalizado (0-1)
         const color = this.hexToRgb(nameColor);
 
         // Dibujamos el nombre. pdf-lib usa coordenadas desde la esquina inferior-izquierda,
-        // así que invertimos el eje Y: pdfY = pageHeight - frontendY
+        // así que invertimos el eje Y: pdfY = pageHeight - frontendY - fontSize
         page.drawText(recipientName, {
             x: namePosition.x,
             y: pageHeight - namePosition.y - fontSize,
@@ -57,6 +72,34 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
 
         const pdfBytes = await pdfDoc.save();
         return Buffer.from(pdfBytes);
+    }
+
+    /**
+     * Intenta incrustar una fuente en el PDFDocument.
+     *
+     * Orden de prioridad:
+     * 1. Si fontFamily es una clave válida de StandardFonts → la usa directamente.
+     * 2. Si existe el archivo `<fontFamily>.ttf` en la carpeta fonts/ → la incrusta con fontkit.
+     * 3. Fallback: Helvetica (StandardFonts).
+     */
+    private async embedFont(pdfDoc: PDFDocument, fontFamily: string) {
+        // 1. ¿Es una fuente estándar de pdf-lib?
+        if (fontFamily in StandardFonts) {
+            const fontKey = fontFamily as keyof typeof StandardFonts;
+            return pdfDoc.embedFont(StandardFonts[fontKey]);
+        }
+
+        // 2. ¿Existe el archivo TTF custom?
+        const ttfPath = path.join(this.fontsDir, `${fontFamily}.ttf`);
+        if (fs.existsSync(ttfPath)) {
+            // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom
+            pdfDoc.registerFontkit(fontkit);
+            const fontBytes = fs.readFileSync(ttfPath);
+            return pdfDoc.embedFont(fontBytes);
+        }
+
+        // 3. Fallback
+        return pdfDoc.embedFont(StandardFonts.Helvetica);
     }
 
     private hexToRgb(hex: string): { r: number; g: number; b: number } {

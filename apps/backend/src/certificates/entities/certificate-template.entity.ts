@@ -42,9 +42,13 @@ export class CertificateTemplate {
     @Column('float', { default: 80 })
     qrSize: number;
 
-    // Clave del enum StandardFonts de pdf-lib (ej: 'Helvetica', 'TimesBoldItalic')
+    // Clave del enum StandardFonts de pdf-lib (ej: 'Helvetica') o nombre del archivo TTF custom
     @Column({ default: 'Helvetica' })
     fontFamily: string;
+
+    // Formato del papel: 'A4' o 'A3'
+    @Column({ default: 'A4' })
+    paperFormat: string;
 
     @CreateDateColumn()
     createdAt: Date;

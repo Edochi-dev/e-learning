@@ -7,10 +7,11 @@ export class HttpCertificateGateway implements CertificateGateway {
         this.baseUrl = baseUrl;
     }
 
-    async uploadTemplate(name: string, courseAbbreviation: string, file: File, token: string): Promise<CertificateTemplate> {
+    async uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File, token: string): Promise<CertificateTemplate> {
         const body = new FormData();
         body.append('name', name);
         body.append('courseAbbreviation', courseAbbreviation);
+        body.append('paperFormat', paperFormat);
         body.append('file', file);
 
         const res = await fetch(`${this.baseUrl}/admin/certificate-templates`, {

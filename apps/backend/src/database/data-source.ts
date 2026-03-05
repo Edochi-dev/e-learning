@@ -21,6 +21,7 @@ import { AddFkIndexes1772577517213 } from './migrations/1772577517213-AddFkIndex
 import { Migration1772578665651 } from './migrations/1772578665651-Migration';
 import { Migration1772652147495 } from './migrations/1772652147495-Migration';
 import { Migration1772656342794 } from './migrations/1772656342794-Migration';
+import { Migration1772660199311 } from './migrations/1772660199311-Migration';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -45,5 +46,6 @@ export const AppDataSource = new DataSource({
         Migration1772578665651,
         Migration1772652147495,
         Migration1772656342794,
+        Migration1772660199311,
     ],
 });

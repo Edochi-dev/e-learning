@@ -69,8 +69,11 @@ export class GenerateCertificateBatchUseCase {
             const certId = randomUUID();
             const verificationUrl = `${frontendUrl}/certificados/${certId}`;
 
-            // 3. Generar QR apuntando a la URL de verificación
-            const qrBuffer = await this.qrGateway.generate(verificationUrl);
+            // 3. Generar QR apuntando a la URL de verificación.
+            // El tamaño en pixels se calcula para 300 DPI:
+            // qrSize está en puntos PDF (1pt = 1/72 pulgada). A 300 DPI: pixels = (pts/72)*300
+            const pixelSize = Math.ceil((template.qrSize / 72) * 300);
+            const qrBuffer = await this.qrGateway.generate(verificationUrl, pixelSize);
 
             // 4. Generar el PDF con nombre y QR superpuestos
             const pdfBuffer = await this.generatorGateway.generate({

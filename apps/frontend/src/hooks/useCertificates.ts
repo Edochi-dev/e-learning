@@ -40,8 +40,8 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
         }
     }, [gateway, token]);
 
-    const uploadTemplate = async (name: string, abbreviation: string, file: File): Promise<CertificateTemplate> => {
-        const template = await gateway.uploadTemplate(name, abbreviation, file, token);
+    const uploadTemplate = async (name: string, abbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> => {
+        const template = await gateway.uploadTemplate(name, abbreviation, paperFormat, file, token);
         setTemplates(prev => [template, ...prev]);
         return template;
     };
