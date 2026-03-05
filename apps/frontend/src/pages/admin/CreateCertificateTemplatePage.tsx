@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Draggable from 'react-draggable';
 import { QRCodeSVG } from 'qrcode.react';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -232,6 +232,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // ─────────────────────────────────────────────────────────────────────────
     return (
         <div className="admin-page">
+            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
             <div className="admin-header">
                 <h1>Nueva Plantilla de Certificado</h1>
                 <p>Sube el PDF en blanco y posiciona el nombre y el QR arrastrándolos.</p>

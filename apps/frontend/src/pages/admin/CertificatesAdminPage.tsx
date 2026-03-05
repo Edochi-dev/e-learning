@@ -22,6 +22,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
+            <Link to="/admin" className="back-link">← Volver al Panel</Link>
             <div className="admin-header">
                 <h1>Gestión de Certificados</h1>
                 <p>Administra plantillas y genera certificados para tus alumnos.</p>

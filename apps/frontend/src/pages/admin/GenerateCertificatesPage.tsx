@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary } from '../../gateways/CertificateGateway';
 
@@ -70,6 +71,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
+            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
             <div className="admin-header">
                 <h1>Generar Certificados</h1>
                 <p>Selecciona una plantilla, ingresa los nombres y genera los PDFs.</p>
