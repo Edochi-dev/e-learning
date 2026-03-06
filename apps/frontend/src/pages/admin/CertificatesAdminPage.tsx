@@ -226,7 +226,10 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     >
                                         <strong>Mantener certificados</strong>
                                         <br />
-                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Los certificados ya emitidos siguen siendo válidos, solo se elimina la plantilla.</span>
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                            Los certificados conservan su PDF y número de folio. Quedarán
+                                            desvinculados de la plantilla pero seguirán siendo válidos y descargables.
+                                        </span>
                                     </button>
                                     <button
                                         onClick={closeModal}
