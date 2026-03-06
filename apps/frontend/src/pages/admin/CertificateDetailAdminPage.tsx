@@ -1,0 +1,171 @@
+import React from 'react';
+import { Link, useParams } from 'react-router-dom';
+import type { CertificateGateway } from '../../gateways/CertificateGateway';
+import { useCertificate } from '../../hooks/useCertificate';
+
+interface Props {
+    gateway: CertificateGateway;
+}
+
+const API_URL = import.meta.env.VITE_API_URL;
+
+export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
+    const { id } = useParams<{ id: string }>();
+    const { certificate, loading, error } = useCertificate(gateway, id!);
+
+    if (loading) {
+        return (
+            <div className="admin-page">
+                <p style={{ color: 'var(--text-muted)' }}>Cargando certificado...</p>
+            </div>
+        );
+    }
+
+    if (error || !certificate) {
+        return (
+            <div className="admin-page">
+                <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
+                <div style={{
+                    background: 'var(--bg-card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '12px',
+                    padding: '2.5rem',
+                    maxWidth: '480px',
+                    textAlign: 'center',
+                    marginTop: '2rem',
+                }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
+                    <h2 style={{ marginBottom: '0.5rem' }}>Certificado no encontrado</h2>
+                    <p style={{ color: 'var(--text-muted)' }}>
+                        El certificado solicitado no existe o fue eliminado del sistema.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    const pdfUrl = `${API_URL}${certificate.filePath}`;
+
+    const handleDownload = async () => {
+        const res = await fetch(pdfUrl);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString('es-MX', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+    });
+
+    return (
+        <div className="admin-page" style={{ maxWidth: '860px' }}>
+            <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
+
+            {/* Encabezado con gradiente de la academia */}
+            <div style={{
+                background: 'linear-gradient(135deg, var(--primary), var(--gold))',
+                borderRadius: '16px',
+                padding: '2rem',
+                color: 'white',
+                marginBottom: '2rem',
+                textAlign: 'center',
+            }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎓</div>
+                <h1 style={{ margin: 0, fontSize: '1.6rem', fontFamily: 'var(--font-heading)' }}>
+                    Certificado Oficial
+                </h1>
+                <p style={{ margin: '0.25rem 0 0', opacity: 0.9, fontSize: '1rem' }}>
+                    Mari's Nails Academy
+                </p>
+            </div>
+
+            {/* Datos del certificado */}
+            <div style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                padding: '1.75rem',
+                marginBottom: '1.5rem',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '1.25rem',
+            }}>
+                <div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Titular</p>
+                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.recipientName}</p>
+                </div>
+                <div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Número de Certificado</p>
+                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>{certificate.certificateNumber}</p>
+                </div>
+                <div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de Emisión</p>
+                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
+                </div>
+                {certificate.template && (
+                    <div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.template.name}</p>
+                    </div>
+                )}
+            </div>
+
+            {/* Sello de autenticidad */}
+            <div style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderLeft: '4px solid var(--gold)',
+                borderRadius: '8px',
+                padding: '1.25rem 1.5rem',
+                marginBottom: '1.5rem',
+                display: 'flex',
+                gap: '1rem',
+                alignItems: 'flex-start',
+            }}>
+                <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>✅</span>
+                <div style={{ fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text)' }}>
+                    <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--text)' }}>
+                        Documento Original — Emitido por Mari's Nails Academy
+                    </strong>
+                    Este certificado acredita la participación y aprobación del curso correspondiente.
+                    Su autenticidad puede verificarse públicamente mediante el código QR incluido en el
+                    documento o a través del portal de verificación de la academia.
+                </div>
+            </div>
+
+            {/* Botón de descarga */}
+            <div style={{ marginBottom: '1.5rem' }}>
+                <button
+                    className="btn-primary"
+                    onClick={handleDownload}
+                    style={{ padding: '0.75rem 2rem', fontSize: '1rem' }}
+                >
+                    Descargar PDF
+                </button>
+            </div>
+
+            {/* Vista previa del PDF */}
+            <div style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+            }}>
+                <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                    Vista previa del certificado
+                </p>
+                <iframe
+                    src={pdfUrl}
+                    title={`Certificado ${certificate.certificateNumber}`}
+                    style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                />
+            </div>
+        </div>
+    );
+};
