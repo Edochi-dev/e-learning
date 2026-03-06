@@ -81,13 +81,13 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
         <div className="admin-page" style={{ maxWidth: '860px' }}>
             <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
 
-            {/* Encabezado con gradiente de la academia */}
+            {/* 1. Encabezado con gradiente de la academia */}
             <div style={{
                 background: 'linear-gradient(135deg, var(--primary), var(--gold))',
                 borderRadius: '16px',
                 padding: '2rem',
                 color: 'white',
-                marginBottom: '2rem',
+                marginBottom: '1.5rem',
                 textAlign: 'center',
             }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎓</div>
@@ -99,38 +99,74 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
                 </p>
             </div>
 
-            {/* Datos del certificado */}
+            {/* 2. Vista previa del PDF — justo debajo del badge */}
+            <div style={{
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border)',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                marginBottom: '1.5rem',
+            }}>
+                {blobUrl ? (
+                    <iframe
+                        src={`${blobUrl}#zoom=page-width&navpanes=0&toolbar=1`}
+                        title={`Certificado ${certificate.certificateNumber}`}
+                        style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                    />
+                ) : (
+                    <p style={{ padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
+                        Cargando vista previa...
+                    </p>
+                )}
+            </div>
+
+            {/* 3. Datos del certificado + botón de descarga */}
             <div style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
                 padding: '1.75rem',
                 marginBottom: '1.5rem',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.25rem',
             }}>
-                <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Titular</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.recipientName}</p>
-                </div>
-                <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Número de Certificado</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>{certificate.certificateNumber}</p>
-                </div>
-                <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de Emisión</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
-                </div>
-                {certificate.template && (
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                    gap: '1.25rem',
+                    marginBottom: '1.5rem',
+                }}>
                     <div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
-                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.template.name}</p>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Titular</p>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.recipientName}</p>
                     </div>
-                )}
+                    <div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Número de Certificado</p>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>{certificate.certificateNumber}</p>
+                    </div>
+                    <div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de Emisión</p>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
+                    </div>
+                    {certificate.template && (
+                        <div>
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
+                            <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.template.name}</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Botón de descarga — esquina inferior derecha del bloque de info */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button
+                        className="btn-primary"
+                        onClick={handleDownload}
+                        style={{ padding: '0.65rem 1.75rem', fontSize: '0.95rem' }}
+                    >
+                        Descargar PDF
+                    </button>
+                </div>
             </div>
 
-            {/* Sello de autenticidad */}
+            {/* 4. Sello de autenticidad */}
             <div style={{
                 background: 'var(--bg-card)',
                 border: '1px solid var(--border)',
@@ -151,40 +187,6 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
                     Su autenticidad puede verificarse públicamente mediante el código QR incluido en el
                     documento o a través del portal de verificación de la academia.
                 </div>
-            </div>
-
-            {/* Botón de descarga */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <button
-                    className="btn-primary"
-                    onClick={handleDownload}
-                    style={{ padding: '0.75rem 2rem', fontSize: '1rem' }}
-                >
-                    Descargar PDF
-                </button>
-            </div>
-
-            {/* Vista previa del PDF */}
-            <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                overflow: 'hidden',
-            }}>
-                <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                    Vista previa del certificado
-                </p>
-                {blobUrl ? (
-                    <iframe
-                        src={blobUrl}
-                        title={`Certificado ${certificate.certificateNumber}`}
-                        style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                    />
-                ) : (
-                    <p style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        Cargando vista previa...
-                    </p>
-                )}
             </div>
         </div>
     );
