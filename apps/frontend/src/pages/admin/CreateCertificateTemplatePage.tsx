@@ -24,15 +24,24 @@ const ptsToMm  = (pts: number) => Math.round(pts * 25.4 / 72);
 const ptsToPx  = (pts: number) => Math.round(pts * 300 / 72);
 
 // Dimensiones esperadas en puntos PDF con tolerancia de ±10 pts.
-// Un "punto PDF" = 1/72 pulgada. A4 = 595×842, A3 = 842×1191.
+// Un "punto PDF" = 1/72 pulgada.
+// Vertical (portrait): lado corto × lado largo. Horizontal (landscape): invertido.
 const PAPER_FORMATS = [
-    { value: 'A4', wPts: 595, hPts: 842 },
-    { value: 'A3', wPts: 842, hPts: 1191 },
+    { value: 'A4 Vertical',    label: 'Vertical',   wPts: 595,  hPts: 842  },
+    { value: 'A4 Horizontal',  label: 'Horizontal', wPts: 842,  hPts: 595  },
+    { value: 'A3 Vertical',    label: 'Vertical',   wPts: 842,  hPts: 1191 },
+    { value: 'A3 Horizontal',  label: 'Horizontal', wPts: 1191, hPts: 842  },
 ];
 const FORMAT_TOLERANCE_PTS = 10;
 
+// Agrupa los formatos por tamaño de papel para el <optgroup> del selector
+const FORMAT_GROUPS = [
+    { group: 'A4', formats: PAPER_FORMATS.filter(f => f.value.startsWith('A4')) },
+    { group: 'A3', formats: PAPER_FORMATS.filter(f => f.value.startsWith('A3')) },
+];
+
 const formatLabel = (fmt: typeof PAPER_FORMATS[number]) =>
-    `${fmt.value}  ${ptsToMm(fmt.wPts)}×${ptsToMm(fmt.hPts)} mm  (${ptsToPx(fmt.wPts)}×${ptsToPx(fmt.hPts)} px)`;
+    `${fmt.label} — ${ptsToMm(fmt.wPts)}×${ptsToMm(fmt.hPts)} mm (${ptsToPx(fmt.wPts)}×${ptsToPx(fmt.hPts)} px @ 300 DPI)`;
 
 type FontOption = {
     value: string; label: string; css: string;
@@ -91,7 +100,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // ── Paso 1 ────────────────────────────────────────────────────────────────
     const [formName, setFormName]               = useState('');
     const [formAbbr, setFormAbbr]               = useState('');
-    const [formPaperFormat, setFormPaperFormat] = useState('A4');
+    const [formPaperFormat, setFormPaperFormat] = useState('A4 Vertical');
     const [file, setFile]                       = useState<File | null>(null);
     const [template, setTemplate]               = useState<CertificateTemplate | null>(null);
 
@@ -189,13 +198,12 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         const page = await pdf.getPage(1);
         const { width, height } = page.getViewport({ scale: 1 });
 
-        // Aceptamos orientación portrait Y landscape
-        const matchPortrait  = Math.abs(width - format.wPts) <= FORMAT_TOLERANCE_PTS
-                            && Math.abs(height - format.hPts) <= FORMAT_TOLERANCE_PTS;
-        const matchLandscape = Math.abs(width - format.hPts) <= FORMAT_TOLERANCE_PTS
-                            && Math.abs(height - format.wPts) <= FORMAT_TOLERANCE_PTS;
+        // Cada opción ya declara su orientación explícitamente,
+        // por lo que validamos coincidencia exacta (con tolerancia).
+        const matchExact = Math.abs(width  - format.wPts) <= FORMAT_TOLERANCE_PTS
+                        && Math.abs(height - format.hPts) <= FORMAT_TOLERANCE_PTS;
 
-        if (!matchPortrait && !matchLandscape) {
+        if (!matchExact) {
             const actualMmW = ptsToMm(width);
             const actualMmH = ptsToMm(height);
             const actualPxW = ptsToPx(width);
@@ -297,7 +305,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
             {!template ? (
                 /* ── PASO 1 ──────────────────────────────────────────────── */
-                <div className="admin-card" style={{ maxWidth: '520px' }}>
+                <div className="admin-card" style={{ maxWidth: '680px' }}>
                     <div style={{ marginBottom: '1.25rem' }}>
                         <label className="form-label">Nombre de la plantilla</label>
                         <input type="text" className="form-input" placeholder="Ej: Manicure Rusa"
@@ -316,7 +324,13 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     <div style={{ marginBottom: '1.25rem' }}>
                         <label className="form-label">Formato de papel</label>
                         <select className="form-input" value={formPaperFormat} onChange={e => setFormPaperFormat(e.target.value)}>
-                            {PAPER_FORMATS.map(f => <option key={f.value} value={f.value}>{formatLabel(f)}</option>)}
+                            {FORMAT_GROUPS.map(({ group, formats }) => (
+                                <optgroup key={group} label={group}>
+                                    {formats.map(f => (
+                                        <option key={f.value} value={f.value}>{formatLabel(f)}</option>
+                                    ))}
+                                </optgroup>
+                            ))}
                         </select>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                             El PDF que subas debe coincidir con este formato para impresión correcta.
