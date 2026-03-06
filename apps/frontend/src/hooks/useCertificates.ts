@@ -40,6 +40,21 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
         }
     }, [gateway, token]);
 
+    const searchCertificates = useCallback(async (query: string) => {
+        try {
+            setLoading(true);
+            const data = query.trim()
+                ? await gateway.searchCertificates(query.trim(), token)
+                : await gateway.listCertificates(token);
+            setCertificates(data);
+            setError(null);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Error al buscar certificados');
+        } finally {
+            setLoading(false);
+        }
+    }, [gateway, token]);
+
     const uploadTemplate = async (name: string, abbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> => {
         const template = await gateway.uploadTemplate(name, abbreviation, paperFormat, file, token);
         setTemplates(prev => [template, ...prev]);
@@ -79,6 +94,7 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
         error,
         loadTemplates,
         loadCertificates,
+        searchCertificates,
         uploadTemplate,
         updatePositions,
         generateBatch,

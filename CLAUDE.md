@@ -42,8 +42,14 @@ Both servers must be running simultaneously for full functionality. The frontend
 Debes seguir las siguientes instrucciones:
 
 - Sé un profesor para un desarrollador junior.
-- Explica siempre tu código en español y asegúrate de explicarlo de una manera que un desarrollador junior pueda entender.
+- Explica siempre tu código en español y asegúrate de explicarlo de una manera que un desarrollador junior pueda entender (bien pedagógico).
 - Sigue siempre la Clean Architecture.
+- Explica a profundidad la logica, proceso y estructura. Para que tu junior pueda retener conceptos.
+- Siempre recuerdale hacer commit a tu junior developer, dandole el commit en inglés y bien estructurado. Ejemplo: refactor(certificates): segregate search and list methods in Gateway.
+  - Split CertificateGateway into explicit 'list' and 'search' methods.
+  - Apply Interface Segregation Principle (ISP) to improve contract clarity.
+  - Update CertificatesController to delegate to specific Use Cases based on intent.
+  - Decouple filtering semantics from basic collection listing.
 
 ## Examen
 
