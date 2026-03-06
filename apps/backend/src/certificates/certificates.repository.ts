@@ -21,6 +21,15 @@ export class CertificatesRepository implements CertificateGateway {
         return this.repo.find({ order: { issuedAt: 'DESC' } });
     }
 
+    async search(query: string): Promise<Certificate[]> {
+        const term = `%${query}%`;
+        return this.repo
+            .createQueryBuilder('cert')
+            .where('cert.recipientName ILIKE :term OR cert.certificateNumber ILIKE :term', { term })
+            .orderBy('cert.issuedAt', 'DESC')
+            .getMany();
+    }
+
     async findOne(id: string): Promise<Certificate | null> {
         return this.repo.findOne({ where: { id } });
     }

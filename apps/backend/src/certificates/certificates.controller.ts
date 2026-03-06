@@ -96,7 +96,10 @@ export class CertificatesController {
     @Get('admin/certificates')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    listCertificates() {
+    listCertificates(@Query('search') search?: string) {
+        if (search?.trim()) {
+            return this.certificateGateway.search(search.trim());
+        }
         return this.certificateGateway.findAll();
     }
 
