@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import type { CertificateGateway, Certificate, CertificateTemplate } from '../../gateways/CertificateGateway';
+import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 
 interface Props {
     gateway: CertificateGateway;
@@ -16,25 +16,17 @@ interface DeleteState {
 
 export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const { token } = useAuth();
-    const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
-    const [deletingCertId, setDeletingCertId] = useState<string | null>(null);
 
     const loadData = useCallback(() => {
         if (!token) return;
         setLoading(true);
-        Promise.all([
-            gateway.listCertificates(token),
-            gateway.listTemplates(token),
-        ])
-            .then(([certs, tmpls]) => {
-                setCertificates(certs);
-                setTemplates(tmpls);
-            })
+        gateway.listTemplates(token)
+            .then(setTemplates)
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [gateway, token]);
@@ -69,28 +61,11 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
         try {
             await gateway.deleteTemplate(deleteState.template.id, token, certAction);
             setTemplates(prev => prev.filter(t => t.id !== deleteState.template.id));
-            if (certAction === 'delete') {
-                setCertificates(prev => prev.filter(c => c.template?.id !== deleteState.template.id));
-            }
             setDeleteState(null);
         } catch (err) {
             setDeleteError(err instanceof Error ? err.message : 'Error al eliminar');
         } finally {
             setDeleting(false);
-        }
-    };
-
-    const handleDeleteCertificate = async (id: string, name: string) => {
-        if (!token) return;
-        if (!confirm(`¿Eliminar el certificado de "${name}"? Esta acción no se puede deshacer.`)) return;
-        setDeletingCertId(id);
-        try {
-            await gateway.deleteCertificate(id, token);
-            setCertificates(prev => prev.filter(c => c.id !== id));
-        } catch (err) {
-            alert(err instanceof Error ? err.message : 'Error al eliminar certificado');
-        } finally {
-            setDeletingCertId(null);
         }
     };
 
@@ -128,6 +103,15 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                         Generar
                     </Link>
                 </div>
+
+                <div className="admin-card">
+                    <div className="admin-card-icon">🔍</div>
+                    <h3>Buscar Certificado</h3>
+                    <p>Busca certificados emitidos por nombre o número y visualiza o descarga el documento.</p>
+                    <Link to="/admin/certificados/buscar" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                        Buscar
+                    </Link>
+                </div>
             </div>
 
             <div style={{ marginTop: '2rem' }}>
@@ -163,43 +147,6 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     }}
                                 >
                                     Eliminar
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div style={{ marginTop: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>Certificados generados</h2>
-                {loading ? (
-                    <p style={{ color: 'var(--text-muted)' }}>Cargando...</p>
-                ) : certificates.length === 0 ? (
-                    <div className="admin-empty">Aún no hay certificados generados.</div>
-                ) : (
-                    <div className="admin-course-links">
-                        {certificates.map(cert => (
-                            <div key={cert.id} className="admin-course-row">
-                                <span className="admin-course-link-title">{cert.recipientName}</span>
-                                <span className="admin-course-link-meta">{cert.certificateNumber}</span>
-                                <span className="admin-course-link-meta">
-                                    {new Date(cert.issuedAt).toLocaleDateString('es-MX')}
-                                </span>
-                                <button
-                                    onClick={() => handleDeleteCertificate(cert.id, cert.recipientName)}
-                                    disabled={deletingCertId === cert.id}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: 'none',
-                                        border: '1px solid var(--error, #e53e3e)',
-                                        color: 'var(--error, #e53e3e)',
-                                        borderRadius: '6px',
-                                        padding: '0.25rem 0.75rem',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                    }}
-                                >
-                                    {deletingCertId === cert.id ? 'Eliminando...' : 'Eliminar'}
                                 </button>
                             </div>
                         ))}

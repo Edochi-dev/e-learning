@@ -59,6 +59,16 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
+    async searchCertificates(query: string, token: string): Promise<Certificate[]> {
+        const url = new URL(`${this.baseUrl}/admin/certificates`);
+        url.searchParams.set('search', query);
+        const res = await fetch(url.toString(), {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error(`Error al buscar certificados: ${res.statusText}`);
+        return res.json();
+    }
+
     async downloadBatch(ids: string[], token: string): Promise<Blob> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/download`, {
             method: 'POST',

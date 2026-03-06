@@ -58,6 +58,7 @@ export interface CertificateGateway {
     listTemplates(token: string): Promise<CertificateTemplate[]>;
     generateBatch(templateId: string, names: string[], token: string): Promise<GeneratedCertificateSummary[]>;
     listCertificates(token: string): Promise<Certificate[]>;
+    searchCertificates(query: string, token: string): Promise<Certificate[]>;
     downloadBatch(ids: string[], token: string): Promise<Blob>;
 
     deleteTemplate(id: string, token: string, certAction?: 'delete' | 'keep'): Promise<void>;
