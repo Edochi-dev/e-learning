@@ -22,6 +22,7 @@ export interface CertificateTemplate {
     fontFamily: string;
     paperFormat: string;
     createdAt: string;
+    certificateCount?: number;
 }
 
 export interface Certificate {
@@ -59,7 +60,8 @@ export interface CertificateGateway {
     listCertificates(token: string): Promise<Certificate[]>;
     downloadBatch(ids: string[], token: string): Promise<Blob>;
 
-    deleteTemplate(id: string, token: string): Promise<void>;
+    deleteTemplate(id: string, token: string, certAction?: 'delete' | 'keep'): Promise<void>;
+    deleteCertificate(id: string, token: string): Promise<void>;
 
     // Público
     getCertificate(id: string): Promise<Certificate>;

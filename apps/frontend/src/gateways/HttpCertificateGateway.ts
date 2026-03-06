@@ -69,14 +69,27 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.blob();
     }
 
-    async deleteTemplate(id: string, token: string): Promise<void> {
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+    async deleteTemplate(id: string, token: string, certAction?: 'delete' | 'keep'): Promise<void> {
+        const url = new URL(`${this.baseUrl}/admin/certificate-templates/${id}`);
+        if (certAction) url.searchParams.set('certAction', certAction);
+        const res = await fetch(url.toString(), {
             method: 'DELETE',
             headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) {
             const body = await res.json().catch(() => ({}));
             throw new Error(body.message ?? `Error al eliminar plantilla: ${res.statusText}`);
+        }
+    }
+
+    async deleteCertificate(id: string, token: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/admin/certificates/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message ?? `Error al eliminar certificado: ${res.statusText}`);
         }
     }
 

@@ -1,5 +1,5 @@
 import {
-    Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards,
+    Controller, Get, Post, Patch, Delete, Body, Param, Query, Res, UseGuards,
     UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
     HttpCode, StreamableFile,
 } from '@nestjs/common';
@@ -20,6 +20,8 @@ import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificat
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
+import type { CertAction } from './use-cases/delete-certificate-template.use-case';
+import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
 import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
@@ -33,6 +35,7 @@ export class CertificatesController {
         private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
         private readonly certificateGateway: CertificateGateway,
         private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
+        private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
     ) {}
 
     // ==========================================
@@ -76,8 +79,11 @@ export class CertificatesController {
     @HttpCode(204)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    deleteTemplate(@Param('id') id: string) {
-        return this.deleteTemplateUseCase.execute(id);
+    deleteTemplate(
+        @Param('id') id: string,
+        @Query('certAction') certAction: CertAction = 'keep',
+    ) {
+        return this.deleteTemplateUseCase.execute(id, certAction);
     }
 
     @Post('admin/certificates/batch')
@@ -107,6 +113,14 @@ export class CertificatesController {
             'Content-Disposition': `attachment; filename="${encodeURIComponent(result.filename)}"`,
         });
         res.send(result.buffer);
+    }
+
+    @Delete('admin/certificates/:id')
+    @HttpCode(204)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    deleteCertificate(@Param('id') id: string) {
+        return this.deleteCertificateUseCase.execute(id);
     }
 
     // ==========================================

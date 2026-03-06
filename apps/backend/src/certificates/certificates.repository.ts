@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CertificateGateway } from './gateways/certificate.gateway';
 import { Certificate } from './entities/certificate.entity';
+import { CertificateTemplate } from './entities/certificate-template.entity';
 
 @Injectable()
 export class CertificatesRepository implements CertificateGateway {
@@ -35,5 +36,30 @@ export class CertificatesRepository implements CertificateGateway {
 
     async findByTemplateId(templateId: string): Promise<Certificate[]> {
         return this.repo.find({ where: { template: { id: templateId } } });
+    }
+
+    async countByTemplateId(templateId: string): Promise<number> {
+        return this.repo.count({ where: { template: { id: templateId } } });
+    }
+
+    async unlinkAllFromTemplate(templateId: string): Promise<void> {
+        await this.repo
+            .createQueryBuilder()
+            .update(Certificate)
+            .set({ template: null as unknown as CertificateTemplate })
+            .where('"templateId" = :templateId', { templateId })
+            .execute();
+    }
+
+    async deleteAllByTemplateId(templateId: string): Promise<Certificate[]> {
+        const certs = await this.findByTemplateId(templateId);
+        if (certs.length > 0) {
+            await this.repo.delete(certs.map(c => c.id));
+        }
+        return certs;
+    }
+
+    async delete(id: string): Promise<void> {
+        await this.repo.delete(id);
     }
 }

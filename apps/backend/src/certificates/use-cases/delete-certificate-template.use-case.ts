@@ -1,8 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { join } from 'path';
 import { unlink } from 'fs/promises';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateGateway } from '../gateways/certificate.gateway';
+
+export type CertAction = 'delete' | 'keep';
 
 @Injectable()
 export class DeleteCertificateTemplateUseCase {
@@ -13,27 +15,30 @@ export class DeleteCertificateTemplateUseCase {
         private readonly certificateGateway: CertificateGateway,
     ) {}
 
-    async execute(id: string): Promise<void> {
+    async execute(id: string, certAction: CertAction = 'keep'): Promise<void> {
         // 1. Verificar que la plantilla existe
         const template = await this.templateGateway.findOne(id);
         if (!template) throw new NotFoundException(`Plantilla ${id} no encontrada`);
 
-        // 2. Verificar que no tiene certificados emitidos asociados
-        const certificates = await this.certificateGateway.findByTemplateId(id);
-        if (certificates.length > 0) {
-            throw new BadRequestException(
-                `No se puede eliminar: la plantilla tiene ${certificates.length} certificado(s) emitido(s).`,
+        // 2. Manejar los certificados asociados según la acción elegida
+        if (certAction === 'delete') {
+            // Eliminar registros y archivos PDF de los certificados emitidos
+            const certs = await this.certificateGateway.deleteAllByTemplateId(id);
+            await Promise.all(
+                certs.map(cert => {
+                    const relativePath = cert.filePath.replace('/static/', '');
+                    return unlink(join(this.publicDir, relativePath)).catch(() => {});
+                }),
             );
+        } else {
+            // 'keep': desconectar los certificados de la plantilla (templateId = NULL)
+            // Los PDFs ya emitidos siguen existiendo y siendo válidos.
+            await this.certificateGateway.unlinkAllFromTemplate(id);
         }
 
-        // 3. Borrar el archivo PDF del disco
-        // filePath es '/static/certificates/templates/archivo.pdf'
-        // El archivo real está en 'public/certificates/templates/archivo.pdf'
+        // 3. Borrar el archivo PDF de la plantilla del disco
         const relativePath = template.filePath.replace('/static/', '');
-        const absolutePath = join(this.publicDir, relativePath);
-        await unlink(absolutePath).catch(() => {
-            // Si el archivo ya no existe en disco, continuamos igual
-        });
+        await unlink(join(this.publicDir, relativePath)).catch(() => {});
 
         // 4. Eliminar el registro de la base de datos
         await this.templateGateway.delete(id);
