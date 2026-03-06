@@ -19,9 +19,9 @@ const MAX_FILE_SIZE_MB = 10;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
 // Conversiones desde puntos PDF (1 pt = 1/72 pulgada)
-// a milímetros y píxeles de pantalla (96 DPI estándar).
+// a milímetros y píxeles de impresión (300 DPI — estándar de calidad para imprimir).
 const ptsToMm  = (pts: number) => Math.round(pts * 25.4 / 72);
-const ptsToPx  = (pts: number) => Math.round(pts * 96  / 72);
+const ptsToPx  = (pts: number) => Math.round(pts * 300 / 72);
 
 // Dimensiones esperadas en puntos PDF con tolerancia de ±10 pts.
 // Un "punto PDF" = 1/72 pulgada. A4 = 595×842, A3 = 842×1191.
@@ -503,8 +503,8 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         </button>
 
                         <div style={{ marginTop: '0.75rem', fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                            <span>PDF: {ptsToMm(pdfDims.w)}×{ptsToMm(pdfDims.h)} mm ({ptsToPx(pdfDims.w)}×{ptsToPx(pdfDims.h)} px)</span><br />
-                            <span>Formato: {template.paperFormat} · 300 DPI para impresión</span>
+                            <span>PDF: {ptsToMm(pdfDims.w)}×{ptsToMm(pdfDims.h)} mm ({ptsToPx(pdfDims.w)}×{ptsToPx(pdfDims.h)} px a 300 DPI)</span><br />
+                            <span>Formato: {template.paperFormat} · Calidad de impresión</span>
                         </div>
                     </div>
                 </div>
