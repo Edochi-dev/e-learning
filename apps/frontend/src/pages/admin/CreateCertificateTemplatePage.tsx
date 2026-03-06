@@ -15,10 +15,24 @@ interface Props {
     gateway: CertificateGateway;
 }
 
+const MAX_FILE_SIZE_MB = 10;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+// Conversiones desde puntos PDF (1 pt = 1/72 pulgada)
+// a milímetros y píxeles de pantalla (96 DPI estándar).
+const ptsToMm  = (pts: number) => Math.round(pts * 25.4 / 72);
+const ptsToPx  = (pts: number) => Math.round(pts * 96  / 72);
+
+// Dimensiones esperadas en puntos PDF con tolerancia de ±10 pts.
+// Un "punto PDF" = 1/72 pulgada. A4 = 595×842, A3 = 842×1191.
 const PAPER_FORMATS = [
-    { value: 'A4', label: 'A4 (210×297 mm) — Estándar' },
-    { value: 'A3', label: 'A3 (297×420 mm) — Grande' },
+    { value: 'A4', wPts: 595, hPts: 842 },
+    { value: 'A3', wPts: 842, hPts: 1191 },
 ];
+const FORMAT_TOLERANCE_PTS = 10;
+
+const formatLabel = (fmt: typeof PAPER_FORMATS[number]) =>
+    `${fmt.value}  ${ptsToMm(fmt.wPts)}×${ptsToMm(fmt.hPts)} mm  (${ptsToPx(fmt.wPts)}×${ptsToPx(fmt.hPts)} px)`;
 
 type FontOption = {
     value: string; label: string; css: string;
@@ -109,6 +123,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving]       = useState(false);
     const [error, setError]         = useState<string | null>(null);
+    const [fileError, setFileError] = useState<string | null>(null);
 
     const selectedFont = FONT_OPTIONS.find(f => f.value === fontFamily) ?? FONT_OPTIONS[0];
 
@@ -157,6 +172,48 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         setNameDefaultPos({ x: INITIAL_NAME_PCT.x * w, y: INITIAL_NAME_PCT.y * h });
         setQrDefaultPos({   x: INITIAL_QR_PCT.x   * w, y: INITIAL_QR_PCT.y   * h });
     }, [canvasRendered]);
+
+    // ── Validación del archivo PDF ────────────────────────────────────────────
+    // Se ejecuta en el onChange del input, antes de subir.
+    // Usa pdfjs-dist (ya importado) para leer dimensiones sin hacer ninguna
+    // petición HTTP — todo sucede en el navegador.
+    const validateFile = async (selectedFile: File): Promise<string | null> => {
+        if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
+            return `El archivo pesa ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB. El máximo permitido es ${MAX_FILE_SIZE_MB} MB.`;
+        }
+
+        const format = PAPER_FORMATS.find(f => f.value === formPaperFormat);
+        if (!format) return null;
+
+        const pdf = await pdfjsLib.getDocument({ data: await selectedFile.arrayBuffer() }).promise;
+        const page = await pdf.getPage(1);
+        const { width, height } = page.getViewport({ scale: 1 });
+
+        // Aceptamos orientación portrait Y landscape
+        const matchPortrait  = Math.abs(width - format.wPts) <= FORMAT_TOLERANCE_PTS
+                            && Math.abs(height - format.hPts) <= FORMAT_TOLERANCE_PTS;
+        const matchLandscape = Math.abs(width - format.hPts) <= FORMAT_TOLERANCE_PTS
+                            && Math.abs(height - format.wPts) <= FORMAT_TOLERANCE_PTS;
+
+        if (!matchPortrait && !matchLandscape) {
+            const actualMmW = ptsToMm(width);
+            const actualMmH = ptsToMm(height);
+            const actualPxW = ptsToPx(width);
+            const actualPxH = ptsToPx(height);
+            return `El PDF mide ${actualMmW}×${actualMmH} mm (${actualPxW}×${actualPxH} px) pero el formato ${format.value} requiere ${ptsToMm(format.wPts)}×${ptsToMm(format.hPts)} mm (${ptsToPx(format.wPts)}×${ptsToPx(format.hPts)} px). Verifica que el PDF esté configurado en ${format.value}.`;
+        }
+
+        return null;
+    };
+
+    const handleFileChange = async (selectedFile: File | null) => {
+        setFile(selectedFile);
+        setFileError(null);
+        if (!selectedFile) return;
+
+        const validationError = await validateFile(selectedFile);
+        setFileError(validationError);
+    };
 
     // ── Paso 1: subir plantilla ───────────────────────────────────────────────
     const handleUpload = async () => {
@@ -259,7 +316,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     <div style={{ marginBottom: '1.25rem' }}>
                         <label className="form-label">Formato de papel</label>
                         <select className="form-input" value={formPaperFormat} onChange={e => setFormPaperFormat(e.target.value)}>
-                            {PAPER_FORMATS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+                            {PAPER_FORMATS.map(f => <option key={f.value} value={f.value}>{formatLabel(f)}</option>)}
                         </select>
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                             El PDF que subas debe coincidir con este formato para impresión correcta.
@@ -269,13 +326,21 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     <div style={{ marginBottom: '1.5rem' }}>
                         <label className="form-label">Archivo PDF (plantilla en blanco)</label>
                         <input type="file" accept="application/pdf" className="form-input"
-                            onChange={e => setFile(e.target.files?.[0] ?? null)} />
+                            onChange={e => handleFileChange(e.target.files?.[0] ?? null)} />
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                            Máximo {MAX_FILE_SIZE_MB} MB · El tamaño del PDF debe coincidir con el formato seleccionado.
+                        </p>
+                        {fileError && (
+                            <p style={{ fontSize: '0.85rem', color: 'var(--error, #e53e3e)', marginTop: '0.5rem', lineHeight: 1.5 }}>
+                                ⚠ {fileError}
+                            </p>
+                        )}
                     </div>
 
                     {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem' }}>{error}</p>}
 
                     <button className="btn-primary" onClick={handleUpload}
-                        disabled={uploading || !formName || !formAbbr || !file}>
+                        disabled={uploading || !formName || !formAbbr || !file || !!fileError}>
                         {uploading ? 'Subiendo…' : 'Continuar →'}
                     </button>
                 </div>
@@ -438,7 +503,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         </button>
 
                         <div style={{ marginTop: '0.75rem', fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                            <span>PDF: {Math.round(pdfDims.w)} × {Math.round(pdfDims.h)} pts</span><br />
+                            <span>PDF: {ptsToMm(pdfDims.w)}×{ptsToMm(pdfDims.h)} mm ({ptsToPx(pdfDims.w)}×{ptsToPx(pdfDims.h)} px)</span><br />
                             <span>Formato: {template.paperFormat} · 300 DPI para impresión</span>
                         </div>
                     </div>

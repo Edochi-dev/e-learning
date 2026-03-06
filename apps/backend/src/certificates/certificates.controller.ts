@@ -45,12 +45,12 @@ export class CertificatesController {
     @Post('admin/certificate-templates')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 20 * 1024 * 1024 } }))
+    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
     uploadTemplate(
         @UploadedFile(
             new ParseFilePipe({
                 validators: [
-                    new MaxFileSizeValidator({ maxSize: 20 * 1024 * 1024 }),
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
                     new FileTypeValidator({ fileType: 'application/pdf' }),
                 ],
             }),
