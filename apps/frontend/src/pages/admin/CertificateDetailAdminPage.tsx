@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificate } from '../../hooks/useCertificate';
@@ -12,6 +12,22 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();
     const { certificate, loading, error } = useCertificate(gateway, id!);
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+    // Descargamos el PDF como Blob para evitar el bloqueo CSP del iframe
+    // (el backend tiene frame-ancestors 'self', que bloquea iframes desde otro origen)
+    useEffect(() => {
+        if (!certificate) return;
+        const pdfUrl = `${API_URL}${certificate.filePath}`;
+        fetch(pdfUrl)
+            .then(res => res.blob())
+            .then(blob => setBlobUrl(URL.createObjectURL(blob)))
+            .catch(() => setBlobUrl(null));
+
+        return () => {
+            setBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+        };
+    }, [certificate]);
 
     if (loading) {
         return (
@@ -44,10 +60,8 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
         );
     }
 
-    const pdfUrl = `${API_URL}${certificate.filePath}`;
-
     const handleDownload = async () => {
-        const res = await fetch(pdfUrl);
+        const res = await fetch(`${API_URL}${certificate.filePath}`);
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -160,11 +174,17 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
                 <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
                     Vista previa del certificado
                 </p>
-                <iframe
-                    src={pdfUrl}
-                    title={`Certificado ${certificate.certificateNumber}`}
-                    style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                />
+                {blobUrl ? (
+                    <iframe
+                        src={blobUrl}
+                        title={`Certificado ${certificate.certificateNumber}`}
+                        style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                    />
+                ) : (
+                    <p style={{ padding: '1rem 1.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        Cargando vista previa...
+                    </p>
+                )}
             </div>
         </div>
     );

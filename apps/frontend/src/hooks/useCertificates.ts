@@ -15,6 +15,7 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
     const [error, setError] = useState<string | null>(null);
 
     const loadTemplates = useCallback(async () => {
+        if (!token) return;
         try {
             setLoading(true);
             const data = await gateway.listTemplates(token);
@@ -28,6 +29,7 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
     }, [gateway, token]);
 
     const loadCertificates = useCallback(async () => {
+        if (!token) return;
         try {
             setLoading(true);
             const data = await gateway.listCertificates(token);
@@ -41,6 +43,7 @@ export const useCertificates = (gateway: CertificateGateway, token: string) => {
     }, [gateway, token]);
 
     const searchCertificates = useCallback(async (query: string) => {
+        if (!token) return;
         try {
             setLoading(true);
             const data = query.trim()
