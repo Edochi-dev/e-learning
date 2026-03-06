@@ -24,6 +24,8 @@ import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
 import { CreateCertificateTemplatePage } from './pages/admin/CreateCertificateTemplatePage';
 import { GenerateCertificatesPage } from './pages/admin/GenerateCertificatesPage';
+import { SearchCertificatesPage } from './pages/admin/SearchCertificatesPage';
+import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdminPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
@@ -93,6 +95,8 @@ function AppContent() {
             <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/buscar" element={<SearchCertificatesPage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/ver/:id" element={<CertificateDetailAdminPage gateway={certificateGateway} />} />
           </Route>
         </Routes>
       </main>
