@@ -1,5 +1,5 @@
 import {
-    Controller, Get, Post, Patch, Body, Param, Res, UseGuards,
+    Controller, Get, Post, Patch, Delete, Body, Param, Res, UseGuards,
     UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
     HttpCode, StreamableFile,
 } from '@nestjs/common';
@@ -19,6 +19,7 @@ import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-te
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
+import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
@@ -31,6 +32,7 @@ export class CertificatesController {
         private readonly getCertificateUseCase: GetCertificateUseCase,
         private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
         private readonly certificateGateway: CertificateGateway,
+        private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
     ) {}
 
     // ==========================================
@@ -68,6 +70,14 @@ export class CertificatesController {
     @Roles(UserRole.ADMIN)
     listTemplates() {
         return this.listTemplatesUseCase.execute();
+    }
+
+    @Delete('admin/certificate-templates/:id')
+    @HttpCode(204)
+    @UseGuards(AuthGuard('jwt'), RolesGuard)
+    @Roles(UserRole.ADMIN)
+    deleteTemplate(@Param('id') id: string) {
+        return this.deleteTemplateUseCase.execute(id);
     }
 
     @Post('admin/certificates/batch')

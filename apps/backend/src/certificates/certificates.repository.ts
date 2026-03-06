@@ -32,4 +32,8 @@ export class CertificatesRepository implements CertificateGateway {
             .where('cert.certificateNumber LIKE :prefix', { prefix: `${abbreviation}-%` })
             .getCount();
     }
+
+    async findByTemplateId(templateId: string): Promise<Certificate[]> {
+        return this.repo.find({ where: { template: { id: templateId } } });
+    }
 }

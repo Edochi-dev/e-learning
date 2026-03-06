@@ -30,4 +30,8 @@ export class CertificateTemplatesRepository implements CertificateTemplateGatewa
         Object.assign(template, data);
         return this.repo.save(template);
     }
+
+    async delete(id: string): Promise<void> {
+        await this.repo.delete(id);
+    }
 }

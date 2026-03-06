@@ -69,6 +69,17 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.blob();
     }
 
+    async deleteTemplate(id: string, token: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message ?? `Error al eliminar plantilla: ${res.statusText}`);
+        }
+    }
+
     async getCertificate(id: string): Promise<Certificate> {
         const res = await fetch(`${this.baseUrl}/certificates/${id}`);
         if (!res.ok) throw new Error('Certificado no encontrado');

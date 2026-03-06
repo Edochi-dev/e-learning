@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import type { CertificateGateway, Certificate } from '../../gateways/CertificateGateway';
+import type { CertificateGateway, Certificate, CertificateTemplate } from '../../gateways/CertificateGateway';
 
 interface Props {
     gateway: CertificateGateway;
@@ -10,15 +10,42 @@ interface Props {
 export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const { token } = useAuth();
     const [certificates, setCertificates] = useState<Certificate[]>([]);
+    const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const loadData = useCallback(() => {
         if (!token) return;
-        gateway.listCertificates(token)
-            .then(setCertificates)
+        setLoading(true);
+        Promise.all([
+            gateway.listCertificates(token),
+            gateway.listTemplates(token),
+        ])
+            .then(([certs, tmpls]) => {
+                setCertificates(certs);
+                setTemplates(tmpls);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [gateway, token]);
+
+    useEffect(() => { loadData(); }, [loadData]);
+
+    const handleDeleteTemplate = async (id: string, name: string) => {
+        if (!token) return;
+        if (!confirm(`¿Eliminar la plantilla "${name}"? Esta acción no se puede deshacer.`)) return;
+        setDeletingId(id);
+        setDeleteError(null);
+        try {
+            await gateway.deleteTemplate(id, token);
+            setTemplates(prev => prev.filter(t => t.id !== id));
+        } catch (err) {
+            setDeleteError(err instanceof Error ? err.message : 'Error al eliminar');
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     return (
         <div className="admin-page">
@@ -46,6 +73,43 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                         Generar
                     </Link>
                 </div>
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+                <h2 style={{ marginBottom: '1rem' }}>Plantillas</h2>
+                {deleteError && (
+                    <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
+                )}
+                {loading ? (
+                    <p style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+                ) : templates.length === 0 ? (
+                    <div className="admin-empty">No hay plantillas aún.</div>
+                ) : (
+                    <div className="admin-course-links">
+                        {templates.map(t => (
+                            <div key={t.id} className="admin-course-row">
+                                <span className="admin-course-link-title">{t.name}</span>
+                                <span className="admin-course-link-meta">{t.courseAbbreviation} · {t.paperFormat}</span>
+                                <button
+                                    onClick={() => handleDeleteTemplate(t.id, t.name)}
+                                    disabled={deletingId === t.id}
+                                    style={{
+                                        marginLeft: 'auto',
+                                        background: 'none',
+                                        border: '1px solid var(--error, #e53e3e)',
+                                        color: 'var(--error, #e53e3e)',
+                                        borderRadius: '6px',
+                                        padding: '0.25rem 0.75rem',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    {deletingId === t.id ? 'Eliminando...' : 'Eliminar'}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <div style={{ marginTop: '2rem' }}>

@@ -5,4 +5,5 @@ export abstract class CertificateTemplateGateway {
     abstract findAll(): Promise<CertificateTemplate[]>;
     abstract findOne(id: string): Promise<CertificateTemplate | null>;
     abstract update(id: string, data: Partial<CertificateTemplate>): Promise<CertificateTemplate>;
+    abstract delete(id: string): Promise<void>;
 }

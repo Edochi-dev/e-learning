@@ -5,4 +5,5 @@ export abstract class CertificateGateway {
     abstract findAll(): Promise<Certificate[]>;
     abstract findOne(id: string): Promise<Certificate | null>;
     abstract countByAbbreviation(abbreviation: string): Promise<number>;
+    abstract findByTemplateId(templateId: string): Promise<Certificate[]>;
 }

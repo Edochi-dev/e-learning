@@ -59,6 +59,8 @@ export interface CertificateGateway {
     listCertificates(token: string): Promise<Certificate[]>;
     downloadBatch(ids: string[], token: string): Promise<Blob>;
 
+    deleteTemplate(id: string, token: string): Promise<void>;
+
     // Público
     getCertificate(id: string): Promise<Certificate>;
 }

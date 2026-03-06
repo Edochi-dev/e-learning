@@ -20,6 +20,7 @@ import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-te
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
+import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 
 /**
  * CertificatesModule
@@ -46,6 +47,7 @@ import { DownloadCertificateBatchUseCase } from './use-cases/download-certificat
         GenerateCertificateBatchUseCase,
         GetCertificateUseCase,
         DownloadCertificateBatchUseCase,
+        DeleteCertificateTemplateUseCase,
 
         // Wiring: abstracción → implementación concreta
         { provide: CertificateTemplateGateway, useClass: CertificateTemplatesRepository },
