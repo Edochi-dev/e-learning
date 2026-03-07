@@ -1,29 +1,13 @@
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { UserRole } from '@maris-nails/shared';
-import { Navigate } from 'react-router-dom';
 
 /**
  * ComingSoonPage
  *
- * Página de "sitio en construcción" que actúa como puerta de entrada
- * mientras la plataforma no está lista para el público general.
- *
- * Comportamiento:
- *  - Si el usuario es ADMIN → lo redirige al panel de administración
- *    (no tiene sentido mostrarle esta página a quien ya tiene acceso total)
- *  - Para todos los demás → muestra el mensaje de próximamente
+ * Página de "sitio en construcción" para el público general.
+ * El acceso de administradores a rutas protegidas se maneja
+ * en ComingSoonGuard, no aquí.
  */
 export const ComingSoonPage = () => {
-    const { user, isLoading } = useAuth();
-
-    if (isLoading) return null;
-
-    // El admin no necesita ver esta página — va directo a su panel
-    if (user?.role === UserRole.ADMIN) {
-        return <Navigate to="/admin" replace />;
-    }
-
     return (
         <div style={styles.wrapper}>
             <div style={styles.card}>

@@ -50,6 +50,7 @@ Debes seguir las siguientes instrucciones:
   - Apply Interface Segregation Principle (ISP) to improve contract clarity.
   - Update CertificatesController to delegate to specific Use Cases based on intent.
   - Decouple filtering semantics from basic collection listing.
+- Un commit debe reflejar **exactamente** lo que cambió en esa sesión de trabajo, ni más ni menos. Repetir el scope de un commit anterior en uno nuevo es mentirle al historial de git.
 
 ## Examen
 

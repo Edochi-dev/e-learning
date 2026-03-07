@@ -2,11 +2,17 @@ import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
+import { HttpCourseGateway } from './gateways/HttpCourseGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ComingSoonPage } from './pages/ComingSoonPage';
+import { ComingSoonGuard } from './components/ComingSoonGuard';
 import { LoginPage } from './pages/LoginPage';
+import { HomePage } from './pages/HomePage';
+import { CatalogPage } from './pages/CatalogPage';
+import { CourseDetailsPage } from './pages/CourseDetailsPage';
+import { LessonPage } from './pages/LessonPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
@@ -31,6 +37,7 @@ function AppContent() {
   // Si creáramos el gateway dentro del render sin useMemo, cada re-render crearía
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
   const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
+  const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
 
   return (
     <>
@@ -55,6 +62,12 @@ function AppContent() {
           {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
+
+          {/* Rutas públicas — visibles solo para ADMIN en modo coming soon */}
+          <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/catalogo" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} /></ComingSoonGuard>} />
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
