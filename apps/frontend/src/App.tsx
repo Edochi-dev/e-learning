@@ -45,6 +45,13 @@ function AppContent() {
         <div className="container nav">
           <Link to="/" className="logo">Mari's Nails Academy 💅</Link>
           <nav className="nav-links">
+            {user?.role === UserRole.ADMIN && (
+              <>
+                <Link to="/catalogo">Catálogo</Link>
+                <Link to="/#sobre-mi">Sobre Mí</Link>
+                <a href="https://wa.me/525512345678" target="_blank" rel="noreferrer">Contacto</a>
+              </>
+            )}
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
             {user ? (
               <UserMenu />
