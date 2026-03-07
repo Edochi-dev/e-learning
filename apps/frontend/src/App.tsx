@@ -1,20 +1,12 @@
 import { useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
-import { HttpCourseGateway } from './gateways/HttpCourseGateway';
-import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { HomePage } from './pages/HomePage';
-import { CatalogPage } from './pages/CatalogPage';
-import { CourseDetailsPage } from './pages/CourseDetailsPage';
-import { LessonPage } from './pages/LessonPage';
+import { ComingSoonPage } from './pages/ComingSoonPage';
 import { LoginPage } from './pages/LoginPage';
-import { RegisterPage } from './pages/RegisterPage';
-import { MyCoursesPage } from './pages/MyCoursesPage';
-import { AccountPage } from './pages/AccountPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
@@ -38,8 +30,6 @@ function AppContent() {
   // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
   // Si creáramos el gateway dentro del render sin useMemo, cada re-render crearía
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
-  const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
-  const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
   const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
 
   return (
@@ -48,23 +38,13 @@ function AppContent() {
         <div className="container nav">
           <Link to="/" className="logo">Mari's Nails Academy 💅</Link>
           <nav className="nav-links">
-            <Link to="/catalogo">Catálogo</Link>
-            <Link to="/#sobre-mi">Sobre Mí</Link>
-            <a href="https://wa.me/525512345678" target="_blank" rel="noreferrer">Contacto</a>
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
-            {/* Si hay usuario: mostramos el menú desplegable con avatar */}
-            {/* Si no hay usuario: botones de registro e inicio de sesión */}
             {user ? (
               <UserMenu />
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem' }}>
-                <Link to="/register" className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
-                  Registrarse
-                </Link>
-                <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', color: 'white' }}>
-                  Ingresar
-                </Link>
-              </div>
+              <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', color: 'white' }}>
+                Ingresar
+              </Link>
             )}
           </nav>
         </div>
@@ -72,22 +52,11 @@ function AppContent() {
 
       <main>
         <Routes>
-          <Route path="/" element={<HomePage gateway={courseGateway} />} />
-          <Route path="/catalogo" element={<CatalogPage gateway={courseGateway} />} />
+          {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/courses/:id" element={<CourseDetailsPage gateway={courseGateway} />} />
           <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
 
-          {/* Rutas protegidas — requieren estar logueado */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/courses/:courseId/lessons/:lessonId" element={<LessonPage gateway={courseGateway} />} />
-            {/* Mis cursos y cuenta: solo accesibles si estás autenticado */}
-            <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
-            <Route path="/cuenta" element={<AccountPage />} />
-          </Route>
-
-          {/* Rutas de Administración Protegidas */}
+          {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
             <Route path="/admin" element={<AdminDashboardPage />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage />} />
@@ -98,6 +67,9 @@ function AppContent() {
             <Route path="/admin/certificados/buscar" element={<SearchCertificatesPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/ver/:id" element={<CertificateDetailAdminPage gateway={certificateGateway} />} />
           </Route>
+
+          {/* Cualquier otra URL → página de próximamente */}
+          <Route path="*" element={<ComingSoonPage />} />
         </Routes>
       </main>
 
