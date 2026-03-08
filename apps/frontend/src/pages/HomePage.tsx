@@ -69,10 +69,22 @@ export const HomePage = ({ gateway }: HomePageProps) => {
         <>
             {/* ─── HERO ──────────────────────────────────────────── */}
             <section className="hero">
-                <div className="container">
-                    <p className="section-eyebrow">Mari's Nails Academy</p>
-                    <h1>Transforma Tu Técnica,<br />Eleva Tu Profesión</h1>
-                    <p>Formación premium en nail art para quienes toman su oficio en serio.</p>
+                <div className="container hero__inner">
+                    <div className="hero__eyebrow">
+                        <span className="hero__eyebrow-dot" />
+                        <span>Nail Art Academy · Est. 2024</span>
+                    </div>
+
+                    <h1 className="hero__heading">
+                        Transforma<br />
+                        Tu <em>Técnica.</em>
+                    </h1>
+
+                    <p className="hero__desc">
+                        Formación premium en nail art para quienes toman su oficio en serio.
+                        Técnica, estilo y negocio en un solo lugar.
+                    </p>
+
                     <div className="hero-actions">
                         <Link to="/cursos" className="btn-primary">
                             Ver Cursos
@@ -83,9 +95,10 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                             rel="noreferrer"
                             className="btn-secondary"
                         >
-                            💬 Escríbeme por WhatsApp
+                            💬 WhatsApp
                         </a>
                     </div>
+
                 </div>
             </section>
 
