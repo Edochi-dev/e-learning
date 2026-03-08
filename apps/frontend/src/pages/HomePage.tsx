@@ -74,8 +74,8 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                     <h1>Transforma Tu Técnica,<br />Eleva Tu Profesión</h1>
                     <p>Formación premium en nail art para quienes toman su oficio en serio.</p>
                     <div className="hero-actions">
-                        <Link to="/catalogo" className="btn-primary">
-                            Ver Catálogo de Cursos
+                        <Link to="/cursos" className="btn-primary">
+                            Ver Cursos
                         </Link>
                         <a
                             href="https://wa.me/56946622112"
@@ -215,8 +215,8 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 ))}
                             </div>
                             <div className="preview-grid-cta">
-                                <Link to="/catalogo" className="btn-primary">
-                                    Ver Catálogo Completo
+                                <Link to="/cursos" className="btn-primary">
+                                    Ver todos los cursos
                                 </Link>
                             </div>
                         </>
@@ -233,7 +233,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                             <span className="preview-card__badge">{item.badge}</span>
                                             <h3 className="preview-card__title">{item.title}</h3>
                                             <p className="preview-card__desc">{item.desc}</p>
-                                            <Link to="/catalogo" className="preview-card__cta">
+                                            <Link to="/cursos" className="preview-card__cta">
                                                 Ver catálogo →
                                             </Link>
                                         </div>
@@ -241,8 +241,8 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 ))}
                             </div>
                             <div className="preview-grid-cta">
-                                <Link to="/catalogo" className="btn-primary">
-                                    Ver Catálogo Completo
+                                <Link to="/cursos" className="btn-primary">
+                                    Ver todos los cursos
                                 </Link>
                             </div>
                         </>

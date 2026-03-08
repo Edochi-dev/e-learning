@@ -896,6 +896,16 @@ input:checked+.slider .icon-moon {
 
 /* === RESPONSIVE === */
 @media (max-width: 768px) {
+  /* Galería marquee — items más compactos en móvil */
+  .gallery-item {
+    width: 220px;
+    height: 155px;
+  }
+
+  .gallery-section {
+    padding: 3rem 0 4rem;
+  }
+
   .hero {
     padding: 4rem 1rem 3rem;
   }

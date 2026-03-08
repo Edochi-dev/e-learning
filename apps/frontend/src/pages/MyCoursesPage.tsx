@@ -61,9 +61,9 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                 <div className="my-courses-page__empty">
                     <p className="my-courses-page__empty-icon">📚</p>
                     <h2>Empieza tu formación</h2>
-                    <p>Explora el catálogo y encuentra el curso perfecto para ti.</p>
-                    <Link to="/catalogo" className="btn-primary">
-                        Ver Catálogo
+                    <p>Explora los cursos disponibles y encuentra el perfecto para ti.</p>
+                    <Link to="/cursos" className="btn-primary">
+                        Ver cursos
                     </Link>
                 </div>
             ) : (

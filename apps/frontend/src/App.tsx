@@ -58,8 +58,7 @@ function AppContent() {
           <nav className="nav-links">
             {user?.role === UserRole.ADMIN && (
               <>
-                <Link to="/catalogo">Catálogo</Link>
-                <Link to="/#sobre-mi">Sobre Mí</Link>
+                <Link to="/cursos">Cursos</Link>
                 <a href="#contacto" onClick={handleContactoClick}>Contacto</a>
               </>
             )}
@@ -83,7 +82,7 @@ function AppContent() {
 
           {/* Rutas públicas — visibles solo para ADMIN en modo coming soon */}
           <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} /></ComingSoonGuard>} />
-          <Route path="/catalogo" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} /></ComingSoonGuard>} />
 
