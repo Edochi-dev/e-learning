@@ -70,33 +70,48 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             {/* ─── HERO ──────────────────────────────────────────── */}
             <section className="hero">
                 <div className="container hero__inner">
-                    <div className="hero__eyebrow">
-                        <span className="hero__eyebrow-dot" />
-                        <span>Nail Art Academy · Est. 2024</span>
+
+                    {/* Columna izquierda — texto */}
+                    <div className="hero__content">
+                        <div className="hero__eyebrow">
+                            <span className="hero__eyebrow-dot" />
+                            <span>Nail Art Academy · Est. 2024</span>
+                        </div>
+
+                        <h1 className="hero__heading">
+                            Transforma<br />
+                            Tu <em>Técnica.</em>
+                        </h1>
+
+                        <p className="hero__desc">
+                            Formación premium en nail art para quienes toman su oficio en serio.
+                            Técnica, estilo y negocio en un solo lugar.
+                        </p>
+
+                        <div className="hero-actions">
+                            <Link to="/cursos" className="btn-primary">
+                                Ver Cursos
+                            </Link>
+                            <a
+                                href="https://wa.me/56946622112"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn-secondary"
+                            >
+                                💬 WhatsApp
+                            </a>
+                        </div>
                     </div>
 
-                    <h1 className="hero__heading">
-                        Transforma<br />
-                        Tu <em>Técnica.</em>
-                    </h1>
-
-                    <p className="hero__desc">
-                        Formación premium en nail art para quienes toman su oficio en serio.
-                        Técnica, estilo y negocio en un solo lugar.
-                    </p>
-
-                    <div className="hero-actions">
-                        <Link to="/cursos" className="btn-primary">
-                            Ver Cursos
-                        </Link>
-                        <a
-                            href="https://wa.me/56946622112"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="btn-secondary"
-                        >
-                            💬 WhatsApp
-                        </a>
+                    {/* Columna derecha — foto
+                        Cuando Mariana entregue la foto, reemplaza el div placeholder por:
+                        <img src="/ruta-foto.jpg" alt="Trabajo de Mariana Salinas" className="hero__photo-img" />
+                    */}
+                    <div className="hero__photo">
+                        <div className="hero__photo-placeholder">
+                            <span className="hero__photo-emoji">💅</span>
+                            <span className="hero__photo-label">Foto aquí</span>
+                        </div>
                     </div>
 
                 </div>
