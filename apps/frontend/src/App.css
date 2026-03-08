@@ -78,6 +78,15 @@
   --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
+/* El gradiente fijo en dark mode — más intenso porque el fondo oscuro lo absorbe */
+[data-theme='dark'] body {
+  background-image:
+    radial-gradient(ellipse 70% 50% at 100% 0%,   rgba(253, 121, 168, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 0%   100%,  rgba(212, 165, 116, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50%  50%,   rgba(253, 121, 168, 0.04) 0%, transparent 50%);
+  background-attachment: fixed;
+}
+
 /* === GLOBAL RESETS === */
 body {
   margin: 0;
@@ -86,11 +95,13 @@ body {
   color: var(--text-primary);
   line-height: 1.6;
   font-weight: 400;
-  /* Gradiente de fondo fijo: rosa top-right, dorado bottom-left.
-     position: fixed lo mantiene estático mientras el usuario scrollea */
+  /* background-attachment: fixed mantiene el gradiente quieto
+     mientras el contenido scrollea encima — efecto parallax sutil */
   background-image:
-    radial-gradient(ellipse 60% 40% at 100% 0%,   rgba(232, 67, 147, 0.05) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 35% at 0%   100%,  rgba(212, 165, 116, 0.05) 0%, transparent 55%);
+    radial-gradient(ellipse 70% 50% at 100% 0%,   rgba(232, 67, 147, 0.09) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 0%   100%,  rgba(212, 165, 116, 0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50%  50%,   rgba(232, 67, 147, 0.03) 0%, transparent 50%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out);
