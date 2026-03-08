@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mari's Nails Academy — Dark Luxe Prototipo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #0E0509;
+      --bg-card:      #19080F;
+      --bg-elevated:  #271020;
+      --gold:         #C9A84C;
+      --gold-light:   #E8D5A3;
+      --gold-dim:     rgba(201, 168, 76, 0.25);
+      --gold-glow:    rgba(201, 168, 76, 0.22);
+      --rose:         #E8437B;
+      --burgundy:     #7A1A3A;
+      --cream:        #F5EDE0;
+      --cream-muted:  #A89484;
+      --text-dim:     #5A4A42;
+      --font-serif:   'Playfair Display', Georgia, serif;
+      --font-sans:    'DM Sans', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--cream);
+      font-family: var(--font-sans);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Subtle ambient glow — no texture, just depth */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 70% 50% at 5% 0%,   rgba(122, 26, 58, 0.45) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 35% at 95% 90%,  rgba(232, 67, 123, 0.08) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ───────────── LAYOUT ───────────── */
+    .container {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ───────────── HEADER ───────────── */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 1.2rem 0;
+      background: rgba(14, 5, 9, 0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--gold-dim);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-serif);
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--gold);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2.5rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--cream-muted);
+      text-decoration: none;
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    .nav-cta {
+      background: var(--gold) !important;
+      color: var(--bg) !important;
+      padding: 0.5rem 1.4rem;
+      font-weight: 600;
+    }
+
+    /* ───────────── ART-DECO DIVIDER ───────────── */
+    .deco {
+      display: flex;
+      align-items: center;
+      gap: 1.4rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .deco__line {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+
+    .deco__mark {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      color: var(--gold);
+      font-size: 0.6rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+    }
+
+    .deco__mark::before,
+    .deco__mark::after { content: '◆'; opacity: 0.5; }
+
+    /* ───────────── BUTTONS ───────────── */
+    .btn-gold {
+      display: inline-block;
+      background: var(--gold);
+      color: var(--bg);
+      padding: 0.85rem 2.2rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      text-decoration: none;
+      transition: background 0.2s, box-shadow 0.3s;
+    }
+    .btn-gold:hover {
+      background: var(--gold-light);
+      box-shadow: 0 0 35px var(--gold-glow);
+    }
+
+    .btn-outline {
+      display: inline-block;
+      background: transparent;
+      color: var(--cream-muted);
+      padding: 0.85rem 2.2rem;
+      font-size: 0.78rem;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      text-decoration: none;
+      border: 1px solid rgba(245, 237, 224, 0.2);
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .btn-outline:hover {
+      border-color: var(--cream-muted);
+      color: var(--cream);
+    }
+
+    /* ───────────── HERO ───────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 6rem;
+      padding-bottom: 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative background circle */
+    .hero__glow {
+      position: absolute;
+      right: -15%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(232, 67, 123, 0.10) 0%, transparent 68%);
+      pointer-events: none;
+    }
+
+    .hero__eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .hero__eyebrow-line {
+      width: 55px;
+      height: 1px;
+      background: var(--gold);
+    }
+    .hero__eyebrow-text {
+      font-size: 0.68rem;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* The Big Type */
+    .hero__hl {
+      font-family: var(--font-serif);
+      line-height: 0.86;
+      margin-bottom: 2.2rem;
+    }
+
+    .hero__hl-1 {
+      display: block;
+      font-size: clamp(72px, 12.5vw, 170px);
+      font-weight: 900;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+    }
+
+    /* Gold outline text — the signature trick */
+    .hero__hl-2 {
+      display: block;
+      font-size: clamp(72px, 12.5vw, 170px);
+      font-weight: 900;
+      color: transparent;
+      -webkit-text-stroke: 2px var(--gold);
+      letter-spacing: -0.02em;
+    }
+
+    .hero__hl-3 {
+      display: block;
+      font-size: clamp(18px, 3vw, 44px);
+      font-weight: 400;
+      font-style: italic;
+      color: var(--rose);
+      letter-spacing: 0.18em;
+      margin-top: 0.6rem;
+    }
+
+    .hero__desc {
+      max-width: 460px;
+      color: var(--cream-muted);
+      font-size: 1rem;
+      line-height: 1.75;
+      margin-bottom: 2.8rem;
+    }
+
+    .hero__actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ───────────── SECTIONS ───────────── */
+    .section {
+      padding: 7rem 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      margin-bottom: 1rem;
+    }
+    .eyebrow__dot {
+      width: 5px; height: 5px;
+      background: var(--rose);
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .eyebrow__text {
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    .section-title {
+      font-family: var(--font-serif);
+      font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+      font-weight: 700;
+      line-height: 1.1;
+      color: var(--cream);
+      margin-bottom: 1.5rem;
+    }
+
+    /* ───────────── SOBRE MÍ ───────────── */
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.7fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .about-frame {
+      position: relative;
+    }
+
+    /* The avatar box */
+    .about-avatar {
+      width: 100%;
+      aspect-ratio: 3 / 4;
+      background: var(--bg-elevated);
+      border: 1px solid var(--gold-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      position: relative;
+    }
+
+    /* Art-deco corner brackets */
+    .about-avatar::before {
+      content: '';
+      position: absolute;
+      top: -10px; left: -10px;
+      width: 28px; height: 28px;
+      border-top: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+    }
+    .about-avatar::after {
+      content: '';
+      position: absolute;
+      bottom: -10px; right: -10px;
+      width: 28px; height: 28px;
+      border-bottom: 2px solid var(--gold);
+      border-right: 2px solid var(--gold);
+    }
+
+    /* Extra bottom-left corner */
+    .corner-bl {
+      position: absolute;
+      bottom: -10px; left: -10px;
+      width: 28px; height: 28px;
+      border-bottom: 2px solid var(--gold);
+      border-left: 2px solid var(--gold);
+    }
+
+    .about-content p {
+      color: var(--cream-muted);
+      line-height: 1.8;
+      margin-bottom: 1.2rem;
+    }
+
+    .about-stats {
+      display: flex;
+      gap: 3rem;
+      margin-top: 2.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--gold-dim);
+    }
+
+    .stat-val {
+      display: block;
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    .stat-lbl {
+      display: block;
+      font-size: 0.68rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+    }
+
+    /* ───────────── CURSOS ───────────── */
+    .courses-top {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 3rem;
+      gap: 2rem;
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--gold-dim);
+      padding: 2rem 1.8rem;
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      border-color: rgba(201, 168, 76, 0.7);
+      box-shadow:
+        0 0 50px rgba(201, 168, 76, 0.12),
+        inset 0 0 30px rgba(201, 168, 76, 0.03);
+    }
+
+    /* Ghost number behind content */
+    .card__num {
+      font-family: var(--font-serif);
+      font-size: 5.5rem;
+      font-weight: 900;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(201, 168, 76, 0.15);
+      line-height: 1;
+      margin-bottom: -1.2rem;
+      user-select: none;
+    }
+
+    .card__badge {
+      display: inline-block;
+      font-size: 0.62rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rose);
+      border: 1px solid rgba(232, 67, 123, 0.5);
+      padding: 0.2rem 0.65rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .card__title {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.3;
+      margin-bottom: 0.8rem;
+    }
+
+    .card__desc {
+      font-size: 0.86rem;
+      color: var(--cream-muted);
+      line-height: 1.7;
+      margin-bottom: 1.6rem;
+    }
+
+    .card__cta {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .card__cta::after { content: ' →'; }
+
+    /* ───────────── CONTACTO ───────────── */
+    .contact-section {
+      background: var(--bg-card);
+      border-top: 1px solid var(--gold-dim);
+    }
+
+    .contact-inner {
+      text-align: center;
+      max-width: 660px;
+      margin: 0 auto;
+    }
+
+    .contact-inner .lead {
+      color: var(--cream-muted);
+      margin-bottom: 2.8rem;
+      font-size: 1.02rem;
+      line-height: 1.75;
+    }
+
+    .contact-cards {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+    }
+
+    .contact-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.45rem;
+      padding: 2rem 2.5rem;
+      border: 1px solid var(--gold-dim);
+      text-decoration: none;
+      transition: border-color 0.25s, box-shadow 0.25s;
+      min-width: 175px;
+    }
+
+    .contact-card:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 35px var(--gold-glow);
+    }
+
+    .contact-card__icon { font-size: 1.7rem; }
+
+    .contact-card__label {
+      font-size: 0.62rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .contact-card__value {
+      font-size: 0.88rem;
+      color: var(--gold);
+      font-weight: 500;
+    }
+
+    /* ───────────── FOOTER ───────────── */
+    footer {
+      padding: 2rem 0;
+      border-top: 1px solid var(--gold-dim);
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    footer p {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      letter-spacing: 0.06em;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── HEADER ────────────────────────────────────── -->
+  <header>
+    <div class="container nav">
+      <a href="#" class="logo">Mari's Nails Academy</a>
+      <ul class="nav-links">
+        <li><a href="#cursos">Catálogo</a></li>
+        <li><a href="#sobre-mi">Sobre Mí</a></li>
+        <li><a href="#contacto">Contacto</a></li>
+        <li><a href="#" class="nav-cta">Ingresar</a></li>
+      </ul>
+    </div>
+  </header>
+
+  <!-- ── HERO ──────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero__glow"></div>
+    <div class="container">
+      <div class="hero__eyebrow">
+        <div class="hero__eyebrow-line"></div>
+        <span class="hero__eyebrow-text">Academia de Nail Art Premium</span>
+      </div>
+
+      <h1 class="hero__hl">
+        <span class="hero__hl-1">MARI'S</span>
+        <span class="hero__hl-2">NAILS</span>
+        <span class="hero__hl-3">Academy</span>
+      </h1>
+
+      <p class="hero__desc">
+        Formación premium en nail art para quienes toman su oficio en serio.
+        Técnica, estilo y negocio en un solo lugar.
+      </p>
+
+      <div class="hero__actions">
+        <a href="#cursos" class="btn-gold">Ver Catálogo</a>
+        <a href="https://wa.me/56946622112" target="_blank" class="btn-outline">💬 WhatsApp</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DIVIDER ────────────────────────────────────── -->
+  <div class="container" style="padding:0 2rem;">
+    <div class="deco">
+      <div class="deco__line"></div>
+      <div class="deco__mark">Est. 2024</div>
+      <div class="deco__line"></div>
+    </div>
+  </div>
+
+  <!-- ── SOBRE MÍ ───────────────────────────────────── -->
+  <section class="section" id="sobre-mi">
+    <div class="container">
+      <div class="about-grid">
+
+        <div class="about-frame">
+          <div class="about-avatar">👩‍🎨</div>
+          <div class="corner-bl"></div>
+        </div>
+
+        <div class="about-content">
+          <div class="eyebrow">
+            <div class="eyebrow__dot"></div>
+            <span class="eyebrow__text">Sobre la educadora</span>
+          </div>
+          <h2 class="section-title">Mariana<br><em>Salinas</em></h2>
+          <p>
+            Con más de 12 años perfeccionando el arte de las uñas, he formado a cientos
+            de profesionales en México y Latinoamérica.
+          </p>
+          <p>
+            Mi metodología combina técnica impecable con creatividad auténtica — porque
+            una nail artist completa domina tanto el pincel como el negocio.
+          </p>
+          <div class="about-stats">
+            <div>
+              <span class="stat-val">500+</span>
+              <span class="stat-lbl">Alumnas</span>
+            </div>
+            <div>
+              <span class="stat-val">12</span>
+              <span class="stat-lbl">Años de exp.</span>
+            </div>
+            <div>
+              <span class="stat-val">3</span>
+              <span class="stat-lbl">Certif. internac.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── DIVIDER ────────────────────────────────────── -->
+  <div class="container" style="padding:0 2rem;">
+    <div class="deco">
+      <div class="deco__line"></div>
+      <div class="deco__mark">Programas</div>
+      <div class="deco__line"></div>
+    </div>
+  </div>
+
+  <!-- ── CURSOS ─────────────────────────────────────── -->
+  <section class="section" id="cursos">
+    <div class="container">
+      <div class="courses-top">
+        <div>
+          <div class="eyebrow">
+            <div class="eyebrow__dot"></div>
+            <span class="eyebrow__text">Programas destacados</span>
+          </div>
+          <h2 class="section-title">Aprende lo que<br>el mercado exige</h2>
+        </div>
+        <a href="#" class="btn-outline" style="flex-shrink:0;">Ver catálogo completo</a>
+      </div>
+
+      <div class="courses-grid">
+        <div class="card">
+          <div class="card__num">01</div>
+          <span class="card__badge">Grabado</span>
+          <h3 class="card__title">Uñas Acrílicas Esculpidas</h3>
+          <p class="card__desc">Desde la preparación del natural hasta el diseño final. La base más demandada del mercado.</p>
+          <a href="#" class="card__cta">Descubrir técnica</a>
+        </div>
+        <div class="card">
+          <div class="card__num">02</div>
+          <span class="card__badge">Grabado</span>
+          <h3 class="card__title">Nail Art Avanzado</h3>
+          <p class="card__desc">Marble, chrome, texturas 3D y más. Para quienes quieren llevar su técnica a otro nivel.</p>
+          <a href="#" class="card__cta">Descubrir técnica</a>
+        </div>
+        <div class="card">
+          <div class="card__num">03</div>
+          <span class="card__badge">Grabado</span>
+          <h3 class="card__title">Gel & Semipermanente</h3>
+          <p class="card__desc">Aplicación impecable, durabilidad y remoción sin daño. El servicio que toda clienta exige.</p>
+          <a href="#" class="card__cta">Descubrir técnica</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CONTACTO ───────────────────────────────────── -->
+  <section class="section contact-section" id="contacto">
+    <div class="container">
+      <div class="contact-inner">
+        <div class="eyebrow" style="justify-content:center;">
+          <div class="eyebrow__dot"></div>
+          <span class="eyebrow__text">Ponte en contacto</span>
+        </div>
+        <h2 class="section-title">Hablemos</h2>
+        <p class="lead">
+          ¿Tienes dudas sobre algún curso o problemas para comenzar tu formación?<br>
+          Estamos aquí para orientarte.
+        </p>
+        <div class="contact-cards">
+          <a href="https://wa.me/56946622112" target="_blank" class="contact-card">
+            <span class="contact-card__icon">💬</span>
+            <span class="contact-card__label">WhatsApp</span>
+            <span class="contact-card__value">+56 9 4662 2112</span>
+          </a>
+          <a href="https://instagram.com/maris_nails_oficial" target="_blank" class="contact-card">
+            <span class="contact-card__icon">📸</span>
+            <span class="contact-card__label">Instagram</span>
+            <span class="contact-card__value">@maris_nails_oficial</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ─────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <p>© 2025 Mari's Nails Academy · Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+</body>
+</html>
