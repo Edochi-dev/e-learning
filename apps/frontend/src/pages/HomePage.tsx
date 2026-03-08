@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
@@ -32,6 +33,17 @@ const STATIC_PREVIEWS = [
 export const HomePage = ({ gateway }: HomePageProps) => {
     const { courses, loading } = useCourses(gateway);
     const previewCourses = courses.slice(0, PREVIEW_COUNT);
+    const location = useLocation();
+
+    // Si venimos de otra página con la intención de ir a #contacto,
+    // esperamos a que el DOM esté listo y hacemos scroll suave.
+    useEffect(() => {
+        if (location.state?.scrollTo === 'contacto') {
+            setTimeout(() => {
+                document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+    }, []);
 
     return (
         <>
@@ -175,6 +187,52 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                             </div>
                         </>
                     )}
+                </div>
+            </section>
+
+            <hr className="section-divider" />
+
+            {/* ─── CONTACTO ────────────────────────────────────── */}
+            <section id="contacto" className="home-contact">
+                <div className="container">
+                    <div className="home-contact__inner">
+                        <p className="section-eyebrow">Ponte en contacto</p>
+                        <h2>Hablemos</h2>
+                        <p className="home-contact__subtitle">
+                            ¿Tienes dudas sobre algún curso o quieres comenzar tu formación?
+                            Estoy aquí para orientarte.
+                        </p>
+                        <div className="contact-cards">
+                            <a
+                                href="https://wa.me/525512345678"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="contact-card"
+                            >
+                                <span className="contact-card__icon">💬</span>
+                                <span className="contact-card__label">WhatsApp</span>
+                                <span className="contact-card__value">+52 55 1234 5678</span>
+                            </a>
+                            <a
+                                href="https://instagram.com/marisnaills"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="contact-card"
+                            >
+                                <span className="contact-card__icon">📸</span>
+                                <span className="contact-card__label">Instagram</span>
+                                <span className="contact-card__value">@marisnaills</span>
+                            </a>
+                            <a
+                                href="mailto:hola@marisnails.com"
+                                className="contact-card"
+                            >
+                                <span className="contact-card__icon">✉️</span>
+                                <span className="contact-card__label">Email</span>
+                                <span className="contact-card__value">hola@marisnails.com</span>
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </section>
 

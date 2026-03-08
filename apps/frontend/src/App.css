@@ -2904,3 +2904,66 @@ input:checked+.slider .icon-moon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
 }
+
+/* ─── HOME CONTACT ──────────────────────────────────────────────────────── */
+.home-contact {
+  padding: 5rem 0;
+  text-align: center;
+}
+
+.home-contact__inner {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.home-contact__subtitle {
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  margin-bottom: 2.5rem;
+}
+
+.contact-cards {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contact-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.75rem 2rem;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+
+.contact-card:hover {
+  border-color: var(--primary);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.contact-card__icon {
+  font-size: 2rem;
+}
+
+.contact-card__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.contact-card__value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--primary);
+}

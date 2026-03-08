@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
 import { HttpCourseGateway } from './gateways/HttpCourseGateway';
@@ -33,6 +33,17 @@ const API_URL = import.meta.env.VITE_API_URL;
 function AppContent() {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme(new LocalStorageThemeGateway());
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  function handleContactoClick(e: React.MouseEvent) {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      navigate('/', { state: { scrollTo: 'contacto' } });
+    }
+  }
   // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
   // Si creáramos el gateway dentro del render sin useMemo, cada re-render crearía
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
@@ -49,7 +60,7 @@ function AppContent() {
               <>
                 <Link to="/catalogo">Catálogo</Link>
                 <Link to="/#sobre-mi">Sobre Mí</Link>
-                <a href="https://wa.me/525512345678" target="_blank" rel="noreferrer">Contacto</a>
+                <a href="#contacto" onClick={handleContactoClick}>Contacto</a>
               </>
             )}
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
