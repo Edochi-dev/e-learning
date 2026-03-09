@@ -81,9 +81,9 @@
 /* El gradiente fijo en dark mode — más intenso porque el fondo oscuro lo absorbe */
 [data-theme='dark'] body {
   background-image:
-    radial-gradient(ellipse 70% 50% at 100% 0%,   rgba(253, 121, 168, 0.10) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 0%   100%,  rgba(212, 165, 116, 0.07) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 30% at 50%  50%,   rgba(253, 121, 168, 0.04) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(253, 121, 168, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 0%   100%,  rgba(212, 165, 116, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(253, 121, 168, 0.06) 0%, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -98,9 +98,9 @@ body {
   /* background-attachment: fixed mantiene el gradiente quieto
      mientras el contenido scrollea encima — efecto parallax sutil */
   background-image:
-    radial-gradient(ellipse 70% 50% at 100% 0%,   rgba(232, 67, 147, 0.09) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 45% at 0%   100%,  rgba(212, 165, 116, 0.08) 0%, transparent 55%),
-    radial-gradient(ellipse 40% 30% at 50%  50%,   rgba(232, 67, 147, 0.03) 0%, transparent 50%);
+    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(232, 67, 147, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 0%   100%,  rgba(212, 165, 116, 0.28) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(232, 67, 147, 0.10) 0%, transparent 50%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -217,18 +217,7 @@ a {
   padding: 8rem 1rem 5rem;
   position: relative;
   overflow: hidden;
-  /* Gradiente: crema en la izquierda (donde va el texto),
-     rosa suave en el centro, toque dorado en la esquina superior derecha */
-  background:
-    radial-gradient(ellipse 55% 80% at 100% 50%,  rgba(232, 67, 147, 0.10) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 40% at 85% 10%,   rgba(212, 165, 116, 0.09) 0%, transparent 55%),
-    radial-gradient(ellipse 30% 50% at 0%   80%,  rgba(212, 165, 116, 0.05) 0%, transparent 50%);
-}
-
-[data-theme='dark'] .hero {
-  background:
-    radial-gradient(ellipse 55% 80% at 100% 50%,  rgba(232, 67, 147, 0.12) 0%, transparent 65%),
-    radial-gradient(ellipse 40% 40% at 85% 10%,   rgba(212, 165, 116, 0.07) 0%, transparent 55%);
+  /* Sin fondo propio — hereda el gradiente del body */
 }
 
 /* Grid de dos columnas: texto | foto */

@@ -55,6 +55,14 @@ export class VideosController {
             res.setHeader(key, value);
         }
 
+        // CORP explícito: el frontend (5173) y el backend (3000) son orígenes
+        // distintos. Sin este header en 'cross-origin', el navegador bloquea el
+        // video con ERR_BLOCKED_BY_RESPONSE.NotSameOrigin (el 206 del stream).
+        // Lo seteamos aquí y no solo en el middleware para garantizar que esté
+        // presente incluso si el pipe del StreamableFile flusea headers antes
+        // de que el middleware haya podido sobreescribir el valor de Helmet.
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
         // Seteamos el status code (200 o 206 para partial content)
         res.status(result.statusCode);
 
