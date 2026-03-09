@@ -19,7 +19,7 @@ export class LocalVideoStreamGateway implements VideoStreamGateway {
     private readonly logger = new Logger(LocalVideoStreamGateway.name);
 
     /** Directorio donde viven los videos */
-    private readonly publicDir = join(__dirname, '..', 'public');
+    private readonly publicDir = join(__dirname, '..', '..', 'public');
 
     /** Mapa de extensiones a MIME types de video */
     private readonly MIME_TYPES: Record<string, string> = {
