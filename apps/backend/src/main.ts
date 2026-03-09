@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import type { Request, Response } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
@@ -11,6 +12,19 @@ async function bootstrap() {
   // Debe ir ANTES de cualquier otra configuración para que se aplique a
   // todas las respuestas, incluyendo los errores del ValidationPipe.
   app.use(helmet());
+
+  // ── Bloqueo de videos estáticos ───────────────────────────────────────────
+  // ServeStaticModule usa Express puro y corre ANTES del router de NestJS,
+  // por lo que BlockVideoStaticMiddleware (registrado con configure()) no
+  // alcanza a interceptar estas peticiones. La única forma de garantizar el
+  // bloqueo es registrar el middleware aquí, al nivel de Express, antes de
+  // que cualquier módulo pueda servir el archivo.
+  app.use('/static/videos', (_req: Request, res: Response) => {
+    res.status(403).json({
+      statusCode: 403,
+      message: 'Acceso directo a videos no permitido. Usa el endpoint /videos/stream con token firmado.',
+    });
+  });
 
   // ── CORS ──────────────────────────────────────────────────────────────────
   // Solo el origen del frontend puede hacer fetch al API.

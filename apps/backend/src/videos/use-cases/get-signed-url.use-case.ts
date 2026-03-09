@@ -25,14 +25,25 @@ export class GetSignedUrlUseCase {
             throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
         }
 
-        // 2. Si es un video externo (YouTube, Vimeo), retornar directamente
-        if (!lesson.videoUrl.startsWith('/static/')) {
+        // 2. Normalizar el URL: si tiene host (ej: "http://localhost:3000/static/videos/clase1.mp4")
+        //    extraemos solo el pathname ("/static/videos/clase1.mp4") para comparar correctamente.
+        //    Esto cubre el caso en que el admin guardó el URL completo en lugar de la ruta relativa.
+        let cleanPath: string;
+        try {
+            cleanPath = new URL(lesson.videoUrl).pathname;
+        } catch {
+            // Si no es un URL válido con host, ya es una ruta relativa
+            cleanPath = lesson.videoUrl;
+        }
+
+        // 3. Si no apunta a nuestro directorio estático, es un video externo (YouTube, Vimeo...)
+        if (!cleanPath.startsWith('/static/')) {
             return { url: lesson.videoUrl, expires: 0 };
         }
 
-        // 3. Extraer la ruta relativa del video
+        // 4. Extraer la ruta relativa del video
         // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
-        const videoPath = lesson.videoUrl.replace('/static/', '');
+        const videoPath = cleanPath.replace('/static/', '');
 
         // 4. Generar token firmado
         const { token, expires } = this.videoTokenService.generateToken(videoPath);
