@@ -5,10 +5,8 @@ services:
     restart: always
     ports:
       - "5432:5432"  # Puerto externo : Puerto interno
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin123  # En producción esto iría en variables de entorno, para dev está ok
-      POSTGRES_DB: maris_nails_db
+    env_file:
+      - apps/backend/.env
     volumes:
       - postgres_data:/var/lib/postgresql/data  # <--- ESTO ES LA CLAVE DE LA PERSISTENCIA
 
