@@ -88,9 +88,9 @@ function AppContent() {
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
-            <Route path="/admin" element={<AdminDashboardPage />} />
-            <Route path="/admin/courses/new" element={<CreateCoursePage />} />
-            <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage />} />
+            <Route path="/admin" element={<AdminDashboardPage gateway={courseGateway} />} />
+            <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />
+            <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage gateway={courseGateway} />} />
             <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} />} />

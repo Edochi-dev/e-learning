@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HttpCourseGateway } from '../../gateways/HttpCourseGateway';
+import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course, Lesson, UpdateCoursePayload, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
 import {
     DndContext,
@@ -153,10 +153,13 @@ function SortableLessonItem({
  * 4. ELIMINAR lecciones (con confirmación)
  * 5. AGREGAR nuevas lecciones
  */
-export const EditCoursePage: React.FC = () => {
+interface EditCoursePageProps {
+    gateway: CourseGateway;
+}
+
+export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseGateway }) => {
     const { courseId } = useParams<{ courseId: string }>();
     const { token } = useAuth();
-    const courseGateway = useMemo(() => new HttpCourseGateway('http://localhost:3000'), []);
 
     // Estado general
     const [course, setCourse] = useState<Course | null>(null);

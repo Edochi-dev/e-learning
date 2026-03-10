@@ -1,12 +1,15 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
-import { HttpCourseGateway } from '../../gateways/HttpCourseGateway';
+import type { CourseGateway } from '../../gateways/CourseGateway';
 import { useAuth } from '../../context/AuthContext';
 import type { Course } from '@maris-nails/shared';
 
-export const AdminDashboardPage: React.FC = () => {
-    const courseGateway = useMemo(() => new HttpCourseGateway('http://localhost:3000'), []);
+interface AdminDashboardPageProps {
+    gateway: CourseGateway;
+}
+
+export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ gateway: courseGateway }) => {
     const { token } = useAuth();
     const [courses, setCourses] = useState<Course[]>([]);
     const [isLoading, setIsLoading] = useState(true);

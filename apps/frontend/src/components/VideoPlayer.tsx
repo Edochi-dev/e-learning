@@ -41,7 +41,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`http://localhost:3000/videos/${lessonId}/signed-url`, {
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/${lessonId}/signed-url`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -58,7 +58,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
                     setVideoSrc(data.url);
                 } else {
                     // URL firmada local: prefijamos con el backend
-                    setVideoSrc(`http://localhost:3000${data.url}`);
+                    setVideoSrc(`${import.meta.env.VITE_API_URL}${data.url}`);
                 }
             } catch (err) {
                 setError('Error al cargar el video. Intenta de nuevo.');

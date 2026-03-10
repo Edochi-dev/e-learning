@@ -4,7 +4,7 @@ import { useCourses } from '../hooks/useCourses';
 
 // El thumbnailUrl del backend es relativo (ej: "/static/thumbnails/uuid.jpg").
 // Necesitamos el origen del backend para construir la URL completa.
-const BACKEND_URL = 'http://localhost:3000';
+const BACKEND_URL = import.meta.env.VITE_API_URL;
 
 interface CatalogPageProps {
     gateway: CourseGateway;

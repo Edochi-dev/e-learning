@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { HttpCourseGateway } from '../../gateways/HttpCourseGateway';
+import type { CourseGateway } from '../../gateways/CourseGateway';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import type { CreateCoursePayload } from '@maris-nails/shared';
 
-const courseGateway = new HttpCourseGateway('http://localhost:3000');
+interface CreateCoursePageProps {
+    gateway: CourseGateway;
+}
 
-export const CreateCoursePage: React.FC = () => {
+export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: courseGateway }) => {
     const navigate = useNavigate();
     const { token } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
