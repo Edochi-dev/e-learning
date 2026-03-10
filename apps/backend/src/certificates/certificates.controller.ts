@@ -3,6 +3,7 @@ import {
     UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
     HttpCode, StreamableFile,
 } from '@nestjs/common';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
@@ -131,6 +132,8 @@ export class CertificatesController {
     // ==========================================
 
     @Get('certificates/:id')
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { ttl: 60000, limit: 30 } })
     getCertificate(@Param('id') id: string) {
         return this.getCertificateUseCase.execute(id);
     }
