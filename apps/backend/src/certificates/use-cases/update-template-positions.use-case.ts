@@ -30,6 +30,7 @@ export class UpdateTemplatePositionsUseCase {
             dateFontSize: dto.dateFontSize ?? 18,
             dateColor: dto.dateColor ?? '#000000',
             dateFontFamily: dto.dateFontFamily ?? 'Helvetica',
+            dateAlign: dto.dateAlign ?? 'left',
         });
     }
 }

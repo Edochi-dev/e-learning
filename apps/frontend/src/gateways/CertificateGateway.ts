@@ -28,6 +28,7 @@ export interface CertificateTemplate {
     dateFontSize: number;
     dateColor: string;
     dateFontFamily: string;
+    dateAlign: 'left' | 'center';
     createdAt: string;
     certificateCount?: number;
 }
@@ -63,6 +64,7 @@ export interface TemplatePositions {
     dateFontSize: number;
     dateColor: string;
     dateFontFamily: string;
+    dateAlign: 'left' | 'center';
 }
 
 export interface CertificateGateway {

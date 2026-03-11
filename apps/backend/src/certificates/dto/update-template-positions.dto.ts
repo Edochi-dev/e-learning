@@ -53,4 +53,8 @@ export class UpdateTemplatePositionsDto {
     @IsOptional()
     @IsString()
     dateFontFamily?: string;
+
+    @IsOptional()
+    @IsString()
+    dateAlign?: string;
 }

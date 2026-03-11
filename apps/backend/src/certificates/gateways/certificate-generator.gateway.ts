@@ -15,6 +15,7 @@ export interface GenerateCertificateParams {
     dateFontSize?: number;
     dateColor?: string;
     dateFontFamily?: string;
+    dateAlign?: 'left' | 'center';
 }
 
 export abstract class CertificateGeneratorGateway {

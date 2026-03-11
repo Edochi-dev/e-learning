@@ -133,10 +133,11 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [nameAlign, setNameAlign]   = useState<'left' | 'center'>('left');
     const [qrSize, setQrSize]         = useState(90);
     // Fecha
-    const [showDate, setShowDate]         = useState(true);
-    const [dateFontSize, setDateFontSize] = useState(18);
-    const [dateColor, setDateColor]       = useState('#1a1a1a');
+    const [showDate, setShowDate]             = useState(true);
+    const [dateFontSize, setDateFontSize]     = useState(18);
+    const [dateColor, setDateColor]           = useState('#1a1a1a');
     const [dateFontFamily, setDateFontFamily] = useState('Helvetica');
+    const [dateAlign, setDateAlign]           = useState<'left' | 'center'>('left');
 
     // ── UI ────────────────────────────────────────────────────────────────────
     const [uploading, setUploading] = useState(false);
@@ -279,6 +280,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 dateFontSize,
                 dateColor,
                 dateFontFamily,
+                dateAlign,
             }, token);
             navigate('/admin/certificados');
         } catch (err) {
@@ -292,38 +294,31 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // data.x / data.y = posición absoluta del elemento desde la esquina
     // superior-izquierda del contenedor padre, en píxeles CSS.
     // react-draggable los acumula internamente sin depender del state de React.
-    const onNameStop = (_: unknown, data: { x: number; y: number }) => {
+    /**
+     * Fábrica de handlers onStop para los Draggables.
+     * align: si es 'center', guardamos el CENTRO del elemento (data.x + width/2)
+     *        como ancla X, en vez del borde izquierdo.
+     * El PDF generator luego hace: drawX = anchorX - textWidth/2
+     */
+    const makeOnStop = (
+        align: 'left' | 'center',
+        nodeRef: React.RefObject<HTMLDivElement | null>,
+        setPct: React.Dispatch<React.SetStateAction<{ x: number; y: number }>>,
+    ) => (_: unknown, data: { x: number; y: number }) => {
         if (!containerRef.current) return;
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
-        // En modo 'center': guardamos el CENTRO del elemento como ancla X.
-        // Así namePositionX siempre representa el punto central del texto,
-        // y el PDF generator puede calcular: drawX = centerX - textWidth/2
-        const anchorX = nameAlign === 'center'
-            ? data.x + (nameNodeRef.current?.offsetWidth ?? 0) / 2
+        const anchorX = align === 'center'
+            ? data.x + (nodeRef.current?.offsetWidth ?? 0) / 2
             : data.x;
-        setNamePct({
+        setPct({
             x: Math.max(0, Math.min(1, anchorX / w)),
             y: Math.max(0, Math.min(1, data.y / h)),
         });
     };
 
-    const onQrStop = (_: unknown, data: { x: number; y: number }) => {
-        if (!containerRef.current) return;
-        const { offsetWidth: w, offsetHeight: h } = containerRef.current;
-        setQrPct({
-            x: Math.max(0, Math.min(1, data.x / w)),
-            y: Math.max(0, Math.min(1, data.y / h)),
-        });
-    };
-
-    const onDateStop = (_: unknown, data: { x: number; y: number }) => {
-        if (!containerRef.current) return;
-        const { offsetWidth: w, offsetHeight: h } = containerRef.current;
-        setDatePct({
-            x: Math.max(0, Math.min(1, data.x / w)),
-            y: Math.max(0, Math.min(1, data.y / h)),
-        });
-    };
+    const onNameStop = makeOnStop(nameAlign, nameNodeRef, setNamePct);
+    const onQrStop   = makeOnStop('left',     qrNodeRef,   setQrPct);
+    const onDateStop = makeOnStop(dateAlign,  dateNodeRef,  setDatePct);
 
     const draggablesReady = nameDefaultPos !== null && qrDefaultPos !== null && dateDefaultPos !== null;
 
@@ -499,6 +494,12 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                     color: dateColor,
                                                     whiteSpace: 'nowrap',
                                                     lineHeight: 1,
+                                                    ...(dateAlign === 'center' && {
+                                                        backgroundImage: 'linear-gradient(#4caf50 1px, transparent 1px)',
+                                                        backgroundSize: '1px 4px',
+                                                        backgroundPosition: '50% 0',
+                                                        backgroundRepeat: 'repeat-y',
+                                                    }),
                                                 }}>
                                                     11/03/2026
                                                 </div>
@@ -636,6 +637,32 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                             </optgroup>
                                         ))}
                                     </select>
+                                </div>
+
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="form-label">Posición de la fecha</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        {(['left', 'center'] as const).map(opt => (
+                                            <button
+                                                key={opt}
+                                                type="button"
+                                                onClick={() => setDateAlign(opt)}
+                                                style={{
+                                                    flex: 1,
+                                                    padding: '0.4rem',
+                                                    border: `2px solid ${dateAlign === opt ? '#4caf50' : 'var(--border)'}`,
+                                                    borderRadius: '6px',
+                                                    background: dateAlign === opt ? 'rgba(76,175,80,0.08)' : 'transparent',
+                                                    color: dateAlign === opt ? '#4caf50' : 'var(--text-muted)',
+                                                    fontWeight: dateAlign === opt ? 700 : 400,
+                                                    fontSize: '0.8rem',
+                                                    cursor: 'pointer',
+                                                }}
+                                            >
+                                                {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 <div style={{ marginBottom: '1rem' }}>

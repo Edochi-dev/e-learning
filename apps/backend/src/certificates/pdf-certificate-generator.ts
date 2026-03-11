@@ -33,8 +33,27 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     // Ruta a la carpeta de fuentes TTF (se copia de src/ a dist/ via nest-cli.json assets)
     private readonly fontsDir = path.join(__dirname, 'fonts');
 
+    /**
+     * Calcula el X real de dibujo según la alineación elegida.
+     * 'left'   → anchorX es el borde izquierdo del texto (pdf-lib estándar)
+     * 'center' → anchorX es el centro; desplazamos la mitad del ancho del texto
+     *            para que el centro del texto caiga exactamente en anchorX
+     */
+    private resolveDrawX(
+        anchorX: number,
+        align: 'left' | 'center',
+        text: string,
+        size: number,
+        font: Awaited<ReturnType<typeof PDFDocument.prototype.embedFont>>,
+    ): number {
+        if (align === 'center') {
+            return anchorX - font.widthOfTextAtSize(text, size) / 2;
+        }
+        return anchorX;
+    }
+
     async generate(params: GenerateCertificateParams): Promise<Buffer> {
-        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, nameAlign, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily } = params;
+        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, nameAlign, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily, dateAlign } = params;
 
         const templateBytes = fs.readFileSync(templatePath);
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -51,19 +70,8 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Convertimos color hex a RGB normalizado (0-1)
         const color = this.hexToRgb(nameColor);
 
-        // Calculamos el X del nombre según la alineación elegida en la plantilla.
-        // 'left'   → namePosition.x es el borde izquierdo del texto
-        // 'center' → namePosition.x es el CENTRO del texto; desplazamos a la izquierda
-        //            la mitad del ancho real del texto para que el centro quede en ese punto.
-        //            Así "Ana" y "María Fernanda González" tienen el mismo centro.
-        const nameX = nameAlign === 'center'
-            ? namePosition.x - font.widthOfTextAtSize(recipientName, fontSize) / 2
-            : namePosition.x;
-
-        // pdf-lib usa coordenadas desde la esquina inferior-izquierda,
-        // así que invertimos el eje Y: pdfY = pageHeight - frontendY - fontSize
         page.drawText(recipientName, {
-            x: nameX,
+            x: this.resolveDrawX(namePosition.x, nameAlign, recipientName, fontSize, font),
             y: pageHeight - namePosition.y - fontSize,
             size: fontSize,
             font,
@@ -84,7 +92,7 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
             const dateFont = await this.embedFont(pdfDoc, dateFontFamily ?? 'Helvetica');
             const dateRgb = this.hexToRgb(dateColor ?? '#000000');
             page.drawText(dateText, {
-                x: datePosition.x,
+                x: this.resolveDrawX(datePosition.x, dateAlign ?? 'left', dateText, dateFontSize, dateFont),
                 y: pageHeight - datePosition.y - dateFontSize,
                 size: dateFontSize,
                 font: dateFont,

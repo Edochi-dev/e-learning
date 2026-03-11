@@ -74,6 +74,9 @@ export class CertificateTemplate {
     @Column({ default: 'Helvetica' })
     dateFontFamily: string;
 
+    @Column({ default: 'left' })
+    dateAlign: string;
+
     @CreateDateColumn()
     createdAt: Date;
 

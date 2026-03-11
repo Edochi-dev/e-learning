@@ -101,6 +101,7 @@ export class GenerateCertificateBatchUseCase {
                     dateFontSize: template.dateFontSize,
                     dateColor: template.dateColor,
                     dateFontFamily: template.dateFontFamily,
+                    dateAlign: (template.dateAlign ?? 'left') as 'left' | 'center',
                 }),
             });
 
