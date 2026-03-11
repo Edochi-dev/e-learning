@@ -48,8 +48,6 @@ type FontOption = {
     weight: string; style: string; group: string;
 };
 
-// Padding horizontal de los elementos draggable (debe coincidir con el style inline)
-const DRAGGABLE_PADDING_X = 4;
 
 const FONT_OPTIONS: FontOption[] = [
     { value: 'GreatVibes-Regular',               label: 'Great Vibes (caligráfica elegante)',      css: "'Great Vibes', cursive",         weight: 'normal', style: 'normal', group: 'Caligráficas' },
@@ -312,7 +310,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
         const anchorX = align === 'center'
             ? data.x + (nodeRef.current?.offsetWidth ?? 0) / 2
-            : data.x + DRAGGABLE_PADDING_X;
+            : data.x;
         setPct({
             x: Math.max(0, Math.min(1, anchorX / w)),
             y: Math.max(0, Math.min(1, data.y / h)),
@@ -424,7 +422,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 left: 0,
                                                 cursor: 'grab',
                                                 userSelect: 'none',
-                                                padding: `0 ${DRAGGABLE_PADDING_X}px`,
+                                                padding: 0,
                                                 background: 'rgba(232, 67, 147, 0.10)',
                                                 border: '1.5px dashed #e84393',
                                                 borderRadius: '3px',
@@ -434,7 +432,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 fontSize: `${displayFontSize()}px`,
                                                 color: nameColor,
                                                 whiteSpace: 'nowrap',
-                                                lineHeight: 1,
+                                                lineHeight: 'normal',
                                                 // En modo centro: marcamos visualmente el eje central
                                                 // con una línea punteada vertical en el medio del elemento
                                                 ...(nameAlign === 'center' && {
@@ -486,7 +484,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                     left: 0,
                                                     cursor: 'grab',
                                                     userSelect: 'none',
-                                                    padding: `0 ${DRAGGABLE_PADDING_X}px`,
+                                                    padding: 0,
                                                     background: 'rgba(100, 180, 100, 0.10)',
                                                     border: '1.5px dashed #4caf50',
                                                     borderRadius: '3px',
@@ -496,7 +494,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                     fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
                                                     color: dateColor,
                                                     whiteSpace: 'nowrap',
-                                                    lineHeight: 1,
+                                                    lineHeight: 'normal',
                                                     ...(dateAlign === 'center' && {
                                                         backgroundImage: 'linear-gradient(#4caf50 1px, transparent 1px)',
                                                         backgroundSize: '1px 4px',
