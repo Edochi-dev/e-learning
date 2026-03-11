@@ -10,3 +10,7 @@ build/
 
 # Logs de errores
 *.log
+
+# Archivos generados en runtime (certificados PDF, plantillas subidas)
+apps/backend/public/certificates/generated/
+apps/backend/public/certificates/templates/
