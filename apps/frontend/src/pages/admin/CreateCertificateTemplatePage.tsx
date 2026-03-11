@@ -48,6 +48,9 @@ type FontOption = {
     weight: string; style: string; group: string;
 };
 
+// Padding horizontal de los elementos draggable (debe coincidir con el style inline)
+const DRAGGABLE_PADDING_X = 4;
+
 const FONT_OPTIONS: FontOption[] = [
     { value: 'GreatVibes-Regular',               label: 'Great Vibes (caligráfica elegante)',      css: "'Great Vibes', cursive",         weight: 'normal', style: 'normal', group: 'Caligráficas' },
     { value: 'DancingScript-Bold',               label: 'Dancing Script Bold (script moderno)',    css: "'Dancing Script', cursive",       weight: '700',    style: 'normal', group: 'Caligráficas' },
@@ -309,7 +312,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
         const anchorX = align === 'center'
             ? data.x + (nodeRef.current?.offsetWidth ?? 0) / 2
-            : data.x;
+            : data.x + DRAGGABLE_PADDING_X;
         setPct({
             x: Math.max(0, Math.min(1, anchorX / w)),
             y: Math.max(0, Math.min(1, data.y / h)),
@@ -421,7 +424,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 left: 0,
                                                 cursor: 'grab',
                                                 userSelect: 'none',
-                                                padding: '0 4px',
+                                                padding: `0 ${DRAGGABLE_PADDING_X}px`,
                                                 background: 'rgba(232, 67, 147, 0.10)',
                                                 border: '1.5px dashed #e84393',
                                                 borderRadius: '3px',
@@ -483,7 +486,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                     left: 0,
                                                     cursor: 'grab',
                                                     userSelect: 'none',
-                                                    padding: '0 4px',
+                                                    padding: `0 ${DRAGGABLE_PADDING_X}px`,
                                                     background: 'rgba(100, 180, 100, 0.10)',
                                                     border: '1.5px dashed #4caf50',
                                                     borderRadius: '3px',

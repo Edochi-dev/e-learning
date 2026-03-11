@@ -70,14 +70,15 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Convertimos color hex a RGB normalizado (0-1)
         const color = this.hexToRgb(nameColor);
 
-        // Usamos fontSize como offset Y en lugar del ascender real de la fuente.
-        // Razón: CSS renderiza texto con half-leading, dejando ~5px por encima del
-        // ascender dentro del line-box. Restar fontSize (mayor que el ascender real)
-        // baja el baseline esos ~5px, haciendo que el tope visual del texto quede
-        // alineado con el borde superior del recuadro del preview, igual que en CSS.
+        // Fuentes caligráficas (Great Vibes, Dancing Script…) tienen em_height > lineHeight
+        // en CSS, por lo que el texto desborda hacia arriba del element box.
+        // Usar heightAtSize como offset coloca el baseline de modo que el tope visual
+        // del texto quede en el borde superior del element box en el PDF,
+        // coincidiendo con el comportamiento de CSS para estas fuentes.
+        const nameAscender = font.heightAtSize(fontSize, { descender: false });
         page.drawText(recipientName, {
             x: this.resolveDrawX(namePosition.x, nameAlign, recipientName, fontSize, font),
-            y: pageHeight - namePosition.y - fontSize,
+            y: pageHeight - namePosition.y - nameAscender,
             size: fontSize,
             font,
             color: rgb(color.r, color.g, color.b),
