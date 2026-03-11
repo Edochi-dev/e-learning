@@ -21,6 +21,11 @@ export interface CertificateTemplate {
     qrSize: number;
     fontFamily: string;
     paperFormat: string;
+    showDate: boolean;
+    datePositionX: number;
+    datePositionY: number;
+    dateFontSize: number;
+    dateColor: string;
     createdAt: string;
     certificateCount?: number;
 }
@@ -49,6 +54,11 @@ export interface TemplatePositions {
     qrPositionX: number;
     qrPositionY: number;
     qrSize: number;
+    showDate: boolean;
+    datePositionX: number;
+    datePositionY: number;
+    dateFontSize: number;
+    dateColor: string;
 }
 
 export interface CertificateGateway {

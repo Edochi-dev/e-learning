@@ -50,6 +50,22 @@ export class CertificateTemplate {
     @Column({ default: 'A4' })
     paperFormat: string;
 
+    // ── Fecha de emisión ──────────────────────────────────────────────────────
+    @Column({ default: true })
+    showDate: boolean;
+
+    @Column('float', { default: 0 })
+    datePositionX: number;
+
+    @Column('float', { default: 0 })
+    datePositionY: number;
+
+    @Column('int', { default: 18 })
+    dateFontSize: number;
+
+    @Column({ default: '#000000' })
+    dateColor: string;
+
     @CreateDateColumn()
     createdAt: Date;
 

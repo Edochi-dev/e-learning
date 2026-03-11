@@ -70,6 +70,7 @@ const FONT_GROUPS = [...new Set(FONT_OPTIONS.map(f => f.group))];
 
 const INITIAL_NAME_PCT = { x: 0.50, y: 0.35 };
 const INITIAL_QR_PCT   = { x: 0.78, y: 0.72 };
+const INITIAL_DATE_PCT = { x: 0.50, y: 0.55 };
 
 /**
  * CreateCertificateTemplatePage
@@ -109,6 +110,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const nameNodeRef  = useRef<HTMLDivElement>(null);
     const qrNodeRef    = useRef<HTMLDivElement>(null);
+    const dateNodeRef  = useRef<HTMLDivElement>(null);
 
     const [pdfDims, setPdfDims] = useState({ w: 0, h: 0 });
 
@@ -116,17 +118,23 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // null = aún no calculadas (Draggables no montan hasta que tengan valor).
     const [nameDefaultPos, setNameDefaultPos] = useState<{ x: number; y: number } | null>(null);
     const [qrDefaultPos,   setQrDefaultPos]   = useState<{ x: number; y: number } | null>(null);
+    const [dateDefaultPos, setDateDefaultPos] = useState<{ x: number; y: number } | null>(null);
 
     // Proporciones (0–1): lo que se convierte a puntos PDF al guardar.
     // Se actualizan en onStop.
     const [namePct, setNamePct] = useState(INITIAL_NAME_PCT);
     const [qrPct,   setQrPct]   = useState(INITIAL_QR_PCT);
+    const [datePct, setDatePct] = useState(INITIAL_DATE_PCT);
 
     // ── Estilo ────────────────────────────────────────────────────────────────
     const [fontFamily, setFontFamily] = useState('GreatVibes-Regular');
     const [fontSize, setFontSize]     = useState(36);
     const [nameColor, setNameColor]   = useState('#1a1a1a');
     const [qrSize, setQrSize]         = useState(90);
+    // Fecha
+    const [showDate, setShowDate]     = useState(true);
+    const [dateFontSize, setDateFontSize] = useState(18);
+    const [dateColor, setDateColor]   = useState('#1a1a1a');
 
     // ── UI ────────────────────────────────────────────────────────────────────
     const [uploading, setUploading] = useState(false);
@@ -180,6 +188,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         if (w === 0 || h === 0) return;
         setNameDefaultPos({ x: INITIAL_NAME_PCT.x * w, y: INITIAL_NAME_PCT.y * h });
         setQrDefaultPos({   x: INITIAL_QR_PCT.x   * w, y: INITIAL_QR_PCT.y   * h });
+        setDateDefaultPos({ x: INITIAL_DATE_PCT.x * w, y: INITIAL_DATE_PCT.y * h });
     }, [canvasRendered]);
 
     // ── Validación del archivo PDF ────────────────────────────────────────────
@@ -261,6 +270,11 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 qrPositionX:   qrPct.x * pdfDims.w,
                 qrPositionY:   qrPct.y * pdfDims.h,
                 qrSize,
+                showDate,
+                datePositionX: datePct.x * pdfDims.w,
+                datePositionY: datePct.y * pdfDims.h,
+                dateFontSize,
+                dateColor,
             }, token);
             navigate('/admin/certificados');
         } catch (err) {
@@ -292,7 +306,16 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         });
     };
 
-    const draggablesReady = nameDefaultPos !== null && qrDefaultPos !== null;
+    const onDateStop = (_: unknown, data: { x: number; y: number }) => {
+        if (!containerRef.current) return;
+        const { offsetWidth: w, offsetHeight: h } = containerRef.current;
+        setDatePct({
+            x: Math.max(0, Math.min(1, data.x / w)),
+            y: Math.max(0, Math.min(1, data.y / h)),
+        });
+    };
+
+    const draggablesReady = nameDefaultPos !== null && qrDefaultPos !== null && dateDefaultPos !== null;
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
@@ -433,6 +456,36 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 <QRCodeSVG value="https://marsnailsacademy.com/certificados/ejemplo" size={displayQrSize()} />
                                             </div>
                                         </Draggable>
+
+                                        {showDate && (
+                                            <Draggable
+                                                nodeRef={dateNodeRef}
+                                                bounds="parent"
+                                                defaultPosition={dateDefaultPos!}
+                                                onStop={onDateStop}
+                                            >
+                                                <div ref={dateNodeRef} style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    cursor: 'grab',
+                                                    userSelect: 'none',
+                                                    padding: '2px 4px',
+                                                    background: 'rgba(100, 180, 100, 0.10)',
+                                                    border: '1.5px dashed #4caf50',
+                                                    borderRadius: '3px',
+                                                    fontFamily: selectedFont.css,
+                                                    fontWeight: selectedFont.weight,
+                                                    fontStyle: selectedFont.style,
+                                                    fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
+                                                    color: dateColor,
+                                                    whiteSpace: 'nowrap',
+                                                    lineHeight: 1,
+                                                }}>
+                                                    11 de marzo de 2026
+                                                </div>
+                                            </Draggable>
+                                        )}
                                     </>
                                 )}
                             </div>
@@ -441,6 +494,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
                             <span><span style={{ color: '#e84393', fontWeight: 700 }}>━ ━</span> Nombre del alumno</span>
                             <span><span style={{ color: '#d4a574', fontWeight: 700 }}>━ ━</span> Código QR</span>
+                            {showDate && <span><span style={{ color: '#4caf50', fontWeight: 700 }}>━ ━</span> Fecha</span>}
                         </div>
                     </div>
 
@@ -508,6 +562,45 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
                             </div>
                         </div>
+
+                        <hr style={{ marginBottom: '1.25rem', borderColor: 'var(--border)' }} />
+
+                        {/* ── Fecha de emisión ── */}
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
+                                <input type="checkbox" checked={showDate} onChange={e => setShowDate(e.target.checked)}
+                                    style={{ accentColor: '#4caf50', width: '16px', height: '16px' }} />
+                                Mostrar fecha de emisión
+                            </label>
+                        </div>
+
+                        {showDate && (
+                            <>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="form-label">Tamaño de fuente (fecha)</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <input type="range" min={6} max={80} step={1} value={dateFontSize}
+                                            onChange={e => setDateFontSize(Number(e.target.value))}
+                                            style={{ flex: 1, accentColor: '#4caf50' }} />
+                                        <input type="number" min={6} max={80} value={dateFontSize}
+                                            onChange={e => setDateFontSize(Math.min(80, Math.max(6, Number(e.target.value))))}
+                                            style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
+                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginBottom: '1.5rem' }}>
+                                    <label className="form-label">Color de la fecha</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                                        <input type="color" value={dateColor} onChange={e => setDateColor(e.target.value)}
+                                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
+                                        <input type="text" className="form-input" value={dateColor}
+                                            onChange={e => setDateColor(e.target.value)}
+                                            style={{ fontFamily: 'monospace', flex: 1 }} />
+                                    </div>
+                                </div>
+                            </>
+                        )}
 
                         {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
 

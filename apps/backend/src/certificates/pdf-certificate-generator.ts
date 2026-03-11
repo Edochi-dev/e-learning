@@ -34,7 +34,7 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     private readonly fontsDir = path.join(__dirname, 'fonts');
 
     async generate(params: GenerateCertificateParams): Promise<Buffer> {
-        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, qrPosition, qrSize } = params;
+        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor } = params;
 
         const templateBytes = fs.readFileSync(templatePath);
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -69,6 +69,19 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
             width: qrSize,
             height: qrSize,
         });
+
+        // Si la plantilla tiene fecha activada, la superponemos usando la misma
+        // fuente que el nombre (coherencia tipográfica del certificado)
+        if (dateText && datePosition && dateFontSize) {
+            const dateRgb = this.hexToRgb(dateColor ?? '#000000');
+            page.drawText(dateText, {
+                x: datePosition.x,
+                y: pageHeight - datePosition.y - dateFontSize,
+                size: dateFontSize,
+                font,
+                color: rgb(dateRgb.r, dateRgb.g, dateRgb.b),
+            });
+        }
 
         const pdfBytes = await pdfDoc.save();
         return Buffer.from(pdfBytes);

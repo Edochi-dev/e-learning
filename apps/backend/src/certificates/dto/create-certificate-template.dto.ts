@@ -10,6 +10,6 @@ export class CreateCertificateTemplateDto {
     courseAbbreviation: string;
 
     @IsString()
-    @IsIn(['A4', 'A3'])
+    @IsIn(['A4 Vertical', 'A4 Horizontal', 'A3 Vertical', 'A3 Horizontal'])
     paperFormat: string;
 }

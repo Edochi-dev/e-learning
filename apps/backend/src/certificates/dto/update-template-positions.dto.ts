@@ -1,4 +1,4 @@
-import { IsNumber, IsString, IsOptional } from 'class-validator';
+import { IsNumber, IsString, IsOptional, IsBoolean } from 'class-validator';
 
 export class UpdateTemplatePositionsDto {
     @IsNumber()
@@ -24,4 +24,25 @@ export class UpdateTemplatePositionsDto {
 
     @IsString()
     fontFamily: string;
+
+    // ── Fecha de emisión ──────────────────────────────────────────────────────
+    @IsOptional()
+    @IsBoolean()
+    showDate?: boolean;
+
+    @IsOptional()
+    @IsNumber()
+    datePositionX?: number;
+
+    @IsOptional()
+    @IsNumber()
+    datePositionY?: number;
+
+    @IsOptional()
+    @IsNumber()
+    dateFontSize?: number;
+
+    @IsOptional()
+    @IsString()
+    dateColor?: string;
 }
