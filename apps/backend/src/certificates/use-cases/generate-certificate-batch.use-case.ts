@@ -93,7 +93,6 @@ export class GenerateCertificateBatchUseCase {
                 nameColor: template.nameColor,
                 fontFamily: template.fontFamily ?? 'Helvetica',
                 nameAlign: (template.nameAlign ?? 'left') as 'left' | 'center',
-                pageWidth: template.pageWidth,
                 qrPosition: { x: template.qrPositionX, y: template.qrPositionY },
                 qrSize: template.qrSize,
                 ...(template.showDate && {

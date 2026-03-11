@@ -34,7 +34,7 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     private readonly fontsDir = path.join(__dirname, 'fonts');
 
     async generate(params: GenerateCertificateParams): Promise<Buffer> {
-        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, nameAlign, pageWidth, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily } = params;
+        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, nameAlign, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily } = params;
 
         const templateBytes = fs.readFileSync(templatePath);
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -52,11 +52,12 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         const color = this.hexToRgb(nameColor);
 
         // Calculamos el X del nombre según la alineación elegida en la plantilla.
-        // 'left'  → el X guardado es el borde izquierdo del texto (comportamiento estándar de pdf-lib)
-        // 'center' → calculamos el X para que el texto quede centrado en la página,
-        //            sin importar cuántos caracteres tenga el nombre
+        // 'left'   → namePosition.x es el borde izquierdo del texto
+        // 'center' → namePosition.x es el CENTRO del texto; desplazamos a la izquierda
+        //            la mitad del ancho real del texto para que el centro quede en ese punto.
+        //            Así "Ana" y "María Fernanda González" tienen el mismo centro.
         const nameX = nameAlign === 'center'
-            ? (pageWidth - font.widthOfTextAtSize(recipientName, fontSize)) / 2
+            ? namePosition.x - font.widthOfTextAtSize(recipientName, fontSize) / 2
             : namePosition.x;
 
         // pdf-lib usa coordenadas desde la esquina inferior-izquierda,

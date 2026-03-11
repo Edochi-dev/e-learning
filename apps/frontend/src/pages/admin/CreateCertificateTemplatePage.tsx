@@ -295,8 +295,14 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const onNameStop = (_: unknown, data: { x: number; y: number }) => {
         if (!containerRef.current) return;
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
+        // En modo 'center': guardamos el CENTRO del elemento como ancla X.
+        // Así namePositionX siempre representa el punto central del texto,
+        // y el PDF generator puede calcular: drawX = centerX - textWidth/2
+        const anchorX = nameAlign === 'center'
+            ? data.x + (nameNodeRef.current?.offsetWidth ?? 0) / 2
+            : data.x;
         setNamePct({
-            x: Math.max(0, Math.min(1, data.x / w)),
+            x: Math.max(0, Math.min(1, anchorX / w)),
             y: Math.max(0, Math.min(1, data.y / h)),
         });
     };
@@ -411,7 +417,6 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                         <Draggable
                                             nodeRef={nameNodeRef}
                                             bounds="parent"
-                                            axis={nameAlign === 'center' ? 'y' : 'both'}
                                             defaultPosition={nameDefaultPos!}
                                             onStop={onNameStop}
                                         >
@@ -419,7 +424,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 position: 'absolute',
                                                 top: 0,
                                                 left: 0,
-                                                cursor: nameAlign === 'center' ? 'ns-resize' : 'grab',
+                                                cursor: 'grab',
                                                 userSelect: 'none',
                                                 padding: '2px 4px',
                                                 background: 'rgba(232, 67, 147, 0.10)',
@@ -432,13 +437,13 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 color: nameColor,
                                                 whiteSpace: 'nowrap',
                                                 lineHeight: 1,
-                                                // En modo centro: ocupa todo el ancho del contenedor
-                                                // y centra el texto — así el preview es fiel al PDF
+                                                // En modo centro: marcamos visualmente el eje central
+                                                // con una línea punteada vertical en el medio del elemento
                                                 ...(nameAlign === 'center' && {
-                                                    width: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100%',
-                                                    textAlign: 'center' as const,
-                                                    left: 0,
-                                                    padding: '2px 0',
+                                                    backgroundImage: 'linear-gradient(#e84393 1px, transparent 1px)',
+                                                    backgroundSize: '1px 4px',
+                                                    backgroundPosition: '50% 0',
+                                                    backgroundRepeat: 'repeat-y',
                                                 }),
                                             }}>
                                                 Ana García
@@ -563,7 +568,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                             </div>
                             {nameAlign === 'center' && (
                                 <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                                    En modo centrado solo puedes mover el nombre verticalmente. El X se calcula automáticamente al generar.
+                                    El punto donde sueltes el elemento será el centro del nombre, sin importar su longitud.
                                 </p>
                             )}
                         </div>
