@@ -45,4 +45,8 @@ export class UpdateTemplatePositionsDto {
     @IsOptional()
     @IsString()
     dateColor?: string;
+
+    @IsOptional()
+    @IsString()
+    dateFontFamily?: string;
 }

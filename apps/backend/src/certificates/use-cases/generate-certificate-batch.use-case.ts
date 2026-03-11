@@ -75,13 +75,13 @@ export class GenerateCertificateBatchUseCase {
             const pixelSize = Math.ceil((template.qrSize / 72) * 300);
             const qrBuffer = await this.qrGateway.generate(verificationUrl, pixelSize);
 
-            // Fecha de emisión en español ("11 de marzo de 2026").
-            // Se genera una vez por certificado en el momento exacto de creación.
-            const dateText = new Date().toLocaleDateString('es-ES', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-            });
+            // Fecha de emisión en formato DD/MM/YYYY.
+            // Se genera en el momento exacto de creación de cada certificado.
+            const now = new Date();
+            const dd = String(now.getDate()).padStart(2, '0');
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const yyyy = now.getFullYear();
+            const dateText = `${dd}/${mm}/${yyyy}`;
 
             // 4. Generar el PDF con nombre, QR y (opcionalmente) fecha superpuestos
             const pdfBuffer = await this.generatorGateway.generate({
@@ -99,6 +99,7 @@ export class GenerateCertificateBatchUseCase {
                     datePosition: { x: template.datePositionX, y: template.datePositionY },
                     dateFontSize: template.dateFontSize,
                     dateColor: template.dateColor,
+                    dateFontFamily: template.dateFontFamily,
                 }),
             });
 

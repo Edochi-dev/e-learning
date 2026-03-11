@@ -13,6 +13,7 @@ export interface GenerateCertificateParams {
     datePosition?: { x: number; y: number };
     dateFontSize?: number;
     dateColor?: string;
+    dateFontFamily?: string;
 }
 
 export abstract class CertificateGeneratorGateway {

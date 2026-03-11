@@ -66,6 +66,9 @@ export class CertificateTemplate {
     @Column({ default: '#000000' })
     dateColor: string;
 
+    @Column({ default: 'Helvetica' })
+    dateFontFamily: string;
+
     @CreateDateColumn()
     createdAt: Date;
 

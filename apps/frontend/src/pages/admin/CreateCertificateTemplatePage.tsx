@@ -132,9 +132,10 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [nameColor, setNameColor]   = useState('#1a1a1a');
     const [qrSize, setQrSize]         = useState(90);
     // Fecha
-    const [showDate, setShowDate]     = useState(true);
+    const [showDate, setShowDate]         = useState(true);
     const [dateFontSize, setDateFontSize] = useState(18);
-    const [dateColor, setDateColor]   = useState('#1a1a1a');
+    const [dateColor, setDateColor]       = useState('#1a1a1a');
+    const [dateFontFamily, setDateFontFamily] = useState('Helvetica');
 
     // ── UI ────────────────────────────────────────────────────────────────────
     const [uploading, setUploading] = useState(false);
@@ -275,6 +276,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 datePositionY: datePct.y * pdfDims.h,
                 dateFontSize,
                 dateColor,
+                dateFontFamily,
             }, token);
             navigate('/admin/certificados');
         } catch (err) {
@@ -474,15 +476,15 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                     background: 'rgba(100, 180, 100, 0.10)',
                                                     border: '1.5px dashed #4caf50',
                                                     borderRadius: '3px',
-                                                    fontFamily: selectedFont.css,
-                                                    fontWeight: selectedFont.weight,
-                                                    fontStyle: selectedFont.style,
+                                                    fontFamily: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).css,
+                                                    fontWeight: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).weight,
+                                                    fontStyle:  (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).style,
                                                     fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
                                                     color: dateColor,
                                                     whiteSpace: 'nowrap',
                                                     lineHeight: 1,
                                                 }}>
-                                                    11 de marzo de 2026
+                                                    11/03/2026
                                                 </div>
                                             </Draggable>
                                         )}
@@ -576,6 +578,19 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
                         {showDate && (
                             <>
+                                <div style={{ marginBottom: '1rem' }}>
+                                    <label className="form-label">Tipo de letra (fecha)</label>
+                                    <select className="form-input" value={dateFontFamily} onChange={e => setDateFontFamily(e.target.value)}>
+                                        {FONT_GROUPS.map(group => (
+                                            <optgroup key={group} label={group}>
+                                                {FONT_OPTIONS.filter(f => f.group === group).map(f => (
+                                                    <option key={f.value} value={f.value}>{f.label}</option>
+                                                ))}
+                                            </optgroup>
+                                        ))}
+                                    </select>
+                                </div>
+
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label className="form-label">Tamaño de fuente (fecha)</label>
                                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>

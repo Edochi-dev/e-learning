@@ -26,6 +26,7 @@ export interface CertificateTemplate {
     datePositionY: number;
     dateFontSize: number;
     dateColor: string;
+    dateFontFamily: string;
     createdAt: string;
     certificateCount?: number;
 }
@@ -59,6 +60,7 @@ export interface TemplatePositions {
     datePositionY: number;
     dateFontSize: number;
     dateColor: string;
+    dateFontFamily: string;
 }
 
 export interface CertificateGateway {
