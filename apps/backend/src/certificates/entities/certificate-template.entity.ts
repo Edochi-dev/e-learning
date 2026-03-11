@@ -46,6 +46,11 @@ export class CertificateTemplate {
     @Column({ default: 'Helvetica' })
     fontFamily: string;
 
+    // 'left' = el X guardado es el borde izquierdo del texto
+    // 'center' = el texto se centra en la página (X se recalcula al generar)
+    @Column({ default: 'left' })
+    nameAlign: string;
+
     // Formato del papel: 'A4' o 'A3'
     @Column({ default: 'A4' })
     paperFormat: string;

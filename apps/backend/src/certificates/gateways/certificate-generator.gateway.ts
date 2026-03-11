@@ -8,6 +8,8 @@ export interface GenerateCertificateParams {
     fontFamily: string;
     qrPosition: { x: number; y: number };
     qrSize: number;
+    nameAlign: 'left' | 'center';
+    pageWidth: number;
     // Fecha de emisión (opcional — solo si la plantilla tiene showDate=true)
     dateText?: string;
     datePosition?: { x: number; y: number };

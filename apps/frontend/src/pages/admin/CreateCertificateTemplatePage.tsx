@@ -130,6 +130,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [fontFamily, setFontFamily] = useState('GreatVibes-Regular');
     const [fontSize, setFontSize]     = useState(36);
     const [nameColor, setNameColor]   = useState('#1a1a1a');
+    const [nameAlign, setNameAlign]   = useState<'left' | 'center'>('left');
     const [qrSize, setQrSize]         = useState(90);
     // Fecha
     const [showDate, setShowDate]         = useState(true);
@@ -268,6 +269,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 nameFontSize:  fontSize,
                 nameColor,
                 fontFamily,
+                nameAlign,
                 qrPositionX:   qrPct.x * pdfDims.w,
                 qrPositionY:   qrPct.y * pdfDims.h,
                 qrSize,
@@ -409,6 +411,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                         <Draggable
                                             nodeRef={nameNodeRef}
                                             bounds="parent"
+                                            axis={nameAlign === 'center' ? 'y' : 'both'}
                                             defaultPosition={nameDefaultPos!}
                                             onStop={onNameStop}
                                         >
@@ -416,7 +419,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 position: 'absolute',
                                                 top: 0,
                                                 left: 0,
-                                                cursor: 'grab',
+                                                cursor: nameAlign === 'center' ? 'ns-resize' : 'grab',
                                                 userSelect: 'none',
                                                 padding: '2px 4px',
                                                 background: 'rgba(232, 67, 147, 0.10)',
@@ -429,6 +432,14 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 color: nameColor,
                                                 whiteSpace: 'nowrap',
                                                 lineHeight: 1,
+                                                // En modo centro: ocupa todo el ancho del contenedor
+                                                // y centra el texto — así el preview es fiel al PDF
+                                                ...(nameAlign === 'center' && {
+                                                    width: containerRef.current ? `${containerRef.current.offsetWidth}px` : '100%',
+                                                    textAlign: 'center' as const,
+                                                    left: 0,
+                                                    padding: '2px 0',
+                                                }),
                                             }}>
                                                 Ana García
                                             </div>
@@ -524,6 +535,37 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                             }}>
                                 Ana García
                             </p>
+                        </div>
+
+                        <div style={{ marginBottom: '1rem' }}>
+                            <label className="form-label">Posición del nombre</label>
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                {(['left', 'center'] as const).map(opt => (
+                                    <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => setNameAlign(opt)}
+                                        style={{
+                                            flex: 1,
+                                            padding: '0.4rem',
+                                            border: `2px solid ${nameAlign === opt ? 'var(--primary)' : 'var(--border)'}`,
+                                            borderRadius: '6px',
+                                            background: nameAlign === opt ? 'rgba(232,67,147,0.08)' : 'transparent',
+                                            color: nameAlign === opt ? 'var(--primary)' : 'var(--text-muted)',
+                                            fontWeight: nameAlign === opt ? 700 : 400,
+                                            fontSize: '0.8rem',
+                                            cursor: 'pointer',
+                                        }}
+                                    >
+                                        {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
+                                    </button>
+                                ))}
+                            </div>
+                            {nameAlign === 'center' && (
+                                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                                    En modo centrado solo puedes mover el nombre verticalmente. El X se calcula automáticamente al generar.
+                                </p>
+                            )}
                         </div>
 
                         <div style={{ marginBottom: '1rem' }}>

@@ -25,6 +25,10 @@ export class UpdateTemplatePositionsDto {
     @IsString()
     fontFamily: string;
 
+    @IsOptional()
+    @IsString()
+    nameAlign?: string;
+
     // ── Fecha de emisión ──────────────────────────────────────────────────────
     @IsOptional()
     @IsBoolean()

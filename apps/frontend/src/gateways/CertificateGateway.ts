@@ -20,6 +20,7 @@ export interface CertificateTemplate {
     qrPositionY: number;
     qrSize: number;
     fontFamily: string;
+    nameAlign: 'left' | 'center';
     paperFormat: string;
     showDate: boolean;
     datePositionX: number;
@@ -52,6 +53,7 @@ export interface TemplatePositions {
     nameFontSize: number;
     nameColor: string;
     fontFamily: string;
+    nameAlign: 'left' | 'center';
     qrPositionX: number;
     qrPositionY: number;
     qrSize: number;

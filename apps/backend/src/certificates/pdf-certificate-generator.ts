@@ -34,7 +34,7 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     private readonly fontsDir = path.join(__dirname, 'fonts');
 
     async generate(params: GenerateCertificateParams): Promise<Buffer> {
-        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily } = params;
+        const { templatePath, recipientName, qrBuffer, namePosition, fontSize, nameColor, fontFamily, nameAlign, pageWidth, qrPosition, qrSize, dateText, datePosition, dateFontSize, dateColor, dateFontFamily } = params;
 
         const templateBytes = fs.readFileSync(templatePath);
         const pdfDoc = await PDFDocument.load(templateBytes);
@@ -51,10 +51,18 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Convertimos color hex a RGB normalizado (0-1)
         const color = this.hexToRgb(nameColor);
 
-        // Dibujamos el nombre. pdf-lib usa coordenadas desde la esquina inferior-izquierda,
+        // Calculamos el X del nombre según la alineación elegida en la plantilla.
+        // 'left'  → el X guardado es el borde izquierdo del texto (comportamiento estándar de pdf-lib)
+        // 'center' → calculamos el X para que el texto quede centrado en la página,
+        //            sin importar cuántos caracteres tenga el nombre
+        const nameX = nameAlign === 'center'
+            ? (pageWidth - font.widthOfTextAtSize(recipientName, fontSize)) / 2
+            : namePosition.x;
+
+        // pdf-lib usa coordenadas desde la esquina inferior-izquierda,
         // así que invertimos el eje Y: pdfY = pageHeight - frontendY - fontSize
         page.drawText(recipientName, {
-            x: namePosition.x,
+            x: nameX,
             y: pageHeight - namePosition.y - fontSize,
             size: fontSize,
             font,
