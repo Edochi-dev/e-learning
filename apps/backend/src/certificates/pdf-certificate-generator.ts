@@ -70,9 +70,14 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Convertimos color hex a RGB normalizado (0-1)
         const color = this.hexToRgb(nameColor);
 
+        // heightAtSize con { descender: false } devuelve el ascender real de la fuente
+        // (cuánto sube el texto por encima de la línea base). Usarlo como offset Y es
+        // más preciso que usar fontSize, porque fuentes decorativas como Great Vibes
+        // tienen ascenders mayores que el em-size y se dibujaban por encima del recuadro.
+        const nameAscender = font.heightAtSize(fontSize, { descender: false });
         page.drawText(recipientName, {
             x: this.resolveDrawX(namePosition.x, nameAlign, recipientName, fontSize, font),
-            y: pageHeight - namePosition.y - fontSize,
+            y: pageHeight - namePosition.y - nameAscender,
             size: fontSize,
             font,
             color: rgb(color.r, color.g, color.b),
@@ -90,10 +95,11 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
         // Si la plantilla tiene fecha activada, la superponemos con su propia fuente
         if (dateText && datePosition && dateFontSize) {
             const dateFont = await this.embedFont(pdfDoc, dateFontFamily ?? 'Helvetica');
+            const dateAscender = dateFont.heightAtSize(dateFontSize, { descender: false });
             const dateRgb = this.hexToRgb(dateColor ?? '#000000');
             page.drawText(dateText, {
                 x: this.resolveDrawX(datePosition.x, dateAlign ?? 'left', dateText, dateFontSize, dateFont),
-                y: pageHeight - datePosition.y - dateFontSize,
+                y: pageHeight - datePosition.y - dateAscender,
                 size: dateFontSize,
                 font: dateFont,
                 color: rgb(dateRgb.r, dateRgb.g, dateRgb.b),
