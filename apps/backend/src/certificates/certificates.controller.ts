@@ -23,6 +23,7 @@ import { DownloadCertificateBatchUseCase } from './use-cases/download-certificat
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 import type { CertAction } from './use-cases/delete-certificate-template.use-case';
 import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
+import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
 import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
@@ -37,6 +38,7 @@ export class CertificatesController {
         private readonly certificateGateway: CertificateGateway,
         private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
         private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
+        private readonly lookupCertificateUseCase: LookupCertificateUseCase,
     ) {}
 
     // ==========================================
@@ -130,6 +132,13 @@ export class CertificatesController {
     // ==========================================
     // Rutas Públicas (verificación de certificado)
     // ==========================================
+
+    @Get('certificates/lookup')
+    @UseGuards(ThrottlerGuard)
+    @Throttle({ default: { ttl: 60000, limit: 20 } })
+    lookupCertificate(@Query('number') number: string) {
+        return this.lookupCertificateUseCase.execute(number ?? '');
+    }
 
     @Get('certificates/:id')
     @UseGuards(ThrottlerGuard)

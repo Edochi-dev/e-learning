@@ -34,6 +34,10 @@ export class CertificatesRepository implements CertificateGateway {
         return this.repo.findOne({ where: { id } });
     }
 
+    async findByNumber(certificateNumber: string): Promise<Certificate | null> {
+        return this.repo.findOne({ where: { certificateNumber } });
+    }
+
     async countByAbbreviation(abbreviation: string): Promise<number> {
         // Cuenta todos los certificados cuyo número empieza con la abreviatura dada.
         // Ej: "MR-" → cuenta MR-00001, MR-00002, etc.

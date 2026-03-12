@@ -82,4 +82,5 @@ export interface CertificateGateway {
 
     // Público
     getCertificate(id: string): Promise<Certificate>;
+    lookupByNumber(certificateNumber: string): Promise<{ id: string }>;
 }

@@ -25,6 +25,7 @@ import { GenerateCertificatesPage } from './pages/admin/GenerateCertificatesPage
 import { SearchCertificatesPage } from './pages/admin/SearchCertificatesPage';
 import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdminPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
+import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 
@@ -78,6 +79,7 @@ function AppContent() {
         <Routes>
           {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/certificados/buscar" element={<CertificateLookupPage gateway={certificateGateway} />} />
           <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
 
           {/* Rutas públicas — visibles solo para ADMIN en modo coming soon */}
