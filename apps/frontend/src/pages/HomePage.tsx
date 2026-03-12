@@ -92,14 +92,9 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                             <Link to="/cursos" className="btn-primary">
                                 Ver Cursos
                             </Link>
-                            <a
-                                href="https://wa.me/56946622112"
-                                target="_blank"
-                                rel="noreferrer"
-                                className="btn-secondary"
-                            >
-                                💬 WhatsApp
-                            </a>
+                            <Link to="/certificados/buscar" className="btn-secondary">
+                                🎓 Ya tengo certificado
+                            </Link>
                         </div>
                     </div>
 

@@ -32,6 +32,18 @@ export const ComingSoonPage = () => {
                     Acceso administradores
                 </Link>
             </div>
+
+            {/* Card secundaria: búsqueda de certificado */}
+            <div style={styles.certCard}>
+                <span style={styles.certIcon}>🎓</span>
+                <div style={styles.certText}>
+                    <p style={styles.certTitle}>¿Ya tienes un certificado?</p>
+                    <p style={styles.certBody}>Búscalo con tu número de certificado</p>
+                </div>
+                <Link to="/certificados/buscar" style={styles.certLink}>
+                    Ver mi certificado →
+                </Link>
+            </div>
         </div>
     );
 };
@@ -40,9 +52,11 @@ const styles: Record<string, React.CSSProperties> = {
     wrapper: {
         minHeight: '80vh',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         padding: '2rem',
+        gap: '0',
     },
     card: {
         background: 'var(--bg-elevated)',
@@ -99,5 +113,44 @@ const styles: Record<string, React.CSSProperties> = {
         textDecoration: 'none',
         borderBottom: '1px dotted var(--text-muted)',
         paddingBottom: '1px',
+    },
+    certCard: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '1rem',
+        background: 'var(--bg-elevated)',
+        border: '1px solid var(--border)',
+        borderRadius: '1rem',
+        padding: '1.25rem 1.5rem',
+        maxWidth: '520px',
+        width: '100%',
+        marginTop: '1rem',
+    },
+    certIcon: {
+        fontSize: '1.75rem',
+        flexShrink: 0,
+    },
+    certText: {
+        flex: 1,
+        textAlign: 'left' as const,
+    },
+    certTitle: {
+        margin: 0,
+        fontWeight: 600,
+        fontSize: '0.95rem',
+        color: 'var(--text)',
+    },
+    certBody: {
+        margin: '0.15rem 0 0',
+        fontSize: '0.8rem',
+        color: 'var(--text-muted)',
+    },
+    certLink: {
+        flexShrink: 0,
+        color: 'var(--primary)',
+        fontWeight: 600,
+        fontSize: '0.9rem',
+        textDecoration: 'none',
+        whiteSpace: 'nowrap' as const,
     },
 };
