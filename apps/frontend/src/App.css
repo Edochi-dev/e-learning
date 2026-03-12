@@ -13,10 +13,10 @@
   --primary-glow: rgba(232, 67, 147, 0.35);
 
   /* Champagne Gold Palette */
-  --gold: #d4a574;
-  --gold-light: #e8c9a0;
-  --gold-dark: #b8860b;
-  --gold-glow: rgba(212, 165, 116, 0.3);
+  --gold: #C9A84C;
+  --gold-light: #E2C97E;
+  --gold-dark: #9A7A28;
+  --gold-glow: rgba(201, 168, 76, 0.3);
 
   /* Neutrals — warm undertone */
   --bg: #fdf8f5;
@@ -43,7 +43,7 @@
   --radius-full: 9999px;
 
   /* Typography */
-  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-heading: 'Kaushan Script', cursive;
   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
 
   /* Transitions */
@@ -58,10 +58,10 @@
   --primary-dark: #e84393;
   --primary-glow: rgba(253, 121, 168, 0.25);
 
-  --gold: #e8c9a0;
-  --gold-light: #f0dbc4;
-  --gold-dark: #d4a574;
-  --gold-glow: rgba(232, 201, 160, 0.15);
+  --gold: #D4B05A;
+  --gold-light: #E8CC84;
+  --gold-dark: #A07D2A;
+  --gold-glow: rgba(212, 176, 90, 0.2);
 
   --bg: #0d0a09;
   --bg-elevated: #1c1614;
@@ -113,7 +113,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   color: var(--text-primary);
   line-height: 1.2;
   margin-top: 0;
@@ -160,20 +160,33 @@ a {
 }
 
 .logo {
-  font-family: var(--font-heading);
-  font-size: 1.65rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary) 0%, var(--gold) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
   text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
   letter-spacing: -0.01em;
   transition: opacity 0.3s ease;
 }
 
 .logo:hover {
   opacity: 0.85;
+}
+
+.logo__img {
+  height: 48px;
+  width: 48px;
+}
+
+.logo__name {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--gold) 0%, var(--primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.2em;
+  overflow: visible;
 }
 
 .nav-links {
@@ -327,6 +340,7 @@ a {
   letter-spacing: -0.02em;
   color: var(--text-primary);
   margin-bottom: 1.5rem;
+  font-family: var(--font-body);
   font-family: var(--font-heading);
 }
 
@@ -433,7 +447,7 @@ a {
 }
 
 .course-title {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.75rem;
@@ -1037,8 +1051,13 @@ input:checked+.slider .icon-moon {
   }
 
 
-  .logo {
-    font-size: 1.35rem;
+  .logo__img {
+    height: 38px;
+    width: 38px;
+  }
+
+  .logo__name {
+    font-size: 1.1rem;
   }
 }
 
@@ -1719,7 +1738,6 @@ input:checked+.slider .icon-moon {
   margin-bottom: 0.75rem;
   display: block;
   font-family: var(--font-heading);
-  font-style: normal;
 }
 
 /* Divisor entre secciones */
@@ -1781,7 +1799,10 @@ input:checked+.slider .icon-moon {
 .home-about__content h2 {
   font-size: 2.75rem;
   margin-bottom: 0.25rem;
-  line-height: 1.15;
+  line-height: 1.5;
+  font-family: var(--font-heading);
+  padding: 0 0.2em 0.2em 0;
+  overflow: visible;
 }
 
 .home-about__name {
@@ -1789,6 +1810,8 @@ input:checked+.slider .icon-moon {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  display: inline-block;
+  padding-right: 0.5em;
 }
 
 .home-about__role {
@@ -1824,7 +1847,7 @@ input:checked+.slider .icon-moon {
 }
 
 .stat-value {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 2.1rem;
   font-weight: 700;
   background: linear-gradient(135deg, var(--primary), var(--gold));
@@ -1942,7 +1965,7 @@ input:checked+.slider .icon-moon {
 }
 
 .preview-card__title {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 1.35rem;
   font-weight: 700;
   margin-bottom: 0.6rem;
@@ -2251,7 +2274,7 @@ input:checked+.slider .icon-moon {
 }
 
 .catalog-card__title {
-  font-family: var(--font-heading);
+  font-family: var(--font-body);
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 0.65rem;
