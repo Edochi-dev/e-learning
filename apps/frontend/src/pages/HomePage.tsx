@@ -100,7 +100,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
 
                     {/* Columna derecha — foto
                         Cuando Mariana entregue la foto, reemplaza el div placeholder por:
-                        <img src="/ruta-foto.jpg" alt="Trabajo de Mariana Salinas" className="hero__photo-img" />
+                        <img src="/ruta-foto.jpg" alt="Trabajo de Mari Sandoval" className="hero__photo-img" />
                     */}
                     <div className="hero__photo">
                         <div className="hero__photo-placeholder">
@@ -115,8 +115,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             {/* ─── GALERÍA MARQUEE ─────────────────────────────── */}
             <section className="gallery-section">
                 <div className="container">
-                    <p className="section-eyebrow">Momentos reales</p>
-                    <h2 className="gallery-section__title">Certificaciones &amp; Talleres</h2>
+                    <p className="section-eyebrow">Certificaciones &amp; Talleres</p>
                     <p className="gallery-section__sub">
                         Más de 500 alumnas certificadas en clases presenciales y online.
                     </p>
@@ -159,12 +158,12 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                 <div className="container">
                     <div className="home-about__inner">
                         <div className="home-about__image-wrap">
-                            <div className="home-about__avatar" aria-hidden="true">👩‍🎨</div>
+                            <img src="/images/About-me.jpg" alt="Mari Sandoval" className="home-about__avatar" />
                         </div>
                         <div className="home-about__content">
                             <p className="section-eyebrow">Sobre la educadora</p>
                             <h2>
-                                Mariana <span className="home-about__name">Salinas</span>
+                                Mari <span className="home-about__name">Sandoval</span>
                             </h2>
                             <p className="home-about__role">Nail Artist & Educadora Certificada</p>
                             <p className="home-about__bio">
@@ -203,8 +202,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             <section className="home-preview">
                 <div className="container">
                     <div className="home-preview__header">
-                        <p className="section-eyebrow">Programas destacados</p>
-                        <h2>Aprende lo que el mercado exige</h2>
+                        <p className="section-eyebrow">Aprende lo que el mercado exige</p>
                         <p className="home-preview__subtitle">
                             Cada programa fue diseñado con base en la demanda real del sector.
                         </p>
@@ -280,7 +278,6 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                 <div className="container">
                     <div className="home-contact__inner">
                         <p className="section-eyebrow">Ponte en contacto</p>
-                        <h2>Hablemos</h2>
                         <p className="home-contact__subtitle">
                             ¿Tienes dudas sobre algún curso o problemas para comenzar tu formación?
                             Estamos aquí para orientarte.
@@ -290,21 +287,29 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 href="https://wa.me/56946622112"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="contact-card"
+                                className="contact-card contact-card--whatsapp"
                             >
-                                <span className="contact-card__icon">💬</span>
-                                <span className="contact-card__label">WhatsApp</span>
-                                <span className="contact-card__value">+56 9 4662 2112</span>
+                                <img src="/images/whatsapp.png" alt="Mari Sandoval" className="contact-card__photo" />
+                                <div className="contact-card__body">
+                                    <span className="contact-card__platform contact-card__platform--whatsapp">WhatsApp</span>
+                                    <span className="contact-card__name">Mari Sandoval</span>
+                                    <span className="contact-card__value">+56 9 4662 2112</span>
+                                </div>
+                                <span className="contact-card__cta">Enviar mensaje →</span>
                             </a>
                             <a
                                 href="https://instagram.com/maris_nails_oficial"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="contact-card"
+                                className="contact-card contact-card--instagram"
                             >
-                                <span className="contact-card__icon">📸</span>
-                                <span className="contact-card__label">Instagram</span>
-                                <span className="contact-card__value">@maris_nails_oficial</span>
+                                <img src="/images/instagram.jpg" alt="Mari Sandoval" className="contact-card__photo" />
+                                <div className="contact-card__body">
+                                    <span className="contact-card__platform contact-card__platform--instagram">Instagram</span>
+                                    <span className="contact-card__name">Mari Sandoval</span>
+                                    <span className="contact-card__value">@maris_nails_oficial</span>
+                                </div>
+                                <span className="contact-card__cta">Ver perfil →</span>
                             </a>
                         </div>
                     </div>

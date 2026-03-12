@@ -1713,13 +1713,13 @@ input:checked+.slider .icon-moon {
 
 /* Eyebrow label (pequeño texto sobre los títulos) */
 .section-eyebrow {
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
+  font-size: 2rem;
+  font-weight: 700;
   color: var(--primary);
   margin-bottom: 0.75rem;
   display: block;
+  font-family: var(--font-heading);
+  font-style: normal;
 }
 
 /* Divisor entre secciones */
@@ -1766,23 +1766,17 @@ input:checked+.slider .icon-moon {
 }
 
 .home-about__avatar {
-  width: 320px;
-  height: 320px;
-  border-radius: 40% 60% 60% 40% / 50% 50% 50% 50%;
-  background: linear-gradient(135deg, rgba(232, 67, 147, 0.1) 0%, rgba(212, 165, 116, 0.16) 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 5.5rem;
-  border: 1.5px solid var(--border-strong);
+  width: 340px;
+  height: 420px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 20px;
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
   position: relative;
   box-shadow: var(--shadow-lg), 0 0 0 8px rgba(212, 165, 116, 0.06);
 }
 
-[data-theme='dark'] .home-about__avatar {
-  background: linear-gradient(135deg, rgba(253, 121, 168, 0.08) 0%, rgba(232, 201, 160, 0.1) 100%);
-  box-shadow: var(--shadow-lg), 0 0 0 8px rgba(232, 201, 160, 0.04);
-}
 
 .home-about__content h2 {
   font-size: 2.75rem;
@@ -2317,10 +2311,9 @@ input:checked+.slider .icon-moon {
   }
 
   .home-about__avatar {
-    width: 220px;
-    height: 220px;
+    width: 100%;
+    height: 280px;
     margin: 0 auto;
-    font-size: 4rem;
   }
 
   .home-stats {
@@ -3124,19 +3117,19 @@ input:checked+.slider .icon-moon {
 
 /* ─── HOME CONTACT ──────────────────────────────────────────────────────── */
 .home-contact {
-  padding: 5rem 0;
+  padding: 3rem 0;
   text-align: center;
 }
 
 .home-contact__inner {
-  max-width: 720px;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .home-contact__subtitle {
   color: var(--text-secondary);
   font-size: 1.05rem;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
 }
 
 .contact-cards {
@@ -3148,39 +3141,94 @@ input:checked+.slider .icon-moon {
 
 .contact-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.4rem;
-  padding: 1.75rem 2rem;
-  min-width: 160px;
+  gap: 1.25rem;
+  padding: 1.5rem 1.75rem;
+  flex: 1;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   text-decoration: none;
   color: var(--text-primary);
-  transition: border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
 }
 
 .contact-card:hover {
-  border-color: var(--primary);
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
 }
 
-.contact-card__icon {
-  font-size: 2rem;
+.contact-card--whatsapp:hover {
+  border-color: #25D366;
 }
 
-.contact-card__label {
-  font-size: 0.75rem;
+.contact-card--instagram:hover {
+  border-color: #E1306C;
+}
+
+.contact-card__photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+}
+
+.contact-card--whatsapp .contact-card__photo {
+  border-color: #25D366;
+}
+
+.contact-card--instagram .contact-card__photo {
+  border-color: #E1306C;
+}
+
+.contact-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.contact-card__platform {
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+}
+
+.contact-card__platform--whatsapp {
+  color: #25D366;
+}
+
+.contact-card__platform--instagram {
+  color: #E1306C;
+}
+
+.contact-card__name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-primary);
 }
 
 .contact-card__value {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--primary);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.contact-card__cta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.contact-card--whatsapp:hover .contact-card__cta {
+  color: #25D366;
+}
+
+.contact-card--instagram:hover .contact-card__cta {
+  color: #E1306C;
 }
