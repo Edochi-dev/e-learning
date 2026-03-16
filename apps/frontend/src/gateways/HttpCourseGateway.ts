@@ -8,6 +8,17 @@ export class HttpCourseGateway implements CourseGateway {
         this.baseUrl = baseUrl;
     }
 
+    private async parseErrorMessage(response: Response, fallback: string): Promise<string> {
+        const text = await response.text();
+        if (!text) return fallback;
+        try {
+            const body = JSON.parse(text);
+            return body.message || fallback;
+        } catch {
+            return fallback;
+        }
+    }
+
     // TODO: cuando se construya la UI de paginación, actualizar el contrato completo:
     // CourseGateway.findAll(page, limit) → PaginatedResult<Course>
     // y pasar total/page/limit al hook y las páginas.
@@ -51,8 +62,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to create course: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to create course: ${response.statusText}`));
         }
         return response.json();
     }
@@ -68,8 +78,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to update course: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to update course: ${response.statusText}`));
         }
         return response.json();
     }
@@ -82,8 +91,7 @@ export class HttpCourseGateway implements CourseGateway {
 
         // 204 No Content es éxito — no hay body que parsear
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to delete course: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to delete course: ${response.statusText}`));
         }
     }
 
@@ -98,8 +106,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to add lesson: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to add lesson: ${response.statusText}`));
         }
         return response.json();
     }
@@ -113,8 +120,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to remove lesson: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to remove lesson: ${response.statusText}`));
         }
     }
 
@@ -134,8 +140,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to update lesson: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to update lesson: ${response.statusText}`));
         }
         return response.json();
     }
@@ -151,8 +156,7 @@ export class HttpCourseGateway implements CourseGateway {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || `Failed to reorder lessons: ${response.statusText}`);
+            throw new Error(await this.parseErrorMessage(response, `Failed to reorder lessons: ${response.statusText}`));
         }
     }
 }
