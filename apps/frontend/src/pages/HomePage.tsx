@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import { API_URL as BACKEND_URL } from '../config';
 
 interface HomePageProps {
     gateway: CourseGateway;

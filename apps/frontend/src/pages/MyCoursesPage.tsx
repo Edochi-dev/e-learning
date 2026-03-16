@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useEnrollments } from '../hooks/useEnrollments';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import { API_URL as BACKEND_URL } from '../config';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;

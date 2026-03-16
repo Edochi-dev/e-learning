@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { API_URL } from '../config';
 
 interface VideoPlayerProps {
     src: string;
@@ -43,7 +44,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/videos/${lessonId}/signed-url`, {
+                const response = await fetch(`${API_URL}/videos/${lessonId}/signed-url`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -61,7 +62,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
                     setVideoSrc(data.url);
                 } else {
                     // URL firmada local: prefijamos con el backend
-                    setVideoSrc(`${import.meta.env.VITE_API_URL}${data.url}`);
+                    setVideoSrc(`${API_URL}${data.url}`);
                 }
             } catch (err) {
                 if ((err as Error).name === 'AbortError') return;

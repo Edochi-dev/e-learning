@@ -7,7 +7,7 @@ interface Props {
     gateway: CertificateGateway;
 }
 
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from '../../config';
 
 export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();

@@ -28,8 +28,7 @@ import { CertificateVerificationPage } from './pages/CertificateVerificationPage
 import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { API_URL } from './config';
 
 function AppContent() {
   const { user } = useAuth();

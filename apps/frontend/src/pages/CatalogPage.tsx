@@ -2,9 +2,7 @@ import { Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
-// El thumbnailUrl del backend es relativo (ej: "/static/thumbnails/uuid.jpg").
-// Necesitamos el origen del backend para construir la URL completa.
-const BACKEND_URL = import.meta.env.VITE_API_URL;
+import { API_URL as BACKEND_URL } from '../config';
 
 interface CatalogPageProps {
     gateway: CourseGateway;
