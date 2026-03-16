@@ -18,6 +18,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const { token } = useAuth();
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -27,7 +28,9 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
         setLoading(true);
         gateway.listTemplates(token)
             .then(setTemplates)
-            .catch(console.error)
+            .catch((err: unknown) => {
+                setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
+            })
             .finally(() => setLoading(false));
     }, [gateway, token]);
 
@@ -84,6 +87,10 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                 <h1>Gestión de Certificados</h1>
                 <p>Administra plantillas y genera certificados para tus alumnos.</p>
             </div>
+
+            {error && (
+                <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem' }}>{error}</p>
+            )}
 
             <div className="admin-grid">
                 <div className="admin-card">

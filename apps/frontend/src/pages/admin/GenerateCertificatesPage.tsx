@@ -19,7 +19,9 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
 
     useEffect(() => {
         if (!token) return;
-        gateway.listTemplates(token).then(setTemplates).catch(console.error);
+        gateway.listTemplates(token).then(setTemplates).catch((err: unknown) => {
+            setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
+        });
     }, [gateway, token]);
 
     const handleGenerate = async () => {
