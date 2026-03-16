@@ -127,6 +127,10 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
 
         // 2. ¿Existe el archivo TTF custom?
         const ttfPath = path.join(this.fontsDir, `${fontFamily}.ttf`);
+        // Verificar que el path resultante no salga del directorio de fuentes
+        if (!ttfPath.startsWith(this.fontsDir)) {
+            return pdfDoc.embedFont(StandardFonts.Helvetica);
+        }
         if (fs.existsSync(ttfPath)) {
             // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom
             pdfDoc.registerFontkit(fontkit);

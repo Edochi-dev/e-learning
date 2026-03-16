@@ -41,7 +41,7 @@ export class DownloadCertificateBatchUseCase {
             const absPath = join(this.publicDir, cert.filePath.replace('/static/', ''));
             const buffer = await readFile(absPath);
 
-            const safeFilename = cert.recipientName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim();
+            const safeFilename = cert.recipientName.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, '').trim() || cert.certificateNumber;
             files.push({ filename: `${cert.certificateNumber} - ${safeFilename}.pdf`, buffer });
         }
 

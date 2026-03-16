@@ -111,14 +111,11 @@ export class EnrollmentsRepository implements EnrollmentGateway {
      * pero así damos una respuesta limpia en lugar de lanzar un error de DB).
      */
     async markLessonComplete(userId: string, lessonId: string): Promise<LessonProgress> {
-        const existing = await this.lessonProgressRepository.findOne({
-            where: { userId, lessonId },
-        });
-
-        if (existing) return existing;
-
-        const progress = this.lessonProgressRepository.create({ userId, lessonId });
-        return this.lessonProgressRepository.save(progress);
+        await this.lessonProgressRepository.upsert(
+            { userId, lessonId },
+            { conflictPaths: ['userId', 'lessonId'], skipUpdateIfNoValuesChanged: true },
+        );
+        return this.lessonProgressRepository.findOne({ where: { userId, lessonId } });
     }
 
     async delete(id: string): Promise<void> {
