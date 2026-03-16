@@ -21,7 +21,7 @@ export class ReorderLessonsUseCase {
             throw new NotFoundException(`Course with id ${courseId} not found`);
         }
 
-        const existingIds = new Set(course.lessons.map(l => l.id));
+        const existingIds = new Set((course.lessons ?? []).map(l => l.id));
 
         // Cada ID enviado debe pertenecer al curso
         for (const id of lessonIds) {
