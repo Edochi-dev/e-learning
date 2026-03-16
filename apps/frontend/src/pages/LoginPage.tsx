@@ -15,22 +15,8 @@ export const LoginPage = () => {
         setError('');
 
         try {
-            await login({ email, password });
-
-            // Verificar si hay token para redirección basada en roles
-            const token = localStorage.getItem('access_token');
-            if (token) {
-                try {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    if (payload.role === UserRole.ADMIN) {
-                        navigate('/admin');
-                        return;
-                    }
-                } catch (e) {
-                    console.error('Error parsing token for redirect', e);
-                }
-            }
-            navigate('/');
+            const user = await login({ email, password });
+            navigate(user.role === UserRole.ADMIN ? '/admin' : '/');
         } catch (err: any) {
             setError('Credenciales inválidas. Por favor intenta de nuevo.');
         }

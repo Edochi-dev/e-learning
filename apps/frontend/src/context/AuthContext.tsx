@@ -5,7 +5,7 @@ import type { AuthGateway } from '../gateways/AuthGateway';
 interface AuthContextType {
     user: User | null;
     token: string | null;
-    login: (credentials: LoginCredentials) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<User>;
     register: (payload: RegisterPayload) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         setIsLoading(false);
     }, []);
 
-    const login = async (credentials: LoginCredentials) => {
+    const login = async (credentials: LoginCredentials): Promise<User> => {
         const response = await gateway.login(credentials);
 
         if (!response.access_token) {
@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         setToken(response.access_token);
         setUser(response.user);
         localStorage.setItem('access_token', response.access_token);
+        return response.user;
     };
 
     /**
