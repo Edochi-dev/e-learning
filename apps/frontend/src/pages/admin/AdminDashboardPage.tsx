@@ -37,7 +37,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ gateway:
             }
         };
         loadCourses();
-    }, []);
+    }, [courseGateway]);
 
     /**
      * Lógica de confirmación en dos pasos:

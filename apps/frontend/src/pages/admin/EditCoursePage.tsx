@@ -234,7 +234,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     useEffect(() => {
         loadCourse();
-    }, [courseId]);
+    }, [courseId, loadCourse]);
 
     // --- Handlers del curso ---
 

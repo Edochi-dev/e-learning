@@ -19,7 +19,7 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
         error,
         loadCertificates,
         searchCertificates,
-    } = useCertificates(gateway, token!);
+    } = useCertificates(gateway, token ?? '');
 
     // Carga todos los certificados al montar la página
     useEffect(() => { loadCertificates(); }, [loadCertificates]);
