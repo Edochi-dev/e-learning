@@ -18,13 +18,18 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     // (el backend tiene frame-ancestors 'self', que bloquea iframes desde otro origen)
     useEffect(() => {
         if (!certificate) return;
+        const controller = new AbortController();
         const pdfUrl = `${API_URL}${certificate.filePath}`;
-        fetch(pdfUrl)
+        fetch(pdfUrl, { signal: controller.signal })
             .then(res => res.blob())
             .then(blob => setBlobUrl(URL.createObjectURL(blob)))
-            .catch(() => setBlobUrl(null));
+            .catch((err: unknown) => {
+                if ((err as Error).name === 'AbortError') return;
+                setBlobUrl(null);
+            });
 
         return () => {
+            controller.abort();
             setBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
         };
     }, [certificate]);
