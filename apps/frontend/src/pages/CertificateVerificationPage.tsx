@@ -65,7 +65,7 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
         a.href = url;
         a.download = `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`;
         a.click();
-        URL.revokeObjectURL(url);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
     };
 
     const issuedDate = new Date(certificate.issuedAt).toLocaleDateString('es-MX', {

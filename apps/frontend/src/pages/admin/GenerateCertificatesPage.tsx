@@ -61,7 +61,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
             a.href = url;
             a.download = filename;
             a.click();
-            URL.revokeObjectURL(url);
+            setTimeout(() => URL.revokeObjectURL(url), 100);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al descargar');
         } finally {
