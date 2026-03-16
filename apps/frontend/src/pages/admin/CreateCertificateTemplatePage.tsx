@@ -174,7 +174,9 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [canvasRendered, setCanvasRendered] = useState(0);
 
     useEffect(() => {
-        if (file && template) renderPdf(file).catch(console.error);
+        if (file && template) renderPdf(file).catch((err: unknown) => {
+            setError(err instanceof Error ? err.message : 'Error al renderizar el PDF');
+        });
     }, [file, template, renderPdf]);
 
     useEffect(() => {
