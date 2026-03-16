@@ -59,9 +59,10 @@ export const HomePage = ({ gateway }: HomePageProps) => {
     // esperamos a que el DOM esté listo y hacemos scroll suave.
     useEffect(() => {
         if (location.state?.scrollTo === 'contacto') {
-            setTimeout(() => {
+            const timer = setTimeout(() => {
                 document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
             }, 100);
+            return () => clearTimeout(timer);
         }
     }, []);
 
