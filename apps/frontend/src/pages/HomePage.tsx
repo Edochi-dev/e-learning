@@ -128,7 +128,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                     <div className="gallery-track gallery-track--fwd">
                         {[...GALLERY_ROW_1, ...GALLERY_ROW_1].map((item, i) => (
                             <div
-                                key={i}
+                                key={`${item.label}-${i}`}
                                 className="gallery-item"
                                 style={{ background: item.gradient }}
                             >
@@ -140,7 +140,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                     <div className="gallery-track gallery-track--rev">
                         {[...GALLERY_ROW_2, ...GALLERY_ROW_2].map((item, i) => (
                             <div
-                                key={i}
+                                key={`${item.label}-${i}`}
                                 className="gallery-item"
                                 style={{ background: item.gradient }}
                             >

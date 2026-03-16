@@ -55,7 +55,7 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
         );
     }
 
-    const pdfUrl = `${API_URL}${certificate.filePath.replace('/static', '/static')}`;
+    const pdfUrl = `${API_URL}${certificate.filePath}`;
 
     const handleDownload = async () => {
         const res = await fetch(pdfUrl);
