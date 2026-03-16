@@ -37,6 +37,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
             return;
         }
 
+        const controller = new AbortController();
+
         const fetchSignedUrl = async () => {
             setLoading(true);
             setError(null);
@@ -45,6 +47,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
+                    signal: controller.signal,
                 });
 
                 if (!response.ok) {
@@ -61,6 +64,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
                     setVideoSrc(`${import.meta.env.VITE_API_URL}${data.url}`);
                 }
             } catch (err) {
+                if ((err as Error).name === 'AbortError') return;
                 setError('Error al cargar el video. Intenta de nuevo.');
                 console.error('Error fetching signed URL:', err);
             } finally {
@@ -69,6 +73,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
         };
 
         fetchSignedUrl();
+        return () => controller.abort();
     }, [lessonId, src, token, isYoutube]);
 
     if (isYoutube) {
