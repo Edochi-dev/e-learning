@@ -11,7 +11,11 @@ export const ComingSoonPage = () => {
     return (
         <div style={styles.wrapper}>
             <div style={styles.card}>
-                <div style={styles.badge}>💅</div>
+                <img
+                    src="/images/Logo%20dorado.PNG"
+                    alt="Mari's Nails Academy"
+                    style={styles.badge}
+                />
 
                 <h1 style={styles.title}>Mari's Nails Academy</h1>
 
@@ -69,9 +73,14 @@ const styles: Record<string, React.CSSProperties> = {
         boxShadow: 'var(--shadow-gold)',
     },
     badge: {
-        fontSize: '3.5rem',
+        width: '110px',
+        height: '110px',
+        objectFit: 'cover',
+        borderRadius: '50%',
         marginBottom: '1rem',
         display: 'block',
+        marginLeft: 'auto',
+        marginRight: 'auto',
     },
     title: {
         fontFamily: 'var(--font-heading)',
