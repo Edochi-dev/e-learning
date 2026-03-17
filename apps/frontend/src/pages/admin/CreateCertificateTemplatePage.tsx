@@ -447,7 +447,8 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                 {/* transform: scale no afecta el layout, así que compensamos
                                     con márgenes para que el área de scroll se expanda correctamente */}
                                 <div style={{
-                                    display: 'inline-block',
+                                    display: 'block',
+                                    width: '100%',
                                     transform: `scale(${zoomLevel})`,
                                     transformOrigin: 'top left',
                                     marginBottom: `${canvasNaturalSize.h * (zoomLevel - 1)}px`,
