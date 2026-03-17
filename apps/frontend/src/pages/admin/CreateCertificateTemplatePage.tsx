@@ -50,21 +50,34 @@ type FontOption = {
 
 
 const FONT_OPTIONS: FontOption[] = [
-    { value: 'GreatVibes-Regular',               label: 'Great Vibes (caligráfica elegante)',      css: "'Great Vibes', cursive",         weight: 'normal', style: 'normal', group: 'Caligráficas' },
-    { value: 'DancingScript-Bold',               label: 'Dancing Script Bold (script moderno)',    css: "'Dancing Script', cursive",       weight: '700',    style: 'normal', group: 'Caligráficas' },
-    { value: 'Pacifico-Regular',                 label: 'Pacifico (redondeada festiva)',           css: "'Pacifico', cursive",             weight: 'normal', style: 'normal', group: 'Caligráficas' },
-    { value: 'PlayfairDisplay-Regular',          label: 'Playfair Display (serif lujosa)',         css: "'Playfair Display', serif",       weight: '400',    style: 'normal', group: 'Serif elegante' },
-    { value: 'PlayfairDisplay-BoldItalic',       label: 'Playfair Display Bold Italic',           css: "'Playfair Display', serif",       weight: '700',    style: 'italic', group: 'Serif elegante' },
-    { value: 'CormorantGaramond-SemiBold',       label: 'Cormorant Garamond SemiBold',            css: "'Cormorant Garamond', serif",     weight: '600',    style: 'normal', group: 'Serif elegante' },
-    { value: 'CormorantGaramond-SemiBoldItalic', label: 'Cormorant Garamond SemiBold Italic',     css: "'Cormorant Garamond', serif",     weight: '600',    style: 'italic', group: 'Serif elegante' },
-    { value: 'Montserrat-Regular',               label: 'Montserrat Regular',                     css: "'Montserrat', sans-serif",        weight: '400',    style: 'normal', group: 'Sans-serif' },
-    { value: 'Montserrat-Bold',                  label: 'Montserrat Bold',                        css: "'Montserrat', sans-serif",        weight: '700',    style: 'normal', group: 'Sans-serif' },
-    { value: 'Helvetica',                        label: 'Helvetica (estándar PDF)',                css: 'Helvetica, Arial, sans-serif',    weight: 'normal', style: 'normal', group: 'Estándar PDF' },
-    { value: 'HelveticaBold',                    label: 'Helvetica Bold (estándar PDF)',           css: 'Helvetica, Arial, sans-serif',    weight: 'bold',   style: 'normal', group: 'Estándar PDF' },
-    { value: 'TimesRoman',                       label: 'Times Roman (estándar PDF)',              css: "'Times New Roman', serif",        weight: 'normal', style: 'normal', group: 'Estándar PDF' },
-    { value: 'TimesBold',                        label: 'Times Bold (estándar PDF)',               css: "'Times New Roman', serif",        weight: 'bold',   style: 'normal', group: 'Estándar PDF' },
-    { value: 'TimesItalic',                      label: 'Times Italic (estándar PDF)',             css: "'Times New Roman', serif",        weight: 'normal', style: 'italic', group: 'Estándar PDF' },
-    { value: 'TimesBoldItalic',                  label: 'Times Bold Italic (estándar PDF)',        css: "'Times New Roman', serif",        weight: 'bold',   style: 'italic', group: 'Estándar PDF' },
+    // Caligráficas
+    { value: 'GreatVibes-Regular',               label: 'Great Vibes (caligráfica elegante)',      css: "'Great Vibes', cursive",              weight: 'normal', style: 'normal', group: 'Caligráficas' },
+    { value: 'Allura-Regular',                   label: 'Allura (script fino)',                    css: "'Allura', cursive",                   weight: 'normal', style: 'normal', group: 'Caligráficas' },
+    { value: 'Sacramento-Regular',               label: 'Sacramento (caligráfica delgada)',        css: "'Sacramento', cursive",               weight: 'normal', style: 'normal', group: 'Caligráficas' },
+    { value: 'DancingScript-Bold',               label: 'Dancing Script Bold (script moderno)',    css: "'Dancing Script', cursive",           weight: '700',    style: 'normal', group: 'Caligráficas' },
+    { value: 'Pacifico-Regular',                 label: 'Pacifico (redondeada festiva)',           css: "'Pacifico', cursive",                 weight: 'normal', style: 'normal', group: 'Caligráficas' },
+    // Serif elegante
+    { value: 'Cinzel-Regular',                   label: 'Cinzel Regular (romana mayúsculas)',      css: "'Cinzel', serif",                     weight: '400',    style: 'normal', group: 'Serif elegante' },
+    { value: 'Cinzel-Bold',                      label: 'Cinzel Bold (romana mayúsculas)',         css: "'Cinzel', serif",                     weight: '700',    style: 'normal', group: 'Serif elegante' },
+    { value: 'PlayfairDisplay-Regular',          label: 'Playfair Display (serif lujosa)',         css: "'Playfair Display', serif",           weight: '400',    style: 'normal', group: 'Serif elegante' },
+    { value: 'PlayfairDisplay-BoldItalic',       label: 'Playfair Display Bold Italic',           css: "'Playfair Display', serif",           weight: '700',    style: 'italic', group: 'Serif elegante' },
+    { value: 'CormorantGaramond-SemiBold',       label: 'Cormorant Garamond SemiBold',            css: "'Cormorant Garamond', serif",         weight: '600',    style: 'normal', group: 'Serif elegante' },
+    { value: 'CormorantGaramond-SemiBoldItalic', label: 'Cormorant Garamond SemiBold Italic',     css: "'Cormorant Garamond', serif",         weight: '600',    style: 'italic', group: 'Serif elegante' },
+    { value: 'LibreBaskerville-Regular',         label: 'Libre Baskerville Regular',              css: "'Libre Baskerville', serif",          weight: '400',    style: 'normal', group: 'Serif elegante' },
+    { value: 'LibreBaskerville-Bold',            label: 'Libre Baskerville Bold',                 css: "'Libre Baskerville', serif",          weight: '700',    style: 'normal', group: 'Serif elegante' },
+    // Sans-serif
+    { value: 'Montserrat-Regular',               label: 'Montserrat Regular',                     css: "'Montserrat', sans-serif",            weight: '400',    style: 'normal', group: 'Sans-serif' },
+    { value: 'Montserrat-Bold',                  label: 'Montserrat Bold',                        css: "'Montserrat', sans-serif",            weight: '700',    style: 'normal', group: 'Sans-serif' },
+    { value: 'Raleway-Regular',                  label: 'Raleway Regular',                        css: "'Raleway', sans-serif",               weight: '400',    style: 'normal', group: 'Sans-serif' },
+    { value: 'Raleway-Bold',                     label: 'Raleway Bold',                           css: "'Raleway', sans-serif",               weight: '700',    style: 'normal', group: 'Sans-serif' },
+    { value: 'NunitoSans-Regular',               label: 'Nunito Sans Regular',                    css: "'Nunito Sans', sans-serif",           weight: '400',    style: 'normal', group: 'Sans-serif' },
+    // Estándar PDF
+    { value: 'Helvetica',                        label: 'Helvetica (estándar PDF)',                css: 'Helvetica, Arial, sans-serif',        weight: 'normal', style: 'normal', group: 'Estándar PDF' },
+    { value: 'HelveticaBold',                    label: 'Helvetica Bold (estándar PDF)',           css: 'Helvetica, Arial, sans-serif',        weight: 'bold',   style: 'normal', group: 'Estándar PDF' },
+    { value: 'TimesRoman',                       label: 'Times Roman (estándar PDF)',              css: "'Times New Roman', serif",            weight: 'normal', style: 'normal', group: 'Estándar PDF' },
+    { value: 'TimesBold',                        label: 'Times Bold (estándar PDF)',               css: "'Times New Roman', serif",            weight: 'bold',   style: 'normal', group: 'Estándar PDF' },
+    { value: 'TimesItalic',                      label: 'Times Italic (estándar PDF)',             css: "'Times New Roman', serif",            weight: 'normal', style: 'italic', group: 'Estándar PDF' },
+    { value: 'TimesBoldItalic',                  label: 'Times Bold Italic (estándar PDF)',        css: "'Times New Roman', serif",            weight: 'bold',   style: 'italic', group: 'Estándar PDF' },
 ];
 
 const FONT_GROUPS = [...new Set(FONT_OPTIONS.map(f => f.group))];
@@ -140,6 +153,12 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [dateFontFamily, setDateFontFamily] = useState('Helvetica');
     const [dateAlign, setDateAlign]           = useState<'left' | 'center'>('left');
 
+    // ── Zoom del preview ──────────────────────────────────────────────────────
+    const [zoomLevel, setZoomLevel]           = useState(1);
+    // Dimensiones naturales (sin escalar) del canvas, necesarias para calcular
+    // los márgenes que expanden el área de scroll al hacer zoom.
+    const [canvasNaturalSize, setCanvasNaturalSize] = useState({ w: 0, h: 0 });
+
     // ── UI ────────────────────────────────────────────────────────────────────
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving]       = useState(false);
@@ -192,6 +211,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         if (canvasRendered === 0 || !containerRef.current) return;
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
         if (w === 0 || h === 0) return;
+        setCanvasNaturalSize({ w, h });
         setNameDefaultPos({ x: INITIAL_NAME_PCT.x * w, y: INITIAL_NAME_PCT.y * h });
         setQrDefaultPos({   x: INITIAL_QR_PCT.x   * w, y: INITIAL_QR_PCT.y   * h });
         setDateDefaultPos({ x: INITIAL_DATE_PCT.x * w, y: INITIAL_DATE_PCT.y * h });
@@ -399,10 +419,40 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                             background: 'var(--bg-card)', border: '2px solid var(--border)',
                             borderRadius: '8px', padding: '0.75rem', marginBottom: '0.5rem',
                         }}>
-                            <p style={{ textAlign: 'center', marginBottom: '0.6rem', fontWeight: 600, fontSize: '0.9rem' }}>
-                                {draggablesReady ? 'Arrastra cada elemento a su posición' : 'Cargando PDF…'}
-                            </p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
+                                <p style={{ fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>
+                                    {draggablesReady ? 'Arrastra cada elemento a su posición' : 'Cargando PDF…'}
+                                </p>
+                                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Zoom</span>
+                                    <input
+                                        type="range" min={0.5} max={2.5} step={0.1} value={zoomLevel}
+                                        onChange={e => setZoomLevel(Number(e.target.value))}
+                                        style={{ width: '100px', accentColor: 'var(--primary)' }}
+                                    />
+                                    <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', minWidth: '36px' }}>
+                                        {Math.round(zoomLevel * 100)}%
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => setZoomLevel(1)}
+                                        title="Restablecer zoom"
+                                        style={{ fontSize: '0.75rem', background: 'none', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', padding: '0.1rem 0.4rem', color: 'var(--text-muted)' }}
+                                    >↺</button>
+                                </div>
+                            </div>
 
+                            {/* Contenedor scrollable: cuando zoom > 1 aparecen barras de scroll */}
+                            <div style={{ overflow: 'auto' }}>
+                                {/* transform: scale no afecta el layout, así que compensamos
+                                    con márgenes para que el área de scroll se expanda correctamente */}
+                                <div style={{
+                                    display: 'inline-block',
+                                    transform: `scale(${zoomLevel})`,
+                                    transformOrigin: 'top left',
+                                    marginBottom: `${canvasNaturalSize.h * (zoomLevel - 1)}px`,
+                                    marginRight:  `${canvasNaturalSize.w * (zoomLevel - 1)}px`,
+                                }}>
                             {/* position:relative es el origen de coordenadas de los Draggables */}
                             <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                                 <canvas ref={canvasRef} style={{ display: 'block', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', pointerEvents: 'none' }} />
@@ -417,6 +467,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                             bounds="parent"
                                             defaultPosition={nameDefaultPos!}
                                             onStop={onNameStop}
+                                            scale={zoomLevel}
                                         >
                                             <div ref={nameNodeRef} style={{
                                                 position: 'absolute',
@@ -453,6 +504,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                             bounds="parent"
                                             defaultPosition={qrDefaultPos!}
                                             onStop={onQrStop}
+                                            scale={zoomLevel}
                                         >
                                             <div ref={qrNodeRef} style={{
                                                 position: 'absolute',
@@ -479,6 +531,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                                 bounds="parent"
                                                 defaultPosition={dateDefaultPos!}
                                                 onStop={onDateStop}
+                                                scale={zoomLevel}
                                             >
                                                 <div ref={dateNodeRef} style={{
                                                     position: 'absolute',
@@ -511,6 +564,8 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                     </>
                                 )}
                             </div>
+                                </div>{/* fin transform wrapper */}
+                            </div>{/* fin overflow wrapper */}
                         </div>
 
                         <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
