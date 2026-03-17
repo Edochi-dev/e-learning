@@ -125,6 +125,9 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const nameNodeRef  = useRef<HTMLDivElement>(null);
     const qrNodeRef    = useRef<HTMLDivElement>(null);
     const dateNodeRef  = useRef<HTMLDivElement>(null);
+    // Ref al viewport scrollable — necesario para leer su ancho antes de que
+    // el canvas renderice, rompiendo la dependencia circular.
+    const viewportRef  = useRef<HTMLDivElement>(null);
 
     const [pdfDims, setPdfDims] = useState({ w: 0, h: 0 });
 
@@ -154,10 +157,15 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [dateAlign, setDateAlign]           = useState<'left' | 'center'>('left');
 
     // ── Zoom del preview ──────────────────────────────────────────────────────
-    const [zoomLevel, setZoomLevel]           = useState(1);
-    // Dimensiones naturales (sin escalar) del canvas, necesarias para calcular
-    // los márgenes que expanden el área de scroll al hacer zoom.
-    const [canvasNaturalSize, setCanvasNaturalSize] = useState({ w: 0, h: 0 });
+    const [zoomLevel, setZoomLevel] = useState(1);
+    // Ancho del viewport scrollable (columna izquierda del grid).
+    // Se captura una vez al montar el paso 2, antes de que el canvas renderice.
+    // Esto rompe la dependencia circular: containerRef necesita un ancho base
+    // para que width:'100%' resuelva correctamente.
+    const [viewportWidth, setViewportWidth] = useState(0);
+    // Altura natural del canvas (sin zoom), en px CSS. Se usa para dimensionar
+    // el spacer que crea el área de scroll vertical correcta.
+    const canvasNaturalHeightRef = useRef(0);
 
     // ── UI ────────────────────────────────────────────────────────────────────
     const [uploading, setUploading] = useState(false);
@@ -202,6 +210,14 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         if (template) setPdfDims({ w: template.pageWidth, h: template.pageHeight });
     }, [template]);
 
+    // Captura el ancho del viewport UNA vez, cuando el paso 2 monta.
+    // useLayoutEffect garantiza que el DOM ya tiene dimensiones reales.
+    useLayoutEffect(() => {
+        if (template && viewportRef.current && viewportWidth === 0) {
+            setViewportWidth(viewportRef.current.offsetWidth);
+        }
+    }, [template, viewportWidth]);
+
     /**
      * useLayoutEffect: corre SÍNCRONO después del paint.
      * En este punto el canvas ya tiene height real (CSS layout computado).
@@ -211,7 +227,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         if (canvasRendered === 0 || !containerRef.current) return;
         const { offsetWidth: w, offsetHeight: h } = containerRef.current;
         if (w === 0 || h === 0) return;
-        setCanvasNaturalSize({ w, h });
+        canvasNaturalHeightRef.current = h;
         setNameDefaultPos({ x: INITIAL_NAME_PCT.x * w, y: INITIAL_NAME_PCT.y * h });
         setQrDefaultPos({   x: INITIAL_QR_PCT.x   * w, y: INITIAL_QR_PCT.y   * h });
         setDateDefaultPos({ x: INITIAL_DATE_PCT.x * w, y: INITIAL_DATE_PCT.y * h });
@@ -442,19 +458,48 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                 </div>
                             </div>
 
-                            {/* Contenedor scrollable: cuando zoom > 1 aparecen barras de scroll */}
-                            <div style={{ overflow: 'auto' }}>
-                                {/* transform: scale no afecta el layout, así que compensamos
-                                    con márgenes para que el área de scroll se expanda correctamente */}
+                            {/*
+                              * ESTRUCTURA DE ZOOM (3 capas):
+                              *
+                              * 1. viewportRef (overflow: auto, altura fija)
+                              *    → El contenedor que NO cambia de tamaño. Muestra scrollbars.
+                              *
+                              * 2. Spacer (dimensiones = naturalSize × zoom, en px reales)
+                              *    → Crea el área de scroll correcta. CSS transform no afecta
+                              *      el layout, así que este div establece las dimensiones reales.
+                              *
+                              * 3. Transform target (posición absoluta, ancho = viewportWidth)
+                              *    → Tiene transform: scale(zoom). Al estar dentro del spacer
+                              *      (que ya tiene las dimensiones correctas), el contenido
+                              *      escalado visualmente coincide con el área de scroll.
+                              *
+                              * containerRef vive dentro del transform target con width: '100%'
+                              * = viewportWidth. Sin dependencia circular. ✓
+                              */}
+                            <div
+                                ref={viewportRef}
+                                style={{ overflow: 'auto', maxHeight: '65vh' }}
+                            >
+                                {/* Spacer: dimensiones reales = área de scroll */}
                                 <div style={{
-                                    display: 'block',
-                                    width: '100%',
-                                    transform: `scale(${zoomLevel})`,
-                                    transformOrigin: 'top left',
-                                    marginBottom: `${canvasNaturalSize.h * (zoomLevel - 1)}px`,
-                                    marginRight:  `${canvasNaturalSize.w * (zoomLevel - 1)}px`,
+                                    width:  viewportWidth > 0 ? `${viewportWidth * Math.max(1, zoomLevel)}px` : '100%',
+                                    height: canvasNaturalHeightRef.current > 0
+                                        ? `${canvasNaturalHeightRef.current * zoomLevel}px`
+                                        : 'auto',
+                                    minWidth: '100%',
+                                    position: 'relative',
+                                    flexShrink: 0,
                                 }}>
-                            {/* position:relative es el origen de coordenadas de los Draggables */}
+                                    {/* Transform target: posición absoluta, escala visual */}
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: 0,
+                                        left: 0,
+                                        width: viewportWidth > 0 ? `${viewportWidth}px` : '100%',
+                                        transform: `scale(${zoomLevel})`,
+                                        transformOrigin: 'top left',
+                                    }}>
+                            {/* containerRef: origen de coordenadas de los Draggables */}
                             <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
                                 <canvas ref={canvasRef} style={{ display: 'block', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', pointerEvents: 'none' }} />
 
@@ -564,9 +609,10 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                         )}
                                     </>
                                 )}
-                            </div>
-                                </div>{/* fin transform wrapper */}
-                            </div>{/* fin overflow wrapper */}
+                            </div>{/* fin containerRef */}
+                                    </div>{/* fin transform target */}
+                                </div>{/* fin spacer */}
+                            </div>{/* fin viewportRef */}
                         </div>
 
                         <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
