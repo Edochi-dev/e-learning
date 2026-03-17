@@ -1,7 +1,7 @@
 import {
     Controller, Get, Post, Patch, Delete, Body, Param, Query, Res, UseGuards,
     UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-    HttpCode, StreamableFile,
+    HttpCode, StreamableFile, ParseUUIDPipe,
 } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -67,7 +67,7 @@ export class CertificatesController {
     @Patch('admin/certificate-templates/:id/positions')
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    updatePositions(@Param('id') id: string, @Body() dto: UpdateTemplatePositionsDto) {
+    updatePositions(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTemplatePositionsDto) {
         return this.updatePositionsUseCase.execute(id, dto);
     }
 
@@ -83,7 +83,7 @@ export class CertificatesController {
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
     deleteTemplate(
-        @Param('id') id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Query('certAction') certAction: CertAction = 'keep',
     ) {
         return this.deleteTemplateUseCase.execute(id, certAction);
@@ -126,7 +126,7 @@ export class CertificatesController {
     @HttpCode(204)
     @UseGuards(AuthGuard('jwt'), RolesGuard)
     @Roles(UserRole.ADMIN)
-    deleteCertificate(@Param('id') id: string) {
+    deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
         return this.deleteCertificateUseCase.execute(id);
     }
 
@@ -144,7 +144,7 @@ export class CertificatesController {
     @Get('certificates/:id')
     @UseGuards(ThrottlerGuard)
     @Throttle({ default: { ttl: 60000, limit: 30 } })
-    getCertificate(@Param('id') id: string) {
+    getCertificate(@Param('id', ParseUUIDPipe) id: string) {
         return this.getCertificateUseCase.execute(id);
     }
 }

@@ -1,7 +1,7 @@
 import {
   Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
   UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-  HttpCode, DefaultValuePipe, ParseIntPipe, BadRequestException,
+  HttpCode, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -90,7 +90,7 @@ export class CoursesController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Course> {
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Course> {
     return this.findOneCourseUseCase.execute(id);
   }
 
@@ -98,7 +98,7 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   async update(
-    @Param('id') id: string,
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() updateCourseDto: UpdateCourseDto,
   ): Promise<Course> {
     return this.updateCourseUseCase.execute(id, updateCourseDto);
@@ -116,7 +116,7 @@ export class CoursesController {
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async delete(@Param('id') id: string): Promise<void> {
+  async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.deleteCourseUseCase.execute(id);
   }
 
@@ -128,7 +128,7 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   async addLesson(
-    @Param('id') courseId: string,
+    @Param('id', ParseUUIDPipe) courseId: string,
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<Lesson> {
     return this.addLessonUseCase.execute(courseId, createLessonDto);
@@ -145,7 +145,7 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   async reorderLessons(
-    @Param('courseId') courseId: string,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
     @Body() dto: ReorderLessonsDto,
   ): Promise<void> {
     return this.reorderLessonsUseCase.execute(courseId, dto.lessonIds);
@@ -165,7 +165,7 @@ export class CoursesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateLesson(
-    @Param('lessonId') lessonId: string,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
     @Body() updateLessonDto: UpdateLessonDto,
   ): Promise<Lesson> {
     return this.updateLessonUseCase.execute(lessonId, updateLessonDto);
@@ -174,7 +174,7 @@ export class CoursesController {
   @Delete(':courseId/lessons/:lessonId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async removeLesson(@Param('lessonId') lessonId: string): Promise<void> {
+  async removeLesson(@Param('lessonId', ParseUUIDPipe) lessonId: string): Promise<void> {
     return this.removeLessonUseCase.execute(lessonId);
   }
 }

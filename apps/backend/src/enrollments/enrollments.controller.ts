@@ -9,6 +9,7 @@ import {
     Req,
     HttpCode,
     HttpStatus,
+    ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
@@ -74,7 +75,7 @@ export class EnrollmentsController {
     @Delete(':enrollmentId')
     @UseGuards(EnrollmentOwnershipGuard)
     @HttpCode(HttpStatus.NO_CONTENT)
-    async unenroll(@Param('enrollmentId') enrollmentId: string): Promise<void> {
+    async unenroll(@Param('enrollmentId', ParseUUIDPipe) enrollmentId: string): Promise<void> {
         return this.unenrollUseCase.execute(enrollmentId);
     }
 }

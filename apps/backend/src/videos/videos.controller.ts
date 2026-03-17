@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, Headers, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, Headers, Res, UseGuards, ParseUUIDPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 import { GetSignedUrlUseCase } from './use-cases/get-signed-url.use-case';
@@ -31,7 +31,7 @@ export class VideosController {
      */
     @Get(':lessonId/signed-url')
     @UseGuards(AuthGuard('jwt'))
-    async getSignedUrl(@Param('lessonId') lessonId: string) {
+    async getSignedUrl(@Param('lessonId', ParseUUIDPipe) lessonId: string) {
         return this.getSignedUrlUseCase.execute(lessonId);
     }
 
