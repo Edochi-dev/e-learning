@@ -115,7 +115,8 @@ export class EnrollmentsRepository implements EnrollmentGateway {
             { userId, lessonId },
             { conflictPaths: ['userId', 'lessonId'], skipUpdateIfNoValuesChanged: true },
         );
-        return this.lessonProgressRepository.findOne({ where: { userId, lessonId } });
+        // El upsert garantiza que el registro existe; null es imposible aquí.
+        return this.lessonProgressRepository.findOne({ where: { userId, lessonId } }) as Promise<LessonProgress>;
     }
 
     async delete(id: string): Promise<void> {
