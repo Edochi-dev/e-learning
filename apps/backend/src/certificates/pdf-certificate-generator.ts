@@ -132,10 +132,13 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
             return pdfDoc.embedFont(StandardFonts.Helvetica);
         }
         if (fs.existsSync(ttfPath)) {
-            // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom
+            // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom.
+            // subset: false evita que el subsetting reconstruya las tablas de glifos
+            // incorrectamente en fuentes OpenType complejas (caligráficas, con ligaduras),
+            // lo que causaba que algunos caracteres aparecieran separados (ej: "Fabiol a").
             pdfDoc.registerFontkit(fontkit);
             const fontBytes = fs.readFileSync(ttfPath);
-            return pdfDoc.embedFont(fontBytes);
+            return pdfDoc.embedFont(fontBytes, { subset: false });
         }
 
         // 3. Fallback
