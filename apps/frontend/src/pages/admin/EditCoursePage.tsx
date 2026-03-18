@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -213,7 +213,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
     );
 
-    const loadCourse = async () => {
+    const loadCourse = useCallback(async () => {
         if (!courseId) return;
         try {
             setIsLoading(true);
@@ -230,11 +230,11 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [courseId, courseGateway]);
 
     useEffect(() => {
         loadCourse();
-    }, [courseId, loadCourse]);
+    }, [loadCourse]);
 
     // --- Handlers del curso ---
 
