@@ -148,7 +148,6 @@ async function bootstrap() {
         {
           title: 'Sesión en vivo: práctica con modelo',
           description: 'Manicura rusa completa de principio a fin en tiempo real.',
-          duration: '60:00',
           videoUrl: '/videos/clase6.mp4',
           order: 6,
           isLive: true,

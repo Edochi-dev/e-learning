@@ -122,12 +122,14 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                                         <div className="cd-timeline__header">
                                             <h3 className="cd-timeline__title">{lesson.title}</h3>
                                             <div className="cd-timeline__meta">
-                                                {lesson.isLive && (
-                                                    <span className="badge badge-live">EN VIVO</span>
-                                                )}
-                                                <span className="cd-timeline__duration">
-                                                    {lesson.duration}
+                                                <span className={`cd-timeline__badge ${lesson.isLive ? 'cd-timeline__badge--live' : 'cd-timeline__badge--recorded'}`}>
+                                                    {lesson.isLive ? 'En vivo' : 'Grabada'}
                                                 </span>
+                                                {!lesson.isLive && lesson.duration && (
+                                                    <span className="cd-timeline__duration">
+                                                        {lesson.duration}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                         <p className="cd-timeline__desc">{lesson.description}</p>

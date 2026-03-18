@@ -19,7 +19,7 @@ export class Lesson implements ILesson {
   @Column('text')
   description: string;
 
-  @Column()
+  @Column({ nullable: true })
   duration: string;
 
   @Column()

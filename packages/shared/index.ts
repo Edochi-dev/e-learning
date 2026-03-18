@@ -4,7 +4,7 @@ export interface Lesson {
     id: string;
     title: string;
     description: string;
-    duration: string; // Ej: "10:00", "1h 30m"
+    duration?: string; // Ej: "10:00", "1h 30m" — opcional para lecciones en vivo
     videoUrl: string; // URL del video (YouTube embed o MP4)
     order: number;    // Posición dentro del curso (0, 1, 2...)
     isLive: boolean;  // True si esta lección es en vivo, False si es grabada
@@ -58,9 +58,9 @@ export interface CreateCoursePayload {
 export interface CreateLessonPayload {
     title: string;
     description: string;
-    duration: string;
+    duration?: string; // Opcional para lecciones en vivo
     videoUrl: string;
-    isLive: boolean;  // Ahora cada lección sabe si es en vivo o grabada
+    isLive: boolean;
 }
 
 export interface UpdateCoursePayload {
