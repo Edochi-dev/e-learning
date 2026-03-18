@@ -10,11 +10,13 @@ import { CertificateGateway } from '../gateways/certificate.gateway';
  */
 @Injectable()
 export class LookupCertificateUseCase {
-    constructor(private readonly certificateGateway: CertificateGateway) {}
+  constructor(private readonly certificateGateway: CertificateGateway) {}
 
-    async execute(certificateNumber: string): Promise<{ id: string }> {
-        const cert = await this.certificateGateway.findByNumber(certificateNumber.toUpperCase());
-        if (!cert) throw new NotFoundException('Certificado no encontrado');
-        return { id: cert.id };
-    }
+  async execute(certificateNumber: string): Promise<{ id: string }> {
+    const cert = await this.certificateGateway.findByNumber(
+      certificateNumber.toUpperCase(),
+    );
+    if (!cert) throw new NotFoundException('Certificado no encontrado');
+    return { id: cert.id };
+  }
 }

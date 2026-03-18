@@ -36,29 +36,32 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
  * solo cambiaríamos las implementaciones aquí — los Use Cases no se tocan.
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([CertificateTemplate, Certificate]),
-        ConfigModule, // Necesario para ConfigService en GenerateCertificateBatchUseCase
-    ],
-    controllers: [CertificatesController],
-    providers: [
-        // Use Cases
-        UploadCertificateTemplateUseCase,
-        UpdateTemplatePositionsUseCase,
-        ListCertificateTemplatesUseCase,
-        GenerateCertificateBatchUseCase,
-        GetCertificateUseCase,
-        DownloadCertificateBatchUseCase,
-        DeleteCertificateTemplateUseCase,
-        DeleteCertificateUseCase,
-        LookupCertificateUseCase,
+  imports: [
+    TypeOrmModule.forFeature([CertificateTemplate, Certificate]),
+    ConfigModule, // Necesario para ConfigService en GenerateCertificateBatchUseCase
+  ],
+  controllers: [CertificatesController],
+  providers: [
+    // Use Cases
+    UploadCertificateTemplateUseCase,
+    UpdateTemplatePositionsUseCase,
+    ListCertificateTemplatesUseCase,
+    GenerateCertificateBatchUseCase,
+    GetCertificateUseCase,
+    DownloadCertificateBatchUseCase,
+    DeleteCertificateTemplateUseCase,
+    DeleteCertificateUseCase,
+    LookupCertificateUseCase,
 
-        // Wiring: abstracción → implementación concreta
-        { provide: CertificateTemplateGateway, useClass: CertificateTemplatesRepository },
-        { provide: CertificateGateway, useClass: CertificatesRepository },
-        { provide: CertificateGeneratorGateway, useClass: PdfCertificateGenerator },
-        { provide: QrCodeGateway, useClass: QrCodeService },
-        { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },
-    ],
+    // Wiring: abstracción → implementación concreta
+    {
+      provide: CertificateTemplateGateway,
+      useClass: CertificateTemplatesRepository,
+    },
+    { provide: CertificateGateway, useClass: CertificatesRepository },
+    { provide: CertificateGeneratorGateway, useClass: PdfCertificateGenerator },
+    { provide: QrCodeGateway, useClass: QrCodeService },
+    { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },
+  ],
 })
 export class CertificatesModule {}

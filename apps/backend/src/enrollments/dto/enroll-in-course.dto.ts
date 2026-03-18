@@ -9,6 +9,6 @@ import { IsUUID } from 'class-validator';
  * @IsUUID() valida que el string tenga formato uuid v4 antes de llegar al Use Case.
  */
 export class EnrollInCourseDto {
-    @IsUUID()
-    courseId: string;
+  @IsUUID()
+  courseId: string;
 }

@@ -15,9 +15,9 @@ import { EnrollmentGateway } from '../gateways/enrollment.gateway';
  */
 @Injectable()
 export class UnenrollUseCase {
-    constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
+  constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
 
-    async execute(enrollmentId: string): Promise<void> {
-        return this.enrollmentGateway.delete(enrollmentId);
-    }
+  async execute(enrollmentId: string): Promise<void> {
+    return this.enrollmentGateway.delete(enrollmentId);
+  }
 }

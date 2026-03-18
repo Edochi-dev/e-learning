@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Migración: mover isLive de la tabla 'courses' a la tabla 'lessons'
@@ -11,18 +11,22 @@ import { MigrationInterface, QueryRunner } from "typeorm";
  * down() → lo revierte (útil si necesitamos hacer rollback)
  */
 export class MoveLessonIsLive1771952849168 implements MigrationInterface {
-    name = 'MoveLessonIsLive1771952849168';
+  name = 'MoveLessonIsLive1771952849168';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // Quitar isLive de la tabla de cursos
-        await queryRunner.query(`ALTER TABLE "courses" DROP COLUMN "isLive"`);
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Quitar isLive de la tabla de cursos
+    await queryRunner.query(`ALTER TABLE "courses" DROP COLUMN "isLive"`);
 
-        // Agregar isLive a la tabla de lecciones (default false = grabada)
-        await queryRunner.query(`ALTER TABLE "lessons" ADD "isLive" boolean NOT NULL DEFAULT false`);
-    }
+    // Agregar isLive a la tabla de lecciones (default false = grabada)
+    await queryRunner.query(
+      `ALTER TABLE "lessons" ADD "isLive" boolean NOT NULL DEFAULT false`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "lessons" DROP COLUMN "isLive"`);
-        await queryRunner.query(`ALTER TABLE "courses" ADD "isLive" boolean NOT NULL DEFAULT false`);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`ALTER TABLE "lessons" DROP COLUMN "isLive"`);
+    await queryRunner.query(
+      `ALTER TABLE "courses" ADD "isLive" boolean NOT NULL DEFAULT false`,
+    );
+  }
 }

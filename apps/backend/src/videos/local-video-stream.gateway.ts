@@ -1,4 +1,9 @@
-import { Injectable, Logger, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { StreamableFile } from '@nestjs/common';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { join, extname, sep } from 'path';
@@ -16,99 +21,104 @@ import { VideoStreamGateway } from './gateways/video-stream.gateway';
  */
 @Injectable()
 export class LocalVideoStreamGateway implements VideoStreamGateway {
-    private readonly logger = new Logger(LocalVideoStreamGateway.name);
+  private readonly logger = new Logger(LocalVideoStreamGateway.name);
 
-    /** Directorio donde viven los videos */
-    private readonly publicDir = join(__dirname, '..', '..', 'public');
+  /** Directorio donde viven los videos */
+  private readonly publicDir = join(__dirname, '..', '..', 'public');
 
-    /** Mapa de extensiones a MIME types de video */
-    private readonly MIME_TYPES: Record<string, string> = {
-        '.mp4': 'video/mp4',
-        '.webm': 'video/webm',
-        '.mov': 'video/quicktime',
-        '.avi': 'video/x-msvideo',
-        '.mkv': 'video/x-matroska',
+  /** Mapa de extensiones a MIME types de video */
+  private readonly MIME_TYPES: Record<string, string> = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mov': 'video/quicktime',
+    '.avi': 'video/x-msvideo',
+    '.mkv': 'video/x-matroska',
+  };
+
+  /**
+   * Verifica que la ruta resuelta esté dentro del directorio público.
+   *
+   * path.join() ya normaliza los ".." (ej: join('/pub', '../../etc') → '/etc'),
+   * así que solo necesitamos comprobar que el resultado empiece con publicDir.
+   * Usamos publicDir + sep (el separador del SO: '/' en Linux, '\' en Windows)
+   * para evitar falsos positivos con directorios de nombre similar
+   * (ej: '/app/public2' no debe confundirse con '/app/public').
+   */
+  private assertPathIsSafe(absolutePath: string): void {
+    if (!absolutePath.startsWith(this.publicDir + sep)) {
+      this.logger.warn(`Path traversal bloqueado: "${absolutePath}"`);
+      throw new ForbiddenException('Acceso denegado');
+    }
+  }
+
+  async getVideoStream(
+    videoPath: string,
+    range?: string,
+  ): Promise<{
+    stream: StreamableFile;
+    headers: Record<string, string | number>;
+    statusCode: number;
+  }> {
+    // Construimos la ruta absoluta al archivo
+    const absolutePath = join(this.publicDir, videoPath);
+
+    // Verificamos que la ruta no escape del directorio autorizado
+    this.assertPathIsSafe(absolutePath);
+
+    if (!existsSync(absolutePath)) {
+      this.logger.warn(`Video no encontrado: ${absolutePath}`);
+      throw new NotFoundException('Video no encontrado');
+    }
+
+    const stat = statSync(absolutePath);
+    const fileSize = stat.size;
+    const ext = extname(absolutePath).toLowerCase();
+    const contentType = this.MIME_TYPES[ext] || 'video/mp4';
+
+    // Si el navegador pide un rango específico (Range Request)
+    // Esto permite: saltar en el video, buffering eficiente, etc.
+    if (range) {
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      // Si no hay final, enviamos un chunk de ~1MB
+      const end = parts[1]
+        ? parseInt(parts[1], 10)
+        : Math.min(start + 1024 * 1024, fileSize - 1);
+      const chunkSize = end - start + 1;
+
+      const stream = createReadStream(absolutePath, { start, end });
+
+      return {
+        stream: new StreamableFile(stream),
+        headers: {
+          'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+          'Accept-Ranges': 'bytes',
+          'Content-Length': chunkSize,
+          'Content-Type': contentType,
+        },
+        statusCode: 206, // 206 = Partial Content
+      };
+    }
+
+    // Sin range: enviamos el video completo
+    const stream = createReadStream(absolutePath);
+
+    return {
+      stream: new StreamableFile(stream),
+      headers: {
+        'Content-Length': fileSize,
+        'Content-Type': contentType,
+        'Accept-Ranges': 'bytes',
+      },
+      statusCode: 200,
     };
+  }
 
-    /**
-     * Verifica que la ruta resuelta esté dentro del directorio público.
-     *
-     * path.join() ya normaliza los ".." (ej: join('/pub', '../../etc') → '/etc'),
-     * así que solo necesitamos comprobar que el resultado empiece con publicDir.
-     * Usamos publicDir + sep (el separador del SO: '/' en Linux, '\' en Windows)
-     * para evitar falsos positivos con directorios de nombre similar
-     * (ej: '/app/public2' no debe confundirse con '/app/public').
-     */
-    private assertPathIsSafe(absolutePath: string): void {
-        if (!absolutePath.startsWith(this.publicDir + sep)) {
-            this.logger.warn(`Path traversal bloqueado: "${absolutePath}"`);
-            throw new ForbiddenException('Acceso denegado');
-        }
-    }
-
-    async getVideoStream(videoPath: string, range?: string): Promise<{
-        stream: StreamableFile;
-        headers: Record<string, string | number>;
-        statusCode: number;
-    }> {
-        // Construimos la ruta absoluta al archivo
-        const absolutePath = join(this.publicDir, videoPath);
-
-        // Verificamos que la ruta no escape del directorio autorizado
-        this.assertPathIsSafe(absolutePath);
-
-        if (!existsSync(absolutePath)) {
-            this.logger.warn(`Video no encontrado: ${absolutePath}`);
-            throw new NotFoundException('Video no encontrado');
-        }
-
-        const stat = statSync(absolutePath);
-        const fileSize = stat.size;
-        const ext = extname(absolutePath).toLowerCase();
-        const contentType = this.MIME_TYPES[ext] || 'video/mp4';
-
-        // Si el navegador pide un rango específico (Range Request)
-        // Esto permite: saltar en el video, buffering eficiente, etc.
-        if (range) {
-            const parts = range.replace(/bytes=/, '').split('-');
-            const start = parseInt(parts[0], 10);
-            // Si no hay final, enviamos un chunk de ~1MB
-            const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 1024 * 1024, fileSize - 1);
-            const chunkSize = end - start + 1;
-
-            const stream = createReadStream(absolutePath, { start, end });
-
-            return {
-                stream: new StreamableFile(stream),
-                headers: {
-                    'Content-Range': `bytes ${start}-${end}/${fileSize}`,
-                    'Accept-Ranges': 'bytes',
-                    'Content-Length': chunkSize,
-                    'Content-Type': contentType,
-                },
-                statusCode: 206, // 206 = Partial Content
-            };
-        }
-
-        // Sin range: enviamos el video completo
-        const stream = createReadStream(absolutePath);
-
-        return {
-            stream: new StreamableFile(stream),
-            headers: {
-                'Content-Length': fileSize,
-                'Content-Type': contentType,
-                'Accept-Ranges': 'bytes',
-            },
-            statusCode: 200,
-        };
-    }
-
-    async videoExists(videoPath: string): Promise<boolean> {
-        const absolutePath = join(this.publicDir, videoPath);
-        // Misma protección: no confirmamos ni negamos la existencia de archivos
-        // fuera del directorio autorizado
-        this.assertPathIsSafe(absolutePath);
-        return existsSync(absolutePath);
-    }
+  async videoExists(videoPath: string): Promise<boolean> {
+    const absolutePath = join(this.publicDir, videoPath);
+    // Misma protección: no confirmamos ni negamos la existencia de archivos
+    // fuera del directorio autorizado
+    this.assertPathIsSafe(absolutePath);
+    return existsSync(absolutePath);
+  }
 }

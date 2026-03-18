@@ -1,12 +1,12 @@
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    CreateDateColumn,
-    ManyToOne,
-    JoinColumn,
-    Unique,
-    Index,
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Unique,
+  Index,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Course } from '../../courses/entities/course.entity';
@@ -32,24 +32,30 @@ import { Course } from '../../courses/entities/course.entity';
 @Entity('enrollments')
 @Unique('UQ_enrollments_userId_courseId', ['userId', 'courseId'])
 export class Enrollment {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column({ type: 'uuid' })
-    userId: string;
+  @Column({ type: 'uuid' })
+  userId: string;
 
-    @Index('IDX_enrollment_courseId')
-    @Column({ type: 'uuid' })
-    courseId: string;
+  @Index('IDX_enrollment_courseId')
+  @Column({ type: 'uuid' })
+  courseId: string;
 
-    @CreateDateColumn()
-    enrolledAt: Date;
+  @CreateDateColumn()
+  enrolledAt: Date;
 
-    @ManyToOne(() => User, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'userId', foreignKeyConstraintName: 'FK_enrollments_userId' })
-    user: User;
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({
+    name: 'userId',
+    foreignKeyConstraintName: 'FK_enrollments_userId',
+  })
+  user: User;
 
-    @ManyToOne(() => Course, { onDelete: 'CASCADE' })
-    @JoinColumn({ name: 'courseId', foreignKeyConstraintName: 'FK_enrollments_courseId' })
-    course: Course;
+  @ManyToOne(() => Course, { onDelete: 'CASCADE' })
+  @JoinColumn({
+    name: 'courseId',
+    foreignKeyConstraintName: 'FK_enrollments_courseId',
+  })
+  course: Course;
 }

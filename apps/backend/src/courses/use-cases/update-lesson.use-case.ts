@@ -27,52 +27,61 @@ import { UpdateLessonDto } from '../dto/update-lesson.dto';
  */
 @Injectable()
 export class UpdateLessonUseCase {
-    constructor(
-        private readonly courseGateway: CourseGateway,
-        private readonly fileStorageGateway: FileStorageGateway,
-    ) { }
+  constructor(
+    private readonly courseGateway: CourseGateway,
+    private readonly fileStorageGateway: FileStorageGateway,
+  ) {}
 
-    async execute(lessonId: string, dto: UpdateLessonDto): Promise<Lesson> {
-        // 1. Obtener la lección actual
-        const currentLesson = await this.courseGateway.findLesson(lessonId);
-        if (!currentLesson) {
-            throw new NotFoundException(`Lesson with id ${lessonId} not found`);
-        }
-
-        // 2. Si el videoUrl cambió, evaluar limpieza de huérfano
-        const oldVideoUrl = currentLesson.videoUrl;
-        const newVideoUrl = dto.videoUrl;
-
-        if (newVideoUrl && newVideoUrl !== oldVideoUrl) {
-            await this.cleanupOrphanedFile(oldVideoUrl, lessonId);
-        }
-
-        // 3. Actualizar la lección
-        return this.courseGateway.updateLesson(lessonId, dto as unknown as Partial<Lesson>);
+  async execute(lessonId: string, dto: UpdateLessonDto): Promise<Lesson> {
+    // 1. Obtener la lección actual
+    const currentLesson = await this.courseGateway.findLesson(lessonId);
+    if (!currentLesson) {
+      throw new NotFoundException(`Lesson with id ${lessonId} not found`);
     }
 
-    /**
-     * Limpia un archivo que ya no será usado por esta lección.
-     *
-     * Condiciones para borrar:
-     * 1. Debe ser un archivo local (no YouTube/externo)
-     * 2. Ninguna OTRA lección debe estar usándolo
-     */
-    private async cleanupOrphanedFile(videoUrl: string, excludeLessonId: string): Promise<void> {
-        // ¿Es un archivo local? (ej: /static/videos/clase1.mp4)
-        if (!this.fileStorageGateway.isLocalFile(videoUrl)) {
-            return; // Es YouTube u otra URL externa, no hay nada que borrar
-        }
+    // 2. Si el videoUrl cambió, evaluar limpieza de huérfano
+    const oldVideoUrl = currentLesson.videoUrl;
+    const newVideoUrl = dto.videoUrl;
 
-        // ¿Alguna otra lección lo usa?
-        const isReferenced = await this.courseGateway.isVideoUrlReferenced(videoUrl, excludeLessonId);
-        if (isReferenced) {
-            return; // Otra lección lo necesita, no borrar
-        }
-
-        // Nadie más lo usa → extraer la ruta relativa y borrar
-        // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
-        const relativePath = videoUrl.replace('/static/', '');
-        await this.fileStorageGateway.deleteFile(relativePath);
+    if (newVideoUrl && newVideoUrl !== oldVideoUrl) {
+      await this.cleanupOrphanedFile(oldVideoUrl, lessonId);
     }
+
+    // 3. Actualizar la lección
+    return this.courseGateway.updateLesson(
+      lessonId,
+      dto as unknown as Partial<Lesson>,
+    );
+  }
+
+  /**
+   * Limpia un archivo que ya no será usado por esta lección.
+   *
+   * Condiciones para borrar:
+   * 1. Debe ser un archivo local (no YouTube/externo)
+   * 2. Ninguna OTRA lección debe estar usándolo
+   */
+  private async cleanupOrphanedFile(
+    videoUrl: string,
+    excludeLessonId: string,
+  ): Promise<void> {
+    // ¿Es un archivo local? (ej: /static/videos/clase1.mp4)
+    if (!this.fileStorageGateway.isLocalFile(videoUrl)) {
+      return; // Es YouTube u otra URL externa, no hay nada que borrar
+    }
+
+    // ¿Alguna otra lección lo usa?
+    const isReferenced = await this.courseGateway.isVideoUrlReferenced(
+      videoUrl,
+      excludeLessonId,
+    );
+    if (isReferenced) {
+      return; // Otra lección lo necesita, no borrar
+    }
+
+    // Nadie más lo usa → extraer la ruta relativa y borrar
+    // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
+    const relativePath = videoUrl.replace('/static/', '');
+    await this.fileStorageGateway.deleteFile(relativePath);
+  }
 }

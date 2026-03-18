@@ -34,21 +34,21 @@ import { CoursesModule } from '../courses/courses.module';
  *       inyección de dependencias (necesita EnrollmentGateway).
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Enrollment, LessonProgress]),
-        CoursesModule,
-    ],
-    controllers: [EnrollmentsController],
-    providers: [
-        {
-            provide: EnrollmentGateway,
-            useClass: EnrollmentsRepository,
-        },
-        EnrollmentOwnershipGuard,
-        EnrollInCourseUseCase,
-        GetMyEnrollmentsUseCase,
-        MarkLessonCompleteUseCase,
-        UnenrollUseCase,
-    ],
+  imports: [
+    TypeOrmModule.forFeature([Enrollment, LessonProgress]),
+    CoursesModule,
+  ],
+  controllers: [EnrollmentsController],
+  providers: [
+    {
+      provide: EnrollmentGateway,
+      useClass: EnrollmentsRepository,
+    },
+    EnrollmentOwnershipGuard,
+    EnrollInCourseUseCase,
+    GetMyEnrollmentsUseCase,
+    MarkLessonCompleteUseCase,
+    UnenrollUseCase,
+  ],
 })
 export class EnrollmentsModule {}

@@ -8,7 +8,7 @@ import { IsArray, IsUUID } from 'class-validator';
  * Eso significa: lección 3 va primero, luego 1, luego 2.
  */
 export class ReorderLessonsDto {
-    @IsArray()
-    @IsUUID('4', { each: true }) // Cada elemento del array debe ser un UUID v4 válido
-    lessonIds: string[];
+  @IsArray()
+  @IsUUID('4', { each: true }) // Cada elemento del array debe ser un UUID v4 válido
+  lessonIds: string[];
 }

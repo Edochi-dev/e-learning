@@ -12,9 +12,9 @@ import { IsUUID } from 'class-validator';
  *   El frontend ya conoce el courseId porque el usuario está dentro de esa página.
  */
 export class MarkLessonCompleteDto {
-    @IsUUID()
-    lessonId: string;
+  @IsUUID()
+  lessonId: string;
 
-    @IsUUID()
-    courseId: string;
+  @IsUUID()
+  courseId: string;
 }

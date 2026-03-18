@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
@@ -19,22 +23,25 @@ import { Enrollment } from '../entities/enrollment.entity';
  */
 @Injectable()
 export class EnrollInCourseUseCase {
-    constructor(
-        private readonly enrollmentGateway: EnrollmentGateway,
-        private readonly courseGateway: CourseGateway,
-    ) {}
+  constructor(
+    private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly courseGateway: CourseGateway,
+  ) {}
 
-    async execute(userId: string, courseId: string): Promise<Enrollment> {
-        const course = await this.courseGateway.findOne(courseId);
-        if (!course) {
-            throw new NotFoundException('Curso no encontrado');
-        }
-
-        const existing = await this.enrollmentGateway.findByUserAndCourse(userId, courseId);
-        if (existing) {
-            throw new ConflictException('Ya estás matriculado en este curso');
-        }
-
-        return this.enrollmentGateway.enroll(userId, courseId);
+  async execute(userId: string, courseId: string): Promise<Enrollment> {
+    const course = await this.courseGateway.findOne(courseId);
+    if (!course) {
+      throw new NotFoundException('Curso no encontrado');
     }
+
+    const existing = await this.enrollmentGateway.findByUserAndCourse(
+      userId,
+      courseId,
+    );
+    if (existing) {
+      throw new ConflictException('Ya estás matriculado en este curso');
+    }
+
+    return this.enrollmentGateway.enroll(userId, courseId);
+  }
 }

@@ -24,15 +24,15 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
       isGlobal: true,
       validationSchema: Joi.object({
         // Base de datos — todas obligatorias
-        DB_HOST:     Joi.string().required(),
-        DB_PORT:     Joi.number().integer().default(5432),
-        DB_USER:     Joi.string().required(),
+        DB_HOST: Joi.string().required(),
+        DB_PORT: Joi.number().integer().default(5432),
+        DB_USER: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
-        DB_NAME:     Joi.string().required(),
+        DB_NAME: Joi.string().required(),
         // Autenticación — obligatoria y con longitud mínima para evitar secrets débiles
-        JWT_SECRET:  Joi.string().min(32).required(),
+        JWT_SECRET: Joi.string().min(32).required(),
         // Servidor — opcional, tiene default
-        PORT:        Joi.number().integer().default(3000),
+        PORT: Joi.number().integer().default(3000),
         FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
       }),
     }),
@@ -82,6 +82,11 @@ export class AppModule implements NestModule {
       .apply(BlockVideoStaticMiddleware)
       .forRoutes('/static/videos/*path')
       .apply(CrossOriginResourcePolicyMiddleware)
-      .forRoutes('/static/images/*path', '/static/thumbnails/*path', '/videos/stream', '/static/certificates/*path');
+      .forRoutes(
+        '/static/images/*path',
+        '/static/thumbnails/*path',
+        '/videos/stream',
+        '/static/certificates/*path',
+      );
   }
 }

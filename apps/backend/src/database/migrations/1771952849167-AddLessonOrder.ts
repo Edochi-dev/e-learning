@@ -1,4 +1,4 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 /**
  * Migración: agregar columna `order` a la tabla `lessons`
@@ -10,13 +10,15 @@ import { MigrationInterface, QueryRunner } from "typeorm";
  * Después del deploy se puede re-ordenar manualmente si se desea.
  */
 export class AddLessonOrder1771952849167 implements MigrationInterface {
-    name = 'AddLessonOrder1771952849167';
+  name = 'AddLessonOrder1771952849167';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "lessons" ADD "order" integer NOT NULL DEFAULT 0`);
-    }
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "lessons" ADD "order" integer NOT NULL DEFAULT 0`,
+    );
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "lessons" DROP COLUMN "order"`);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`ALTER TABLE "lessons" DROP COLUMN "order"`);
+  }
 }

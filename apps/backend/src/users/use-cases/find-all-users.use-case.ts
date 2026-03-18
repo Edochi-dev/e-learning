@@ -4,9 +4,9 @@ import { User } from '../entities/user.entity';
 
 @Injectable()
 export class FindAllUsersUseCase {
-    constructor(private readonly userGateway: UserGateway) { }
+  constructor(private readonly userGateway: UserGateway) {}
 
-    async execute(): Promise<User[]> {
-        return this.userGateway.findAll();
-    }
+  async execute(): Promise<User[]> {
+    return this.userGateway.findAll();
+  }
 }

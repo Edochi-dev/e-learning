@@ -27,6 +27,8 @@ import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdmin
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { AccountPage } from './pages/AccountPage';
+import { MyCoursesPage } from './pages/MyCoursesPage';
+import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -51,6 +53,7 @@ function AppContent() {
   const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
   const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
   const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
+  const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
 
   return (
     <>
@@ -95,6 +98,7 @@ function AppContent() {
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
             <Route path="/cuenta" element={<AccountPage gateway={authGateway} />} />
+            <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
           </Route>
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}

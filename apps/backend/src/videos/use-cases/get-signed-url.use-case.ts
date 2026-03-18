@@ -13,44 +13,44 @@ import { VideoTokenService } from '../video-token.service';
  */
 @Injectable()
 export class GetSignedUrlUseCase {
-    constructor(
-        private readonly courseGateway: CourseGateway,
-        private readonly videoTokenService: VideoTokenService,
-    ) { }
+  constructor(
+    private readonly courseGateway: CourseGateway,
+    private readonly videoTokenService: VideoTokenService,
+  ) {}
 
-    async execute(lessonId: string): Promise<{ url: string; expires: number }> {
-        // 1. Buscar la lección
-        const lesson = await this.courseGateway.findLesson(lessonId);
-        if (!lesson) {
-            throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
-        }
-
-        // 2. Normalizar el URL: si tiene host (ej: "http://localhost:3000/static/videos/clase1.mp4")
-        //    extraemos solo el pathname ("/static/videos/clase1.mp4") para comparar correctamente.
-        //    Esto cubre el caso en que el admin guardó el URL completo en lugar de la ruta relativa.
-        let cleanPath: string;
-        try {
-            cleanPath = new URL(lesson.videoUrl).pathname;
-        } catch {
-            // Si no es un URL válido con host, ya es una ruta relativa
-            cleanPath = lesson.videoUrl;
-        }
-
-        // 3. Si no apunta a nuestro directorio estático, es un video externo (YouTube, Vimeo...)
-        if (!cleanPath.startsWith('/static/')) {
-            return { url: lesson.videoUrl, expires: 0 };
-        }
-
-        // 4. Extraer la ruta relativa del video
-        // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
-        const videoPath = cleanPath.replace('/static/', '');
-
-        // 4. Generar token firmado
-        const { token, expires } = this.videoTokenService.generateToken(videoPath);
-
-        // 5. Construir la URL firmada
-        const url = `/videos/stream?path=${encodeURIComponent(videoPath)}&token=${token}`;
-
-        return { url, expires };
+  async execute(lessonId: string): Promise<{ url: string; expires: number }> {
+    // 1. Buscar la lección
+    const lesson = await this.courseGateway.findLesson(lessonId);
+    if (!lesson) {
+      throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
     }
+
+    // 2. Normalizar el URL: si tiene host (ej: "http://localhost:3000/static/videos/clase1.mp4")
+    //    extraemos solo el pathname ("/static/videos/clase1.mp4") para comparar correctamente.
+    //    Esto cubre el caso en que el admin guardó el URL completo en lugar de la ruta relativa.
+    let cleanPath: string;
+    try {
+      cleanPath = new URL(lesson.videoUrl).pathname;
+    } catch {
+      // Si no es un URL válido con host, ya es una ruta relativa
+      cleanPath = lesson.videoUrl;
+    }
+
+    // 3. Si no apunta a nuestro directorio estático, es un video externo (YouTube, Vimeo...)
+    if (!cleanPath.startsWith('/static/')) {
+      return { url: lesson.videoUrl, expires: 0 };
+    }
+
+    // 4. Extraer la ruta relativa del video
+    // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
+    const videoPath = cleanPath.replace('/static/', '');
+
+    // 4. Generar token firmado
+    const { token, expires } = this.videoTokenService.generateToken(videoPath);
+
+    // 5. Construir la URL firmada
+    const url = `/videos/stream?path=${encodeURIComponent(videoPath)}&token=${token}`;
+
+    return { url, expires };
+  }
 }

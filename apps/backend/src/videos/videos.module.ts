@@ -22,22 +22,20 @@ import { Lesson } from '../courses/entities/lessons.entity';
  * Todo lo demás (controller, use cases, frontend) sigue igual.
  */
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([Course, Lesson]),
-    ],
-    controllers: [VideosController],
-    providers: [
-        GetSignedUrlUseCase,
-        StreamVideoUseCase,
-        VideoTokenService,
-        {
-            provide: VideoStreamGateway,
-            useClass: LocalVideoStreamGateway, // ← Cambiá esta línea para migrar a nube
-        },
-        {
-            provide: CourseGateway,
-            useClass: CoursesRepository,
-        },
-    ],
+  imports: [TypeOrmModule.forFeature([Course, Lesson])],
+  controllers: [VideosController],
+  providers: [
+    GetSignedUrlUseCase,
+    StreamVideoUseCase,
+    VideoTokenService,
+    {
+      provide: VideoStreamGateway,
+      useClass: LocalVideoStreamGateway, // ← Cambiá esta línea para migrar a nube
+    },
+    {
+      provide: CourseGateway,
+      useClass: CoursesRepository,
+    },
+  ],
 })
-export class VideosModule { }
+export class VideosModule {}

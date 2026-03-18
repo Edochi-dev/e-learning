@@ -1,7 +1,22 @@
 import {
-    Controller, Get, Post, Patch, Delete, Body, Param, Query, Res, UseGuards,
-    UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-    HttpCode, StreamableFile, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  Res,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  HttpCode,
+  StreamableFile,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -28,123 +43,131 @@ import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
 export class CertificatesController {
-    constructor(
-        private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
-        private readonly updatePositionsUseCase: UpdateTemplatePositionsUseCase,
-        private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
-        private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
-        private readonly getCertificateUseCase: GetCertificateUseCase,
-        private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
-        private readonly certificateGateway: CertificateGateway,
-        private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
-        private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
-        private readonly lookupCertificateUseCase: LookupCertificateUseCase,
-    ) {}
+  constructor(
+    private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
+    private readonly updatePositionsUseCase: UpdateTemplatePositionsUseCase,
+    private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
+    private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
+    private readonly getCertificateUseCase: GetCertificateUseCase,
+    private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
+    private readonly certificateGateway: CertificateGateway,
+    private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
+    private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
+    private readonly lookupCertificateUseCase: LookupCertificateUseCase,
+  ) {}
 
-    // ==========================================
-    // Rutas de Admin (requieren rol ADMIN)
-    // ==========================================
+  // ==========================================
+  // Rutas de Admin (requieren rol ADMIN)
+  // ==========================================
 
-    @Post('admin/certificate-templates')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }))
-    uploadTemplate(
-        @UploadedFile(
-            new ParseFilePipe({
-                validators: [
-                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
-                    new FileTypeValidator({ fileType: 'application/pdf' }),
-                ],
-            }),
-        )
-        file: Express.Multer.File,
-        @Body() dto: CreateCertificateTemplateDto,
-    ) {
-        return this.uploadTemplateUseCase.execute(dto, file);
+  @Post('admin/certificate-templates')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  uploadTemplate(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'application/pdf' }),
+        ],
+      }),
+    )
+    file: Express.Multer.File,
+    @Body() dto: CreateCertificateTemplateDto,
+  ) {
+    return this.uploadTemplateUseCase.execute(dto, file);
+  }
+
+  @Patch('admin/certificate-templates/:id/positions')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  updatePositions(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateTemplatePositionsDto,
+  ) {
+    return this.updatePositionsUseCase.execute(id, dto);
+  }
+
+  @Get('admin/certificate-templates')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  listTemplates() {
+    return this.listTemplatesUseCase.execute();
+  }
+
+  @Delete('admin/certificate-templates/:id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  deleteTemplate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query('certAction') certAction: CertAction = 'keep',
+  ) {
+    return this.deleteTemplateUseCase.execute(id, certAction);
+  }
+
+  @Post('admin/certificates/batch')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  generateBatch(@Body() dto: GenerateCertificateBatchDto) {
+    return this.generateBatchUseCase.execute(dto);
+  }
+
+  @Get('admin/certificates')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  listCertificates(@Query('search') search?: string) {
+    const term = search?.trim().slice(0, 200);
+    if (term) {
+      return this.certificateGateway.search(term);
     }
+    return this.certificateGateway.findAll();
+  }
 
-    @Patch('admin/certificate-templates/:id/positions')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    updatePositions(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateTemplatePositionsDto) {
-        return this.updatePositionsUseCase.execute(id, dto);
-    }
+  @Post('admin/certificates/download')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async downloadBatch(
+    @Body() dto: DownloadCertificateBatchDto,
+    @Res() res: Response,
+  ) {
+    const result = await this.downloadBatchUseCase.execute(dto.ids);
 
-    @Get('admin/certificate-templates')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    listTemplates() {
-        return this.listTemplatesUseCase.execute();
-    }
+    const contentType = result.isZip ? 'application/zip' : 'application/pdf';
+    res.set({
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(result.filename)}"`,
+    });
+    res.send(result.buffer);
+  }
 
-    @Delete('admin/certificate-templates/:id')
-    @HttpCode(204)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    deleteTemplate(
-        @Param('id', ParseUUIDPipe) id: string,
-        @Query('certAction') certAction: CertAction = 'keep',
-    ) {
-        return this.deleteTemplateUseCase.execute(id, certAction);
-    }
+  @Delete('admin/certificates/:id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
+    return this.deleteCertificateUseCase.execute(id);
+  }
 
-    @Post('admin/certificates/batch')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    generateBatch(@Body() dto: GenerateCertificateBatchDto) {
-        return this.generateBatchUseCase.execute(dto);
-    }
+  // ==========================================
+  // Rutas Públicas (verificación de certificado)
+  // ==========================================
 
-    @Get('admin/certificates')
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    listCertificates(@Query('search') search?: string) {
-        const term = search?.trim().slice(0, 200);
-        if (term) {
-            return this.certificateGateway.search(term);
-        }
-        return this.certificateGateway.findAll();
-    }
+  @Get('certificates/lookup')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 60000, limit: 20 } })
+  lookupCertificate(@Query('number') number: string) {
+    return this.lookupCertificateUseCase.execute(number ?? '');
+  }
 
-    @Post('admin/certificates/download')
-    @HttpCode(200)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    async downloadBatch(@Body() dto: DownloadCertificateBatchDto, @Res() res: Response) {
-        const result = await this.downloadBatchUseCase.execute(dto.ids);
-
-        const contentType = result.isZip ? 'application/zip' : 'application/pdf';
-        res.set({
-            'Content-Type': contentType,
-            'Content-Disposition': `attachment; filename="${encodeURIComponent(result.filename)}"`,
-        });
-        res.send(result.buffer);
-    }
-
-    @Delete('admin/certificates/:id')
-    @HttpCode(204)
-    @UseGuards(AuthGuard('jwt'), RolesGuard)
-    @Roles(UserRole.ADMIN)
-    deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
-        return this.deleteCertificateUseCase.execute(id);
-    }
-
-    // ==========================================
-    // Rutas Públicas (verificación de certificado)
-    // ==========================================
-
-    @Get('certificates/lookup')
-    @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { ttl: 60000, limit: 20 } })
-    lookupCertificate(@Query('number') number: string) {
-        return this.lookupCertificateUseCase.execute(number ?? '');
-    }
-
-    @Get('certificates/:id')
-    @UseGuards(ThrottlerGuard)
-    @Throttle({ default: { ttl: 60000, limit: 30 } })
-    getCertificate(@Param('id', ParseUUIDPipe) id: string) {
-        return this.getCertificateUseCase.execute(id);
-    }
+  @Get('certificates/:id')
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 60000, limit: 30 } })
+  getCertificate(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getCertificateUseCase.execute(id);
+  }
 }

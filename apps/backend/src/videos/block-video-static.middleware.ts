@@ -11,19 +11,20 @@ import type { Request, Response, NextFunction } from 'express';
  */
 @Injectable()
 export class BlockVideoStaticMiddleware implements NestMiddleware {
-    use(req: Request, res: Response, next: NextFunction) {
-        const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
-        const hasVideoExtension = videoExtensions.some(ext =>
-            req.path.toLowerCase().endsWith(ext),
-        );
+  use(req: Request, res: Response, next: NextFunction) {
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv'];
+    const hasVideoExtension = videoExtensions.some((ext) =>
+      req.path.toLowerCase().endsWith(ext),
+    );
 
-        if (hasVideoExtension) {
-            return res.status(403).json({
-                statusCode: 403,
-                message: 'Acceso directo a videos no permitido. Usa el endpoint /videos/stream con token firmado.',
-            });
-        }
-
-        next();
+    if (hasVideoExtension) {
+      return res.status(403).json({
+        statusCode: 403,
+        message:
+          'Acceso directo a videos no permitido. Usa el endpoint /videos/stream con token firmado.',
+      });
     }
+
+    next();
+  }
 }

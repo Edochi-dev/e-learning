@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 
@@ -20,25 +24,32 @@ import { CourseGateway } from '../../courses/gateways/course.gateway';
  */
 @Injectable()
 export class MarkLessonCompleteUseCase {
-    constructor(
-        private readonly enrollmentGateway: EnrollmentGateway,
-        private readonly courseGateway: CourseGateway,
-    ) {}
+  constructor(
+    private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly courseGateway: CourseGateway,
+  ) {}
 
-    async execute(userId: string, lessonId: string, courseId: string): Promise<void> {
-        // Paso 1: ¿Está matriculado? (Ownership check)
-        const enrollment = await this.enrollmentGateway.findByUserAndCourse(userId, courseId);
-        if (!enrollment) {
-            throw new ForbiddenException('No estás matriculado en este curso');
-        }
-
-        // Paso 2: ¿Existe la lección?
-        const lesson = await this.courseGateway.findLesson(lessonId);
-        if (!lesson) {
-            throw new NotFoundException('Lección no encontrada');
-        }
-
-        // Paso 3: Marcar completa (idempotente: si ya lo estaba, no pasa nada)
-        await this.enrollmentGateway.markLessonComplete(userId, lessonId);
+  async execute(
+    userId: string,
+    lessonId: string,
+    courseId: string,
+  ): Promise<void> {
+    // Paso 1: ¿Está matriculado? (Ownership check)
+    const enrollment = await this.enrollmentGateway.findByUserAndCourse(
+      userId,
+      courseId,
+    );
+    if (!enrollment) {
+      throw new ForbiddenException('No estás matriculado en este curso');
     }
+
+    // Paso 2: ¿Existe la lección?
+    const lesson = await this.courseGateway.findLesson(lessonId);
+    if (!lesson) {
+      throw new NotFoundException('Lección no encontrada');
+    }
+
+    // Paso 3: Marcar completa (idempotente: si ya lo estaba, no pasa nada)
+    await this.enrollmentGateway.markLessonComplete(userId, lessonId);
+  }
 }

@@ -1,4 +1,13 @@
-import { Controller, Get, Param, Query, Headers, Res, UseGuards, ParseUUIDPipe } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Query,
+  Headers,
+  Res,
+  UseGuards,
+  ParseUUIDPipe,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 import { GetSignedUrlUseCase } from './use-cases/get-signed-url.use-case';
@@ -18,54 +27,58 @@ import { StreamVideoUseCase } from './use-cases/stream-video.use-case';
  */
 @Controller('videos')
 export class VideosController {
-    constructor(
-        private readonly getSignedUrlUseCase: GetSignedUrlUseCase,
-        private readonly streamVideoUseCase: StreamVideoUseCase,
-    ) { }
+  constructor(
+    private readonly getSignedUrlUseCase: GetSignedUrlUseCase,
+    private readonly streamVideoUseCase: StreamVideoUseCase,
+  ) {}
 
-    /**
-     * GET /videos/:lessonId/signed-url
-     *
-     * Requiere JWT. Retorna una URL firmada temporal.
-     * El frontend usa esta URL como src del <video>.
-     */
-    @Get(':lessonId/signed-url')
-    @UseGuards(AuthGuard('jwt'))
-    async getSignedUrl(@Param('lessonId', ParseUUIDPipe) lessonId: string) {
-        return this.getSignedUrlUseCase.execute(lessonId);
+  /**
+   * GET /videos/:lessonId/signed-url
+   *
+   * Requiere JWT. Retorna una URL firmada temporal.
+   * El frontend usa esta URL como src del <video>.
+   */
+  @Get(':lessonId/signed-url')
+  @UseGuards(AuthGuard('jwt'))
+  async getSignedUrl(@Param('lessonId', ParseUUIDPipe) lessonId: string) {
+    return this.getSignedUrlUseCase.execute(lessonId);
+  }
+
+  /**
+   * GET /videos/stream?path=videos/clase1.mp4&token=abc123.1608000000
+   *
+   * NO requiere JWT — el token firmado en la query string ES la autenticación.
+   * Soporta Range Requests para streaming eficiente.
+   */
+  @Get('stream')
+  async streamVideo(
+    @Query('path') videoPath: string,
+    @Query('token') token: string,
+    @Headers('range') range: string | undefined,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.streamVideoUseCase.execute(
+      videoPath,
+      token,
+      range,
+    );
+
+    // Seteamos los headers de respuesta
+    for (const [key, value] of Object.entries(result.headers)) {
+      res.setHeader(key, value);
     }
 
-    /**
-     * GET /videos/stream?path=videos/clase1.mp4&token=abc123.1608000000
-     *
-     * NO requiere JWT — el token firmado en la query string ES la autenticación.
-     * Soporta Range Requests para streaming eficiente.
-     */
-    @Get('stream')
-    async streamVideo(
-        @Query('path') videoPath: string,
-        @Query('token') token: string,
-        @Headers('range') range: string | undefined,
-        @Res({ passthrough: true }) res: Response,
-    ) {
-        const result = await this.streamVideoUseCase.execute(videoPath, token, range);
+    // CORP explícito: el frontend (5173) y el backend (3000) son orígenes
+    // distintos. Sin este header en 'cross-origin', el navegador bloquea el
+    // video con ERR_BLOCKED_BY_RESPONSE.NotSameOrigin (el 206 del stream).
+    // Lo seteamos aquí y no solo en el middleware para garantizar que esté
+    // presente incluso si el pipe del StreamableFile flusea headers antes
+    // de que el middleware haya podido sobreescribir el valor de Helmet.
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
 
-        // Seteamos los headers de respuesta
-        for (const [key, value] of Object.entries(result.headers)) {
-            res.setHeader(key, value);
-        }
+    // Seteamos el status code (200 o 206 para partial content)
+    res.status(result.statusCode);
 
-        // CORP explícito: el frontend (5173) y el backend (3000) son orígenes
-        // distintos. Sin este header en 'cross-origin', el navegador bloquea el
-        // video con ERR_BLOCKED_BY_RESPONSE.NotSameOrigin (el 206 del stream).
-        // Lo seteamos aquí y no solo en el middleware para garantizar que esté
-        // presente incluso si el pipe del StreamableFile flusea headers antes
-        // de que el middleware haya podido sobreescribir el valor de Helmet.
-        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-
-        // Seteamos el status code (200 o 206 para partial content)
-        res.status(result.statusCode);
-
-        return result.stream;
-    }
+    return result.stream;
+  }
 }

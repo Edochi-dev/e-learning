@@ -9,27 +9,27 @@
  * cambiaríamos la clase que implementa este gateway.
  */
 export abstract class FileStorageGateway {
-    /**
-     * Guarda un archivo subido en una carpeta del almacenamiento.
-     * @param file   El archivo recibido por Multer (tiene .buffer, .originalname, .mimetype)
-     * @param folder Subcarpeta destino, ej: "thumbnails" o "videos"
-     * @returns      La URL pública del archivo guardado, ej: "/static/thumbnails/uuid.jpg"
-     *
-     * Nota para el alumno: este método retorna una PROMESA de string porque
-     * escribir en disco (o subir a S3) es una operación asíncrona — puede tardar.
-     */
-    abstract saveFile(file: Express.Multer.File, folder: string): Promise<string>;
+  /**
+   * Guarda un archivo subido en una carpeta del almacenamiento.
+   * @param file   El archivo recibido por Multer (tiene .buffer, .originalname, .mimetype)
+   * @param folder Subcarpeta destino, ej: "thumbnails" o "videos"
+   * @returns      La URL pública del archivo guardado, ej: "/static/thumbnails/uuid.jpg"
+   *
+   * Nota para el alumno: este método retorna una PROMESA de string porque
+   * escribir en disco (o subir a S3) es una operación asíncrona — puede tardar.
+   */
+  abstract saveFile(file: Express.Multer.File, folder: string): Promise<string>;
 
-    /**
-     * Elimina un archivo del almacenamiento.
-     * @param filePath Ruta relativa del archivo (ej: "videos/clase1.mp4")
-     */
-    abstract deleteFile(filePath: string): Promise<void>;
+  /**
+   * Elimina un archivo del almacenamiento.
+   * @param filePath Ruta relativa del archivo (ej: "videos/clase1.mp4")
+   */
+  abstract deleteFile(filePath: string): Promise<void>;
 
-    /**
-     * Determina si una URL apunta a un archivo local (servido por nuestro backend).
-     * Esto es importante porque si alguien pone un link de YouTube, NO queremos
-     * intentar borrar archivos del filesystem.
-     */
-    abstract isLocalFile(url: string): boolean;
+  /**
+   * Determina si una URL apunta a un archivo local (servido por nuestro backend).
+   * Esto es importante porque si alguien pone un link de YouTube, NO queremos
+   * intentar borrar archivos del filesystem.
+   */
+  abstract isLocalFile(url: string): boolean;
 }

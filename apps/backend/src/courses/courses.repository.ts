@@ -17,167 +17,175 @@ import { Lesson } from './entities/lessons.entity';
  */
 @Injectable()
 export class CoursesRepository implements CourseGateway {
-    constructor(
-        @InjectRepository(Course)
-        private readonly courseRepository: Repository<Course>,
-        @InjectRepository(Lesson)
-        private readonly lessonRepository: Repository<Lesson>,
-    ) { }
+  constructor(
+    @InjectRepository(Course)
+    private readonly courseRepository: Repository<Course>,
+    @InjectRepository(Lesson)
+    private readonly lessonRepository: Repository<Lesson>,
+  ) {}
 
-    // ==========================================
-    // Operaciones de Cursos
-    // ==========================================
+  // ==========================================
+  // Operaciones de Cursos
+  // ==========================================
 
-    async create(course: Course): Promise<Course> {
-        const newCourse = this.courseRepository.create(course);
-        return this.courseRepository.save(newCourse);
+  async create(course: Course): Promise<Course> {
+    const newCourse = this.courseRepository.create(course);
+    return this.courseRepository.save(newCourse);
+  }
+
+  async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
+    const [data, total] = await this.courseRepository.findAndCount({
+      relations: ['lessons'],
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { data, total, page, limit };
+  }
+
+  async findOne(id: string): Promise<Course | null> {
+    return this.courseRepository.findOne({
+      where: { id },
+      relations: ['lessons'],
+      order: { lessons: { order: 'ASC' } }, // Siempre devolver lecciones ordenadas
+    });
+  }
+
+  async update(id: string, data: Partial<Course>): Promise<Course> {
+    const course = await this.findOne(id);
+    if (!course) {
+      throw new NotFoundException(`Course with id ${id} not found`);
     }
 
-    async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
-        const [data, total] = await this.courseRepository.findAndCount({
-            relations: ['lessons'],
-            skip: (page - 1) * limit,
-            take: limit,
-        });
-        return { data, total, page, limit };
+    Object.assign(course, data);
+    return this.courseRepository.save(course);
+  }
+
+  /**
+   * Elimina un curso por su ID.
+   *
+   * Usamos delete() (SQL directo) porque la entidad Lesson tiene
+   * onDelete: 'CASCADE' en su @ManyToOne. Eso significa que la propia
+   * base de datos borra las lecciones asociadas automáticamente al
+   * recibir el DELETE del curso — sin pasar por el ORM.
+   *
+   * Esta es la solución más robusta: funciona con cualquier cliente
+   * (ORM, SQL directo, psql) porque el contrato vive en la DB, no en el código.
+   */
+  async delete(id: string): Promise<void> {
+    const result = await this.courseRepository.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Course with id ${id} not found`);
+    }
+  }
+
+  // ==========================================
+  // Operaciones de Lecciones
+  // ==========================================
+
+  async addLesson(
+    courseId: string,
+    lessonData: Partial<Lesson>,
+  ): Promise<Lesson> {
+    const course = await this.findOne(courseId);
+    if (!course) {
+      throw new NotFoundException(`Course with id ${courseId} not found`);
     }
 
-    async findOne(id: string): Promise<Course | null> {
-        return this.courseRepository.findOne({
-            where: { id },
-            relations: ['lessons'],
-            order: { lessons: { order: 'ASC' } }, // Siempre devolver lecciones ordenadas
-        });
+    // La nueva lección va al final: su order es igual al total actual de lecciones
+    const lesson = this.lessonRepository.create({
+      ...lessonData,
+      order: course.lessons?.length ?? 0,
+      course,
+    });
+    return this.lessonRepository.save(lesson);
+  }
+
+  async removeLesson(lessonId: string): Promise<void> {
+    const result = await this.lessonRepository.delete(lessonId);
+    if (result.affected === 0) {
+      throw new NotFoundException(`Lesson with id ${lessonId} not found`);
+    }
+  }
+
+  /**
+   * Busca una lección por su ID.
+   * Necesario para que el UpdateLessonUseCase pueda obtener el videoUrl
+   * ACTUAL de la lección antes de actualizarla.
+   */
+  async findLesson(lessonId: string): Promise<Lesson | null> {
+    return this.lessonRepository.findOne({ where: { id: lessonId } });
+  }
+
+  /**
+   * Actualiza los campos de una lección existente.
+   * Object.assign() fusiona los datos nuevos con los existentes,
+   * y save() los persiste en la base de datos.
+   */
+  async updateLesson(lessonId: string, data: Partial<Lesson>): Promise<Lesson> {
+    const lesson = await this.findLesson(lessonId);
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with id ${lessonId} not found`);
     }
 
-    async update(id: string, data: Partial<Course>): Promise<Course> {
-        const course = await this.findOne(id);
-        if (!course) {
-            throw new NotFoundException(`Course with id ${id} not found`);
-        }
+    Object.assign(lesson, data);
+    return this.lessonRepository.save(lesson);
+  }
 
-        Object.assign(course, data);
-        return this.courseRepository.save(course);
-    }
+  /**
+   * Actualiza el campo `order` de cada lección según la posición en el array.
+   * lessonIds[0] → order 0, lessonIds[1] → order 1, etc.
+   *
+   * Promise.all() ejecuta todas las actualizaciones en PARALELO para ser eficiente.
+   * No tiene sentido esperar a que termine una para empezar la otra.
+   */
+  async reorderLessons(_courseId: string, lessonIds: string[]): Promise<void> {
+    await Promise.all(
+      lessonIds.map((lessonId, index) =>
+        this.lessonRepository.update(lessonId, { order: index }),
+      ),
+    );
+  }
 
-    /**
-     * Elimina un curso por su ID.
-     *
-     * Usamos delete() (SQL directo) porque la entidad Lesson tiene
-     * onDelete: 'CASCADE' en su @ManyToOne. Eso significa que la propia
-     * base de datos borra las lecciones asociadas automáticamente al
-     * recibir el DELETE del curso — sin pasar por el ORM.
-     *
-     * Esta es la solución más robusta: funciona con cualquier cliente
-     * (ORM, SQL directo, psql) porque el contrato vive en la DB, no en el código.
-     */
-    async delete(id: string): Promise<void> {
-        const result = await this.courseRepository.delete(id);
-        if (result.affected === 0) {
-            throw new NotFoundException(`Course with id ${id} not found`);
-        }
-    }
+  /**
+   * ¿Alguna OTRA lección (distinta a excludeLessonId) usa este videoUrl?
+   *
+   * Se usa en UPDATE: la lección sigue viva en la DB mientras actualizamos,
+   * por eso excluimos su propio ID para no contarse a sí misma.
+   */
+  async isVideoUrlReferenced(
+    videoUrl: string,
+    excludeLessonId: string,
+  ): Promise<boolean> {
+    const count = await this.lessonRepository.count({
+      where: {
+        videoUrl,
+        id: Not(excludeLessonId),
+      },
+    });
+    return count > 0;
+  }
 
-    // ==========================================
-    // Operaciones de Lecciones
-    // ==========================================
+  /**
+   * ¿Alguna lección (cualquiera) usa este videoUrl?
+   *
+   * Se usa en DELETE: la lección ya fue borrada antes de llamar este método,
+   * así que no hay nada que excluir — una sola query sin condiciones extra.
+   */
+  async isVideoUrlInUse(videoUrl: string): Promise<boolean> {
+    const count = await this.lessonRepository.count({ where: { videoUrl } });
+    return count > 0;
+  }
 
-    async addLesson(courseId: string, lessonData: Partial<Lesson>): Promise<Lesson> {
-        const course = await this.findOne(courseId);
-        if (!course) {
-            throw new NotFoundException(`Course with id ${courseId} not found`);
-        }
-
-        // La nueva lección va al final: su order es igual al total actual de lecciones
-        const lesson = this.lessonRepository.create({
-            ...lessonData,
-            order: course.lessons?.length ?? 0,
-            course,
-        });
-        return this.lessonRepository.save(lesson);
-    }
-
-    async removeLesson(lessonId: string): Promise<void> {
-        const result = await this.lessonRepository.delete(lessonId);
-        if (result.affected === 0) {
-            throw new NotFoundException(`Lesson with id ${lessonId} not found`);
-        }
-    }
-
-    /**
-     * Busca una lección por su ID.
-     * Necesario para que el UpdateLessonUseCase pueda obtener el videoUrl
-     * ACTUAL de la lección antes de actualizarla.
-     */
-    async findLesson(lessonId: string): Promise<Lesson | null> {
-        return this.lessonRepository.findOne({ where: { id: lessonId } });
-    }
-
-    /**
-     * Actualiza los campos de una lección existente.
-     * Object.assign() fusiona los datos nuevos con los existentes,
-     * y save() los persiste en la base de datos.
-     */
-    async updateLesson(lessonId: string, data: Partial<Lesson>): Promise<Lesson> {
-        const lesson = await this.findLesson(lessonId);
-        if (!lesson) {
-            throw new NotFoundException(`Lesson with id ${lessonId} not found`);
-        }
-
-        Object.assign(lesson, data);
-        return this.lessonRepository.save(lesson);
-    }
-
-    /**
-     * Actualiza el campo `order` de cada lección según la posición en el array.
-     * lessonIds[0] → order 0, lessonIds[1] → order 1, etc.
-     *
-     * Promise.all() ejecuta todas las actualizaciones en PARALELO para ser eficiente.
-     * No tiene sentido esperar a que termine una para empezar la otra.
-     */
-    async reorderLessons(_courseId: string, lessonIds: string[]): Promise<void> {
-        await Promise.all(
-            lessonIds.map((lessonId, index) =>
-                this.lessonRepository.update(lessonId, { order: index }),
-            ),
-        );
-    }
-
-    /**
-     * ¿Alguna OTRA lección (distinta a excludeLessonId) usa este videoUrl?
-     *
-     * Se usa en UPDATE: la lección sigue viva en la DB mientras actualizamos,
-     * por eso excluimos su propio ID para no contarse a sí misma.
-     */
-    async isVideoUrlReferenced(videoUrl: string, excludeLessonId: string): Promise<boolean> {
-        const count = await this.lessonRepository.count({
-            where: {
-                videoUrl,
-                id: Not(excludeLessonId),
-            },
-        });
-        return count > 0;
-    }
-
-    /**
-     * ¿Alguna lección (cualquiera) usa este videoUrl?
-     *
-     * Se usa en DELETE: la lección ya fue borrada antes de llamar este método,
-     * así que no hay nada que excluir — una sola query sin condiciones extra.
-     */
-    async isVideoUrlInUse(videoUrl: string): Promise<boolean> {
-        const count = await this.lessonRepository.count({ where: { videoUrl } });
-        return count > 0;
-    }
-
-    /**
-     * ¿Algún curso (cualquiera) usa esta thumbnailUrl?
-     *
-     * Mismo principio: se llama después de borrar el curso de la DB,
-     * así que no necesitamos exclusión.
-     */
-    async isThumbnailUrlInUse(thumbnailUrl: string): Promise<boolean> {
-        const count = await this.courseRepository.count({ where: { thumbnailUrl } });
-        return count > 0;
-    }
+  /**
+   * ¿Algún curso (cualquiera) usa esta thumbnailUrl?
+   *
+   * Mismo principio: se llama después de borrar el curso de la DB,
+   * así que no necesitamos exclusión.
+   */
+  async isThumbnailUrlInUse(thumbnailUrl: string): Promise<boolean> {
+    const count = await this.courseRepository.count({
+      where: { thumbnailUrl },
+    });
+    return count > 0;
+  }
 }

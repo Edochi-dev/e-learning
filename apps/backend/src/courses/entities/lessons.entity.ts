@@ -1,31 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  Index,
+} from 'typeorm';
 import { Lesson as ILesson } from '@maris-nails/shared';
 import { Course } from './course.entity';
 
 @Entity('lessons')
 export class Lesson implements ILesson {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column('text')
-    description: string;
+  @Column('text')
+  description: string;
 
-    @Column()
-    duration: string;
+  @Column()
+  duration: string;
 
-    @Column()
-    videoUrl: string;
+  @Column()
+  videoUrl: string;
 
-    @Column({ default: 0 })
-    order: number;
+  @Column({ default: 0 })
+  order: number;
 
-    @Column({ default: false })
-    isLive: boolean;
+  @Column({ default: false })
+  isLive: boolean;
 
-    @Index()
-    @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
-    course: Course;
+  @Index()
+  @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
+  course: Course;
 }

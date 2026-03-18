@@ -53,4 +53,4 @@ import { StorageModule } from '../storage/storage.module';
   // puedan inyectarlo en sus Use Cases sin tener que reimplementarlo.
   exports: [CourseGateway],
 })
-export class CoursesModule { }
+export class CoursesModule {}

@@ -18,10 +18,10 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  *   "id" son uuid NOT NULL sin DEFAULT — a diferencia de un serial o un uuid_generate_v4().
  */
 export class AddEnrollmentsAndProgress1772200000000 implements MigrationInterface {
-    name = 'AddEnrollmentsAndProgress1772200000000';
+  name = 'AddEnrollmentsAndProgress1772200000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
             CREATE TABLE "enrollments" (
                 "id"         uuid                NOT NULL,
                 "userId"     uuid                NOT NULL,
@@ -36,7 +36,7 @@ export class AddEnrollmentsAndProgress1772200000000 implements MigrationInterfac
             )
         `);
 
-        await queryRunner.query(`
+    await queryRunner.query(`
             CREATE TABLE "lesson_progress" (
                 "id"          uuid                NOT NULL,
                 "userId"      uuid                NOT NULL,
@@ -50,10 +50,10 @@ export class AddEnrollmentsAndProgress1772200000000 implements MigrationInterfac
                     REFERENCES "lessons"("id") ON DELETE CASCADE
             )
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP TABLE "lesson_progress"`);
-        await queryRunner.query(`DROP TABLE "enrollments"`);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`DROP TABLE "lesson_progress"`);
+    await queryRunner.query(`DROP TABLE "enrollments"`);
+  }
 }

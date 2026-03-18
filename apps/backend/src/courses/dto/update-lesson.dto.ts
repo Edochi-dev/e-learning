@@ -12,4 +12,4 @@ import { CreateLessonDto } from './create-lesson.dto';
  * y los validadores de @IsString() siguen aplicando, pero solo a los
  * campos que envíes.
  */
-export class UpdateLessonDto extends PartialType(CreateLessonDto) { }
+export class UpdateLessonDto extends PartialType(CreateLessonDto) {}

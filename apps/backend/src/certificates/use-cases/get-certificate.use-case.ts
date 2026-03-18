@@ -10,11 +10,11 @@ import { Certificate } from '../entities/certificate.entity';
  */
 @Injectable()
 export class GetCertificateUseCase {
-    constructor(private readonly certificateGateway: CertificateGateway) {}
+  constructor(private readonly certificateGateway: CertificateGateway) {}
 
-    async execute(id: string): Promise<Certificate> {
-        const cert = await this.certificateGateway.findOne(id);
-        if (!cert) throw new NotFoundException('Certificado no encontrado');
-        return cert;
-    }
+  async execute(id: string): Promise<Certificate> {
+    const cert = await this.certificateGateway.findOne(id);
+    if (!cert) throw new NotFoundException('Certificado no encontrado');
+    return cert;
+  }
 }

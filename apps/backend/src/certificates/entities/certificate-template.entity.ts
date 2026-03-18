@@ -1,85 +1,91 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  OneToMany,
+} from 'typeorm';
 import { Certificate } from './certificate.entity';
 
 @Entity('certificate_templates')
 export class CertificateTemplate {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    name: string;
+  @Column()
+  name: string;
 
-    @Column()
-    courseAbbreviation: string;
+  @Column()
+  courseAbbreviation: string;
 
-    @Column()
-    filePath: string;
+  @Column()
+  filePath: string;
 
-    @Column('float')
-    pageWidth: number;
+  @Column('float')
+  pageWidth: number;
 
-    @Column('float')
-    pageHeight: number;
+  @Column('float')
+  pageHeight: number;
 
-    @Column('float', { default: 0 })
-    namePositionX: number;
+  @Column('float', { default: 0 })
+  namePositionX: number;
 
-    @Column('float', { default: 0 })
-    namePositionY: number;
+  @Column('float', { default: 0 })
+  namePositionY: number;
 
-    @Column('int', { default: 28 })
-    nameFontSize: number;
+  @Column('int', { default: 28 })
+  nameFontSize: number;
 
-    @Column({ default: '#000000' })
-    nameColor: string;
+  @Column({ default: '#000000' })
+  nameColor: string;
 
-    @Column('float', { default: 0 })
-    qrPositionX: number;
+  @Column('float', { default: 0 })
+  qrPositionX: number;
 
-    @Column('float', { default: 0 })
-    qrPositionY: number;
+  @Column('float', { default: 0 })
+  qrPositionY: number;
 
-    @Column('float', { default: 80 })
-    qrSize: number;
+  @Column('float', { default: 80 })
+  qrSize: number;
 
-    // Clave del enum StandardFonts de pdf-lib (ej: 'Helvetica') o nombre del archivo TTF custom
-    @Column({ default: 'Helvetica' })
-    fontFamily: string;
+  // Clave del enum StandardFonts de pdf-lib (ej: 'Helvetica') o nombre del archivo TTF custom
+  @Column({ default: 'Helvetica' })
+  fontFamily: string;
 
-    // 'left' = el X guardado es el borde izquierdo del texto
-    // 'center' = el texto se centra en la página (X se recalcula al generar)
-    @Column({ default: 'left' })
-    nameAlign: string;
+  // 'left' = el X guardado es el borde izquierdo del texto
+  // 'center' = el texto se centra en la página (X se recalcula al generar)
+  @Column({ default: 'left' })
+  nameAlign: string;
 
-    // Formato del papel: 'A4' o 'A3'
-    @Column({ default: 'A4' })
-    paperFormat: string;
+  // Formato del papel: 'A4' o 'A3'
+  @Column({ default: 'A4' })
+  paperFormat: string;
 
-    // ── Fecha de emisión ──────────────────────────────────────────────────────
-    @Column({ default: true })
-    showDate: boolean;
+  // ── Fecha de emisión ──────────────────────────────────────────────────────
+  @Column({ default: true })
+  showDate: boolean;
 
-    @Column('float', { default: 0 })
-    datePositionX: number;
+  @Column('float', { default: 0 })
+  datePositionX: number;
 
-    @Column('float', { default: 0 })
-    datePositionY: number;
+  @Column('float', { default: 0 })
+  datePositionY: number;
 
-    @Column('int', { default: 18 })
-    dateFontSize: number;
+  @Column('int', { default: 18 })
+  dateFontSize: number;
 
-    @Column({ default: '#000000' })
-    dateColor: string;
+  @Column({ default: '#000000' })
+  dateColor: string;
 
-    @Column({ default: 'Helvetica' })
-    dateFontFamily: string;
+  @Column({ default: 'Helvetica' })
+  dateFontFamily: string;
 
-    @Column({ default: 'left' })
-    dateAlign: string;
+  @Column({ default: 'left' })
+  dateAlign: string;
 
-    @CreateDateColumn()
-    createdAt: Date;
+  @CreateDateColumn()
+  createdAt: Date;
 
-    @OneToMany(() => Certificate, (cert) => cert.template)
-    certificates: Certificate[];
+  @OneToMany(() => Certificate, (cert) => cert.template)
+  certificates: Certificate[];
 }

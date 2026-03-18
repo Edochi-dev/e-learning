@@ -24,57 +24,61 @@ import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway'
  */
 @Injectable()
 export class DeleteCourseUseCase {
-    constructor(
-        private readonly courseGateway: CourseGateway,
-        private readonly fileStorageGateway: FileStorageGateway,
-    ) { }
+  constructor(
+    private readonly courseGateway: CourseGateway,
+    private readonly fileStorageGateway: FileStorageGateway,
+  ) {}
 
-    async execute(id: string): Promise<void> {
-        // Paso 1: leer el curso ANTES de borrarlo para anotar las rutas en memoria
-        const course = await this.courseGateway.findOne(id);
+  async execute(id: string): Promise<void> {
+    // Paso 1: leer el curso ANTES de borrarlo para anotar las rutas en memoria
+    const course = await this.courseGateway.findOne(id);
 
-        if (!course) {
-            throw new NotFoundException(`Curso con id ${id} no encontrado`);
-        }
-
-        // Recopilar videoUrls locales únicos de todas las lecciones.
-        // Set<string> elimina duplicados: si dos lecciones compartieran video,
-        // solo procesamos el archivo una vez.
-        const localVideoUrls = new Set<string>();
-        for (const lesson of course.lessons ?? []) {
-            if (lesson.videoUrl && this.fileStorageGateway.isLocalFile(lesson.videoUrl)) {
-                localVideoUrls.add(lesson.videoUrl);
-            }
-        }
-
-        const thumbnailUrl = course.thumbnailUrl ?? null;
-
-        // Paso 2: borrar el curso — si falla aquí, los archivos siguen intactos ✅
-        // Las lecciones se eliminan en cascada (cascade: true en la entidad Course)
-        await this.courseGateway.delete(id);
-
-        // Pasos 3 y 4: limpieza de archivos (best-effort)
-        // El curso y sus lecciones ya no existen en la DB, así que las queries
-        // de "¿sigue en uso?" son simples conteos sin exclusiones.
-
-        // Paso 3: limpiar videos de las lecciones
-        await Promise.allSettled(
-            [...localVideoUrls].map(async (videoUrl) => {
-                const stillInUse = await this.courseGateway.isVideoUrlInUse(videoUrl);
-                if (!stillInUse) {
-                    const relativePath = videoUrl.replace('/static/', '');
-                    await this.fileStorageGateway.deleteFile(relativePath);
-                }
-            }),
-        );
-
-        // Paso 4: limpiar la miniatura del curso
-        if (thumbnailUrl && this.fileStorageGateway.isLocalFile(thumbnailUrl)) {
-            const stillInUse = await this.courseGateway.isThumbnailUrlInUse(thumbnailUrl);
-            if (!stillInUse) {
-                const relativePath = thumbnailUrl.replace('/static/', '');
-                await this.fileStorageGateway.deleteFile(relativePath);
-            }
-        }
+    if (!course) {
+      throw new NotFoundException(`Curso con id ${id} no encontrado`);
     }
+
+    // Recopilar videoUrls locales únicos de todas las lecciones.
+    // Set<string> elimina duplicados: si dos lecciones compartieran video,
+    // solo procesamos el archivo una vez.
+    const localVideoUrls = new Set<string>();
+    for (const lesson of course.lessons ?? []) {
+      if (
+        lesson.videoUrl &&
+        this.fileStorageGateway.isLocalFile(lesson.videoUrl)
+      ) {
+        localVideoUrls.add(lesson.videoUrl);
+      }
+    }
+
+    const thumbnailUrl = course.thumbnailUrl ?? null;
+
+    // Paso 2: borrar el curso — si falla aquí, los archivos siguen intactos ✅
+    // Las lecciones se eliminan en cascada (cascade: true en la entidad Course)
+    await this.courseGateway.delete(id);
+
+    // Pasos 3 y 4: limpieza de archivos (best-effort)
+    // El curso y sus lecciones ya no existen en la DB, así que las queries
+    // de "¿sigue en uso?" son simples conteos sin exclusiones.
+
+    // Paso 3: limpiar videos de las lecciones
+    await Promise.allSettled(
+      [...localVideoUrls].map(async (videoUrl) => {
+        const stillInUse = await this.courseGateway.isVideoUrlInUse(videoUrl);
+        if (!stillInUse) {
+          const relativePath = videoUrl.replace('/static/', '');
+          await this.fileStorageGateway.deleteFile(relativePath);
+        }
+      }),
+    );
+
+    // Paso 4: limpiar la miniatura del curso
+    if (thumbnailUrl && this.fileStorageGateway.isLocalFile(thumbnailUrl)) {
+      const stillInUse =
+        await this.courseGateway.isThumbnailUrlInUse(thumbnailUrl);
+      if (!stillInUse) {
+        const relativePath = thumbnailUrl.replace('/static/', '');
+        await this.fileStorageGateway.deleteFile(relativePath);
+      }
+    }
+  }
 }

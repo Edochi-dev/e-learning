@@ -1,7 +1,23 @@
 import {
-  Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards,
-  UseInterceptors, UploadedFile, ParseFilePipe, MaxFileSizeValidator, FileTypeValidator,
-  HttpCode, DefaultValuePipe, ParseIntPipe, ParseUUIDPipe, BadRequestException,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  ParseFilePipe,
+  MaxFileSizeValidator,
+  FileTypeValidator,
+  HttpCode,
+  DefaultValuePipe,
+  ParseIntPipe,
+  ParseUUIDPipe,
+  BadRequestException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -48,7 +64,7 @@ export class CoursesController {
     private readonly updateLessonUseCase: UpdateLessonUseCase,
     private readonly reorderLessonsUseCase: ReorderLessonsUseCase,
     private readonly deleteCourseUseCase: DeleteCourseUseCase,
-  ) { }
+  ) {}
 
   // ==========================================
   // Endpoints de Cursos
@@ -85,7 +101,8 @@ export class CoursesController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
   ): Promise<PaginatedResult<Course>> {
-    if (limit > 100) throw new BadRequestException('El límite máximo es 100 por página');
+    if (limit > 100)
+      throw new BadRequestException('El límite máximo es 100 por página');
     return this.findAllCoursesUseCase.execute(page, limit);
   }
 
@@ -174,7 +191,9 @@ export class CoursesController {
   @Delete(':courseId/lessons/:lessonId')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async removeLesson(@Param('lessonId', ParseUUIDPipe) lessonId: string): Promise<void> {
+  async removeLesson(
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+  ): Promise<void> {
     return this.removeLessonUseCase.execute(lessonId);
   }
 }

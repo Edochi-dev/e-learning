@@ -22,7 +22,8 @@ async function bootstrap() {
   app.use('/static/videos', (_req: Request, res: Response) => {
     res.status(403).json({
       statusCode: 403,
-      message: 'Acceso directo a videos no permitido. Usa el endpoint /videos/stream con token firmado.',
+      message:
+        'Acceso directo a videos no permitido. Usa el endpoint /videos/stream con token firmado.',
     });
   });
 

@@ -21,36 +21,39 @@ import { CreateCertificateTemplateDto } from '../dto/create-certificate-template
  */
 @Injectable()
 export class UploadCertificateTemplateUseCase {
-    // Ruta a la carpeta public/ del backend (funciona en dev y prod)
-    private readonly publicDir = join(__dirname, '..', '..', '..', 'public');
+  // Ruta a la carpeta public/ del backend (funciona en dev y prod)
+  private readonly publicDir = join(__dirname, '..', '..', '..', 'public');
 
-    constructor(private readonly templateGateway: CertificateTemplateGateway) {}
+  constructor(private readonly templateGateway: CertificateTemplateGateway) {}
 
-    async execute(dto: CreateCertificateTemplateDto, file: Express.Multer.File): Promise<CertificateTemplate> {
-        // 1. Guardar el archivo PDF en disco
-        const ext = extname(file.originalname) || '.pdf';
-        const filename = `${randomUUID()}${ext}`;
-        const destFolder = join(this.publicDir, 'certificates', 'templates');
-        const destPath = join(destFolder, filename);
+  async execute(
+    dto: CreateCertificateTemplateDto,
+    file: Express.Multer.File,
+  ): Promise<CertificateTemplate> {
+    // 1. Guardar el archivo PDF en disco
+    const ext = extname(file.originalname) || '.pdf';
+    const filename = `${randomUUID()}${ext}`;
+    const destFolder = join(this.publicDir, 'certificates', 'templates');
+    const destPath = join(destFolder, filename);
 
-        await mkdir(destFolder, { recursive: true });
-        await writeFile(destPath, file.buffer);
+    await mkdir(destFolder, { recursive: true });
+    await writeFile(destPath, file.buffer);
 
-        const filePath = `/static/certificates/templates/${filename}`;
+    const filePath = `/static/certificates/templates/${filename}`;
 
-        // 2. Leer las dimensiones del PDF con pdf-lib
-        const pdfDoc = await PDFDocument.load(file.buffer);
-        const firstPage = pdfDoc.getPages()[0];
-        const { width: pageWidth, height: pageHeight } = firstPage.getSize();
+    // 2. Leer las dimensiones del PDF con pdf-lib
+    const pdfDoc = await PDFDocument.load(file.buffer);
+    const firstPage = pdfDoc.getPages()[0];
+    const { width: pageWidth, height: pageHeight } = firstPage.getSize();
 
-        // 3. Persistir en la base de datos
-        return this.templateGateway.create({
-            name: dto.name,
-            courseAbbreviation: dto.courseAbbreviation.toUpperCase(),
-            filePath,
-            pageWidth,
-            pageHeight,
-            paperFormat: dto.paperFormat,
-        });
-    }
+    // 3. Persistir en la base de datos
+    return this.templateGateway.create({
+      name: dto.name,
+      courseAbbreviation: dto.courseAbbreviation.toUpperCase(),
+      filePath,
+      pageWidth,
+      pageHeight,
+      paperFormat: dto.paperFormat,
+    });
+  }
 }

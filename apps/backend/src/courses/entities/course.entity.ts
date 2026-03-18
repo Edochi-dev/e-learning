@@ -4,24 +4,24 @@ import { Lesson } from './lessons.entity';
 
 @Entity('courses')
 export class Course implements ICourse {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @Column('decimal')
-    price: number;
+  @Column('decimal')
+  price: number;
 
-    @Column('text')
-    description: string;
+  @Column('text')
+  description: string;
 
-    // nullable: true porque los cursos viejos no tienen miniatura.
-    // Sin esto, la migración fallaría al intentar agregar una columna NOT NULL
-    // en una tabla que ya tiene filas.
-    @Column({ nullable: true })
-    thumbnailUrl: string;
+  // nullable: true porque los cursos viejos no tienen miniatura.
+  // Sin esto, la migración fallaría al intentar agregar una columna NOT NULL
+  // en una tabla que ya tiene filas.
+  @Column({ nullable: true })
+  thumbnailUrl: string;
 
-    @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
-    lessons: Lesson[];
+  @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
+  lessons: Lesson[];
 }

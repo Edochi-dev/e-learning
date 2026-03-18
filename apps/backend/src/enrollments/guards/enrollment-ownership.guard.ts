@@ -1,9 +1,9 @@
 import {
-    Injectable,
-    CanActivate,
-    ExecutionContext,
-    ForbiddenException,
-    NotFoundException,
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+  NotFoundException,
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 
@@ -34,24 +34,26 @@ import { EnrollmentGateway } from '../gateways/enrollment.gateway';
  */
 @Injectable()
 export class EnrollmentOwnershipGuard implements CanActivate {
-    constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
+  constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
 
-    async canActivate(context: ExecutionContext): Promise<boolean> {
-        const request = context.switchToHttp().getRequest();
-        const enrollmentId: string = request.params.enrollmentId;
-        const userId: string = request.user.id;
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest();
+    const enrollmentId: string = request.params.enrollmentId;
+    const userId: string = request.user.id;
 
-        const enrollment = await this.enrollmentGateway.findById(enrollmentId);
-        if (!enrollment) {
-            throw new NotFoundException('Matrícula no encontrada');
-        }
-
-        if (enrollment.userId !== userId) {
-            throw new ForbiddenException('No tienes permiso para acceder a esta matrícula');
-        }
-
-        // Adjuntamos al request para evitar una segunda consulta en el controlador
-        request.enrollment = enrollment;
-        return true;
+    const enrollment = await this.enrollmentGateway.findById(enrollmentId);
+    if (!enrollment) {
+      throw new NotFoundException('Matrícula no encontrada');
     }
+
+    if (enrollment.userId !== userId) {
+      throw new ForbiddenException(
+        'No tienes permiso para acceder a esta matrícula',
+      );
+    }
+
+    // Adjuntamos al request para evitar una segunda consulta en el controlador
+    request.enrollment = enrollment;
+    return true;
+  }
 }

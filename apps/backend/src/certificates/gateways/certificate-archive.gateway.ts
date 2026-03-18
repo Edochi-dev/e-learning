@@ -1,8 +1,8 @@
 export interface ArchiveFile {
-    filename: string;
-    buffer: Buffer;
+  filename: string;
+  buffer: Buffer;
 }
 
 export abstract class CertificateArchiveGateway {
-    abstract createZip(files: ArchiveFile[]): Promise<Buffer>;
+  abstract createZip(files: ArchiveFile[]): Promise<Buffer>;
 }

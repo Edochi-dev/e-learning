@@ -24,28 +24,28 @@ import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway'
  */
 @Injectable()
 export class RemoveLessonUseCase {
-    constructor(
-        private readonly courseGateway: CourseGateway,
-        private readonly fileStorageGateway: FileStorageGateway,
-    ) { }
+  constructor(
+    private readonly courseGateway: CourseGateway,
+    private readonly fileStorageGateway: FileStorageGateway,
+  ) {}
 
-    async execute(lessonId: string): Promise<void> {
-        // Paso 1: leer el videoUrl ANTES de borrar (después ya no existirá en la DB)
-        const lesson = await this.courseGateway.findLesson(lessonId);
-        const videoUrl = lesson?.videoUrl ?? null;
+  async execute(lessonId: string): Promise<void> {
+    // Paso 1: leer el videoUrl ANTES de borrar (después ya no existirá en la DB)
+    const lesson = await this.courseGateway.findLesson(lessonId);
+    const videoUrl = lesson?.videoUrl ?? null;
 
-        // Paso 2: borrar la lección — si falla aquí, el archivo sigue intacto ✅
-        await this.courseGateway.removeLesson(lessonId);
+    // Paso 2: borrar la lección — si falla aquí, el archivo sigue intacto ✅
+    await this.courseGateway.removeLesson(lessonId);
 
-        // Paso 3 y 4: limpieza de archivo (best-effort, el usuario ya no lo verá)
-        if (videoUrl && this.fileStorageGateway.isLocalFile(videoUrl)) {
-            // La lección ya no existe en la DB, así que preguntamos sin exclusiones:
-            // "¿alguna lección restante sigue usando este archivo?"
-            const stillInUse = await this.courseGateway.isVideoUrlInUse(videoUrl);
-            if (!stillInUse) {
-                const relativePath = videoUrl.replace('/static/', '');
-                await this.fileStorageGateway.deleteFile(relativePath);
-            }
-        }
+    // Paso 3 y 4: limpieza de archivo (best-effort, el usuario ya no lo verá)
+    if (videoUrl && this.fileStorageGateway.isLocalFile(videoUrl)) {
+      // La lección ya no existe en la DB, así que preguntamos sin exclusiones:
+      // "¿alguna lección restante sigue usando este archivo?"
+      const stillInUse = await this.courseGateway.isVideoUrlInUse(videoUrl);
+      if (!stillInUse) {
+        const relativePath = videoUrl.replace('/static/', '');
+        await this.fileStorageGateway.deleteFile(relativePath);
+      }
     }
+  }
 }

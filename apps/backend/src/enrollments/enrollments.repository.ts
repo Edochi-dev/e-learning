@@ -17,109 +17,125 @@ import { LessonProgress } from './entities/lesson-progress.entity';
  */
 @Injectable()
 export class EnrollmentsRepository implements EnrollmentGateway {
-    constructor(
-        @InjectRepository(Enrollment)
-        private readonly enrollmentRepository: Repository<Enrollment>,
-        @InjectRepository(LessonProgress)
-        private readonly lessonProgressRepository: Repository<LessonProgress>,
-    ) {}
+  constructor(
+    @InjectRepository(Enrollment)
+    private readonly enrollmentRepository: Repository<Enrollment>,
+    @InjectRepository(LessonProgress)
+    private readonly lessonProgressRepository: Repository<LessonProgress>,
+  ) {}
 
-    async enroll(userId: string, courseId: string): Promise<Enrollment> {
-        const enrollment = this.enrollmentRepository.create({ userId, courseId });
-        return this.enrollmentRepository.save(enrollment);
-    }
+  async enroll(userId: string, courseId: string): Promise<Enrollment> {
+    const enrollment = this.enrollmentRepository.create({ userId, courseId });
+    return this.enrollmentRepository.save(enrollment);
+  }
 
-    async findById(id: string): Promise<Enrollment | null> {
-        return this.enrollmentRepository.findOne({ where: { id } });
-    }
+  async findById(id: string): Promise<Enrollment | null> {
+    return this.enrollmentRepository.findOne({ where: { id } });
+  }
 
-    async findByUserAndCourse(userId: string, courseId: string): Promise<Enrollment | null> {
-        return this.enrollmentRepository.findOne({ where: { userId, courseId } });
-    }
+  async findByUserAndCourse(
+    userId: string,
+    courseId: string,
+  ): Promise<Enrollment | null> {
+    return this.enrollmentRepository.findOne({ where: { userId, courseId } });
+  }
 
-    /**
-     * Carga las matrículas con su curso y las lecciones de ese curso.
-     *
-     * relations: ['course', 'course.lessons'] le dice a TypeORM que haga
-     * los JOINs necesarios para cargar esas relaciones anidadas en una sola query.
-     *
-     * Necesitamos 'course.lessons' para que el Use Case pueda calcular totalLessons.
-     */
-    async findByUserWithCourses(userId: string): Promise<Enrollment[]> {
-        return this.enrollmentRepository.find({
-            where: { userId },
-            relations: ['course', 'course.lessons'],
-            order: { enrolledAt: 'DESC' },
-        });
-    }
+  /**
+   * Carga las matrículas con su curso y las lecciones de ese curso.
+   *
+   * relations: ['course', 'course.lessons'] le dice a TypeORM que haga
+   * los JOINs necesarios para cargar esas relaciones anidadas en una sola query.
+   *
+   * Necesitamos 'course.lessons' para que el Use Case pueda calcular totalLessons.
+   */
+  async findByUserWithCourses(userId: string): Promise<Enrollment[]> {
+    return this.enrollmentRepository.find({
+      where: { userId },
+      relations: ['course', 'course.lessons'],
+      order: { enrolledAt: 'DESC' },
+    });
+  }
 
-    /**
-     * Trae TODO el progreso del usuario en UNA sola query y lo agrupa en JavaScript.
-     *
-     * El SQL trae filas planas como:
-     *   { courseId: 'uuid-A', lessonId: 'uuid-1' }
-     *   { courseId: 'uuid-A', lessonId: 'uuid-2' }
-     *   { courseId: 'uuid-B', lessonId: 'uuid-5' }
-     *
-     * El reduce() las convierte en un objeto agrupado:
-     *   { 'uuid-A': ['uuid-1', 'uuid-2'], 'uuid-B': ['uuid-5'] }
-     *
-     * ¿Qué hace reduce()?
-     *   Recorre el array acumulando resultados en un objeto vacío {}.
-     *   Por cada fila: si el courseId ya existe en el acumulador, añade el lessonId.
-     *   Si no existe, crea un array nuevo con ese lessonId.
-     *   acc[row.courseId] ??= []  →  "si no existe, inicializa como array vacío"
-     */
-    async getCompletedLessonIdsByCourse(userId: string): Promise<Record<string, string[]>> {
-        const rows = await this.lessonProgressRepository
-            .createQueryBuilder('lp')
-            .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
-            .where('lp."userId" = :userId', { userId })
-            .select('lp."lessonId"', 'lessonId')
-            .addSelect('l."courseId"', 'courseId')
-            .getRawMany<{ lessonId: string; courseId: string }>();
+  /**
+   * Trae TODO el progreso del usuario en UNA sola query y lo agrupa en JavaScript.
+   *
+   * El SQL trae filas planas como:
+   *   { courseId: 'uuid-A', lessonId: 'uuid-1' }
+   *   { courseId: 'uuid-A', lessonId: 'uuid-2' }
+   *   { courseId: 'uuid-B', lessonId: 'uuid-5' }
+   *
+   * El reduce() las convierte en un objeto agrupado:
+   *   { 'uuid-A': ['uuid-1', 'uuid-2'], 'uuid-B': ['uuid-5'] }
+   *
+   * ¿Qué hace reduce()?
+   *   Recorre el array acumulando resultados en un objeto vacío {}.
+   *   Por cada fila: si el courseId ya existe en el acumulador, añade el lessonId.
+   *   Si no existe, crea un array nuevo con ese lessonId.
+   *   acc[row.courseId] ??= []  →  "si no existe, inicializa como array vacío"
+   */
+  async getCompletedLessonIdsByCourse(
+    userId: string,
+  ): Promise<Record<string, string[]>> {
+    const rows = await this.lessonProgressRepository
+      .createQueryBuilder('lp')
+      .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
+      .where('lp."userId" = :userId', { userId })
+      .select('lp."lessonId"', 'lessonId')
+      .addSelect('l."courseId"', 'courseId')
+      .getRawMany<{ lessonId: string; courseId: string }>();
 
-        return rows.reduce<Record<string, string[]>>((acc, row) => {
-            acc[row.courseId] ??= [];
-            acc[row.courseId].push(row.lessonId);
-            return acc;
-        }, {});
-    }
+    return rows.reduce<Record<string, string[]>>((acc, row) => {
+      acc[row.courseId] ??= [];
+      acc[row.courseId].push(row.lessonId);
+      return acc;
+    }, {});
+  }
 
-    /**
-     * Devuelve los IDs de lecciones completadas por un usuario en un curso específico.
-     * Para la vista de detalle de un único curso — no usar en listas (usa getByCourse).
-     */
-    async getCompletedLessonIds(userId: string, courseId: string): Promise<string[]> {
-        const results = await this.lessonProgressRepository
-            .createQueryBuilder('lp')
-            .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
-            .where('lp."userId" = :userId', { userId })
-            .andWhere('l."courseId" = :courseId', { courseId })
-            .select('lp."lessonId"', 'lessonId')
-            .getRawMany<{ lessonId: string }>();
+  /**
+   * Devuelve los IDs de lecciones completadas por un usuario en un curso específico.
+   * Para la vista de detalle de un único curso — no usar en listas (usa getByCourse).
+   */
+  async getCompletedLessonIds(
+    userId: string,
+    courseId: string,
+  ): Promise<string[]> {
+    const results = await this.lessonProgressRepository
+      .createQueryBuilder('lp')
+      .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
+      .where('lp."userId" = :userId', { userId })
+      .andWhere('l."courseId" = :courseId', { courseId })
+      .select('lp."lessonId"', 'lessonId')
+      .getRawMany<{ lessonId: string }>();
 
-        return results.map((r) => r.lessonId);
-    }
+    return results.map((r) => r.lessonId);
+  }
 
-    /**
-     * Marca una lección como completada de forma idempotente.
-     *
-     * Idempotente significa: llamarlo una o diez veces produce el mismo resultado.
-     * Si la lección ya estaba completada, devolvemos el registro existente
-     * sin crear un duplicado (la restricción UNIQUE en la DB también lo evitaría,
-     * pero así damos una respuesta limpia en lugar de lanzar un error de DB).
-     */
-    async markLessonComplete(userId: string, lessonId: string): Promise<LessonProgress> {
-        await this.lessonProgressRepository.upsert(
-            { userId, lessonId },
-            { conflictPaths: ['userId', 'lessonId'], skipUpdateIfNoValuesChanged: true },
-        );
-        // El upsert garantiza que el registro existe; null es imposible aquí.
-        return this.lessonProgressRepository.findOne({ where: { userId, lessonId } }) as Promise<LessonProgress>;
-    }
+  /**
+   * Marca una lección como completada de forma idempotente.
+   *
+   * Idempotente significa: llamarlo una o diez veces produce el mismo resultado.
+   * Si la lección ya estaba completada, devolvemos el registro existente
+   * sin crear un duplicado (la restricción UNIQUE en la DB también lo evitaría,
+   * pero así damos una respuesta limpia en lugar de lanzar un error de DB).
+   */
+  async markLessonComplete(
+    userId: string,
+    lessonId: string,
+  ): Promise<LessonProgress> {
+    await this.lessonProgressRepository.upsert(
+      { userId, lessonId },
+      {
+        conflictPaths: ['userId', 'lessonId'],
+        skipUpdateIfNoValuesChanged: true,
+      },
+    );
+    // El upsert garantiza que el registro existe; null es imposible aquí.
+    return this.lessonProgressRepository.findOne({
+      where: { userId, lessonId },
+    }) as Promise<LessonProgress>;
+  }
 
-    async delete(id: string): Promise<void> {
-        await this.enrollmentRepository.delete(id);
-    }
+  async delete(id: string): Promise<void> {
+    await this.enrollmentRepository.delete(id);
+  }
 }

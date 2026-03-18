@@ -1,19 +1,22 @@
 import {
-    Controller,
-    Post,
-    Get,
-    Delete,
-    Body,
-    Param,
-    UseGuards,
-    Req,
-    HttpCode,
-    HttpStatus,
-    ParseUUIDPipe,
+  Controller,
+  Post,
+  Get,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+  Req,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
-import { GetMyEnrollmentsUseCase, EnrollmentWithProgress } from './use-cases/get-my-enrollments.use-case';
+import {
+  GetMyEnrollmentsUseCase,
+  EnrollmentWithProgress,
+} from './use-cases/get-my-enrollments.use-case';
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
@@ -39,43 +42,55 @@ import { Enrollment } from './entities/enrollment.entity';
 @Controller('enrollments')
 @UseGuards(AuthGuard('jwt'))
 export class EnrollmentsController {
-    constructor(
-        private readonly enrollInCourseUseCase: EnrollInCourseUseCase,
-        private readonly getMyEnrollmentsUseCase: GetMyEnrollmentsUseCase,
-        private readonly markLessonCompleteUseCase: MarkLessonCompleteUseCase,
-        private readonly unenrollUseCase: UnenrollUseCase,
-    ) {}
+  constructor(
+    private readonly enrollInCourseUseCase: EnrollInCourseUseCase,
+    private readonly getMyEnrollmentsUseCase: GetMyEnrollmentsUseCase,
+    private readonly markLessonCompleteUseCase: MarkLessonCompleteUseCase,
+    private readonly unenrollUseCase: UnenrollUseCase,
+  ) {}
 
-    @Post('me')
-    async enroll(@Req() req: any, @Body() dto: EnrollInCourseDto): Promise<Enrollment> {
-        return this.enrollInCourseUseCase.execute(req.user.id, dto.courseId);
-    }
+  @Post('me')
+  async enroll(
+    @Req() req: any,
+    @Body() dto: EnrollInCourseDto,
+  ): Promise<Enrollment> {
+    return this.enrollInCourseUseCase.execute(req.user.id, dto.courseId);
+  }
 
-    @Get('me')
-    async getMyEnrollments(@Req() req: any): Promise<EnrollmentWithProgress[]> {
-        return this.getMyEnrollmentsUseCase.execute(req.user.id);
-    }
+  @Get('me')
+  async getMyEnrollments(@Req() req: any): Promise<EnrollmentWithProgress[]> {
+    return this.getMyEnrollmentsUseCase.execute(req.user.id);
+  }
 
-    @Post('me/progress')
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async markLessonComplete(@Req() req: any, @Body() dto: MarkLessonCompleteDto): Promise<void> {
-        return this.markLessonCompleteUseCase.execute(req.user.id, dto.lessonId, dto.courseId);
-    }
+  @Post('me/progress')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async markLessonComplete(
+    @Req() req: any,
+    @Body() dto: MarkLessonCompleteDto,
+  ): Promise<void> {
+    return this.markLessonCompleteUseCase.execute(
+      req.user.id,
+      dto.lessonId,
+      dto.courseId,
+    );
+  }
 
-    /**
-     * DELETE /enrollments/:enrollmentId — Darse de baja de un curso.
-     *
-     * Aquí sí aparece un :enrollmentId en la URL → necesitamos el OwnershipGuard.
-     * El guard verifica que la matrícula pertenece al usuario del JWT.
-     *
-     * AuthGuard('jwt') va ANTES de EnrollmentOwnershipGuard porque:
-     *   el OwnershipGuard necesita req.user.id, que solo existe
-     *   después de que AuthGuard valide el token.
-     */
-    @Delete(':enrollmentId')
-    @UseGuards(EnrollmentOwnershipGuard)
-    @HttpCode(HttpStatus.NO_CONTENT)
-    async unenroll(@Param('enrollmentId', ParseUUIDPipe) enrollmentId: string): Promise<void> {
-        return this.unenrollUseCase.execute(enrollmentId);
-    }
+  /**
+   * DELETE /enrollments/:enrollmentId — Darse de baja de un curso.
+   *
+   * Aquí sí aparece un :enrollmentId en la URL → necesitamos el OwnershipGuard.
+   * El guard verifica que la matrícula pertenece al usuario del JWT.
+   *
+   * AuthGuard('jwt') va ANTES de EnrollmentOwnershipGuard porque:
+   *   el OwnershipGuard necesita req.user.id, que solo existe
+   *   después de que AuthGuard valide el token.
+   */
+  @Delete(':enrollmentId')
+  @UseGuards(EnrollmentOwnershipGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async unenroll(
+    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
+  ): Promise<void> {
+    return this.unenrollUseCase.execute(enrollmentId);
+  }
 }

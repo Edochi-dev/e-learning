@@ -4,19 +4,19 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 // Usa IF NOT EXISTS para ser idempotente — seguro de ejecutar sobre una BD ya existente
 // (por ejemplo, al migrar desde synchronize: true en desarrollo).
 export class InitialSchema1740000000000 implements MigrationInterface {
-    name = 'InitialSchema1740000000000';
+  name = 'InitialSchema1740000000000';
 
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        // Enum de roles de usuario
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // Enum de roles de usuario
+    await queryRunner.query(`
             DO $$ BEGIN
                 CREATE TYPE "public"."users_role_enum" AS ENUM('admin', 'student');
             EXCEPTION WHEN duplicate_object THEN NULL;
             END $$
         `);
 
-        // Tabla de usuarios
-        await queryRunner.query(`
+    // Tabla de usuarios
+    await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS "users" (
                 "id"        uuid                           NOT NULL,
                 "email"     character varying              NOT NULL,
@@ -29,8 +29,8 @@ export class InitialSchema1740000000000 implements MigrationInterface {
             )
         `);
 
-        // Tabla de cursos
-        await queryRunner.query(`
+    // Tabla de cursos
+    await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS "courses" (
                 "id"          uuid                NOT NULL,
                 "title"       character varying   NOT NULL,
@@ -41,8 +41,8 @@ export class InitialSchema1740000000000 implements MigrationInterface {
             )
         `);
 
-        // Tabla de lecciones
-        await queryRunner.query(`
+    // Tabla de lecciones
+    await queryRunner.query(`
             CREATE TABLE IF NOT EXISTS "lessons" (
                 "id"          uuid                NOT NULL,
                 "title"       character varying   NOT NULL,
@@ -54,8 +54,8 @@ export class InitialSchema1740000000000 implements MigrationInterface {
             )
         `);
 
-        // FK lecciones → cursos (solo si no existe)
-        await queryRunner.query(`
+    // FK lecciones → cursos (solo si no existe)
+    await queryRunner.query(`
             DO $$ BEGIN
                 ALTER TABLE "lessons"
                     ADD CONSTRAINT "FK_lessons_courseId"
@@ -64,13 +64,15 @@ export class InitialSchema1740000000000 implements MigrationInterface {
             EXCEPTION WHEN duplicate_object THEN NULL;
             END $$
         `);
-    }
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "lessons" DROP CONSTRAINT IF EXISTS "FK_lessons_courseId"`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "lessons"`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "courses"`);
-        await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
-        await queryRunner.query(`DROP TYPE IF EXISTS "public"."users_role_enum"`);
-    }
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `ALTER TABLE "lessons" DROP CONSTRAINT IF EXISTS "FK_lessons_courseId"`,
+    );
+    await queryRunner.query(`DROP TABLE IF EXISTS "lessons"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "courses"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "users"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "public"."users_role_enum"`);
+  }
 }

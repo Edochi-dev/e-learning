@@ -10,12 +10,12 @@ import { QrCodeGateway } from './gateways/qr-code.gateway';
  */
 @Injectable()
 export class QrCodeService implements QrCodeGateway {
-    async generate(url: string, pixelSize: number): Promise<Buffer> {
-        const buffer = await QRCode.toBuffer(url, {
-            type: 'png',
-            margin: 1,
-            width: pixelSize,
-        });
-        return buffer;
-    }
+  async generate(url: string, pixelSize: number): Promise<Buffer> {
+    const buffer = await QRCode.toBuffer(url, {
+      type: 'png',
+      margin: 1,
+      width: pixelSize,
+    });
+    return buffer;
+  }
 }
