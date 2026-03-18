@@ -46,7 +46,11 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                 <div className="catalog-featured__content">
                                     <p className="catalog-featured__tag">Programa destacado</p>
                                     <span className="catalog-featured__badge">
-                                        {featured.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Clase grabada'}
+                                        {featured.lessons?.every(l => l.isLive)
+                                            ? 'Clases en vivo'
+                                            : featured.lessons?.some(l => l.isLive)
+                                                ? 'Incluye clases en vivo'
+                                                : 'Clases grabadas'}
                                     </span>
                                     <h2>{featured.title}</h2>
                                     <p className="catalog-featured__desc">
@@ -74,13 +78,17 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                     <article key={course.id} className="catalog-card">
                                         <div className="catalog-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
-                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                ? <img src={course.thumbnailUrl.startsWith('http') ? course.thumbnailUrl : `${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
                                                 : '💅'
                                             }
                                         </div>
                                         <div className="catalog-card__body">
                                             <span className="catalog-card__badge">
-                                                {course.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Clase grabada'}
+                                                {course.lessons?.every(l => l.isLive)
+                                                    ? 'Clases en vivo'
+                                                    : course.lessons?.some(l => l.isLive)
+                                                        ? 'Incluye clases en vivo'
+                                                        : 'Clases grabadas'}
                                             </span>
                                             <h3 className="catalog-card__title">{course.title}</h3>
                                             <p className="catalog-card__desc">

@@ -35,17 +35,17 @@ const GALLERY_ROW_2 = [
 const STATIC_PREVIEWS = [
     {
         title: 'Uñas Acrílicas Esculpidas',
-        badge: 'Grabado',
+        badge: 'Clases grabadas',
         desc: 'Desde la preparación del natural hasta el diseño final. La base más demandada del mercado.',
     },
     {
         title: 'Nail Art Avanzado',
-        badge: 'Grabado',
+        badge: 'Clases grabadas',
         desc: 'Marble, chrome, texturas 3D y más. Para quienes quieren llevar su técnica a otro nivel.',
     },
     {
         title: 'Gel & Semipermanente',
-        badge: 'Grabado',
+        badge: 'Clases grabadas',
         desc: 'Aplicación impecable, durabilidad y remoción sin daño. El servicio que toda clienta exige.',
     },
 ];
@@ -217,13 +217,17 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                     <article key={course.id} className="preview-card">
                                         <div className="preview-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
-                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                ? <img src={course.thumbnailUrl.startsWith('http') ? course.thumbnailUrl : `${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
                                                 : '💅'
                                             }
                                         </div>
                                         <div className="preview-card__body">
                                             <span className="preview-card__badge">
-                                                {course.lessons?.some(l => l.isLive) ? 'Incluye clases en vivo' : 'Grabado'}
+                                                {course.lessons?.every(l => l.isLive)
+                                                    ? 'Clases en vivo'
+                                                    : course.lessons?.some(l => l.isLive)
+                                                        ? 'Incluye clases en vivo'
+                                                        : 'Clases grabadas'}
                                             </span>
                                             <h3 className="preview-card__title">{course.title}</h3>
                                             <p className="preview-card__desc">
