@@ -157,7 +157,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     const [dateAlign, setDateAlign]           = useState<'left' | 'center'>('left');
 
     // ── Zoom del preview ──────────────────────────────────────────────────────
-    const [zoomLevel, setZoomLevel] = useState(1);
+    const [zoomLevel, setZoomLevel] = useState(1.2);
     // Ancho del viewport scrollable (columna izquierda del grid).
     // Se captura una vez al montar el paso 2, antes de que el canvas renderice.
     // Esto rompe la dependencia circular: containerRef necesita un ancho base
@@ -430,7 +430,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 /* ── PASO 2 ──────────────────────────────────────────────── */
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', alignItems: 'start' }}>
 
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                         <div style={{
                             background: 'var(--bg-card)', border: '2px solid var(--border)',
                             borderRadius: '8px', padding: '0.75rem', marginBottom: '0.5rem',
@@ -478,7 +478,14 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                               */}
                             <div
                                 ref={viewportRef}
-                                style={{ overflow: 'auto', maxHeight: '65vh' }}
+                                style={{
+                                    overflow: 'auto',
+                                    width: viewportWidth > 0 ? `${viewportWidth}px` : '100%',
+                                    height: canvasNaturalHeightRef.current > 0
+                                        ? `${canvasNaturalHeightRef.current}px`
+                                        : 'auto',
+                                    maxHeight: '85vh',
+                                }}
                             >
                                 {/* Spacer: dimensiones reales = área de scroll */}
                                 <div style={{
