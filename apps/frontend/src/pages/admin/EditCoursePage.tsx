@@ -176,6 +176,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         title: '',
         description: '',
         price: 0,
+        features: [],
     });
 
     // Estado del panel "Agregar lección" (cerrado por defecto)
@@ -224,6 +225,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 title: data.title,
                 description: data.description,
                 price: data.price,
+                features: data.features ?? [],
             });
         } catch (err: any) {
             setError(err.message || 'Error al cargar el curso');
@@ -245,6 +247,30 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             [name]: type === 'number' ? Number(value) :
                 type === 'checkbox' ? (e.target as HTMLInputElement).checked :
                     value
+        }));
+    };
+
+    // --- Handlers de features ---
+
+    const handleFeatureChange = (index: number, value: string) => {
+        setCourseForm(prev => {
+            const updated = [...(prev.features ?? [])];
+            updated[index] = value;
+            return { ...prev, features: updated };
+        });
+    };
+
+    const addFeature = () => {
+        setCourseForm(prev => ({
+            ...prev,
+            features: [...(prev.features ?? []), ''],
+        }));
+    };
+
+    const removeFeature = (index: number) => {
+        setCourseForm(prev => ({
+            ...prev,
+            features: (prev.features ?? []).filter((_, i) => i !== index),
         }));
     };
 
@@ -422,6 +448,42 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                         <label htmlFor="price">Precio (USD)</label>
                         <input type="number" id="price" name="price" value={courseForm.price} onChange={handleCourseChange} required min="0" />
                     </div>
+
+                    {/* Editor de features (beneficios del curso) */}
+                    <div className="form-group">
+                        <label>Beneficios del curso</label>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem' }}>
+                            Aparecen en la card de compra. Ej: "Acceso de por vida", "Certificado al completar".
+                        </p>
+                        {(courseForm.features ?? []).map((feature, i) => (
+                            <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                <input
+                                    type="text"
+                                    value={feature}
+                                    onChange={(e) => handleFeatureChange(i, e.target.value)}
+                                    placeholder={`Beneficio ${i + 1}`}
+                                    style={{ flex: 1 }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => removeFeature(i)}
+                                    className="btn-secondary"
+                                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}
+                                >
+                                    Quitar
+                                </button>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={addFeature}
+                            className="btn-secondary"
+                            style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}
+                        >
+                            + Agregar beneficio
+                        </button>
+                    </div>
+
                     <button type="submit" disabled={isSubmittingCourse} className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
                         {isSubmittingCourse ? 'Guardando...' : 'Guardar Cambios del Curso'}
                     </button>

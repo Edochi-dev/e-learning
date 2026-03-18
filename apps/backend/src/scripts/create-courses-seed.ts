@@ -14,6 +14,7 @@ async function bootstrap() {
       description:
         'Domina la técnica de uñas acrílicas paso a paso. Desde la preparación de la uña natural hasta la aplicación perfecta de tips y esculpido. Incluye manejo de monómero y polímero, limado profesional y acabados que duran semanas. Ideal para principiantes que quieren empezar a generar ingresos.',
       thumbnailUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?w=800&q=80',
+      features: ['Acceso inmediato al contenido', 'Acceso de por vida', 'Material descargable'],
       lessons: [
         {
           title: 'Introducción a materiales',
@@ -63,6 +64,7 @@ async function bootstrap() {
       description:
         'Lleva tus diseños al siguiente nivel. Aprende técnicas de mano alzada, degradados, foil, stamping y decoración 3D. Cada lección incluye práctica guiada para que domines los trazos con confianza. Para alumnas que ya manejan la base y quieren diferenciarse con diseños únicos.',
       thumbnailUrl: 'https://images.unsplash.com/photo-1607779097040-26e80aa78e66?w=800&q=80',
+      features: ['Acceso inmediato al contenido', 'Acceso de por vida', 'Práctica guiada paso a paso'],
       lessons: [
         {
           title: 'Teoría del color en nail art',
@@ -104,6 +106,7 @@ async function bootstrap() {
       description:
         'La técnica más limpia y precisa del mercado. Aprende el manejo profesional del torno eléctrico, selección de fresas según tipo de cutícula, corte con tijera y alicate, y el acabado impecable que tus clientas van a amar. Certificación incluida al completar.',
       thumbnailUrl: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=800&q=80',
+      features: ['Acceso inmediato al contenido', 'Certificado al completar', 'Incluye sesión en vivo', 'Acceso de por vida'],
       lessons: [
         {
           title: 'Anatomía de la uña y cutícula',
@@ -160,6 +163,7 @@ async function bootstrap() {
       description:
         'Dos técnicas modernas en un solo curso. El soft gel es ligero y flexible; el polygel combina lo mejor del acrílico y el gel. Aprende cuándo usar cada uno, moldes vs tips, y cómo lograr extensiones naturales que tus clientas no van a querer sacarse nunca.',
       thumbnailUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?w=800&q=80',
+      features: ['Acceso inmediato al contenido', 'Acceso de por vida', '2 técnicas en 1 curso'],
       lessons: [
         {
           title: 'Diferencias entre gel, soft gel y polygel',
@@ -193,6 +197,7 @@ async function bootstrap() {
       description:
         'Transforma tu servicio de pedicura en una experiencia spa premium. Desde el remojo terapéutico hasta el esmaltado perfecto, pasando por exfoliación, hidratación profunda y masaje relajante. Aprende a cobrar más ofreciendo una experiencia que tus clientas van a recomendar.',
       thumbnailUrl: 'https://images.unsplash.com/photo-1562322140-8baeececf3df?w=800&q=80',
+      features: ['Acceso inmediato al contenido', 'Acceso de por vida', 'Técnicas de servicio premium'],
       lessons: [
         {
           title: 'Preparación del spa y productos',

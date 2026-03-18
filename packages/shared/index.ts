@@ -16,6 +16,7 @@ export interface Course {
     price: number;
     description: string;
     thumbnailUrl?: string;
+    features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
     lessons: Lesson[];
 }
 
@@ -53,6 +54,7 @@ export interface CreateCoursePayload {
     price: number;
     description: string;
     thumbnailUrl?: string;
+    features?: string[];
 }
 
 export interface CreateLessonPayload {
@@ -68,6 +70,7 @@ export interface UpdateCoursePayload {
     price?: number;
     description?: string;
     thumbnailUrl?: string;
+    features?: string[];
 }
 
 export interface UpdateLessonPayload {

@@ -41,6 +41,11 @@ export class CreateCourseDto {
   thumbnailUrl?: string;
 
   @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  features?: string[];
+
+  @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateLessonDto)
   @IsOptional()

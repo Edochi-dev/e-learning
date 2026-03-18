@@ -156,12 +156,13 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                             Inscribirme Ahora
                         </button>
 
-                        <ul className="cd-purchase-card__features">
-                            <li>Acceso inmediato al contenido</li>
-                            <li>{sortedLessons.length} lecciones en video</li>
-                            <li>Certificado al completar</li>
-                            <li>Acceso de por vida</li>
-                        </ul>
+                        {course.features && course.features.length > 0 && (
+                            <ul className="cd-purchase-card__features">
+                                {course.features.map((feature, i) => (
+                                    <li key={i}>{feature}</li>
+                                ))}
+                            </ul>
+                        )}
                     </div>
                 </aside>
             </div>

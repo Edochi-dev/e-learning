@@ -22,6 +22,11 @@ export class Course implements ICourse {
   @Column({ nullable: true })
   thumbnailUrl: string;
 
+  // 'simple-json' serializa el array como JSON string en una columna TEXT.
+  // PostgreSQL no necesita una columna jsonb para un array simple de strings.
+  @Column('simple-json', { nullable: true })
+  features: string[];
+
   @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
   lessons: Lesson[];
 }
