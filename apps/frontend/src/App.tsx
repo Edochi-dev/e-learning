@@ -26,6 +26,7 @@ import { SearchCertificatesPage } from './pages/admin/SearchCertificatesPage';
 import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdminPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { CertificateLookupPage } from './pages/CertificateLookupPage';
+import { AccountPage } from './pages/AccountPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -49,6 +50,7 @@ function AppContent() {
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
   const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
   const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
+  const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
 
   return (
     <>
@@ -89,6 +91,11 @@ function AppContent() {
           <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} /></ComingSoonGuard>} />
+
+          {/* Rutas protegidas — cualquier usuario autenticado */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/cuenta" element={<AccountPage gateway={authGateway} />} />
+          </Route>
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>

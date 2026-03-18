@@ -41,4 +41,20 @@ export class HttpAuthGateway implements AuthGateway {
 
         return response.json();
     }
+
+    async changePassword(currentPassword: string, newPassword: string, token: string): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/users/me/password`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ currentPassword, newPassword }),
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Error al cambiar la contraseña');
+        }
+    }
 }

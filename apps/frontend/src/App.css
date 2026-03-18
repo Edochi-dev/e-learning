@@ -2952,7 +2952,48 @@ input:checked+.slider .icon-moon {
   border-radius: var(--radius-full);
 }
 
-/* Grid de tarjetas de configuración */
+/* ── Tabs de navegación ── */
+.account-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border);
+  max-width: 700px;
+  margin: 0 auto 2rem;
+}
+
+.account-tabs__btn {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.account-tabs__btn:hover {
+  color: var(--text-primary);
+}
+
+.account-tabs__btn--active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ── Contenido de la tab activa ── */
+.account-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+/* Grid de tarjetas de configuración (legado, se mantiene por si se usa) */
 .account-cards {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -3002,6 +3043,38 @@ input:checked+.slider .icon-moon {
 .account-card__action {
   margin-top: auto;
   align-self: flex-start;
+}
+
+.account-card__note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0;
+  font-style: italic;
+}
+
+/* ── Formulario de contraseña ── */
+.account-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.account-password-form .btn-primary {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+.account-field__hint {
+  font-size: 0.78rem;
+  margin: 0.2rem 0 0;
+}
+
+.account-field__hint--error {
+  color: var(--error, #e53e3e);
+}
+
+.account-field__hint--success {
+  color: var(--success, #38a169);
 }
 
 .account-card__empty {

@@ -3,4 +3,5 @@ import type { LoginCredentials, AuthResponse, RegisterPayload, User } from '@mar
 export interface AuthGateway {
     login(credentials: LoginCredentials): Promise<AuthResponse>;
     register(payload: RegisterPayload): Promise<User>;
+    changePassword(currentPassword: string, newPassword: string, token: string): Promise<void>;
 }
