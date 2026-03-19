@@ -14,3 +14,11 @@ build/
 # Archivos generados en runtime (certificados PDF, plantillas subidas)
 apps/backend/public/certificates/generated/
 apps/backend/public/certificates/templates/
+
+# Certificados SSL (NUNCA subir a git)
+ssl/*.pem
+ssl/*.key
+ssl/*.crt
+
+# Backups de base de datos
+backups/

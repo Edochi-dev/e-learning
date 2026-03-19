@@ -5,7 +5,10 @@ export class Migration1772164663311 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `ALTER TABLE "lessons" DROP CONSTRAINT "FK_1a9ff2409a84c76560ae8a92590"`,
+      `ALTER TABLE "lessons" DROP CONSTRAINT IF EXISTS "FK_1a9ff2409a84c76560ae8a92590"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "lessons" DROP CONSTRAINT IF EXISTS "FK_lessons_courseId"`,
     );
     await queryRunner.query(
       `ALTER TABLE "lessons" ADD CONSTRAINT "FK_1a9ff2409a84c76560ae8a92590" FOREIGN KEY ("courseId") REFERENCES "courses"("id") ON DELETE CASCADE ON UPDATE NO ACTION`,
