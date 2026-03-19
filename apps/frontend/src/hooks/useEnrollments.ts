@@ -6,51 +6,37 @@ import { useAuth } from '../context/AuthContext';
  * useEnrollments — Hook que gestiona los cursos matriculados del usuario.
  *
  * Responsabilidades:
- *   - Hacer el fetch al montar el componente (o cuando cambia el token/gateway)
+ *   - Hacer el fetch al montar el componente (o cuando cambia el gateway)
  *   - Gestionar los estados loading / error / data
  *   - Exponer una función `refresh` para que la página pueda recargar los datos
- *     (útil después de matricularse en un nuevo curso)
  *
- * ¿Por qué el hook llama a useAuth() internamente?
- *   Porque las matrículas SIEMPRE requieren estar autenticado. No tiene sentido
- *   que la página tenga que pasar el token manualmente cada vez que usa este hook.
- *   El hook sabe que necesita el token y lo toma solo del contexto de auth.
- *
- * Flujo:
- *   MyCoursesPage → useEnrollments(gateway) → gateway.getMyEnrollments(token) → API
- *
- * Si el usuario no está autenticado (token = null), el hook simplemente
- * termina el loading sin hacer fetch. La página está protegida por ProtectedRoute
- * de todos modos, así que esto solo es una segunda capa de seguridad.
+ * El JWT viaja automáticamente en una cookie HttpOnly — el hook ya no necesita
+ * manejar el token. Solo verifica que el usuario esté autenticado (user !== null)
+ * antes de hacer el fetch.
  */
 export const useEnrollments = (gateway: EnrollmentGateway) => {
-    const { token } = useAuth();
+    const { isAuthenticated } = useAuth();
     const [enrollments, setEnrollments] = useState<EnrollmentWithProgress[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 
-    // useCallback memoriza la función `fetchEnrollments` para que no se re-cree
-    // en cada render. Esto evita que el useEffect se dispare en bucle infinito,
-    // porque `fetchEnrollments` es una dependencia de ese useEffect.
     const fetchEnrollments = useCallback(async () => {
-        if (!token) {
+        if (!isAuthenticated) {
             setLoading(false);
             return;
         }
         try {
             setLoading(true);
             setError(null);
-            const data = await gateway.getMyEnrollments(token);
+            const data = await gateway.getMyEnrollments();
             setEnrollments(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             setLoading(false);
         }
-    }, [gateway, token]);
+    }, [gateway, isAuthenticated]);
 
-    // Se ejecuta la primera vez que el componente aparece en pantalla,
-    // y cada vez que cambia el token o el gateway.
     useEffect(() => {
         fetchEnrollments();
     }, [fetchEnrollments]);
@@ -59,8 +45,6 @@ export const useEnrollments = (gateway: EnrollmentGateway) => {
         enrollments,
         loading,
         error,
-        // `refresh` permite que la página recargue los datos manualmente,
-        // por ejemplo después de matricularse en un nuevo curso.
         refresh: fetchEnrollments,
     };
 };

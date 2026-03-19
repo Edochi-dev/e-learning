@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 
 interface Props {
@@ -15,7 +14,6 @@ interface DeleteState {
 }
 
 export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
-    const { token } = useAuth();
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -24,15 +22,14 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const [deleteError, setDeleteError] = useState<string | null>(null);
 
     const loadData = useCallback(() => {
-        if (!token) return;
         setLoading(true);
-        gateway.listTemplates(token)
+        gateway.listTemplates()
             .then(setTemplates)
             .catch((err: unknown) => {
                 setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
             })
             .finally(() => setLoading(false));
-    }, [gateway, token]);
+    }, [gateway]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -58,11 +55,11 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     };
 
     const executeDelete = async (certAction: 'delete' | 'keep') => {
-        if (!token || !deleteState) return;
+        if (!deleteState) return;
         setDeleting(true);
         setDeleteError(null);
         try {
-            await gateway.deleteTemplate(deleteState.template.id, token, certAction);
+            await gateway.deleteTemplate(deleteState.template.id, certAction);
             setTemplates(prev => prev.filter(t => t.id !== deleteState.template.id));
             setDeleteState(null);
         } catch (err) {

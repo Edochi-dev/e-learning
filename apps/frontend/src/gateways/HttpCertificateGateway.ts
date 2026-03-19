@@ -7,7 +7,7 @@ export class HttpCertificateGateway implements CertificateGateway {
         this.baseUrl = baseUrl;
     }
 
-    async uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File, token: string): Promise<CertificateTemplate> {
+    async uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> {
         const body = new FormData();
         body.append('name', name);
         body.append('courseAbbreviation', courseAbbreviation);
@@ -16,75 +16,78 @@ export class HttpCertificateGateway implements CertificateGateway {
 
         const res = await fetch(`${this.baseUrl}/admin/certificate-templates`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
             body,
         });
         if (!res.ok) throw new Error(`Error al subir plantilla: ${res.statusText}`);
         return res.json();
     }
 
-    async updateTemplatePositions(id: string, positions: TemplatePositions, token: string): Promise<CertificateTemplate> {
+    async updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate> {
         const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}/positions`, {
             method: 'PATCH',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(positions),
         });
         if (!res.ok) throw new Error(`Error al actualizar posiciones: ${res.statusText}`);
         return res.json();
     }
 
-    async listTemplates(token: string): Promise<CertificateTemplate[]> {
+    async listTemplates(): Promise<CertificateTemplate[]> {
         const res = await fetch(`${this.baseUrl}/admin/certificate-templates`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar plantillas: ${res.statusText}`);
         return res.json();
     }
 
-    async generateBatch(templateId: string, names: string[], token: string): Promise<GeneratedCertificateSummary[]> {
+    async generateBatch(templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/batch`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ templateId, names }),
         });
         if (!res.ok) throw new Error(`Error al generar certificados: ${res.statusText}`);
         return res.json();
     }
 
-    async listCertificates(token: string): Promise<Certificate[]> {
+    async listCertificates(): Promise<Certificate[]> {
         const res = await fetch(`${this.baseUrl}/admin/certificates`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar certificados: ${res.statusText}`);
         return res.json();
     }
 
-    async searchCertificates(query: string, token: string): Promise<Certificate[]> {
+    async searchCertificates(query: string): Promise<Certificate[]> {
         const url = new URL(`${this.baseUrl}/admin/certificates`);
         url.searchParams.set('search', query);
         const res = await fetch(url.toString(), {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al buscar certificados: ${res.statusText}`);
         return res.json();
     }
 
-    async downloadBatch(ids: string[], token: string): Promise<Blob> {
+    async downloadBatch(ids: string[]): Promise<Blob> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/download`, {
             method: 'POST',
-            headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ ids }),
         });
         if (!res.ok) throw new Error(`Error al descargar certificados: ${res.statusText}`);
         return res.blob();
     }
 
-    async deleteTemplate(id: string, token: string, certAction?: 'delete' | 'keep'): Promise<void> {
+    async deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void> {
         const url = new URL(`${this.baseUrl}/admin/certificate-templates/${id}`);
         if (certAction) url.searchParams.set('certAction', certAction);
         const res = await fetch(url.toString(), {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!res.ok) {
             const body = await res.json().catch(() => ({}));
@@ -92,10 +95,10 @@ export class HttpCertificateGateway implements CertificateGateway {
         }
     }
 
-    async deleteCertificate(id: string, token: string): Promise<void> {
+    async deleteCertificate(id: string): Promise<void> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/${id}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
         if (!res.ok) {
             const body = await res.json().catch(() => ({}));

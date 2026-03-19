@@ -23,7 +23,7 @@ type Tab = 'cuenta' | 'facturacion';
  * gateways como props, nunca los importan directamente).
  */
 export const AccountPage: React.FC<Props> = ({ gateway }) => {
-    const { user, token } = useAuth();
+    const { user } = useAuth();
 
     // ── Tab activa ──────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<Tab>('cuenta');
@@ -36,7 +36,7 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
     const [passwordSuccess, setPasswordSuccess] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
 
-    if (!user || !token) return null;
+    if (!user) return null;
 
     const avatarColor = getColorFromName(user.fullName);
 
@@ -54,7 +54,7 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
         setChangingPassword(true);
 
         try {
-            await gateway.changePassword(currentPassword, newPassword, token);
+            await gateway.changePassword(currentPassword, newPassword);
             setPasswordSuccess(true);
             setCurrentPassword('');
             setNewPassword('');

@@ -8,9 +8,11 @@ import {
   Get,
   UseGuards,
   Req,
+  Res,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
+import type { Response } from 'express';
 import { CreateUserDto } from './dto/create-user.dto';
 import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { LoginUserDto } from './dto/login-user.dto';
@@ -22,6 +24,15 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UserRole } from '@maris-nails/shared';
 import { FindAllUsersUseCase } from './use-cases/find-all-users.use-case';
+
+/** Opciones de la cookie HttpOnly que transporta el JWT. */
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+  maxAge: 60 * 60 * 1000, // 1 hora — mismo TTL que el JWT
+};
 
 @Controller('users')
 export class UsersController {
@@ -47,8 +58,17 @@ export class UsersController {
   @Throttle({ default: { ttl: 60000, limit: 10 } })
   async login(
     @Body() loginUserDto: LoginUserDto,
-  ): Promise<{ user: User; token: string }> {
-    return this.loginUserUseCase.execute(loginUserDto);
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ user: User }> {
+    const { user, token } = await this.loginUserUseCase.execute(loginUserDto);
+    res.cookie('access_token', token, COOKIE_OPTIONS);
+    return { user };
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async logout(@Res({ passthrough: true }) res: Response): Promise<void> {
+    res.clearCookie('access_token', COOKIE_OPTIONS);
   }
 
   @Get('me')

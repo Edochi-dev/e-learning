@@ -25,20 +25,19 @@ export interface EnrollmentWithProgress {
  * Igual que CourseGateway: define QUÉ operaciones existen.
  * HttpEnrollmentGateway define CÓMO hacerlas via fetch().
  *
- * Nota: todos los métodos reciben `token` porque estas rutas requieren JWT.
- * El token lo obtiene la página desde useAuth() y lo pasa al hook,
- * que a su vez lo pasa al gateway. Nunca accedemos a localStorage aquí.
+ * El JWT viaja automáticamente en una cookie HttpOnly — los métodos
+ * ya no reciben token como parámetro.
  */
 export interface EnrollmentGateway {
     /** Devuelve los cursos del usuario con su progreso calculado */
-    getMyEnrollments(token: string): Promise<EnrollmentWithProgress[]>;
+    getMyEnrollments(): Promise<EnrollmentWithProgress[]>;
 
     /** Inscribe al usuario en un curso */
-    enroll(courseId: string, token: string): Promise<void>;
+    enroll(courseId: string): Promise<void>;
 
     /** Elimina la matrícula (baja del curso) */
-    unenroll(enrollmentId: string, token: string): Promise<void>;
+    unenroll(enrollmentId: string): Promise<void>;
 
     /** Marca una lección como completada */
-    markLessonComplete(lessonId: string, courseId: string, token: string): Promise<void>;
+    markLessonComplete(lessonId: string, courseId: string): Promise<void>;
 }

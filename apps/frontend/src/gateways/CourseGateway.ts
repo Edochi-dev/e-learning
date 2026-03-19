@@ -13,13 +13,13 @@ export interface CourseGateway {
     // Cursos
     findAll(): Promise<Course[]>;
     findOne(id: string): Promise<Course>;
-    create(course: CreateCoursePayload, token: string, thumbnail?: File): Promise<Course>;
-    update(id: string, data: UpdateCoursePayload, token: string): Promise<Course>;
-    delete(id: string, token: string): Promise<void>;
+    create(course: CreateCoursePayload, thumbnail?: File): Promise<Course>;
+    update(id: string, data: UpdateCoursePayload): Promise<Course>;
+    delete(id: string): Promise<void>;
 
     // Lecciones
-    addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson>;
-    removeLesson(courseId: string, lessonId: string, token: string): Promise<void>;
-    updateLesson(courseId: string, lessonId: string, data: UpdateLessonPayload, token: string): Promise<Lesson>;
-    reorderLessons(courseId: string, lessonIds: string[], token: string): Promise<void>;
+    addLesson(courseId: string, lesson: CreateLessonPayload): Promise<Lesson>;
+    removeLesson(courseId: string, lessonId: string): Promise<void>;
+    updateLesson(courseId: string, lessonId: string, data: UpdateLessonPayload): Promise<Lesson>;
+    reorderLessons(courseId: string, lessonIds: string[]): Promise<void>;
 }

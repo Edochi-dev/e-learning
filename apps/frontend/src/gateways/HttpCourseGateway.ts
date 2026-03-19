@@ -39,25 +39,18 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async create(course: any, token: string, thumbnail?: File): Promise<Course> {
-        // FormData permite enviar texto + archivo en el mismo request (multipart/form-data).
-        // IMPORTANTE: no agregar Content-Type manualmente. El browser lo pone solo
-        // con el "boundary" correcto que Multer necesita para parsear el cuerpo.
+    async create(course: any, thumbnail?: File): Promise<Course> {
         const body = new FormData();
         body.append('title', course.title);
         body.append('price', String(course.price));
         body.append('description', course.description);
         if (thumbnail) {
-            // 'thumbnail' debe coincidir con el nombre del campo en FileInterceptor('thumbnail')
             body.append('thumbnail', thumbnail);
         }
 
         const response = await fetch(`${this.baseUrl}/courses`, {
             method: 'POST',
-            headers: {
-                // Solo el token de auth — sin Content-Type, el browser lo gestiona
-                Authorization: `Bearer ${token}`,
-            },
+            credentials: 'include',
             body,
         });
 
@@ -67,13 +60,11 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async update(id: string, data: any, token: string): Promise<Course> {
+    async update(id: string, data: any): Promise<Course> {
         const response = await fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(data),
         });
 
@@ -83,25 +74,22 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async delete(id: string, token: string): Promise<void> {
+    async delete(id: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
 
-        // 204 No Content es éxito — no hay body que parsear
         if (!response.ok) {
             throw new Error(await this.parseErrorMessage(response, `Failed to delete course: ${response.statusText}`));
         }
     }
 
-    async addLesson(courseId: string, lesson: CreateLessonPayload, token: string): Promise<Lesson> {
+    async addLesson(courseId: string, lesson: CreateLessonPayload): Promise<Lesson> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(lesson),
         });
 
@@ -111,12 +99,10 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async removeLesson(courseId: string, lessonId: string, token: string): Promise<void> {
+    async removeLesson(courseId: string, lessonId: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
             method: 'DELETE',
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -129,13 +115,11 @@ export class HttpCourseGateway implements CourseGateway {
      * Solo envía los campos que cambien (actualización parcial).
      * El backend se encarga de limpiar archivos huérfanos si el videoUrl cambió.
      */
-    async updateLesson(courseId: string, lessonId: string, data: any, token: string): Promise<Lesson> {
+    async updateLesson(courseId: string, lessonId: string, data: any): Promise<Lesson> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(data),
         });
 
@@ -145,13 +129,11 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async reorderLessons(courseId: string, lessonIds: string[], token: string): Promise<void> {
+    async reorderLessons(courseId: string, lessonIds: string[]): Promise<void> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/reorder`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ lessonIds }),
         });
 

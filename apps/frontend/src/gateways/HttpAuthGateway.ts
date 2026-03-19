@@ -12,6 +12,7 @@ export class HttpAuthGateway implements AuthGateway {
         const response = await fetch(`${this.baseUrl}/users/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(credentials),
         });
 
@@ -20,17 +21,14 @@ export class HttpAuthGateway implements AuthGateway {
             throw new Error(error.message || `Login failed: ${response.statusText}`);
         }
 
-        const data = await response.json();
-        return {
-            access_token: data.token, // El backend devuelve "token", el frontend espera "access_token"
-            user: data.user,
-        };
+        return response.json();
     }
 
     async register(payload: RegisterPayload): Promise<User> {
         const response = await fetch(`${this.baseUrl}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify(payload),
         });
 
@@ -42,13 +40,11 @@ export class HttpAuthGateway implements AuthGateway {
         return response.json();
     }
 
-    async changePassword(currentPassword: string, newPassword: string, token: string): Promise<void> {
+    async changePassword(currentPassword: string, newPassword: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/users/me/password`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ currentPassword, newPassword }),
         });
 
@@ -56,5 +52,12 @@ export class HttpAuthGateway implements AuthGateway {
             const error = await response.json();
             throw new Error(error.message || 'Error al cambiar la contraseña');
         }
+    }
+
+    async logout(): Promise<void> {
+        await fetch(`${this.baseUrl}/users/logout`, {
+            method: 'POST',
+            credentials: 'include',
+        });
     }
 }

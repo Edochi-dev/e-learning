@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import type { CourseGateway } from '../../gateways/CourseGateway';
-import { useAuth } from '../../context/AuthContext';
 import type { Course } from '@maris-nails/shared';
 
 interface AdminDashboardPageProps {
@@ -10,7 +9,6 @@ interface AdminDashboardPageProps {
 }
 
 export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ gateway: courseGateway }) => {
-    const { token } = useAuth();
     const [courses, setCourses] = useState<Course[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -69,10 +67,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ gateway:
     };
 
     const executeDeletion = async (courseId: string) => {
-        if (!token) return;
         setDeletingId(courseId);
         try {
-            await courseGateway.delete(courseId, token);
+            await courseGateway.delete(courseId);
             // Actualizar la lista local sin hacer otro fetch al servidor
             setCourses(prev => prev.filter(c => c.id !== courseId));
         } catch (err) {

@@ -69,16 +69,16 @@ export interface TemplatePositions {
 
 export interface CertificateGateway {
     // Admin
-    uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File, token: string): Promise<CertificateTemplate>;
-    updateTemplatePositions(id: string, positions: TemplatePositions, token: string): Promise<CertificateTemplate>;
-    listTemplates(token: string): Promise<CertificateTemplate[]>;
-    generateBatch(templateId: string, names: string[], token: string): Promise<GeneratedCertificateSummary[]>;
-    listCertificates(token: string): Promise<Certificate[]>;
-    searchCertificates(query: string, token: string): Promise<Certificate[]>;
-    downloadBatch(ids: string[], token: string): Promise<Blob>;
+    uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
+    updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate>;
+    listTemplates(): Promise<CertificateTemplate[]>;
+    generateBatch(templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]>;
+    listCertificates(): Promise<Certificate[]>;
+    searchCertificates(query: string): Promise<Certificate[]>;
+    downloadBatch(ids: string[]): Promise<Blob>;
 
-    deleteTemplate(id: string, token: string, certAction?: 'delete' | 'keep'): Promise<void>;
-    deleteCertificate(id: string, token: string): Promise<void>;
+    deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void>;
+    deleteCertificate(id: string): Promise<void>;
 
     // Público
     getCertificate(id: string): Promise<Certificate>;

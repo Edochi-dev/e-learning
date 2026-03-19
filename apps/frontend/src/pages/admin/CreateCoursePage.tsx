@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import type { CreateCoursePayload } from '@maris-nails/shared';
@@ -11,7 +10,6 @@ interface CreateCoursePageProps {
 
 export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: courseGateway }) => {
     const navigate = useNavigate();
-    const { token } = useAuth();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     // useRef en lugar de useState: no necesitamos re-renderizar al cambiar el archivo.
@@ -37,8 +35,6 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token) return;
-
         setIsLoading(true);
         setError(null);
 
@@ -46,7 +42,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
             // Pedimos al componente hijo el archivo ya recortado con Canvas.
             // Si el admin no subió imagen, getCroppedFile() devuelve null.
             const croppedFile = await thumbnailRef.current?.getCroppedFile() ?? null;
-            await courseGateway.create(formData, token, croppedFile ?? undefined);
+            await courseGateway.create(formData, croppedFile ?? undefined);
             navigate('/admin');
         } catch (err: any) {
             setError(err.message || 'Error al crear el curso');

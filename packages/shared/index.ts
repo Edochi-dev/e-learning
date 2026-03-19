@@ -45,7 +45,6 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-    access_token: string;
     user: User;
 }
 

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { API_URL } from '../config';
 
 interface VideoPlayerProps {
@@ -20,7 +19,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const { token } = useAuth();
 
     // 1. Detectar si es YouTube
     const isYoutube = src.includes('youtube.com') || src.includes('youtu.be');
@@ -33,11 +31,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
         }
 
         // Si es un video local, pedir URL firmada
-        if (!token) {
-            setError('Debes iniciar sesión para ver este video');
-            return;
-        }
-
         const controller = new AbortController();
 
         const fetchSignedUrl = async () => {
@@ -45,9 +38,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
             setError(null);
             try {
                 const response = await fetch(`${API_URL}/videos/${lessonId}/signed-url`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    credentials: 'include',
                     signal: controller.signal,
                 });
 
@@ -75,7 +66,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId }
 
         fetchSignedUrl();
         return () => controller.abort();
-    }, [lessonId, src, token, isYoutube]);
+    }, [lessonId, src, isYoutube]);
 
     if (isYoutube) {
         return (

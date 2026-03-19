@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificates } from '../../hooks/useCertificates';
 
@@ -9,7 +8,6 @@ interface Props {
 }
 
 export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
-    const { token } = useAuth();
     const navigate = useNavigate();
     const [query, setQuery] = useState('');
 
@@ -19,7 +17,7 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
         error,
         loadCertificates,
         searchCertificates,
-    } = useCertificates(gateway, token ?? '');
+    } = useCertificates(gateway);
 
     // Carga todos los certificados al montar la página
     useEffect(() => { loadCertificates(); }, [loadCertificates]);

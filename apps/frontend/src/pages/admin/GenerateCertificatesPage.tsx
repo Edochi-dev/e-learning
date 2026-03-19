@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary } from '../../gateways/CertificateGateway';
 
 interface Props {
@@ -8,7 +7,6 @@ interface Props {
 }
 
 export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
-    const { token } = useAuth();
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [namesText, setNamesText] = useState('');
@@ -18,21 +16,20 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!token) return;
-        gateway.listTemplates(token).then(setTemplates).catch((err: unknown) => {
+        gateway.listTemplates().then(setTemplates).catch((err: unknown) => {
             setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
         });
-    }, [gateway, token]);
+    }, [gateway]);
 
     const handleGenerate = async () => {
-        if (!token || !selectedTemplateId || !namesText.trim()) return;
+        if (!selectedTemplateId || !namesText.trim()) return;
         const names = namesText.split('\n').map(n => n.trim()).filter(Boolean);
         if (names.length === 0) return;
 
         setLoading(true);
         setError(null);
         try {
-            const result = await gateway.generateBatch(selectedTemplateId, names, token);
+            const result = await gateway.generateBatch(selectedTemplateId, names);
             setGenerated(result);
             setSelected(new Set(result.map(c => c.id)));
         } catch (err) {
@@ -52,11 +49,11 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
     };
 
     const handleDownload = async () => {
-        if (!token || selected.size === 0) return;
+        if (selected.size === 0) return;
         setLoading(true);
         try {
             const ids = Array.from(selected);
-            const blob = await gateway.downloadBatch(ids, token);
+            const blob = await gateway.downloadBatch(ids);
             const filename = ids.length === 1 ? 'certificado.pdf' : 'certificados.zip';
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');

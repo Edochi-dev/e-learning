@@ -6,8 +6,8 @@ import type { EnrollmentGateway, EnrollmentWithProgress } from './EnrollmentGate
  * Este es el único archivo del frontend que sabe qué URLs existen en la API
  * para el módulo de matrículas. Si las rutas cambian, solo cambias aquí.
  *
- * Patrón de autenticación: todas las rutas son /me (el userId sale del JWT en el servidor),
- * así que simplemente mandamos el token en el header Authorization.
+ * Patrón de autenticación: el JWT viaja en una cookie HttpOnly que el browser
+ * envía automáticamente con credentials: 'include'.
  */
 export class HttpEnrollmentGateway implements EnrollmentGateway {
     private readonly baseUrl: string;
@@ -16,9 +16,9 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         this.baseUrl = baseUrl;
     }
 
-    async getMyEnrollments(token: string): Promise<EnrollmentWithProgress[]> {
+    async getMyEnrollments(): Promise<EnrollmentWithProgress[]> {
         const response = await fetch(`${this.baseUrl}/enrollments/me`, {
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -28,13 +28,11 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         return response.json();
     }
 
-    async enroll(courseId: string, token: string): Promise<void> {
+    async enroll(courseId: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/enrollments/me`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ courseId }),
         });
 
@@ -44,10 +42,10 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         }
     }
 
-    async unenroll(enrollmentId: string, token: string): Promise<void> {
+    async unenroll(enrollmentId: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/enrollments/${enrollmentId}`, {
             method: 'DELETE',
-            headers: { Authorization: `Bearer ${token}` },
+            credentials: 'include',
         });
 
         if (!response.ok) {
@@ -55,17 +53,14 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         }
     }
 
-    async markLessonComplete(lessonId: string, courseId: string, token: string): Promise<void> {
+    async markLessonComplete(lessonId: string, courseId: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/enrollments/me/progress`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: `Bearer ${token}`,
-            },
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ lessonId, courseId }),
         });
 
-        // 204 No Content = éxito, no hay body que parsear
         if (!response.ok) {
             throw new Error('No se pudo guardar el progreso');
         }

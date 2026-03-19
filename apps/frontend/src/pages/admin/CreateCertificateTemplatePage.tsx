@@ -3,7 +3,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import Draggable from 'react-draggable';
 import { QRCodeSVG } from 'qrcode.react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { useAuth } from '../../context/AuthContext';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -109,7 +108,6 @@ const INITIAL_DATE_PCT = { x: 0.50, y: 0.55 };
  *      y la convierte en proporción dividiendo por el tamaño actual del contenedor.
  */
 export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
-    const { token } = useAuth();
     const navigate = useNavigate();
 
     // ── Paso 1 ────────────────────────────────────────────────────────────────
@@ -276,11 +274,11 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
     // ── Paso 1: subir plantilla ───────────────────────────────────────────────
     const handleUpload = async () => {
-        if (!token || !formName || !formAbbr || !file) return;
+        if (!formName || !formAbbr || !file) return;
         setUploading(true);
         setError(null);
         try {
-            const result = await gateway.uploadTemplate(formName, formAbbr, formPaperFormat, file, token);
+            const result = await gateway.uploadTemplate(formName, formAbbr, formPaperFormat, file);
             setTemplate(result);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al subir la plantilla');
@@ -299,7 +297,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
     // ── Paso 2: guardar ───────────────────────────────────────────────────────
     const handleSave = async () => {
-        if (!token || !template) return;
+        if (!template) return;
         setSaving(true);
         setError(null);
         try {
@@ -320,7 +318,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 dateColor,
                 dateFontFamily,
                 dateAlign,
-            }, token);
+            });
             navigate('/admin/certificados');
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al guardar posiciones');

@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course, Lesson, UpdateCoursePayload, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
 import {
@@ -159,7 +158,6 @@ interface EditCoursePageProps {
 
 export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseGateway }) => {
     const { courseId } = useParams<{ courseId: string }>();
-    const { token } = useAuth();
 
     // Estado general
     const [course, setCourse] = useState<Course | null>(null);
@@ -276,12 +274,12 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     const handleCourseSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token || !courseId) return;
+        if (!courseId) return;
         setIsSubmittingCourse(true);
         setError(null);
         setSuccessMessage(null);
         try {
-            await courseGateway.update(courseId, courseForm, token);
+            await courseGateway.update(courseId, courseForm);
             setSuccessMessage('¡Curso actualizado correctamente!');
         } catch (err: any) {
             setError(err.message || 'Error al actualizar el curso');
@@ -297,7 +295,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
         // Si no hay destino o el elemento no se movió, no hacemos nada
         if (!over || active.id === over.id) return;
-        if (!token || !courseId) return;
+        if (!courseId) return;
 
         const oldIndex = lessons.findIndex(l => l.id === active.id);
         const newIndex = lessons.findIndex(l => l.id === over.id);
@@ -318,7 +316,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         });
 
         try {
-            await courseGateway.reorderLessons(courseId, reordered.map(l => l.id), token);
+            await courseGateway.reorderLessons(courseId, reordered.map(l => l.id));
             setSuccessMessage('¡Orden guardado!');
         } catch (err: any) {
             // Revertir al orden anterior si el backend falló
@@ -339,12 +337,12 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     const handleAddLesson = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token || !courseId) return;
+        if (!courseId) return;
         setIsSubmittingLesson(true);
         setError(null);
         setSuccessMessage(null);
         try {
-            await courseGateway.addLesson(courseId, lessonForm, token);
+            await courseGateway.addLesson(courseId, lessonForm);
             setLessonForm({ title: '', description: '', duration: '', videoUrl: '', isLive: false });
             setIsAddingLesson(false); // Cerrar el panel tras agregar
             setSuccessMessage('¡Lección agregada exitosamente!');
@@ -359,12 +357,12 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     // --- Handlers de lecciones: ELIMINAR ---
 
     const handleRemoveLesson = async (lessonId: string) => {
-        if (!token || !courseId) return;
+        if (!courseId) return;
         if (!window.confirm('¿Estás seguro de que quieres eliminar esta lección?')) return;
         setError(null);
         setSuccessMessage(null);
         try {
-            await courseGateway.removeLesson(courseId, lessonId, token);
+            await courseGateway.removeLesson(courseId, lessonId);
             setSuccessMessage('Lección eliminada.');
             await loadCourse();
         } catch (err: any) {
@@ -397,12 +395,12 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     const handleUpdateLesson = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!token || !courseId || !editingLessonId) return;
+        if (!courseId || !editingLessonId) return;
         setIsSubmittingLesson(true);
         setError(null);
         setSuccessMessage(null);
         try {
-            await courseGateway.updateLesson(courseId, editingLessonId, editLessonForm, token);
+            await courseGateway.updateLesson(courseId, editingLessonId, editLessonForm);
             setEditingLessonId(null);
             setSuccessMessage('¡Lección actualizada!');
             await loadCourse();

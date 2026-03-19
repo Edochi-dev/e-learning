@@ -1,6 +1,7 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import type { Request, Response } from 'express';
 import { AppModule } from './app.module';
 
@@ -12,6 +13,7 @@ async function bootstrap() {
   // Debe ir ANTES de cualquier otra configuración para que se aplique a
   // todas las respuestas, incluyendo los errores del ValidationPipe.
   app.use(helmet());
+  app.use(cookieParser());
 
   // ── Bloqueo de videos estáticos ───────────────────────────────────────────
   // ServeStaticModule usa Express puro y corre ANTES del router de NestJS,
@@ -34,7 +36,8 @@ async function bootstrap() {
   app.enableCors({
     origin: allowedOrigin,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type'],
+    credentials: true,
   });
   // transform: true permite que el DTO convierta "49.99" (string de multipart)
   // a número automáticamente, usando @Type(() => Number) en los campos del DTO.
