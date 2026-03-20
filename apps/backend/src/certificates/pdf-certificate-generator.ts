@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { Injectable, Logger } from '@nestjs/common';
+import { PDFDocument, PDFFont, PDFPage, rgb, RGB, StandardFonts } from 'pdf-lib';
 import * as fs from 'fs';
 import * as path from 'path';
 import {
@@ -27,12 +27,22 @@ const fontkit = fontkitModule.default ?? fontkitModule;
  *   junto a este archivo compilado (copiada allí por nest-cli.json assets).
  * - Si el archivo no existe, cae a Helvetica como último recurso.
  *
+ * Renderizado de texto char-by-char:
+ *   pdf-lib con fuentes custom (TTF) tiene un bug conocido donde ciertos visores de PDF
+ *   (Chrome, Adobe) usan la tabla de anchos interna del TTF (`hmtx`) en vez del array
+ *   `/W` del descriptor CIDFont. Si estos anchos no coinciden, el texto se ve separado
+ *   (ej: "Maria" → "Mari a"). Para evitarlo, cada carácter se dibuja en su propia
+ *   coordenada X explícita, calculada sumando los anchos de pdf-lib uno a uno.
+ *   Así el visor no puede "adivinar" mal la posición — la recibe explícita.
+ *
  * El sistema de coordenadas de pdf-lib tiene el origen (0,0) en la esquina
  * inferior-izquierda del PDF. Por eso convertimos las coordenadas del frontend
  * (que vienen desde la esquina superior-izquierda) a coordenadas PDF.
  */
 @Injectable()
 export class PdfCertificateGenerator implements CertificateGeneratorGateway {
+  private readonly logger = new Logger(PdfCertificateGenerator.name);
+
   // Ruta a la carpeta de fuentes TTF (se copia de src/ a dist/ via nest-cli.json assets)
   private readonly fontsDir = path.join(__dirname, 'fonts');
 
@@ -47,12 +57,46 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     align: 'left' | 'center',
     text: string,
     size: number,
-    font: Awaited<ReturnType<typeof PDFDocument.prototype.embedFont>>,
+    font: PDFFont,
   ): number {
     if (align === 'center') {
       return anchorX - font.widthOfTextAtSize(text, size) / 2;
     }
     return anchorX;
+  }
+
+  /**
+   * Dibuja texto carácter por carácter con posición X explícita.
+   *
+   * ¿Por qué no usar page.drawText(texto_completo)?
+   * Cuando pdf-lib embebe una fuente custom (TTF) con subset: false, la fuente
+   * queda en el PDF con dos tablas de anchos: el array /W (de fontkit) y la
+   * tabla hmtx interna del TTF. Algunos visores usan hmtx en vez de /W,
+   * y si difieren → se generan gaps fantasma entre letras.
+   *
+   * Al dibujar char-by-char, cada carácter recibe una coordenada X explícita
+   * via un operador de posicionamiento (Td/Tm). El visor DEBE respetar esa
+   * coordenada — no puede "adivinar" usando anchos internos.
+   *
+   * Para fuentes StandardFonts (Helvetica, etc.) este bug no existe porque
+   * no tienen un programa TTF embebido, así que usamos drawText normal.
+   */
+  private drawTextCharByChar(
+    page: PDFPage,
+    text: string,
+    options: { x: number; y: number; size: number; font: PDFFont; color: RGB },
+  ): void {
+    let currentX = options.x;
+    for (const char of text) {
+      page.drawText(char, {
+        x: currentX,
+        y: options.y,
+        size: options.size,
+        font: options.font,
+        color: options.color,
+      });
+      currentX += options.font.widthOfTextAtSize(char, options.size);
+    }
   }
 
   async generate(params: GenerateCertificateParams): Promise<Buffer> {
@@ -85,7 +129,10 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     const qrImage = await pdfDoc.embedPng(qrBuffer);
 
     // Incrustamos la fuente: primero intentamos fuente custom TTF, luego StandardFonts
-    const font = await this.embedFont(pdfDoc, fontFamily ?? 'Helvetica');
+    const { font, isCustom } = await this.embedFont(
+      pdfDoc,
+      fontFamily ?? 'Helvetica',
+    );
 
     // Convertimos color hex a RGB normalizado (0-1)
     const color = this.hexToRgb(nameColor);
@@ -96,19 +143,35 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
     // del texto quede en el borde superior del element box en el PDF,
     // coincidiendo con el comportamiento de CSS para estas fuentes.
     const nameAscender = font.heightAtSize(fontSize, { descender: false });
-    page.drawText(recipientName, {
-      x: this.resolveDrawX(
-        namePosition.x,
-        nameAlign,
-        recipientName,
-        fontSize,
-        font,
-      ),
-      y: pageHeight - namePosition.y - nameAscender,
-      size: fontSize,
+    const nameDrawX = this.resolveDrawX(
+      namePosition.x,
+      nameAlign,
+      recipientName,
+      fontSize,
       font,
-      color: rgb(color.r, color.g, color.b),
-    });
+    );
+    const nameDrawY = pageHeight - namePosition.y - nameAscender;
+    const nameRgb = rgb(color.r, color.g, color.b);
+
+    // Fuentes custom → char-by-char para evitar gaps por discrepancia hmtx vs /W.
+    // StandardFonts → drawText normal (no tienen el bug).
+    if (isCustom) {
+      this.drawTextCharByChar(page, recipientName, {
+        x: nameDrawX,
+        y: nameDrawY,
+        size: fontSize,
+        font,
+        color: nameRgb,
+      });
+    } else {
+      page.drawText(recipientName, {
+        x: nameDrawX,
+        y: nameDrawY,
+        size: fontSize,
+        font,
+        color: nameRgb,
+      });
+    }
 
     // Dibujamos el QR. El Y también se invierte y se resta el tamaño del QR
     // para que la esquina superior-izquierda del QR coincida con el punto elegido
@@ -121,24 +184,38 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
 
     // Si la plantilla tiene fecha activada, la superponemos con su propia fuente
     if (dateText && datePosition && dateFontSize) {
-      const dateFont = await this.embedFont(
+      const { font: dateFont, isCustom: isDateCustom } = await this.embedFont(
         pdfDoc,
         dateFontFamily ?? 'Helvetica',
       );
       const dateRgb = this.hexToRgb(dateColor ?? '#000000');
-      page.drawText(dateText, {
-        x: this.resolveDrawX(
-          datePosition.x,
-          dateAlign ?? 'left',
-          dateText,
-          dateFontSize,
-          dateFont,
-        ),
-        y: pageHeight - datePosition.y - dateFontSize,
-        size: dateFontSize,
-        font: dateFont,
-        color: rgb(dateRgb.r, dateRgb.g, dateRgb.b),
-      });
+      const dateDrawX = this.resolveDrawX(
+        datePosition.x,
+        dateAlign ?? 'left',
+        dateText,
+        dateFontSize,
+        dateFont,
+      );
+      const dateDrawY = pageHeight - datePosition.y - dateFontSize;
+      const dateRgbColor = rgb(dateRgb.r, dateRgb.g, dateRgb.b);
+
+      if (isDateCustom) {
+        this.drawTextCharByChar(page, dateText, {
+          x: dateDrawX,
+          y: dateDrawY,
+          size: dateFontSize,
+          font: dateFont,
+          color: dateRgbColor,
+        });
+      } else {
+        page.drawText(dateText, {
+          x: dateDrawX,
+          y: dateDrawY,
+          size: dateFontSize,
+          font: dateFont,
+          color: dateRgbColor,
+        });
+      }
     }
 
     const pdfBytes = await pdfDoc.save();
@@ -152,32 +229,56 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
    * 1. Si fontFamily es una clave válida de StandardFonts → la usa directamente.
    * 2. Si existe el archivo `<fontFamily>.ttf` en la carpeta fonts/ → la incrusta con fontkit.
    * 3. Fallback: Helvetica (StandardFonts).
+   *
+   * Retorna { font, isCustom } para que el caller sepa si debe usar char-by-char.
    */
-  private async embedFont(pdfDoc: PDFDocument, fontFamily: string) {
+  private async embedFont(
+    pdfDoc: PDFDocument,
+    fontFamily: string,
+  ): Promise<{ font: PDFFont; isCustom: boolean }> {
     // 1. ¿Es una fuente estándar de pdf-lib?
     if (fontFamily in StandardFonts) {
       const fontKey = fontFamily as keyof typeof StandardFonts;
-      return pdfDoc.embedFont(StandardFonts[fontKey]);
+      return {
+        font: await pdfDoc.embedFont(StandardFonts[fontKey]),
+        isCustom: false,
+      };
     }
 
     // 2. ¿Existe el archivo TTF custom?
     const ttfPath = path.join(this.fontsDir, `${fontFamily}.ttf`);
     // Verificar que el path resultante no salga del directorio de fuentes
     if (!ttfPath.startsWith(this.fontsDir)) {
-      return pdfDoc.embedFont(StandardFonts.Helvetica);
+      return {
+        font: await pdfDoc.embedFont(StandardFonts.Helvetica),
+        isCustom: false,
+      };
     }
     if (fs.existsSync(ttfPath)) {
-      // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom.
-      // subset: false evita que el subsetting reconstruya las tablas de glifos
-      // incorrectamente en fuentes OpenType complejas (caligráficas, con ligaduras),
-      // lo que causaba que algunos caracteres aparecieran separados (ej: "Fabiol a").
-      pdfDoc.registerFontkit(fontkit);
-      const fontBytes = fs.readFileSync(ttfPath);
-      return pdfDoc.embedFont(fontBytes, { subset: false });
+      try {
+        // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom.
+        // subset: false evita que el subsetting reconstruya las tablas de glifos
+        // incorrectamente en fuentes OpenType complejas (caligráficas, con ligaduras).
+        pdfDoc.registerFontkit(fontkit);
+        const fontBytes = fs.readFileSync(ttfPath);
+        return {
+          font: await pdfDoc.embedFont(fontBytes, { subset: false }),
+          isCustom: true,
+        };
+      } catch (error) {
+        // Si el archivo TTF está corrupto o tiene un formato no soportado,
+        // logueamos el error y caemos al fallback en vez de romper toda la generación.
+        this.logger.warn(
+          `No se pudo cargar la fuente "${fontFamily}": ${error.message}. Usando Helvetica.`,
+        );
+      }
     }
 
     // 3. Fallback
-    return pdfDoc.embedFont(StandardFonts.Helvetica);
+    return {
+      font: await pdfDoc.embedFont(StandardFonts.Helvetica),
+      isCustom: false,
+    };
   }
 
   private hexToRgb(hex: string): { r: number; g: number; b: number } {
