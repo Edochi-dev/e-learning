@@ -22,3 +22,6 @@ ssl/*.crt
 
 # Backups de base de datos
 backups/
+
+# Claude Code (configuración local)
+.claude/
