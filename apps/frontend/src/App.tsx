@@ -29,6 +29,7 @@ import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { AccountPage } from './pages/AccountPage';
 import { MyCoursesPage } from './pages/MyCoursesPage';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
+import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -54,6 +55,7 @@ function AppContent() {
   const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
   const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
   const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
+  const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
 
   return (
     <>
@@ -92,7 +94,7 @@ function AppContent() {
           {/* Rutas públicas — visibles solo para ADMIN en modo coming soon */}
           <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
-          <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} orderGateway={orderGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} /></ComingSoonGuard>} />
 
           {/* Rutas protegidas — cualquier usuario autenticado */}

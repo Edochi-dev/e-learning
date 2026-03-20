@@ -1,10 +1,15 @@
-import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
+import type { OrderGateway } from '../gateways/OrderGateway';
+import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../hooks/useCourse';
+import { OrderStatus } from '@maris-nails/shared';
 import { API_URL as BACKEND_URL } from '../config';
 
 interface CourseDetailsPageProps {
     gateway: CourseGateway;
+    orderGateway: OrderGateway;
 }
 
 /**
@@ -22,9 +27,50 @@ interface CourseDetailsPageProps {
  *   - URLs absolutas (https://...) se usan directas
  *   - Rutas relativas (/static/...) se prefijan con BACKEND_URL
  */
-export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
+export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPageProps) => {
     const { id } = useParams<{ id: string }>();
     const { course, loading, error } = useCourse(gateway, id);
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    // Estado del flujo de compra
+    const [purchasing, setPurchasing] = useState(false);
+    const [purchaseError, setPurchaseError] = useState<string | null>(null);
+    const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+
+    /**
+     * handlePurchase — Flujo de compra directa.
+     *
+     * 1. Si no está logueado → lo mandamos al login (con returnTo para que vuelva)
+     * 2. Si está logueado → llamamos al backend (POST /orders/me)
+     * 3. Si el pago fue exitoso → mostramos mensaje y redirigimos a "mis cursos"
+     * 4. Si falló → mostramos el error
+     */
+    const handlePurchase = async () => {
+        if (!user) {
+            navigate('/login', { state: { returnTo: `/courses/${id}` } });
+            return;
+        }
+
+        setPurchasing(true);
+        setPurchaseError(null);
+
+        try {
+            const order = await orderGateway.createOrder(id!);
+
+            if (order.status === OrderStatus.COMPLETED) {
+                setPurchaseSuccess(true);
+                // Redirigir a "mis cursos" después de 2 segundos para que vea el mensaje
+                setTimeout(() => navigate('/mis-cursos'), 2000);
+            } else {
+                setPurchaseError('El pago no se pudo procesar. Intenta de nuevo.');
+            }
+        } catch (err: any) {
+            setPurchaseError(err.message || 'Ocurrió un error inesperado');
+        } finally {
+            setPurchasing(false);
+        }
+    };
 
     if (loading) return (
         <div className="container" style={{ padding: '6rem 0', textAlign: 'center' }}>
@@ -152,9 +198,24 @@ export const CourseDetailsPage = ({ gateway }: CourseDetailsPageProps) => {
                             <span className="cd-purchase-card__amount">{course.price}</span>
                         </div>
 
-                        <button className="btn-primary cd-purchase-card__cta">
-                            Inscribirme Ahora
+                        <button
+                            className="btn-primary cd-purchase-card__cta"
+                            onClick={handlePurchase}
+                            disabled={purchasing || purchaseSuccess}
+                        >
+                            {purchasing ? 'Procesando...' :
+                             purchaseSuccess ? 'Compra exitosa' :
+                             'Inscribirme Ahora'}
                         </button>
+
+                        {purchaseError && (
+                            <p className="cd-purchase-card__error">{purchaseError}</p>
+                        )}
+                        {purchaseSuccess && (
+                            <p className="cd-purchase-card__success">
+                                Ahora tienes acceso al curso. Redirigiendo...
+                            </p>
+                        )}
 
                         {course.features && course.features.length > 0 && (
                             <ul className="cd-purchase-card__features">
