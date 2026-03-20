@@ -50,5 +50,9 @@ import { CoursesModule } from '../courses/courses.module';
     MarkLessonCompleteUseCase,
     UnenrollUseCase,
   ],
+  // Exportamos EnrollmentGateway para que otros módulos (como OrdersModule)
+  // puedan inyectarlo en sus Use Cases. Sin esto, NestJS lanza un error
+  // de dependencia no resuelta porque el gateway solo es visible internamente.
+  exports: [EnrollmentGateway],
 })
 export class EnrollmentsModule {}

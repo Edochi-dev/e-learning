@@ -14,6 +14,7 @@ import { User } from './users/entities/user.entity';
 import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CertificatesModule } from './certificates/certificates.module';
+import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
 
@@ -67,6 +68,7 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     UsersModule,
     VideosModule,
     EnrollmentsModule,
+    OrdersModule,
     CertificatesModule,
   ],
   controllers: [AppController],

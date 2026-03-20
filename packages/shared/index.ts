@@ -85,3 +85,51 @@ export interface RegisterPayload {
     email: string;
     password: string; // Se envía en texto plano; el backend lo hashea con bcrypt antes de guardar
 }
+
+// ─── Orders (Compra directa de cursos) ────────────────────────────────
+
+/**
+ * OrderStatus — Ciclo de vida de una orden de compra.
+ *
+ * El flujo normal es:  PENDING → COMPLETED
+ * Si el pago falla:    PENDING → FAILED
+ *
+ * Usamos "const + as const" por la misma razón que UserRole:
+ * erasableSyntaxOnly no permite enums tradicionales en el frontend.
+ */
+export const OrderStatus = {
+    PENDING: 'pending',
+    COMPLETED: 'completed',
+    FAILED: 'failed',
+} as const;
+
+export type OrderStatus = typeof OrderStatus[keyof typeof OrderStatus];
+
+/**
+ * Order — Representa una compra de un curso por un usuario.
+ *
+ * ¿Por qué necesitamos esto si ya tenemos Enrollment?
+ *
+ * Enrollment = "el usuario TIENE acceso al curso" (relación activa).
+ * Order = "el usuario PAGÓ por el curso" (registro histórico de la transacción).
+ *
+ * Una Order COMPLETED genera un Enrollment. Pero si en el futuro se ofrece
+ * un reembolso, se puede eliminar el Enrollment sin perder el registro de
+ * que hubo una compra (útil para contabilidad, auditoría, soporte).
+ *
+ * amount se guarda en la Order (y no se lee del Course) porque el precio
+ * del curso puede cambiar después. La Order congela el precio al momento
+ * de la compra — esto es estándar en cualquier sistema de e-commerce.
+ */
+export interface Order {
+    id: string;
+    userId: string;
+    courseId: string;
+    amount: number;        // Precio congelado al momento de la compra
+    status: OrderStatus;
+    createdAt: string;     // ISO 8601
+}
+
+export interface CreateOrderPayload {
+    courseId: string;
+}
