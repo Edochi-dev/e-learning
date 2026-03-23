@@ -13,6 +13,7 @@ import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
 import { LessonPage } from './pages/LessonPage';
+import { CourseLearnPage } from './pages/CourseLearnPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
@@ -101,6 +102,7 @@ function AppContent() {
           <Route element={<ProtectedRoute />}>
             <Route path="/cuenta" element={<AccountPage gateway={authGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
+            <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} />} />
           </Route>
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}

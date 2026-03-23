@@ -116,7 +116,7 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
 
                                 {/* CTA */}
                                 <Link
-                                    to={`/courses/${enrollment.course.id}`}
+                                    to={`/courses/${enrollment.course.id}/learn`}
                                     className="enrollment-card__cta"
                                 >
                                     {enrollment.progressPercent === 100
