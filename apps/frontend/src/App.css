@@ -3700,6 +3700,7 @@ input:checked+.slider .icon-moon {
 /* Info de la lección */
 
 .course-learn__lesson-info {
+  max-width: 75%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -3922,6 +3923,11 @@ input:checked+.slider .icon-moon {
 
   .course-learn__main {
     padding: 1rem;
+  }
+
+  .course-learn__video,
+  .course-learn__lesson-info {
+    max-width: 100%;
   }
 
   .course-learn__sidebar {
