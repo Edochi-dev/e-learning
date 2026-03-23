@@ -3691,6 +3691,7 @@ input:checked+.slider .icon-moon {
 }
 
 .course-learn__video {
+  max-width: 75%;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);

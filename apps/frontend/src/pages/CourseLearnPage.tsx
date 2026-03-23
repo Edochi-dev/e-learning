@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useCourse } from '../hooks/useCourse';
+import { useEnrollments } from '../hooks/useEnrollments';
 import { VideoPlayer } from '../components/VideoPlayer';
 
 /**
@@ -20,11 +21,19 @@ import { VideoPlayer } from '../components/VideoPlayer';
  * un dominio distinto. No mezclamos "obtener datos del curso" con
  * "gestionar el progreso del alumno" en un solo gateway.
  *
- * La protección de ruta (solo usuarios autenticados) NO vive aquí.
- * Vive en App.tsx con <ProtectedRoute>. ¿Por qué?
- * Porque la autorización es una responsabilidad de la INFRAESTRUCTURA
- * de routing, no de la página. Si la página se protegiera a sí misma,
- * cada página tendría que repetir la misma lógica de auth.
+ * SEGURIDAD — Dos niveles de protección:
+ *   1. <ProtectedRoute> en App.tsx → solo usuarios AUTENTICADOS llegan aquí
+ *   2. Verificación de enrollment aquí → solo usuarios MATRICULADOS ven el contenido
+ *
+ * ¿Por qué la verificación de enrollment vive AQUÍ y no en el router?
+ * Porque ProtectedRoute es genérico (solo sabe de auth y roles).
+ * La lógica de "¿compró este curso?" es ESPECÍFICA de este dominio.
+ * Si la metiéramos en el router, tendríamos que pasarle el enrollmentGateway
+ * al router, acoplándolo a un dominio que no le corresponde.
+ *
+ * Es la misma razón por la que un guardia de seguridad en un edificio
+ * revisa tu badge (autenticación), pero la recepción de cada piso
+ * verifica que tengas cita (autorización específica del dominio).
  */
 
 interface CourseLearnPageProps {
@@ -34,7 +43,29 @@ interface CourseLearnPageProps {
 
 export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLearnPageProps) => {
     const { courseId } = useParams<{ courseId: string }>();
-    const { course, loading, error } = useCourse(courseGateway, courseId);
+    const { course, loading: courseLoading, error: courseError } = useCourse(courseGateway, courseId);
+
+    /**
+     * useEnrollments nos da la lista de cursos que el usuario ha comprado.
+     * Lo usamos para verificar que este courseId está en esa lista.
+     *
+     * ¿Por qué no creamos un endpoint específico como GET /enrollments/me/:courseId?
+     * Porque ya tenemos la lista completa en useEnrollments, y un usuario
+     * típico tiene pocos cursos (1-5). No vale la pena un endpoint extra
+     * para evitar filtrar un array de 5 elementos en el cliente.
+     */
+    const { enrollments, loading: enrollmentLoading, error: enrollmentError } = useEnrollments(enrollmentGateway);
+
+    const loading = courseLoading || enrollmentLoading;
+    const error = courseError || enrollmentError;
+
+    /**
+     * isEnrolled — ¿El usuario compró este curso?
+     *
+     * Si no ha terminado de cargar, asumimos false (se mostrará el spinner).
+     * Una vez cargado, buscamos si el courseId actual está en su lista de matrículas.
+     */
+    const isEnrolled = enrollments.some(e => e.course.id === courseId);
 
     /**
      * currentLessonId — controla qué lección se muestra.
@@ -113,6 +144,20 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                 <div className="course-learn__error">
                     <p>{error || 'Curso no encontrado'}</p>
                     <Link to="/mis-cursos" className="btn-secondary">Volver a mis cursos</Link>
+                </div>
+            </div>
+        );
+    }
+
+    // GUARD: si el usuario no está matriculado, no puede ver las lecciones.
+    // Lo redirigimos a la página de detalle del curso (donde puede comprarlo).
+    if (!isEnrolled) {
+        return (
+            <div className="container course-learn">
+                <div className="course-learn__error">
+                    <h2>No tienes acceso a este curso</h2>
+                    <p>Necesitas comprar el curso para acceder a sus lecciones.</p>
+                    <Link to={`/courses/${courseId}`} className="btn-primary">Ver curso</Link>
                 </div>
             </div>
         );
