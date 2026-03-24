@@ -65,4 +65,30 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
             throw new Error('No se pudo guardar el progreso');
         }
     }
+
+    async getCourseProgress(courseId: string): Promise<{
+        completedLessonIds: string[];
+        watchProgress: Record<string, number>;
+    }> {
+        const response = await fetch(
+            `${this.baseUrl}/enrollments/me/courses/${courseId}/progress`,
+            { credentials: 'include' },
+        );
+
+        if (!response.ok) {
+            throw new Error('No se pudo cargar el progreso del curso');
+        }
+        return response.json();
+    }
+
+    async saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void> {
+        // Fire-and-forget: si falla (error de red, etc.) no interrumpimos la experiencia.
+        // El progreso se reintentará en el siguiente umbral del 5%.
+        fetch(`${this.baseUrl}/enrollments/me/watch-progress`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ lessonId, courseId, percent }),
+        }).catch(() => { /* silencioso */ });
+    }
 }

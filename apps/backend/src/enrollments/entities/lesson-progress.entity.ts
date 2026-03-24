@@ -2,7 +2,6 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
   ManyToOne,
   JoinColumn,
   Unique,
@@ -40,8 +39,16 @@ export class LessonProgress {
   @Column({ type: 'uuid' })
   lessonId: string;
 
-  @CreateDateColumn()
-  completedAt: Date;
+  // Porcentaje del video visto (0-100). Se guarda periódicamente mientras el alumno ve el video.
+  // Al completar la lección se fija a 100.
+  @Column('float', { default: 0 })
+  watchedPercent: number;
+
+  // null = el alumno está en progreso pero aún no completó.
+  // fecha = lección completada. Cambiamos de @CreateDateColumn a nullable
+  // porque ahora creamos el registro ANTES de la compleción (al guardar watchedPercent).
+  @Column({ type: 'timestamptz', nullable: true, default: null })
+  completedAt: Date | null;
 
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({

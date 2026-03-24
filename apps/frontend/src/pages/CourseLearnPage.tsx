@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 // Porcentaje mínimo del video que el alumno debe ver para poder
 // marcar la lección como completada.
@@ -87,38 +87,67 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
     const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
 
     // watchProgress: porcentaje del video actual que el alumno ha visto (0-100).
-    // Usamos useRef para el valor "en vivo" (se actualiza en cada timeupdate)
-    // y useState para el valor que dispara re-renders (lo actualizamos con throttle implícito).
     const [watchProgress, setWatchProgress] = useState(0);
     const lastReportedProgressRef = useRef(0);
+    // lastSavedThresholdRef: último umbral del 5% que ya enviamos al backend.
+    // Evita enviar la misma llamada dos veces para el mismo umbral.
+    const lastSavedThresholdRef = useRef(0);
+
+    // completedLessonIds y watchProgress se cargan desde el backend al montar la página,
+    // así el alumno nunca pierde su progreso entre sesiones o dispositivos.
+    const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
+    const [savedWatchProgress, setSavedWatchProgress] = useState<Record<string, number>>({});
+    const [markingComplete, setMarkingComplete] = useState(false);
+
+    useEffect(() => {
+        if (!courseId || !isEnrolled) return;
+        enrollmentGateway.getCourseProgress(courseId).then(({ completedLessonIds: ids, watchProgress }) => {
+            setCompletedLessonIds(new Set(ids));
+            setSavedWatchProgress(watchProgress);
+        }).catch(() => { /* Si falla, empezamos en cero — no es bloqueante */ });
+    }, [courseId, isEnrolled, enrollmentGateway]);
 
     const handleWatchProgress = useCallback((percent: number) => {
-        // Solo re-renderizamos si el progreso subió al menos 1 punto,
-        // para no disparar cientos de renders innecesarios.
+        // Re-render solo si el progreso subió al menos 1 punto
         if (percent - lastReportedProgressRef.current >= 1 || percent === 100) {
             lastReportedProgressRef.current = percent;
             setWatchProgress(percent);
         }
     }, []);
 
-    // Al cambiar de lección, reseteamos el progreso de visualización.
+    // activeLessonIdForEffect captura el currentLessonId actual para usarlo en los effects
+    const activeLessonIdForEffect = currentLessonId;
+
+    // Cuando llegan los datos del backend, sincronizamos el progreso de la lección activa.
+    useEffect(() => {
+        if (!activeLessonIdForEffect) return;
+        const saved = savedWatchProgress[activeLessonIdForEffect] ?? 0;
+        if (saved > 0) {
+            setWatchProgress(saved);
+            lastReportedProgressRef.current = saved;
+            lastSavedThresholdRef.current = Math.floor(saved / 5) * 5;
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [savedWatchProgress]);
+
+    // Guardamos en el backend cada vez que el alumno cruza un umbral del 5%
+    useEffect(() => {
+        if (!courseId || !activeLessonIdForEffect) return;
+        const threshold = Math.floor(watchProgress / 5) * 5;
+        if (threshold > lastSavedThresholdRef.current && threshold > 0) {
+            lastSavedThresholdRef.current = threshold;
+            enrollmentGateway.saveWatchProgress(activeLessonIdForEffect, courseId, threshold);
+        }
+    }, [watchProgress, courseId, activeLessonIdForEffect, enrollmentGateway]);
+
+    // Al cambiar de lección, inicializamos el progreso con el valor guardado en BD
     const handleLessonChange = useCallback((lessonId: string) => {
         setCurrentLessonId(lessonId);
-        setWatchProgress(0);
-        lastReportedProgressRef.current = 0;
-    }, []);
-
-    /**
-     * completedLessonIds — lecciones que el alumno marcó como completadas
-     * durante ESTA sesión.
-     *
-     * Limitación actual: no cargamos las completadas previas del backend.
-     * Solo rastreamos las que se completan aquí y ahora. En una futura
-     * sesión podemos añadir un GET /enrollments/me/progress/:courseId
-     * para cargar el historial completo.
-     */
-    const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
-    const [markingComplete, setMarkingComplete] = useState(false);
+        const saved = savedWatchProgress[lessonId] ?? 0;
+        setWatchProgress(saved);
+        lastReportedProgressRef.current = saved;
+        lastSavedThresholdRef.current = Math.floor(saved / 5) * 5;
+    }, [savedWatchProgress]);
 
     /**
      * handleMarkComplete — Marca la lección actual como completada.
@@ -207,7 +236,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
      * Si currentLessonId es null (primera carga), usamos la primera lección.
      * Si el usuario clickeó una lección en el sidebar, usamos esa.
      */
-    const activeLessonId = currentLessonId ?? course.lessons[0].id;
+    const activeLessonId = currentLessonId ?? course.lessons[0]?.id ?? '';
     const activeLesson = course.lessons.find(l => l.id === activeLessonId) ?? course.lessons[0];
     const activeLessonIndex = course.lessons.findIndex(l => l.id === activeLesson.id);
     const isCurrentCompleted = completedLessonIds.has(activeLesson.id);

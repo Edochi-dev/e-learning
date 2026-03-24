@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Delete,
   Body,
   Param,
@@ -19,9 +20,12 @@ import {
 } from './use-cases/get-my-enrollments.use-case';
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
+import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
+import { GetCourseProgressUseCase, CourseProgress } from './use-cases/get-course-progress.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { EnrollInCourseDto } from './dto/enroll-in-course.dto';
 import { MarkLessonCompleteDto } from './dto/mark-lesson-complete.dto';
+import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
 import { Enrollment } from './entities/enrollment.entity';
 
 /**
@@ -47,6 +51,8 @@ export class EnrollmentsController {
     private readonly getMyEnrollmentsUseCase: GetMyEnrollmentsUseCase,
     private readonly markLessonCompleteUseCase: MarkLessonCompleteUseCase,
     private readonly unenrollUseCase: UnenrollUseCase,
+    private readonly saveWatchProgressUseCase: SaveWatchProgressUseCase,
+    private readonly getCourseProgressUseCase: GetCourseProgressUseCase,
   ) {}
 
   @Post('me')
@@ -72,6 +78,38 @@ export class EnrollmentsController {
       req.user.id,
       dto.lessonId,
       dto.courseId,
+    );
+  }
+
+  /**
+   * GET /enrollments/me/courses/:courseId/progress
+   * Devuelve en una sola llamada las lecciones completadas Y el porcentaje visto
+   * por lección. El frontend lo usa al montar la página de estudio.
+   */
+  @Get('me/courses/:courseId/progress')
+  async getCourseProgress(
+    @Req() req: any,
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ): Promise<CourseProgress> {
+    return this.getCourseProgressUseCase.execute(req.user.id, courseId);
+  }
+
+  /**
+   * PATCH /enrollments/me/watch-progress
+   * Guarda el porcentaje de video visto. El frontend lo llama cada vez que
+   * el progreso sube 5 puntos (throttle para no saturar la API).
+   */
+  @Patch('me/watch-progress')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async saveWatchProgress(
+    @Req() req: any,
+    @Body() dto: SaveWatchProgressDto,
+  ): Promise<void> {
+    return this.saveWatchProgressUseCase.execute(
+      req.user.id,
+      dto.lessonId,
+      dto.courseId,
+      dto.percent,
     );
   }
 

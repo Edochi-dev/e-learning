@@ -72,4 +72,23 @@ export abstract class EnrollmentGateway {
     userId: string,
     lessonId: string,
   ): Promise<LessonProgress>;
+
+  /**
+   * Guarda (upsert) el porcentaje de video visto para una lección.
+   * Solo actualiza si el nuevo percent es MAYOR al guardado (nunca retrocede).
+   */
+  abstract saveWatchProgress(
+    userId: string,
+    lessonId: string,
+    percent: number,
+  ): Promise<void>;
+
+  /**
+   * Devuelve, para un curso dado, el porcentaje visto por lección.
+   * Retorna un Record lessonId → watchedPercent (solo lecciones con registro existente).
+   */
+  abstract getWatchProgressByCourse(
+    userId: string,
+    courseId: string,
+  ): Promise<Record<string, number>>;
 }

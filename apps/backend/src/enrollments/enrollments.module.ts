@@ -9,6 +9,8 @@ import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
 import { GetMyEnrollmentsUseCase } from './use-cases/get-my-enrollments.use-case';
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
+import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
+import { GetCourseProgressUseCase } from './use-cases/get-course-progress.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { CoursesModule } from '../courses/courses.module';
 
@@ -49,6 +51,8 @@ import { CoursesModule } from '../courses/courses.module';
     GetMyEnrollmentsUseCase,
     MarkLessonCompleteUseCase,
     UnenrollUseCase,
+    SaveWatchProgressUseCase,
+    GetCourseProgressUseCase,
   ],
   // Exportamos EnrollmentGateway para que otros módulos (como OrdersModule)
   // puedan inyectarlo en sus Use Cases. Sin esto, NestJS lanza un error

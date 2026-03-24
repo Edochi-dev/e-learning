@@ -40,4 +40,13 @@ export interface EnrollmentGateway {
 
     /** Marca una lección como completada */
     markLessonComplete(lessonId: string, courseId: string): Promise<void>;
+
+    /** Devuelve lecciones completadas y porcentaje visto por lección para un curso */
+    getCourseProgress(courseId: string): Promise<{
+        completedLessonIds: string[];
+        watchProgress: Record<string, number>;
+    }>;
+
+    /** Guarda el porcentaje de video visto para una lección */
+    saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void>;
 }

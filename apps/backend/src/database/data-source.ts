@@ -30,6 +30,7 @@ import { Migration1773243621356 } from './migrations/1773243621356-Migration';
 import { MakeLessonDurationNullable1773500000000 } from './migrations/1773500000000-MakeLessonDurationNullable';
 import { AddCourseFeatures1773500100000 } from './migrations/1773500100000-AddCourseFeatures';
 import { Migration1774043566376 } from './migrations/1774043566376-Migration';
+import { Migration1774364896058 } from './migrations/1774364896058-Migration';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -71,5 +72,6 @@ export const AppDataSource = new DataSource({
     MakeLessonDurationNullable1773500000000,
     AddCourseFeatures1773500100000,
     Migration1774043566376,
+    Migration1774364896058,
   ],
 });

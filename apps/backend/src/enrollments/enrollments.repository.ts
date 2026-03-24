@@ -80,6 +80,8 @@ export class EnrollmentsRepository implements EnrollmentGateway {
       .createQueryBuilder('lp')
       .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
       .where('lp."userId" = :userId', { userId })
+      // Solo lecciones realmente completadas (completedAt puede ser null si solo se guardó watchedPercent)
+      .andWhere('lp."completedAt" IS NOT NULL')
       .select('lp."lessonId"', 'lessonId')
       .addSelect('l."courseId"', 'courseId')
       .getRawMany<{ lessonId: string; courseId: string }>();
@@ -104,6 +106,7 @@ export class EnrollmentsRepository implements EnrollmentGateway {
       .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
       .where('lp."userId" = :userId', { userId })
       .andWhere('l."courseId" = :courseId', { courseId })
+      .andWhere('lp."completedAt" IS NOT NULL')
       .select('lp."lessonId"', 'lessonId')
       .getRawMany<{ lessonId: string }>();
 
@@ -122,17 +125,58 @@ export class EnrollmentsRepository implements EnrollmentGateway {
     userId: string,
     lessonId: string,
   ): Promise<LessonProgress> {
+    // Fijamos completedAt y watchedPercent=100.
+    // Si el registro ya existía (el alumno guardó progreso antes), lo actualizamos.
+    // Si ya estaba completado, el upsert es idempotente y no cambia nada.
     await this.lessonProgressRepository.upsert(
-      { userId, lessonId },
+      { userId, lessonId, completedAt: new Date(), watchedPercent: 100 },
       {
         conflictPaths: ['userId', 'lessonId'],
         skipUpdateIfNoValuesChanged: true,
       },
     );
-    // El upsert garantiza que el registro existe; null es imposible aquí.
     return this.lessonProgressRepository.findOne({
       where: { userId, lessonId },
     }) as Promise<LessonProgress>;
+  }
+
+  async saveWatchProgress(
+    userId: string,
+    lessonId: string,
+    percent: number,
+  ): Promise<void> {
+    // INSERT ... ON CONFLICT DO UPDATE con condición:
+    //   - Crea el registro si no existe (primer avance del alumno en esta lección).
+    //   - Si ya existe: actualiza watchedPercent SOLO si el nuevo es mayor Y la lección
+    //     no está completada (no retrocedemos progreso ni pisamos la compleción).
+    await this.lessonProgressRepository.query(
+      `INSERT INTO lesson_progress ("userId", "lessonId", "watchedPercent")
+       VALUES ($1, $2, $3)
+       ON CONFLICT ("userId", "lessonId")
+       DO UPDATE SET "watchedPercent" = EXCLUDED."watchedPercent"
+       WHERE EXCLUDED."watchedPercent" > lesson_progress."watchedPercent"
+         AND lesson_progress."completedAt" IS NULL`,
+      [userId, lessonId, percent],
+    );
+  }
+
+  async getWatchProgressByCourse(
+    userId: string,
+    courseId: string,
+  ): Promise<Record<string, number>> {
+    const rows = await this.lessonProgressRepository
+      .createQueryBuilder('lp')
+      .innerJoin('lessons', 'l', 'l.id = lp."lessonId"')
+      .where('lp."userId" = :userId', { userId })
+      .andWhere('l."courseId" = :courseId', { courseId })
+      .select('lp."lessonId"', 'lessonId')
+      .addSelect('lp."watchedPercent"', 'watchedPercent')
+      .getRawMany<{ lessonId: string; watchedPercent: number }>();
+
+    return rows.reduce<Record<string, number>>((acc, row) => {
+      acc[row.lessonId] = row.watchedPercent;
+      return acc;
+    }, {});
   }
 
   async delete(id: string): Promise<void> {
