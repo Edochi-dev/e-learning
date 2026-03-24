@@ -5,6 +5,7 @@ import {
   ValidateNested,
   IsArray,
 } from 'class-validator';
+
 import { Type } from 'class-transformer';
 
 class CreateLessonDto {
@@ -33,12 +34,6 @@ export class CreateCourseDto {
 
   @IsString()
   description: string;
-
-  // thumbnailUrl lo rellena el use-case después de guardar el archivo.
-  // El cliente nunca envía este campo — envía el archivo binario por separado.
-  @IsString()
-  @IsOptional()
-  thumbnailUrl?: string;
 
   @IsArray()
   @IsString({ each: true })

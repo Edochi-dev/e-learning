@@ -23,13 +23,16 @@ export class CreateCourseUseCase {
   ): Promise<Course> {
     // Si el admin subió una imagen, la guardamos y obtenemos su URL pública.
     // Si no subió ninguna, thumbnailUrl simplemente no se incluye en el curso.
+    // Importante: nunca tomamos thumbnailUrl del DTO (el cliente no puede enviarlo);
+    // solo lo asignamos aquí después de guardar el archivo en disco.
+    let thumbnailUrl: string | undefined;
     if (thumbnail) {
-      dto.thumbnailUrl = await this.fileStorageGateway.saveFile(
+      thumbnailUrl = await this.fileStorageGateway.saveFile(
         thumbnail,
         'thumbnails',
       );
     }
 
-    return this.courseGateway.create(dto as unknown as Course);
+    return this.courseGateway.create({ ...dto, thumbnailUrl } as unknown as Course);
   }
 }
