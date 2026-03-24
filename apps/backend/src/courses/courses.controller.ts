@@ -36,6 +36,8 @@ import { RemoveLessonUseCase } from './use-cases/remove-lesson.use-case';
 import { UpdateLessonUseCase } from './use-cases/update-lesson.use-case';
 import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
 import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
+import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnail.use-case';
+import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -64,6 +66,8 @@ export class CoursesController {
     private readonly updateLessonUseCase: UpdateLessonUseCase,
     private readonly reorderLessonsUseCase: ReorderLessonsUseCase,
     private readonly deleteCourseUseCase: DeleteCourseUseCase,
+    private readonly updateCourseThumbnailUseCase: UpdateCourseThumbnailUseCase,
+    private readonly deleteCourseThumbnailUseCase: DeleteCourseThumbnailUseCase,
   ) {}
 
   // ==========================================
@@ -135,6 +139,51 @@ export class CoursesController {
   @Roles(UserRole.ADMIN)
   async delete(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     return this.deleteCourseUseCase.execute(id);
+  }
+
+  // ==========================================
+  // Endpoints de Miniatura del Curso
+  // ==========================================
+
+  /**
+   * PATCH /courses/:id/thumbnail — Reemplaza la miniatura del curso.
+   *
+   * Ruta declarada ANTES de los endpoints de lecciones para que NestJS
+   * no confunda "thumbnail" con un lessonId dinámico.
+   * Recibe un archivo binario en el campo 'thumbnail' (multipart/form-data).
+   */
+  @Patch(':id/thumbnail')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('thumbnail'))
+  async updateThumbnail(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /image\/(jpeg|png|webp)/ }),
+        ],
+        fileIsRequired: true,
+      }),
+    )
+    thumbnail: Express.Multer.File,
+  ): Promise<Course> {
+    return this.updateCourseThumbnailUseCase.execute(id, thumbnail);
+  }
+
+  /**
+   * DELETE /courses/:id/thumbnail — Elimina la miniatura del curso.
+   * Borra el archivo del disco y limpia el campo thumbnailUrl en la BD.
+   */
+  @Delete(':id/thumbnail')
+  @HttpCode(204)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteThumbnail(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<void> {
+    await this.deleteCourseThumbnailUseCase.execute(id);
   }
 
   // ==========================================

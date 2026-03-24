@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course, Lesson, UpdateCoursePayload, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
+import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import {
     DndContext,
     closestCenter,
@@ -177,6 +178,11 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         features: [],
     });
 
+    // Estado de la miniatura
+    const thumbnailRef = useRef<ThumbnailUploaderHandle>(null);
+    const [isSubmittingThumbnail, setIsSubmittingThumbnail] = useState(false);
+    const [isDeletingThumbnail, setIsDeletingThumbnail] = useState(false);
+
     // Estado del panel "Agregar lección" (cerrado por defecto)
     const [isAddingLesson, setIsAddingLesson] = useState(false);
 
@@ -270,6 +276,41 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             ...prev,
             features: (prev.features ?? []).filter((_, i) => i !== index),
         }));
+    };
+
+    const handleUpdateThumbnail = async () => {
+        if (!courseId) return;
+        const file = await thumbnailRef.current?.getCroppedFile();
+        if (!file) return;
+        setIsSubmittingThumbnail(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            const updated = await courseGateway.updateThumbnail(courseId, file);
+            setCourse(updated);
+            setSuccessMessage('¡Miniatura actualizada!');
+        } catch (err: any) {
+            setError(err.message || 'Error al actualizar la miniatura');
+        } finally {
+            setIsSubmittingThumbnail(false);
+        }
+    };
+
+    const handleDeleteThumbnail = async () => {
+        if (!courseId) return;
+        if (!window.confirm('¿Eliminar la miniatura del curso?')) return;
+        setIsDeletingThumbnail(true);
+        setError(null);
+        setSuccessMessage(null);
+        try {
+            await courseGateway.deleteThumbnail(courseId);
+            setCourse(prev => prev ? { ...prev, thumbnailUrl: undefined } : prev);
+            setSuccessMessage('Miniatura eliminada.');
+        } catch (err: any) {
+            setError(err.message || 'Error al eliminar la miniatura');
+        } finally {
+            setIsDeletingThumbnail(false);
+        }
     };
 
     const handleCourseSubmit = async (e: React.FormEvent) => {
@@ -488,7 +529,53 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 </form>
             </div>
 
-            {/* Sección 2: Lista de lecciones con drag-and-drop */}
+            {/* Sección 2: Gestión de miniatura */}
+            <div className="admin-form" style={{ marginTop: '2rem' }}>
+                <h2 style={{ marginBottom: '0.25rem' }}>Miniatura del curso</h2>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                    Imagen de portada que aparece en el catálogo. Proporción 16:9 recomendada.
+                </p>
+
+                {/* Preview de la miniatura actual */}
+                {course.thumbnailUrl && (
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Miniatura actual:</p>
+                        <div style={{ position: 'relative', display: 'inline-block' }}>
+                            <img
+                                src={course.thumbnailUrl}
+                                alt="Miniatura actual"
+                                style={{ width: '100%', maxWidth: '320px', borderRadius: 'var(--radius-md)', display: 'block' }}
+                            />
+                        </div>
+                        <div style={{ marginTop: '0.75rem' }}>
+                            <button
+                                type="button"
+                                onClick={handleDeleteThumbnail}
+                                disabled={isDeletingThumbnail}
+                                className="btn-cancel"
+                                style={{ fontSize: '0.85rem' }}
+                            >
+                                {isDeletingThumbnail ? 'Eliminando...' : 'Eliminar miniatura'}
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Uploader para nueva miniatura */}
+                <ThumbnailUploader ref={thumbnailRef} />
+
+                <button
+                    type="button"
+                    onClick={handleUpdateThumbnail}
+                    disabled={isSubmittingThumbnail}
+                    className="btn-primary"
+                    style={{ marginTop: '1rem', width: '100%' }}
+                >
+                    {isSubmittingThumbnail ? 'Subiendo...' : course.thumbnailUrl ? 'Reemplazar miniatura' : 'Subir miniatura'}
+                </button>
+            </div>
+
+            {/* Sección 4: Lista de lecciones con drag-and-drop */}
             <div className="admin-section" style={{ marginTop: '2.5rem' }}>
                 <h2>Lecciones ({lessons.length})</h2>
                 {lessons.length === 0 ? (
@@ -537,7 +624,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 )}
             </div>
 
-            {/* Sección 3: Panel colapsable para agregar lección */}
+            {/* Sección 5: Panel colapsable para agregar lección */}
             <div className="admin-section">
                 {/* Botón toggle — siempre visible */}
                 <button

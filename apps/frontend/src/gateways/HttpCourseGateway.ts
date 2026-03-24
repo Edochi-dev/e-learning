@@ -74,6 +74,33 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
+    async updateThumbnail(id: string, file: File): Promise<Course> {
+        const body = new FormData();
+        body.append('thumbnail', file);
+
+        const response = await fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
+            method: 'PATCH',
+            credentials: 'include',
+            body,
+        });
+
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'Error al actualizar la miniatura'));
+        }
+        return response.json();
+    }
+
+    async deleteThumbnail(id: string): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
+            method: 'DELETE',
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'Error al eliminar la miniatura'));
+        }
+    }
+
     async delete(id: string): Promise<void> {
         const response = await fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'DELETE',
