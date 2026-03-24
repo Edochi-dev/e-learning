@@ -217,7 +217,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                     <article key={course.id} className="preview-card">
                                         <div className="preview-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
-                                                ? <img src={course.thumbnailUrl.startsWith('http') ? course.thumbnailUrl : `${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
                                                 : '💅'
                                             }
                                         </div>

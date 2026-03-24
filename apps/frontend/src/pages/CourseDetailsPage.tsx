@@ -90,7 +90,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
     );
 
     const thumbnailSrc = course.thumbnailUrl
-        ? (course.thumbnailUrl.startsWith('http') ? course.thumbnailUrl : `${BACKEND_URL}${course.thumbnailUrl}`)
+        ? `${BACKEND_URL}${course.thumbnailUrl}`
         : null;
 
     const sortedLessons = [...(course.lessons ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));

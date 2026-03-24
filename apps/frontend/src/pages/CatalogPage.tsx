@@ -78,7 +78,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                     <article key={course.id} className="catalog-card">
                                         <div className="catalog-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
-                                                ? <img src={course.thumbnailUrl.startsWith('http') ? course.thumbnailUrl : `${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
+                                                ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
                                                 : '💅'
                                             }
                                         </div>
