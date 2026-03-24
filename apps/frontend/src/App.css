@@ -3699,6 +3699,34 @@ input:checked+.slider .icon-moon {
   box-shadow: var(--shadow-md);
 }
 
+/* Barra de progreso de visualización */
+
+.course-learn__watch-progress {
+  width: 75%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.course-learn__watch-progress-bar {
+  height: 4px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.course-learn__watch-progress-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.course-learn__watch-progress-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
 /* Info de la lección */
 
 .course-learn__lesson-info {
@@ -3929,6 +3957,7 @@ input:checked+.slider .icon-moon {
 
   .course-learn__header,
   .course-learn__video,
+  .course-learn__watch-progress,
   .course-learn__lesson-info {
     width: 100%;
   }

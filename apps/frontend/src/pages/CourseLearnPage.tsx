@@ -1,4 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+
+// Porcentaje mínimo del video que el alumno debe ver para poder
+// marcar la lección como completada.
+const WATCH_THRESHOLD = 80;
 import { useParams, Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
@@ -81,6 +85,28 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
      * URL, contaminaríamos el historial de navegación.
      */
     const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
+
+    // watchProgress: porcentaje del video actual que el alumno ha visto (0-100).
+    // Usamos useRef para el valor "en vivo" (se actualiza en cada timeupdate)
+    // y useState para el valor que dispara re-renders (lo actualizamos con throttle implícito).
+    const [watchProgress, setWatchProgress] = useState(0);
+    const lastReportedProgressRef = useRef(0);
+
+    const handleWatchProgress = useCallback((percent: number) => {
+        // Solo re-renderizamos si el progreso subió al menos 1 punto,
+        // para no disparar cientos de renders innecesarios.
+        if (percent - lastReportedProgressRef.current >= 1 || percent === 100) {
+            lastReportedProgressRef.current = percent;
+            setWatchProgress(percent);
+        }
+    }, []);
+
+    // Al cambiar de lección, reseteamos el progreso de visualización.
+    const handleLessonChange = useCallback((lessonId: string) => {
+        setCurrentLessonId(lessonId);
+        setWatchProgress(0);
+        lastReportedProgressRef.current = 0;
+    }, []);
 
     /**
      * completedLessonIds — lecciones que el alumno marcó como completadas
@@ -186,6 +212,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
     const activeLessonIndex = course.lessons.findIndex(l => l.id === activeLesson.id);
     const isCurrentCompleted = completedLessonIds.has(activeLesson.id);
 
+    // Los videos de YouTube no permiten tracking desde fuera del iframe,
+    // así que los exoneramos del requisito de progreso.
+    const isYoutubeLesson = activeLesson.videoUrl?.includes('youtube.com') || activeLesson.videoUrl?.includes('youtu.be');
+    const hasWatchedEnough = isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
+
     // Navegación entre lecciones
     const prevLesson = activeLessonIndex > 0 ? course.lessons[activeLessonIndex - 1] : null;
     const nextLesson = activeLessonIndex < course.lessons.length - 1 ? course.lessons[activeLessonIndex + 1] : null;
@@ -208,8 +239,26 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                         src={activeLesson.videoUrl ?? ''}
                         title={activeLesson.title}
                         lessonId={activeLesson.id}
+                        onWatchProgress={handleWatchProgress}
                     />
                 </div>
+
+                {/* Barra de progreso de visualización — solo para videos locales */}
+                {!isYoutubeLesson && !isCurrentCompleted && (
+                    <div className="course-learn__watch-progress">
+                        <div className="course-learn__watch-progress-bar">
+                            <div
+                                className="course-learn__watch-progress-fill"
+                                style={{ width: `${watchProgress}%` }}
+                            />
+                        </div>
+                        <span className="course-learn__watch-progress-label">
+                            {hasWatchedEnough
+                                ? 'Listo para completar'
+                                : `Visto ${Math.floor(watchProgress)}% · Necesitas ver al menos el ${WATCH_THRESHOLD}%`}
+                        </span>
+                    </div>
+                )}
 
                 {/* Info de la lección actual */}
                 <div className="course-learn__lesson-info">
@@ -218,7 +267,8 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                         <button
                             className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''}`}
                             onClick={() => handleMarkComplete(activeLesson.id)}
-                            disabled={isCurrentCompleted || markingComplete}
+                            disabled={isCurrentCompleted || markingComplete || !hasWatchedEnough}
+                            title={!hasWatchedEnough ? `Necesitas ver al menos el ${WATCH_THRESHOLD}% del video` : undefined}
                         >
                             {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
                         </button>
@@ -232,7 +282,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                         {prevLesson ? (
                             <button
                                 className="course-learn__nav-btn"
-                                onClick={() => setCurrentLessonId(prevLesson.id)}
+                                onClick={() => handleLessonChange(prevLesson.id)}
                             >
                                 ← {prevLesson.title}
                             </button>
@@ -240,7 +290,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                         {nextLesson ? (
                             <button
                                 className="course-learn__nav-btn course-learn__nav-btn--next"
-                                onClick={() => setCurrentLessonId(nextLesson.id)}
+                                onClick={() => handleLessonChange(nextLesson.id)}
                             >
                                 {nextLesson.title} →
                             </button>
@@ -267,7 +317,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                             <button
                                 key={lesson.id}
                                 className={`course-learn__lesson-item ${isActive ? 'course-learn__lesson-item--active' : ''} ${isCompleted ? 'course-learn__lesson-item--completed' : ''}`}
-                                onClick={() => setCurrentLessonId(lesson.id)}
+                                onClick={() => handleLessonChange(lesson.id)}
                             >
                                 <span className="course-learn__lesson-number">
                                     {isCompleted ? '✓' : index + 1}
