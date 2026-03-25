@@ -9,6 +9,10 @@ import { LessonProgress } from '../enrollments/entities/lesson-progress.entity';
 import { CertificateTemplate } from '../certificates/entities/certificate-template.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
 import { Order } from '../orders/entities/order.entity';
+import { QuizQuestion } from '../courses/entities/quiz-question.entity';
+import { QuizOption } from '../courses/entities/quiz-option.entity';
+import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
+import { QuizAttemptAnswer } from '../enrollments/entities/quiz-attempt-answer.entity';
 
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema';
 import { Migration1771952849166 } from './migrations/1771952849166-Migration';
@@ -31,6 +35,7 @@ import { MakeLessonDurationNullable1773500000000 } from './migrations/1773500000
 import { AddCourseFeatures1773500100000 } from './migrations/1773500100000-AddCourseFeatures';
 import { Migration1774043566376 } from './migrations/1774043566376-Migration';
 import { Migration1774364896058 } from './migrations/1774364896058-Migration';
+import { Migration1774464520488 } from './migrations/1774464520488-Migration';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -50,6 +55,10 @@ export const AppDataSource = new DataSource({
     CertificateTemplate,
     Certificate,
     Order,
+    QuizQuestion,
+    QuizOption,
+    QuizAttempt,
+    QuizAttemptAnswer,
   ],
   migrations: [
     InitialSchema1740000000000,
@@ -73,5 +82,6 @@ export const AppDataSource = new DataSource({
     AddCourseFeatures1773500100000,
     Migration1774043566376,
     Migration1774364896058,
+    Migration1774464520488,
   ],
 });
