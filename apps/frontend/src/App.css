@@ -3995,3 +3995,242 @@ input:checked+.slider .icon-moon {
     padding: 0.4rem 0.75rem;
   }
 }
+
+/* ================================================================
+   LESSON TYPE SELECTOR & BADGES
+   Selector de tipo (Clase / Examen) en el formulario de crear lección
+   y badges que aparecen junto al título en la lista de lecciones.
+   ================================================================ */
+
+.lesson-type-selector {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lesson-type-option {
+  flex: 1;
+  padding: 0.65rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  text-align: center;
+}
+
+.lesson-type-option:hover {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.04);
+}
+
+.lesson-type-option.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(232, 67, 147, 0.1), rgba(212, 165, 116, 0.08));
+  color: var(--primary);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}
+
+.lesson-type-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full);
+  margin-left: 0.5rem;
+  vertical-align: middle;
+  letter-spacing: 0.02em;
+}
+
+.lesson-type-badge.class {
+  background: rgba(232, 67, 147, 0.1);
+  color: var(--primary);
+}
+
+.lesson-type-badge.exam {
+  background: rgba(212, 165, 116, 0.15);
+  color: var(--gold);
+}
+
+/* ================================================================
+   QUIZ QUESTION BUILDER (Admin)
+   Interfaz del admin para crear/editar preguntas de un examen.
+   ================================================================ */
+
+.quiz-builder {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+}
+
+.quiz-builder__question {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.quiz-builder__question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.quiz-builder__question-number {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--primary);
+}
+
+.quiz-builder__remove-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+}
+
+.quiz-builder__remove-btn:hover {
+  color: #e74c3c;
+  border-color: #e74c3c;
+}
+
+.quiz-builder__question-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  box-sizing: border-box;
+}
+
+.quiz-builder__question-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.quiz-builder__related-lesson {
+  margin-bottom: 0.75rem;
+}
+
+.quiz-builder__related-lesson label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.3rem;
+}
+
+.quiz-builder__related-lesson select {
+  width: 100%;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.quiz-builder__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.quiz-builder__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quiz-builder__option input[type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.quiz-builder__option-input {
+  flex: 1;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.quiz-builder__option-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px var(--primary-glow);
+}
+
+.quiz-builder__remove-option {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  line-height: 1;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s;
+}
+
+.quiz-builder__remove-option:hover {
+  color: #e74c3c;
+}
+
+.quiz-builder__add-option {
+  background: transparent;
+  border: 1px dashed var(--border);
+  color: var(--text-muted);
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s ease;
+  margin-top: 0.25rem;
+}
+
+.quiz-builder__add-option:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.quiz-builder__add-question {
+  background: linear-gradient(135deg, rgba(232, 67, 147, 0.08), rgba(212, 165, 116, 0.08));
+  border: 2px dashed var(--border);
+  color: var(--primary);
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.25s ease;
+  width: 100%;
+}
+
+.quiz-builder__add-question:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 8px var(--primary-glow);
+}

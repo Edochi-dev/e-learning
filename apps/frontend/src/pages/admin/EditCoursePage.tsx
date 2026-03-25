@@ -3,8 +3,9 @@ import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
 import type { CourseGateway } from '../../gateways/CourseGateway';
-import type { Course, Lesson, UpdateCoursePayload, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
+import { LessonType, type Course, type Lesson, type UpdateCoursePayload, type CreateLessonPayload, type UpdateLessonPayload, type CreateQuizQuestionPayload } from '@maris-nails/shared';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
+import { QuizQuestionBuilder } from '../../components/QuizQuestionBuilder';
 import {
     DndContext,
     closestCenter,
@@ -91,14 +92,27 @@ function SortableLessonItem({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                         <textarea name="description" value={editLessonForm.description} onChange={onEditChange} placeholder="Descripción" rows={2} required />
                     </div>
-                    <div className="form-row">
-                        <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
-                        <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
-                    </div>
-                    <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
-                        <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
-                        <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
-                    </div>
+                    {/* Solo mostrar campos de video si la lección es tipo class */}
+                    {lesson.type !== LessonType.EXAM && (
+                        <>
+                            <div className="form-row">
+                                <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
+                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
+                            </div>
+                            <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
+                                <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
+                                <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
+                            </div>
+                        </>
+                    )}
+                    {/* Para exámenes: info de solo lectura (las preguntas se editan recreando) */}
+                    {lesson.type === LessonType.EXAM && (
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+                            📝 {lesson.questions?.length ?? 0} preguntas · Mínimo para aprobar: {lesson.passingScore}
+                            <br />
+                            <span style={{ fontSize: '0.78rem' }}>Para editar las preguntas, elimina este examen y créalo de nuevo.</span>
+                        </div>
+                    )}
                     <div className="admin-actions">
                         <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
                             {isSubmittingLesson ? 'Guardando...' : '💾 Guardar'}
@@ -120,14 +134,28 @@ function SortableLessonItem({
                         ⠿
                     </span>
                     <div className="admin-lesson-info">
-                        <h4>{index + 1}. {lesson.title}</h4>
+                        <h4>
+                            {index + 1}. {lesson.title}
+                            <span className={`lesson-type-badge ${lesson.type === LessonType.EXAM ? 'exam' : 'class'}`}>
+                                {lesson.type === LessonType.EXAM ? '📝 Examen' : '🎬 Clase'}
+                            </span>
+                        </h4>
                         <p>{lesson.description}</p>
                         <div className="admin-lesson-meta">
-                            <span>⏱ {lesson.duration}</span>
-                            <span>🎬 {lesson.videoUrl}</span>
-                            <span className={`lesson-mode-badge ${lesson.isLive ? 'live' : 'recorded'}`}>
-                                {lesson.isLive ? '🔴 En vivo' : '📼 Grabado'}
-                            </span>
+                            {lesson.type === LessonType.EXAM ? (
+                                <>
+                                    <span>✅ Mínimo para aprobar: {lesson.passingScore}</span>
+                                    <span>❓ {lesson.questions?.length ?? 0} preguntas</span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>⏱ {lesson.duration}</span>
+                                    <span>🎬 {lesson.videoUrl}</span>
+                                    <span className={`lesson-mode-badge ${lesson.isLive ? 'live' : 'recorded'}`}>
+                                        {lesson.isLive ? '🔴 En vivo' : '📼 Grabado'}
+                                    </span>
+                                </>
+                            )}
                         </div>
                     </div>
                     <div className="admin-actions">
@@ -192,9 +220,12 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     const [lessonForm, setLessonForm] = useState<CreateLessonPayload>({
         title: '',
         description: '',
+        type: LessonType.CLASS,
         duration: '',
         videoUrl: '',
         isLive: false,
+        passingScore: undefined,
+        questions: [],
     });
 
     // Estado de la edición inline de lecciones
@@ -385,7 +416,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         setSuccessMessage(null);
         try {
             await courseGateway.addLesson(courseId, lessonForm);
-            setLessonForm({ title: '', description: '', duration: '', videoUrl: '', isLive: false });
+            setLessonForm({ title: '', description: '', type: LessonType.CLASS, duration: '', videoUrl: '', isLive: false, passingScore: undefined, questions: [] });
             setIsAddingLesson(false); // Cerrar el panel tras agregar
             setSuccessMessage('¡Lección agregada exitosamente!');
             await loadCourse();
@@ -642,33 +673,84 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 <div className={`add-lesson-panel ${isAddingLesson ? 'open' : ''}`}>
                     <div className="admin-form" style={{ marginTop: '1rem' }}>
                         <form onSubmit={handleAddLesson}>
+                            {/* Selector de tipo */}
+                            <div className="form-group">
+                                <label>Tipo de lección</label>
+                                <div className="lesson-type-selector">
+                                    <button
+                                        type="button"
+                                        className={`lesson-type-option ${lessonForm.type === LessonType.CLASS ? 'active' : ''}`}
+                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.CLASS }))}
+                                    >
+                                        🎬 Clase (video)
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className={`lesson-type-option ${lessonForm.type === LessonType.EXAM ? 'active' : ''}`}
+                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.EXAM }))}
+                                    >
+                                        📝 Examen
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Campos comunes */}
                             <div className="form-group">
                                 <label htmlFor="lesson-title">Título</label>
-                                <input type="text" id="lesson-title" name="title" value={lessonForm.title} onChange={handleLessonChange} required placeholder="Ej: Introducción a materiales" />
+                                <input type="text" id="lesson-title" name="title" value={lessonForm.title} onChange={handleLessonChange} required placeholder={lessonForm.type === LessonType.EXAM ? 'Ej: Examen de técnicas básicas' : 'Ej: Introducción a materiales'} />
                             </div>
                             <div className="form-group">
                                 <label htmlFor="lesson-description">Descripción</label>
                                 <textarea id="lesson-description" name="description" value={lessonForm.description} onChange={handleLessonChange} required rows={3} placeholder="Descripción de la lección..." />
                             </div>
-                            <div className="form-row" style={{ marginBottom: '1.25rem' }}>
-                                <div>
-                                    <label htmlFor="lesson-duration">Duración</label>
-                                    <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} required placeholder="Ej: 15:00" />
-                                </div>
-                                <div>
-                                    <label htmlFor="lesson-videoUrl">URL del Video</label>
-                                    <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <div className="checkbox-group">
-                                    <input type="checkbox" id="lesson-isLive" name="isLive" checked={lessonForm.isLive} onChange={handleLessonChange} />
-                                    <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
-                                </div>
-                            </div>
 
-                        <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
-                                {isSubmittingLesson ? 'Agregando...' : 'Agregar Lección'}
+                            {/* Campos condicionales según tipo */}
+                            {lessonForm.type === LessonType.CLASS ? (
+                                <>
+                                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
+                                        <div>
+                                            <label htmlFor="lesson-duration">Duración</label>
+                                            <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} placeholder="Ej: 15:00" />
+                                        </div>
+                                        <div>
+                                            <label htmlFor="lesson-videoUrl">URL del Video</label>
+                                            <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <div className="checkbox-group">
+                                            <input type="checkbox" id="lesson-isLive" name="isLive" checked={!!lessonForm.isLive} onChange={handleLessonChange} />
+                                            <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="form-group">
+                                        <label htmlFor="lesson-passingScore">Respuestas correctas para aprobar</label>
+                                        <input
+                                            type="number"
+                                            id="lesson-passingScore"
+                                            min={1}
+                                            value={lessonForm.passingScore ?? ''}
+                                            onChange={(e) => setLessonForm(prev => ({ ...prev, passingScore: Number(e.target.value) }))}
+                                            required
+                                            placeholder="Ej: 3"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Preguntas del examen</label>
+                                        <QuizQuestionBuilder
+                                            questions={lessonForm.questions ?? []}
+                                            onChange={(questions) => setLessonForm(prev => ({ ...prev, questions }))}
+                                            classLessons={lessons.filter(l => (l.type ?? LessonType.CLASS) === LessonType.CLASS)}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
+                                {isSubmittingLesson ? 'Agregando...' : lessonForm.type === LessonType.EXAM ? 'Agregar Examen' : 'Agregar Lección'}
                             </button>
                         </form>
                     </div>
