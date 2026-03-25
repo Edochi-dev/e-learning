@@ -4,11 +4,13 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 // marcar la lección como completada.
 const WATCH_THRESHOLD = 80;
 import { useParams, Link } from 'react-router-dom';
+import { LessonType } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useCourse } from '../hooks/useCourse';
 import { useEnrollments } from '../hooks/useEnrollments';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { QuizPlayer } from '../components/QuizPlayer';
 
 /**
  * CourseLearnPage — Página de ESTUDIO del curso.
@@ -241,10 +243,13 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
     const activeLessonIndex = course.lessons.findIndex(l => l.id === activeLesson.id);
     const isCurrentCompleted = completedLessonIds.has(activeLesson.id);
 
+    // Determinar si la lección activa es un examen
+    const isExamLesson = activeLesson.type === LessonType.EXAM;
+
     // Los videos de YouTube no permiten tracking desde fuera del iframe,
     // así que los exoneramos del requisito de progreso.
     const isYoutubeLesson = activeLesson.videoUrl?.includes('youtube.com') || activeLesson.videoUrl?.includes('youtu.be');
-    const hasWatchedEnough = isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
+    const hasWatchedEnough = isExamLesson || isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
 
     // Navegación entre lecciones
     const prevLesson = activeLessonIndex > 0 ? course.lessons[activeLessonIndex - 1] : null;
@@ -262,45 +267,69 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                     <h2 className="course-learn__course-title">{course.title}</h2>
                 </div>
 
-                {/* Video player */}
-                <div className="course-learn__video">
-                    <VideoPlayer
-                        src={activeLesson.videoUrl ?? ''}
-                        title={activeLesson.title}
-                        lessonId={activeLesson.id}
-                        onWatchProgress={handleWatchProgress}
-                    />
-                </div>
-
-                {/* Barra de progreso de visualización — solo para videos locales */}
-                {!isYoutubeLesson && !isCurrentCompleted && (
-                    <div className="course-learn__watch-progress">
-                        <div className="course-learn__watch-progress-bar">
-                            <div
-                                className="course-learn__watch-progress-fill"
-                                style={{ width: `${watchProgress}%` }}
+                {/* Contenido principal: Video o Quiz según tipo de lección */}
+                {isExamLesson ? (
+                    <div className="course-learn__quiz">
+                        <QuizPlayer
+                            courseId={courseId!}
+                            lessonId={activeLesson.id}
+                            courseGateway={courseGateway}
+                            enrollmentGateway={enrollmentGateway}
+                            onComplete={() => handleMarkComplete(activeLesson.id)}
+                            onNavigateToLesson={(targetLessonId) => handleLessonChange(targetLessonId)}
+                        />
+                    </div>
+                ) : (
+                    <>
+                        <div className="course-learn__video">
+                            <VideoPlayer
+                                src={activeLesson.videoUrl ?? ''}
+                                title={activeLesson.title}
+                                lessonId={activeLesson.id}
+                                onWatchProgress={handleWatchProgress}
                             />
                         </div>
-                        <span className="course-learn__watch-progress-label">
-                            {hasWatchedEnough
-                                ? 'Listo para completar'
-                                : `Visto ${Math.floor(watchProgress)}% · Necesitas ver al menos el ${WATCH_THRESHOLD}%`}
-                        </span>
-                    </div>
+
+                        {/* Barra de progreso de visualización — solo para videos locales */}
+                        {!isYoutubeLesson && !isCurrentCompleted && (
+                            <div className="course-learn__watch-progress">
+                                <div className="course-learn__watch-progress-bar">
+                                    <div
+                                        className="course-learn__watch-progress-fill"
+                                        style={{ width: `${watchProgress}%` }}
+                                    />
+                                </div>
+                                <span className="course-learn__watch-progress-label">
+                                    {hasWatchedEnough
+                                        ? 'Listo para completar'
+                                        : `Visto ${Math.floor(watchProgress)}% · Necesitas ver al menos el ${WATCH_THRESHOLD}%`}
+                                </span>
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Info de la lección actual */}
                 <div className="course-learn__lesson-info">
                     <div className="course-learn__lesson-header">
                         <h1 className="course-learn__lesson-title">{activeLesson.title}</h1>
-                        <button
-                            className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''}`}
-                            onClick={() => handleMarkComplete(activeLesson.id)}
-                            disabled={isCurrentCompleted || markingComplete || !hasWatchedEnough}
-                            title={!hasWatchedEnough ? `Necesitas ver al menos el ${WATCH_THRESHOLD}% del video` : undefined}
-                        >
-                            {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
-                        </button>
+                        {/* Para exámenes, la lección se completa automáticamente al aprobar.
+                            Solo mostramos el botón manual para lecciones tipo class. */}
+                        {!isExamLesson && (
+                            <button
+                                className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''}`}
+                                onClick={() => handleMarkComplete(activeLesson.id)}
+                                disabled={isCurrentCompleted || markingComplete || !hasWatchedEnough}
+                                title={!hasWatchedEnough ? `Necesitas ver al menos el ${WATCH_THRESHOLD}% del video` : undefined}
+                            >
+                                {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
+                            </button>
+                        )}
+                        {isExamLesson && isCurrentCompleted && (
+                            <span className="course-learn__complete-btn course-learn__complete-btn--done">
+                                Aprobado
+                            </span>
+                        )}
                     </div>
                     {activeLesson.description && (
                         <p className="course-learn__lesson-desc">{activeLesson.description}</p>
@@ -349,7 +378,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                                 onClick={() => handleLessonChange(lesson.id)}
                             >
                                 <span className="course-learn__lesson-number">
-                                    {isCompleted ? '✓' : index + 1}
+                                    {isCompleted
+                                        ? '✓'
+                                        : lesson.type === LessonType.EXAM
+                                            ? '📝'
+                                            : index + 1}
                                 </span>
                                 <span className="course-learn__lesson-name">
                                     {lesson.title}

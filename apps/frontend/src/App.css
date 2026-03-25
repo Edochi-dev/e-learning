@@ -4234,3 +4234,298 @@ input:checked+.slider .icon-moon {
   border-color: var(--primary);
   box-shadow: 0 2px 8px var(--primary-glow);
 }
+
+/* ================================================================
+   QUIZ PLAYER (Alumno)
+   Interfaz del alumno para tomar exámenes y ver resultados.
+   ================================================================ */
+
+.quiz-player {
+  padding: 2rem;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.quiz-player--loading,
+.quiz-player--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  min-height: 300px;
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+
+.quiz-player--error {
+  color: #e74c3c;
+}
+
+.quiz-player__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-player__header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.quiz-player__count {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.quiz-player__questions {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.quiz-player__submit {
+  width: 100%;
+  padding: 0.85rem;
+  font-size: 1rem;
+}
+
+.quiz-player__cooldown {
+  text-align: center;
+  padding: 1rem;
+  background: rgba(231, 76, 60, 0.08);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-top: 1rem;
+}
+
+.quiz-player__cooldown strong {
+  color: #e74c3c;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Pregunta individual ── */
+
+.quiz-question {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+
+.quiz-question__text {
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.quiz-question__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* ── Opción de respuesta ── */
+
+.quiz-option {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg);
+}
+
+.quiz-option:hover {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.03);
+}
+
+.quiz-option--selected {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(232, 67, 147, 0.08), rgba(212, 165, 116, 0.05));
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.quiz-option input[type="radio"] {
+  accent-color: var(--primary);
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.quiz-option__text {
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+/* ================================================================
+   QUIZ RESULTS (Alumno)
+   Pantalla de resultados después de enviar el examen.
+   ================================================================ */
+
+.quiz-result__header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.quiz-result__header h2 {
+  font-family: var(--font-heading);
+  font-size: 1.8rem;
+  margin: 0 0 0.5rem;
+}
+
+.quiz-result--passed .quiz-result__header h2 {
+  color: #27ae60;
+}
+
+.quiz-result--failed .quiz-result__header h2 {
+  color: #e74c3c;
+}
+
+.quiz-result__score {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+.quiz-result__minimum {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: 0.4rem;
+}
+
+.quiz-result__details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.quiz-result__question {
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-md);
+  border-left: 4px solid;
+}
+
+.quiz-result__question--correct {
+  background: rgba(39, 174, 96, 0.06);
+  border-left-color: #27ae60;
+}
+
+.quiz-result__question--wrong {
+  background: rgba(231, 76, 60, 0.06);
+  border-left-color: #e74c3c;
+}
+
+.quiz-result__question-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.quiz-result__question-icon {
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  width: 1.2rem;
+  text-align: center;
+}
+
+.quiz-result__question--correct .quiz-result__question-icon {
+  color: #27ae60;
+}
+
+.quiz-result__question--wrong .quiz-result__question-icon {
+  color: #e74c3c;
+}
+
+.quiz-result__question-text {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.quiz-result__answer {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-left: 1.7rem;
+}
+
+.quiz-result__actions {
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.quiz-result__success-message {
+  color: #27ae60;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+/* ── Hint: "Repasa la lección X" ── */
+
+.quiz-hint {
+  margin-top: 0.4rem;
+  margin-left: 1.7rem;
+  font-size: 0.83rem;
+  color: var(--gold);
+}
+
+.quiz-hint__link {
+  background: none;
+  border: none;
+  color: var(--gold);
+  font-size: 0.83rem;
+  font-family: var(--font-body);
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.quiz-hint__link:hover {
+  color: var(--primary);
+}
+
+/* ── Contenedor del quiz dentro de CourseLearnPage ── */
+
+.course-learn__quiz {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  min-height: 400px;
+}
+
+/* ── Responsive quiz ── */
+
+@media (max-width: 768px) {
+  .quiz-player {
+    padding: 1.25rem;
+  }
+
+  .quiz-player__header h2 {
+    font-size: 1.25rem;
+  }
+
+  .quiz-result__header h2 {
+    font-size: 1.4rem;
+  }
+
+  .quiz-question {
+    padding: 1rem;
+  }
+
+  .quiz-option {
+    padding: 0.5rem 0.65rem;
+  }
+}
