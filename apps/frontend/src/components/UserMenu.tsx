@@ -98,7 +98,7 @@ export const UserMenu = () => {
                         onClick={handleNavigation}
                     >
                         <span className="user-menu__item-icon">📚</span>
-                        Mis Cursos
+                        <span>Mis Cursos</span>
                     </Link>
 
                     <Link
@@ -108,7 +108,7 @@ export const UserMenu = () => {
                         onClick={handleNavigation}
                     >
                         <span className="user-menu__item-icon">⚙️</span>
-                        Mi Cuenta
+                        <span>Mi Cuenta</span>
                     </Link>
 
                     {/* Solo visible para administradores */}
@@ -120,7 +120,7 @@ export const UserMenu = () => {
                             onClick={handleNavigation}
                         >
                             <span className="user-menu__item-icon">🛡️</span>
-                            Panel Admin
+                            <span>Panel Admin</span>
                         </Link>
                     )}
 
@@ -133,7 +133,7 @@ export const UserMenu = () => {
                         onClick={handleLogout}
                     >
                         <span className="user-menu__item-icon">🚪</span>
-                        Cerrar Sesión
+                        <span>Cerrar Sesión</span>
                     </button>
                 </div>
             )}

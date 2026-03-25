@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
+import { API_URL as BACKEND_URL } from '../../config';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course, Lesson, UpdateCoursePayload, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
@@ -542,7 +543,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Miniatura actual:</p>
                         <div style={{ position: 'relative', display: 'inline-block' }}>
                             <img
-                                src={course.thumbnailUrl}
+                                src={`${BACKEND_URL}${course.thumbnailUrl}`}
                                 alt="Miniatura actual"
                                 style={{ width: '100%', maxWidth: '320px', borderRadius: 'var(--radius-md)', display: 'block' }}
                             />
