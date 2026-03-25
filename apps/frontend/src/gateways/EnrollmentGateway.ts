@@ -19,6 +19,8 @@ export interface EnrollmentWithProgress {
     progressPercent: number;
 }
 
+import type { QuizResult, QuizAnswer } from '@maris-nails/shared';
+
 /**
  * EnrollmentGateway (Frontend) — Contrato para las operaciones de matrículas.
  *
@@ -49,4 +51,7 @@ export interface EnrollmentGateway {
 
     /** Guarda el porcentaje de video visto para una lección */
     saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void>;
+
+    /** Envía las respuestas de un quiz y devuelve el resultado con feedback */
+    submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult>;
 }

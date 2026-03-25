@@ -1,3 +1,4 @@
+import type { QuizResult, QuizAnswer } from '@maris-nails/shared';
 import type { EnrollmentGateway, EnrollmentWithProgress } from './EnrollmentGateway';
 
 /**
@@ -90,5 +91,25 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
             credentials: 'include',
             body: JSON.stringify({ lessonId, courseId, percent }),
         }).catch(() => { /* silencioso */ });
+    }
+
+    async submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult> {
+        const response = await fetch(`${this.baseUrl}/enrollments/me/quiz`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ lessonId, courseId, answers }),
+        });
+
+        if (!response.ok) {
+            const text = await response.text();
+            let message = 'Error al enviar el quiz';
+            try {
+                const body = JSON.parse(text);
+                message = body.message || message;
+            } catch { /* usar mensaje default */ }
+            throw new Error(message);
+        }
+        return response.json();
     }
 }

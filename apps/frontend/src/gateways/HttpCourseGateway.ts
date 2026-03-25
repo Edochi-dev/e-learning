@@ -1,4 +1,4 @@
-import type { Course, Lesson, CreateLessonPayload } from '@maris-nails/shared';
+import type { Course, Lesson, CreateLessonPayload, QuizQuestion } from '@maris-nails/shared';
 import type { CourseGateway } from './CourseGateway';
 
 export class HttpCourseGateway implements CourseGateway {
@@ -167,5 +167,17 @@ export class HttpCourseGateway implements CourseGateway {
         if (!response.ok) {
             throw new Error(await this.parseErrorMessage(response, `Failed to reorder lessons: ${response.statusText}`));
         }
+    }
+
+    async getQuizQuestions(courseId: string, lessonId: string): Promise<QuizQuestion[]> {
+        const response = await fetch(
+            `${this.baseUrl}/courses/${courseId}/lessons/${lessonId}/quiz`,
+            { credentials: 'include' },
+        );
+
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'Error al cargar las preguntas del quiz'));
+        }
+        return response.json();
     }
 }

@@ -1,4 +1,4 @@
-import type { Course, CreateCoursePayload, UpdateCoursePayload, Lesson, CreateLessonPayload, UpdateLessonPayload } from '@maris-nails/shared';
+import type { Course, CreateCoursePayload, UpdateCoursePayload, Lesson, CreateLessonPayload, UpdateLessonPayload, QuizQuestion } from '@maris-nails/shared';
 
 /**
  * CourseGateway (Frontend) — Contrato para las operaciones de cursos/lecciones
@@ -24,4 +24,8 @@ export interface CourseGateway {
     removeLesson(courseId: string, lessonId: string): Promise<void>;
     updateLesson(courseId: string, lessonId: string, data: UpdateLessonPayload): Promise<Lesson>;
     reorderLessons(courseId: string, lessonIds: string[]): Promise<void>;
+
+    // Quiz
+    /** Obtiene las preguntas de un quiz SIN las respuestas correctas (isCorrect omitido) */
+    getQuizQuestions(courseId: string, lessonId: string): Promise<QuizQuestion[]>;
 }
