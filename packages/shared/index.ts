@@ -1,13 +1,43 @@
 // Esta es la definición ÚNICA de un curso para todo el proyecto
 
+// ─── Lesson Type ───────────────────────────────────────────────────────
+// Discriminador de tipo de lección: una lección puede ser una clase (video)
+// o un examen (quiz). Mismo patrón "const + as const" que UserRole y OrderStatus.
+export const LessonType = {
+    CLASS: 'class',
+    EXAM: 'exam',
+} as const;
+
+export type LessonType = typeof LessonType[keyof typeof LessonType];
+
+// ─── Quiz ──────────────────────────────────────────────────────────────
+
+export interface QuizOption {
+    id: string;
+    text: string;
+    isCorrect: boolean; // Solo visible para el admin; el backend lo omite al enviar al alumno
+}
+
+export interface QuizQuestion {
+    id: string;
+    text: string;
+    order: number;
+    options: QuizOption[];
+    relatedLessonId?: string;    // FK a la lección de video donde se explica el tema
+    relatedLessonTitle?: string; // Se resuelve en el backend (join); usado para el hint al alumno
+}
+
 export interface Lesson {
     id: string;
     title: string;
     description: string;
-    duration?: string; // Ej: "10:00", "1h 30m" — opcional para lecciones en vivo
-    videoUrl: string; // URL del video (YouTube embed o MP4)
-    order: number;    // Posición dentro del curso (0, 1, 2...)
-    isLive: boolean;  // True si esta lección es en vivo, False si es grabada
+    type: LessonType;         // 'class' (video) o 'exam' (quiz)
+    duration?: string;        // Solo para class — Ej: "10:00", "1h 30m"
+    videoUrl?: string;        // Solo para class — URL del video
+    order: number;            // Posición dentro del curso (0, 1, 2...)
+    isLive: boolean;          // Solo para class — True si es en vivo
+    passingScore?: number;    // Solo para exam — respuestas correctas mínimas para aprobar
+    questions?: QuizQuestion[]; // Solo para exam — preguntas del quiz
 }
 
 export interface Course {
@@ -59,9 +89,23 @@ export interface CreateCoursePayload {
 export interface CreateLessonPayload {
     title: string;
     description: string;
-    duration?: string; // Opcional para lecciones en vivo
-    videoUrl: string;
-    isLive: boolean;
+    type: LessonType;                     // 'class' o 'exam'
+    duration?: string;                    // Solo para class
+    videoUrl?: string;                    // Obligatorio para class, no aplica para exam
+    isLive?: boolean;                     // Solo para class
+    passingScore?: number;                // Solo para exam
+    questions?: CreateQuizQuestionPayload[]; // Solo para exam
+}
+
+export interface CreateQuizQuestionPayload {
+    text: string;
+    relatedLessonId?: string;             // Lección de video donde se explica el tema
+    options: CreateQuizOptionPayload[];
+}
+
+export interface CreateQuizOptionPayload {
+    text: string;
+    isCorrect: boolean;
 }
 
 export interface UpdateCoursePayload {
@@ -75,9 +119,12 @@ export interface UpdateCoursePayload {
 export interface UpdateLessonPayload {
     title?: string;
     description?: string;
+    type?: LessonType;
     duration?: string;
     videoUrl?: string;
     isLive?: boolean;
+    passingScore?: number;
+    questions?: CreateQuizQuestionPayload[];
 }
 
 export interface RegisterPayload {
@@ -132,4 +179,49 @@ export interface Order {
 
 export interface CreateOrderPayload {
     courseId: string;
+}
+
+// ─── Quiz Submission & Results ─────────────────────────────────────────
+
+/**
+ * SubmitQuizPayload — Lo que el alumno envía al contestar un quiz.
+ *
+ * Cada "answer" es: "para esta pregunta, elegí esta opción".
+ * El backend evalúa internamente si la opción es correcta o no.
+ */
+export interface SubmitQuizPayload {
+    lessonId: string;
+    courseId: string;
+    answers: QuizAnswer[];
+}
+
+export interface QuizAnswer {
+    questionId: string;
+    selectedOptionId: string;
+}
+
+/**
+ * QuizResultDetail — Feedback por cada pregunta del quiz.
+ *
+ * - Si `correct: true` → el alumno acertó (se muestra en verde).
+ * - Si `correct: false` → el alumno falló. NO se revela la respuesta correcta,
+ *   pero se muestra `relatedLessonTitle` como hint ("Repasa: Lección X").
+ */
+export interface QuizResultDetail {
+    questionId: string;
+    correct: boolean;
+    selectedOptionId: string;
+    relatedLessonId?: string;
+    relatedLessonTitle?: string;
+}
+
+/**
+ * QuizResult — Respuesta del backend tras evaluar un quiz.
+ */
+export interface QuizResult {
+    passed: boolean;
+    score: number;           // Respuestas correctas
+    totalQuestions: number;
+    passingScore: number;
+    details: QuizResultDetail[];
 }
