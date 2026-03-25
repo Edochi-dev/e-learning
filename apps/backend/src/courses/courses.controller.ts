@@ -38,6 +38,7 @@ import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
 import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnail.use-case';
 import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
+import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -68,6 +69,7 @@ export class CoursesController {
     private readonly deleteCourseUseCase: DeleteCourseUseCase,
     private readonly updateCourseThumbnailUseCase: UpdateCourseThumbnailUseCase,
     private readonly deleteCourseThumbnailUseCase: DeleteCourseThumbnailUseCase,
+    private readonly getQuizQuestionsUseCase: GetQuizQuestionsUseCase,
   ) {}
 
   // ==========================================
@@ -198,6 +200,20 @@ export class CoursesController {
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<Lesson> {
     return this.addLessonUseCase.execute(courseId, createLessonDto);
+  }
+
+  /**
+   * GET /courses/:courseId/lessons/:lessonId/quiz
+   *
+   * Devuelve las preguntas del quiz SIN las respuestas correctas (isCorrect omitido).
+   * Requiere JWT porque solo alumnos autenticados pueden ver el quiz.
+   */
+  @Get(':courseId/lessons/:lessonId/quiz')
+  @UseGuards(AuthGuard('jwt'))
+  async getQuizQuestions(
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+  ) {
+    return this.getQuizQuestionsUseCase.execute(lessonId);
   }
 
   /**

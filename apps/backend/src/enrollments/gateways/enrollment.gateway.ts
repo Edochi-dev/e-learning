@@ -1,5 +1,6 @@
 import { Enrollment } from '../entities/enrollment.entity';
 import { LessonProgress } from '../entities/lesson-progress.entity';
+import { QuizAttempt } from '../entities/quiz-attempt.entity';
 
 /**
  * EnrollmentGateway — Contrato abstracto para la capa de datos de Matrículas.
@@ -91,4 +92,21 @@ export abstract class EnrollmentGateway {
     userId: string,
     courseId: string,
   ): Promise<Record<string, number>>;
+
+  // --- Quiz Attempts ---
+
+  /**
+   * Guarda un intento de quiz con sus respuestas individuales.
+   * cascade: true en QuizAttempt guarda las QuizAttemptAnswer automáticamente.
+   */
+  abstract saveQuizAttempt(attempt: Partial<QuizAttempt>): Promise<QuizAttempt>;
+
+  /**
+   * Obtiene el último intento de un alumno en un quiz específico.
+   * Se usa para el cooldown de 30 minutos: si submittedAt + 30min > ahora → rechazar.
+   */
+  abstract getLastQuizAttempt(
+    userId: string,
+    lessonId: string,
+  ): Promise<QuizAttempt | null>;
 }

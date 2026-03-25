@@ -68,4 +68,13 @@ export abstract class CourseGateway {
    * y actualiza el campo `order` de cada una en la base de datos.
    */
   abstract reorderLessons(courseId: string, lessonIds: string[]): Promise<void>;
+
+  /**
+   * Carga una lección con sus preguntas y opciones (eager loading).
+   *
+   * Se usa en dos contextos:
+   * - GetQuizQuestionsUseCase: para enviar preguntas al alumno (sin isCorrect)
+   * - SubmitQuizUseCase: para evaluar respuestas (con isCorrect)
+   */
+  abstract findLessonWithQuestions(lessonId: string): Promise<Lesson | null>;
 }

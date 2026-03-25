@@ -26,7 +26,9 @@ import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { EnrollInCourseDto } from './dto/enroll-in-course.dto';
 import { MarkLessonCompleteDto } from './dto/mark-lesson-complete.dto';
 import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
+import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { Enrollment } from './entities/enrollment.entity';
+import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 
 /**
  * EnrollmentsController — Endpoints HTTP del sistema de matrículas.
@@ -53,6 +55,7 @@ export class EnrollmentsController {
     private readonly unenrollUseCase: UnenrollUseCase,
     private readonly saveWatchProgressUseCase: SaveWatchProgressUseCase,
     private readonly getCourseProgressUseCase: GetCourseProgressUseCase,
+    private readonly submitQuizUseCase: SubmitQuizUseCase,
   ) {}
 
   @Post('me')
@@ -110,6 +113,24 @@ export class EnrollmentsController {
       dto.lessonId,
       dto.courseId,
       dto.percent,
+    );
+  }
+
+  /**
+   * POST /enrollments/me/quiz — Enviar respuestas de un quiz.
+   *
+   * El backend evalúa las respuestas, guarda el intento y, si el alumno
+   * aprueba, marca la lección como completada automáticamente.
+   *
+   * Puede devolver 429 (Too Many Requests) si el cooldown de 30 min no ha pasado.
+   */
+  @Post('me/quiz')
+  async submitQuiz(@Req() req: any, @Body() dto: SubmitQuizDto) {
+    return this.submitQuizUseCase.execute(
+      req.user.id,
+      dto.lessonId,
+      dto.courseId,
+      dto.answers,
     );
   }
 

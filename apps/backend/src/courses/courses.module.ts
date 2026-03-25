@@ -12,10 +12,13 @@ import { ReorderLessonsUseCase } from './use-cases/reorder-lessons.use-case';
 import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnail.use-case';
 import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
+import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case';
 import { CourseGateway } from './gateways/course.gateway';
 import { CoursesRepository } from './courses.repository';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
+import { QuizQuestion } from './entities/quiz-question.entity';
+import { QuizOption } from './entities/quiz-option.entity';
 import { StorageModule } from '../storage/storage.module';
 
 /**
@@ -32,7 +35,7 @@ import { StorageModule } from '../storage/storage.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Course, Lesson]),
+    TypeOrmModule.forFeature([Course, Lesson, QuizQuestion, QuizOption]),
     StorageModule, // Importamos para que FileStorageGateway esté disponible
   ],
   controllers: [CoursesController],
@@ -48,6 +51,7 @@ import { StorageModule } from '../storage/storage.module';
     DeleteCourseUseCase,
     UpdateCourseThumbnailUseCase,
     DeleteCourseThumbnailUseCase,
+    GetQuizQuestionsUseCase,
     {
       provide: CourseGateway,
       useClass: CoursesRepository,

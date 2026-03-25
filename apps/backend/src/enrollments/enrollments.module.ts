@@ -5,12 +5,15 @@ import { EnrollmentsRepository } from './enrollments.repository';
 import { EnrollmentGateway } from './gateways/enrollment.gateway';
 import { Enrollment } from './entities/enrollment.entity';
 import { LessonProgress } from './entities/lesson-progress.entity';
+import { QuizAttempt } from './entities/quiz-attempt.entity';
+import { QuizAttemptAnswer } from './entities/quiz-attempt-answer.entity';
 import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
 import { GetMyEnrollmentsUseCase } from './use-cases/get-my-enrollments.use-case';
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
 import { GetCourseProgressUseCase } from './use-cases/get-course-progress.use-case';
+import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { CoursesModule } from '../courses/courses.module';
 
@@ -37,7 +40,7 @@ import { CoursesModule } from '../courses/courses.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Enrollment, LessonProgress]),
+    TypeOrmModule.forFeature([Enrollment, LessonProgress, QuizAttempt, QuizAttemptAnswer]),
     CoursesModule,
   ],
   controllers: [EnrollmentsController],
@@ -53,6 +56,7 @@ import { CoursesModule } from '../courses/courses.module';
     UnenrollUseCase,
     SaveWatchProgressUseCase,
     GetCourseProgressUseCase,
+    SubmitQuizUseCase,
   ],
   // Exportamos EnrollmentGateway para que otros módulos (como OrdersModule)
   // puedan inyectarlo en sus Use Cases. Sin esto, NestJS lanza un error

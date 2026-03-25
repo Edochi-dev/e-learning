@@ -25,6 +25,11 @@ export class GetSignedUrlUseCase {
       throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
     }
 
+    // Si la lección no tiene videoUrl (es un examen), no hay video que firmar
+    if (!lesson.videoUrl) {
+      throw new NotFoundException('Esta lección no tiene video');
+    }
+
     // 2. Normalizar el URL: si tiene host (ej: "http://localhost:3000/static/videos/clase1.mp4")
     //    extraemos solo el pathname ("/static/videos/clase1.mp4") para comparar correctamente.
     //    Esto cubre el caso en que el admin guardó el URL completo en lugar de la ruta relativa.

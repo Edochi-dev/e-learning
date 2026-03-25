@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EnrollmentGateway } from './gateways/enrollment.gateway';
 import { Enrollment } from './entities/enrollment.entity';
 import { LessonProgress } from './entities/lesson-progress.entity';
+import { QuizAttempt } from './entities/quiz-attempt.entity';
 
 /**
  * EnrollmentsRepository — Implementación concreta del EnrollmentGateway.
@@ -22,6 +23,8 @@ export class EnrollmentsRepository implements EnrollmentGateway {
     private readonly enrollmentRepository: Repository<Enrollment>,
     @InjectRepository(LessonProgress)
     private readonly lessonProgressRepository: Repository<LessonProgress>,
+    @InjectRepository(QuizAttempt)
+    private readonly quizAttemptRepository: Repository<QuizAttempt>,
   ) {}
 
   async enroll(userId: string, courseId: string): Promise<Enrollment> {
@@ -181,5 +184,28 @@ export class EnrollmentsRepository implements EnrollmentGateway {
 
   async delete(id: string): Promise<void> {
     await this.enrollmentRepository.delete(id);
+  }
+
+  // ==========================================
+  // Quiz Attempts
+  // ==========================================
+
+  async saveQuizAttempt(attempt: Partial<QuizAttempt>): Promise<QuizAttempt> {
+    const entity = this.quizAttemptRepository.create(attempt);
+    return this.quizAttemptRepository.save(entity);
+  }
+
+  /**
+   * Busca el intento más reciente del alumno en este quiz.
+   * ORDER BY submittedAt DESC + LIMIT 1 = el último intento.
+   */
+  async getLastQuizAttempt(
+    userId: string,
+    lessonId: string,
+  ): Promise<QuizAttempt | null> {
+    return this.quizAttemptRepository.findOne({
+      where: { userId, lessonId },
+      order: { submittedAt: 'DESC' },
+    });
   }
 }

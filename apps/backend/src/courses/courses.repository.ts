@@ -45,8 +45,15 @@ export class CoursesRepository implements CourseGateway {
   async findOne(id: string): Promise<Course | null> {
     return this.courseRepository.findOne({
       where: { id },
-      relations: ['lessons'],
-      order: { lessons: { order: 'ASC' } }, // Siempre devolver lecciones ordenadas
+      // Cargamos lessons + sus questions + options para que el admin vea el quiz completo.
+      // Para el alumno, el Use Case filtra isCorrect antes de devolver.
+      relations: ['lessons', 'lessons.questions', 'lessons.questions.options'],
+      order: {
+        lessons: {
+          order: 'ASC',
+          questions: { order: 'ASC' },
+        },
+      },
     });
   }
 
@@ -187,5 +194,21 @@ export class CoursesRepository implements CourseGateway {
       where: { thumbnailUrl },
     });
     return count > 0;
+  }
+
+  /**
+   * Carga una lección con sus preguntas y opciones.
+   *
+   * relations funciona como un "JOIN automático": le dice a TypeORM que además
+   * de la lección, cargue las entidades relacionadas en una sola consulta.
+   * 'questions' carga QuizQuestion[], y 'questions.options' carga QuizOption[]
+   * dentro de cada pregunta. Sin esto, lesson.questions sería undefined.
+   */
+  async findLessonWithQuestions(lessonId: string): Promise<Lesson | null> {
+    return this.lessonRepository.findOne({
+      where: { id: lessonId },
+      relations: ['questions', 'questions.options'],
+      order: { questions: { order: 'ASC' } },
+    });
   }
 }

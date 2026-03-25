@@ -13,6 +13,6 @@ export class AddLessonUseCase {
       throw new NotFoundException(`Course with id ${courseId} not found`);
     }
 
-    return this.courseGateway.addLesson(courseId, dto);
+    return this.courseGateway.addLesson(courseId, dto as any);
   }
 }

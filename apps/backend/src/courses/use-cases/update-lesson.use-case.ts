@@ -43,7 +43,7 @@ export class UpdateLessonUseCase {
     const oldVideoUrl = currentLesson.videoUrl;
     const newVideoUrl = dto.videoUrl;
 
-    if (newVideoUrl && newVideoUrl !== oldVideoUrl) {
+    if (newVideoUrl && oldVideoUrl && newVideoUrl !== oldVideoUrl) {
       await this.cleanupOrphanedFile(oldVideoUrl, lessonId);
     }
 
