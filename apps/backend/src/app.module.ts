@@ -6,8 +6,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import * as Joi from 'joi';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
@@ -71,8 +69,6 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     OrdersModule,
     CertificatesModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule implements NestModule {
   /**
