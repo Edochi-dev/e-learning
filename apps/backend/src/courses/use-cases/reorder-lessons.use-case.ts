@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { CourseGateway } from '../gateways/course.gateway';
+import { LessonGateway } from '../gateways/lesson.gateway';
 
 /**
  * ReorderLessonsUseCase — Caso de uso: reordenar las lecciones de un curso
@@ -17,7 +18,10 @@ import { CourseGateway } from '../gateways/course.gateway';
  */
 @Injectable()
 export class ReorderLessonsUseCase {
-  constructor(private readonly courseGateway: CourseGateway) {}
+  constructor(
+    private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
+  ) {}
 
   async execute(courseId: string, lessonIds: string[]): Promise<void> {
     const course = await this.courseGateway.findOne(courseId);
@@ -27,7 +31,6 @@ export class ReorderLessonsUseCase {
 
     const existingIds = new Set((course.lessons ?? []).map((l) => l.id));
 
-    // Cada ID enviado debe pertenecer al curso
     for (const id of lessonIds) {
       if (!existingIds.has(id)) {
         throw new BadRequestException(
@@ -36,13 +39,12 @@ export class ReorderLessonsUseCase {
       }
     }
 
-    // El array debe contener todas las lecciones del curso (ni más, ni menos)
     if (lessonIds.length !== existingIds.size) {
       throw new BadRequestException(
         'lessonIds must contain all lessons of the course',
       );
     }
 
-    await this.courseGateway.reorderLessons(courseId, lessonIds);
+    await this.lessonGateway.reorderLessons(courseId, lessonIds);
   }
 }

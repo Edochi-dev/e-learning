@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CourseGateway } from '../gateways/course.gateway';
+import { LessonGateway } from '../gateways/lesson.gateway';
 
 /**
  * GetQuizQuestionsUseCase — Devuelve las preguntas de un quiz al alumno.
@@ -21,10 +21,10 @@ import { CourseGateway } from '../gateways/course.gateway';
  */
 @Injectable()
 export class GetQuizQuestionsUseCase {
-  constructor(private readonly courseGateway: CourseGateway) {}
+  constructor(private readonly lessonGateway: LessonGateway) {}
 
   async execute(lessonId: string) {
-    const lesson = await this.courseGateway.findLessonWithQuestions(lessonId);
+    const lesson = await this.lessonGateway.findLessonWithQuestions(lessonId);
 
     if (!lesson) {
       throw new NotFoundException('Lección no encontrada');

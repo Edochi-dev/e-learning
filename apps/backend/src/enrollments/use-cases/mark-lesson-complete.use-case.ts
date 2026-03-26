@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { CourseGateway } from '../../courses/gateways/course.gateway';
+import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
 /**
  * MarkLessonCompleteUseCase — Marca una lección como completada por el alumno.
@@ -26,7 +26,7 @@ import { CourseGateway } from '../../courses/gateways/course.gateway';
 export class MarkLessonCompleteUseCase {
   constructor(
     private readonly enrollmentGateway: EnrollmentGateway,
-    private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
   ) {}
 
   async execute(
@@ -44,7 +44,7 @@ export class MarkLessonCompleteUseCase {
     }
 
     // Paso 2: ¿Existe la lección?
-    const lesson = await this.courseGateway.findLesson(lessonId);
+    const lesson = await this.lessonGateway.findLesson(lessonId);
     if (!lesson) {
       throw new NotFoundException('Lección no encontrada');
     }

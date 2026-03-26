@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { CourseGateway } from './gateways/course.gateway';
+import { LessonGateway } from './gateways/lesson.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
@@ -19,7 +20,7 @@ import { QuizQuestion } from './entities/quiz-question.entity';
  * tiene su implementación aquí con queries reales a la base de datos.
  */
 @Injectable()
-export class CoursesRepository implements CourseGateway {
+export class CoursesRepository implements CourseGateway, LessonGateway {
   constructor(
     @InjectRepository(Course)
     private readonly courseRepository: Repository<Course>,

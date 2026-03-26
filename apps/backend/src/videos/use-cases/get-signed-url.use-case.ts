@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CourseGateway } from '../../courses/gateways/course.gateway';
+import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { VideoTokenService } from '../video-token.service';
 
 /**
@@ -14,13 +14,13 @@ import { VideoTokenService } from '../video-token.service';
 @Injectable()
 export class GetSignedUrlUseCase {
   constructor(
-    private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
     private readonly videoTokenService: VideoTokenService,
   ) {}
 
   async execute(lessonId: string): Promise<{ url: string; expires: number }> {
     // 1. Buscar la lección
-    const lesson = await this.courseGateway.findLesson(lessonId);
+    const lesson = await this.lessonGateway.findLesson(lessonId);
     if (!lesson) {
       throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
     }

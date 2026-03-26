@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Lesson } from '@maris-nails/shared';
-import { CourseGateway } from '../gateways/course.gateway';
+import { LessonGateway } from '../gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { UpdateLessonDto } from '../dto/update-lesson.dto';
 
@@ -28,13 +28,13 @@ import { UpdateLessonDto } from '../dto/update-lesson.dto';
 @Injectable()
 export class UpdateLessonUseCase {
   constructor(
-    private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
     private readonly fileStorageGateway: FileStorageGateway,
   ) {}
 
   async execute(lessonId: string, dto: UpdateLessonDto): Promise<Lesson> {
     // 1. Obtener la lección actual
-    const currentLesson = await this.courseGateway.findLesson(lessonId);
+    const currentLesson = await this.lessonGateway.findLesson(lessonId);
     if (!currentLesson) {
       throw new NotFoundException(`Lesson with id ${lessonId} not found`);
     }
@@ -57,7 +57,7 @@ export class UpdateLessonUseCase {
     }
 
     // 4. Actualizar la lección
-    return this.courseGateway.updateLesson(
+    return this.lessonGateway.updateLesson(
       lessonId,
       dto as unknown as Partial<Lesson>,
     );
@@ -80,7 +80,7 @@ export class UpdateLessonUseCase {
     }
 
     // ¿Alguna otra lección lo usa?
-    const isReferenced = await this.courseGateway.isVideoUrlReferenced(
+    const isReferenced = await this.lessonGateway.isVideoUrlReferenced(
       videoUrl,
       excludeLessonId,
     );

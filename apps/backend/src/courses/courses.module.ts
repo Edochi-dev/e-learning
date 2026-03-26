@@ -14,6 +14,7 @@ import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnai
 import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
 import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case';
 import { CourseGateway } from './gateways/course.gateway';
+import { LessonGateway } from './gateways/lesson.gateway';
 import { CoursesRepository } from './courses.repository';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
@@ -58,9 +59,11 @@ import { StorageModule } from '../storage/storage.module';
       provide: CourseGateway,
       useClass: CoursesRepository,
     },
+    {
+      provide: LessonGateway,
+      useClass: CoursesRepository,
+    },
   ],
-  // Exportamos CourseGateway para que otros módulos (como EnrollmentsModule)
-  // puedan inyectarlo en sus Use Cases sin tener que reimplementarlo.
-  exports: [CourseGateway],
+  exports: [CourseGateway, LessonGateway],
 })
 export class CoursesModule {}

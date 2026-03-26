@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
+import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { QuizResult, QuizResultDetail } from '@maris-nails/shared';
 
 /**
@@ -35,6 +36,7 @@ export class SubmitQuizUseCase {
   constructor(
     private readonly enrollmentGateway: EnrollmentGateway,
     private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
   ) {}
 
   async execute(
@@ -54,7 +56,7 @@ export class SubmitQuizUseCase {
     }
 
     // ── Paso 2: Cargar la lección con preguntas ──────────────────────
-    const lesson = await this.courseGateway.findLessonWithQuestions(lessonId);
+    const lesson = await this.lessonGateway.findLessonWithQuestions(lessonId);
     if (!lesson) {
       throw new NotFoundException('Lección no encontrada');
     }

@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CourseGateway } from '../gateways/course.gateway';
+import { LessonGateway } from '../gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 
 /**
@@ -26,6 +27,7 @@ import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway'
 export class DeleteCourseUseCase {
   constructor(
     private readonly courseGateway: CourseGateway,
+    private readonly lessonGateway: LessonGateway,
     private readonly fileStorageGateway: FileStorageGateway,
   ) {}
 
@@ -61,7 +63,7 @@ export class DeleteCourseUseCase {
     // Paso 3: limpiar videos de las lecciones
     await Promise.allSettled(
       [...localVideoUrls].map(async (videoUrl) => {
-        const stillInUse = await this.courseGateway.isVideoUrlInUse(videoUrl);
+        const stillInUse = await this.lessonGateway.isVideoUrlInUse(videoUrl);
         if (!stillInUse) {
           const relativePath = videoUrl.replace('/static/', '');
           await this.fileStorageGateway.deleteFile(relativePath);
