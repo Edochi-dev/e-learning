@@ -1697,6 +1697,16 @@ input:checked+.slider .icon-moon {
   box-shadow: var(--shadow-sm);
 }
 
+/* Item siendo arrastrado: se "levanta" de la lista con sombra,
+   borde de color primario y escala sutil para dar sensación de profundidad. */
+.admin-lesson-item.is-dragging {
+  opacity: 0.85;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2), 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary);
+  transform: scale(1.02);
+  background: var(--surface);
+}
+
 .admin-lesson-view {
   display: flex;
   justify-content: space-between;
@@ -1866,9 +1876,20 @@ input:checked+.slider .icon-moon {
 }
 
 .add-lesson-panel.open {
-  /* Valor suficientemente grande para cualquier formulario.
-     max-height no puede ser 'auto' en transitions — necesita un número. */
-  max-height: 700px;
+  /* Valor suficientemente grande para cualquier formulario, incluyendo
+     exámenes con muchas preguntas. max-height no puede ser 'auto' en
+     transitions — necesita un número concreto. 3000px es seguro porque
+     el contenido real nunca llega ahí; CSS no renderiza espacio vacío. */
+  max-height: 3000px;
+}
+
+/* flex: 1 hace que la info ocupe todo el espacio disponible entre
+   el drag handle (izquierda) y los botones de acción (derecha).
+   Sin esto, space-between distribuye el espacio de forma desigual
+   según el largo del contenido de cada lección. */
+.admin-lesson-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .admin-lesson-info h4 {
@@ -2010,8 +2031,31 @@ input:checked+.slider .icon-moon {
   border-bottom: 1px solid var(--border);
 }
 
+/* Edit Course Page: top row (course data + thumbnail side by side on desktop) */
+.edit-course-top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+/* Dentro del top-row, cada caja se estira en altura (stretch).
+   Flex column + el botón con margin-top: auto lo empuja al fondo,
+   así ambos botones quedan alineados sin importar el contenido. */
+.edit-course-top-row > .admin-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-course-top-row > .admin-form > button,
+.edit-course-top-row > .admin-form > form > button:last-child {
+  margin-top: auto;
+}
+
 /* Responsive admin */
 @media (max-width: 768px) {
+  .edit-course-top-row {
+    grid-template-columns: 1fr;
+  }
   .admin-page {
     padding: 1.5rem 1rem 3rem;
   }

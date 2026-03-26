@@ -70,14 +70,10 @@ function SortableLessonItem({
         // CSS.Transform.toString convierte el objeto {x, y, scaleX, scaleY}
         // al string que CSS entiende: 'translate3d(0px, -40px, 0) scaleY(1)'
         transform: CSS.Transform.toString(transform),
-        // Cuando isDragging es true, forzamos 'none' para anular el
-        // 'transition: all 0.3s' del CSS de .admin-lesson-item.
-        // Sin esto, el elemento arrastrado tendría lag de 0.3s siguiendo
-        // al cursor, confundiendo la detección de colisiones de dnd-kit.
-        // Cuando no arrastramos, usamos el valor de dnd-kit (slide de otros ítems)
-        // o undefined para dejar que el CSS de la clase controle.
+        // Cuando isDragging: 'none' para que siga al cursor sin delay.
+        // Cuando no: usamos la transition de dnd-kit para animar el slide
+        // suave de los otros items abriéndole paso al arrastrado.
         transition: isDragging ? 'none' : (transition ?? undefined),
-        opacity: isDragging ? 0.4 : 1,
         zIndex: isDragging ? 10 : 'auto',
         position: 'relative',
     };
@@ -85,7 +81,7 @@ function SortableLessonItem({
     const isEditing = editingLessonId === lesson.id;
 
     return (
-        <div ref={setNodeRef} style={style} className="admin-lesson-item">
+        <div ref={setNodeRef} style={style} className={`admin-lesson-item ${isDragging ? 'is-dragging' : ''}`}>
             {isEditing ? (
                 <form onSubmit={onUpdateLesson} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -97,13 +93,15 @@ function SortableLessonItem({
                     {/* Solo mostrar campos de video si la lección es tipo class */}
                     {lesson.type !== LessonType.EXAM && (
                         <>
-                            <div className="form-row">
-                                <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
-                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
-                            </div>
                             <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
                                 <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
+                            </div>
+                            <div className="form-row">
+                                {!editLessonForm.isLive && (
+                                    <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
+                                )}
+                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
                             </div>
                         </>
                     )}
@@ -525,11 +523,14 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     }
 
     return (
-        <div className="admin-page" style={{ maxWidth: '860px' }}>
+        <div className="admin-page" style={{ maxWidth: '1100px' }}>
             <Link to="/admin" className="back-link">← Volver al Panel</Link>
 
             {error && <div className="alert alert-error">⚠️ {error}</div>}
             {successMessage && <div className="alert alert-success">✅ {successMessage}</div>}
+
+            {/* Fila superior: datos del curso + miniatura lado a lado en desktop */}
+            <div className="edit-course-top-row">
 
             {/* Sección 1: Editar datos del curso */}
             <div className="admin-form">
@@ -592,7 +593,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             </div>
 
             {/* Sección 2: Gestión de miniatura */}
-            <div className="admin-form" style={{ marginTop: '2rem' }}>
+            <div className="admin-form">
                 <h2 style={{ marginBottom: '0.25rem' }}>Miniatura del curso</h2>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
                     Imagen de portada que aparece en el catálogo. Proporción 16:9 recomendada.
@@ -631,11 +632,13 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     onClick={handleUpdateThumbnail}
                     disabled={isSubmittingThumbnail}
                     className="btn-primary"
-                    style={{ marginTop: '1rem', width: '100%' }}
+                    style={{ width: '100%' }}
                 >
                     {isSubmittingThumbnail ? 'Subiendo...' : course.thumbnailUrl ? 'Reemplazar miniatura' : 'Subir miniatura'}
                 </button>
             </div>
+
+            </div>{/* cierre de edit-course-top-row */}
 
             {/* Sección 4: Lista de lecciones con drag-and-drop */}
             <div className="admin-section" style={{ marginTop: '2.5rem' }}>
@@ -739,20 +742,22 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                             {/* Campos condicionales según tipo */}
                             {lessonForm.type === LessonType.CLASS ? (
                                 <>
-                                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
-                                        <div>
-                                            <label htmlFor="lesson-duration">Duración</label>
-                                            <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} placeholder="Ej: 15:00" />
-                                        </div>
-                                        <div>
-                                            <label htmlFor="lesson-videoUrl">URL del Video</label>
-                                            <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
-                                        </div>
-                                    </div>
                                     <div className="form-group">
                                         <div className="checkbox-group">
                                             <input type="checkbox" id="lesson-isLive" name="isLive" checked={!!lessonForm.isLive} onChange={handleLessonChange} />
                                             <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
+                                        </div>
+                                    </div>
+                                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
+                                        {!lessonForm.isLive && (
+                                            <div>
+                                                <label htmlFor="lesson-duration">Duración</label>
+                                                <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} placeholder="Ej: 15:00" />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <label htmlFor="lesson-videoUrl">URL del Video</label>
+                                            <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
                                         </div>
                                     </div>
                                 </>
