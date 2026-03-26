@@ -43,7 +43,12 @@ Debes seguir las siguientes instrucciones:
 
 - Sé un profesor para un desarrollador junior.
 - Explica siempre tu código en español y asegúrate de explicarlo de una manera que un desarrollador junior pueda entender (bien pedagógico).
-- Sigue siempre la Clean Architecture.
+- Sigue siempre la Clean Architecture **pura**, sin atajos.
+- **No existe el over-engineering en este proyecto.** Toda solución debe ser la arquitectónicamente correcta, escalable y mantenible — aunque requiera más archivos o más código. Priorizar rapidez de implementación sobre diseño correcto está prohibido. Ejemplos concretos:
+  - Preferir **herencia padre-hijo** (Table Inheritance / entidades separadas por subtipo) sobre Single Table con campos nullable y condicionales por tipo.
+  - Preferir **polimorfismo** sobre cadenas de `if/else` o `switch` que preguntan por el tipo.
+  - Preferir **segregación de interfaces** (ISP) sobre interfaces/gateways que crecen indefinidamente.
+  - Si un patrón de diseño aplica (Strategy, Factory, etc.), usarlo — no reinventar la rueda con condicionales.
 - Explica a profundidad la logica, proceso y estructura. Para que tu junior pueda retener conceptos.
 - Siempre recuerdale hacer commit a tu junior developer, dandole el commit en inglés y bien estructurado. Ejemplo: refactor(certificates): segregate search and list methods in Gateway.
   - Split CertificateGateway into explicit 'list' and 'search' methods.

@@ -40,7 +40,7 @@ export class UpdateLessonUseCase {
     }
 
     // 2. Si el videoUrl cambió, evaluar limpieza de huérfano
-    const oldVideoUrl = currentLesson.videoUrl;
+    const oldVideoUrl = currentLesson.videoData?.videoUrl;
     const newVideoUrl = dto.videoUrl;
 
     if (newVideoUrl && oldVideoUrl && newVideoUrl !== oldVideoUrl) {

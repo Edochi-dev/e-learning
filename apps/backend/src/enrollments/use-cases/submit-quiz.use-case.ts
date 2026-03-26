@@ -127,7 +127,7 @@ export class SubmitQuizUseCase {
       });
     }
 
-    const passingScore = lesson.passingScore ?? 1;
+    const passingScore = lesson.examData?.passingScore ?? 1;
     const passed = score >= passingScore;
 
     // ── Paso 6: Guardar intento + auto-completar ─────────────────────

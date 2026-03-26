@@ -27,17 +27,34 @@ export interface QuizQuestion {
     relatedLessonTitle?: string; // Se resuelve en el backend (join); usado para el hint al alumno
 }
 
+// ─── Lesson Data por tipo ─────────────────────────────────────────────
+// Cada tipo de lección tiene datos específicos agrupados en su propia interfaz.
+// Esto evita campos nullable sueltos que "solo aplican si type es X".
+
+export interface VideoLessonData {
+    videoUrl: string;
+    duration?: string;       // Ej: "10:00", "1h 30m". Nullable porque las lecciones en vivo no tienen duración.
+    isLive: boolean;
+}
+
+export interface ExamLessonData {
+    passingScore: number;    // Respuestas correctas mínimas para aprobar
+}
+
+// ─── Lesson (base) ───────────────────────────────────────────────────
+// Campos comunes a TODA lección. Los datos específicos de cada tipo
+// viven en videoData o examData — nunca ambos a la vez.
+// El campo `type` indica cuál de los dos está presente.
+
 export interface Lesson {
     id: string;
     title: string;
     description: string;
-    type: LessonType;         // 'class' (video) o 'exam' (quiz)
-    duration?: string;        // Solo para class — Ej: "10:00", "1h 30m"
-    videoUrl?: string;        // Solo para class — URL del video
-    order: number;            // Posición dentro del curso (0, 1, 2...)
-    isLive: boolean;          // Solo para class — True si es en vivo
-    passingScore?: number;    // Solo para exam — respuestas correctas mínimas para aprobar
-    questions?: QuizQuestion[]; // Solo para exam — preguntas del quiz
+    type: LessonType;
+    order: number;
+    videoData?: VideoLessonData;      // Presente solo si type === 'class'
+    examData?: ExamLessonData;        // Presente solo si type === 'exam'
+    questions?: QuizQuestion[];       // Presente solo si type === 'exam'
 }
 
 export interface Course {
@@ -89,12 +106,14 @@ export interface CreateCoursePayload {
 export interface CreateLessonPayload {
     title: string;
     description: string;
-    type: LessonType;                     // 'class' o 'exam'
-    duration?: string;                    // Solo para class
-    videoUrl?: string;                    // Obligatorio para class, no aplica para exam
-    isLive?: boolean;                     // Solo para class
-    passingScore?: number;                // Solo para exam
-    questions?: CreateQuizQuestionPayload[]; // Solo para exam
+    type: LessonType;
+    // Campos de video (solo cuando type === 'class')
+    videoUrl?: string;
+    duration?: string;
+    isLive?: boolean;
+    // Campos de examen (solo cuando type === 'exam')
+    passingScore?: number;
+    questions?: CreateQuizQuestionPayload[];
 }
 
 export interface CreateQuizQuestionPayload {

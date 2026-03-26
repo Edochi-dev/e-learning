@@ -31,7 +31,7 @@ export const LessonPage = ({ gateway }: LessonPageProps) => {
 
                 <div style={{ marginBottom: '1.5rem' }}>
                     <VideoPlayer
-                        src={currentLesson.videoUrl ?? ''}
+                        src={currentLesson.videoData?.videoUrl ?? ''}
                         title={currentLesson.title}
                         lessonId={currentLesson.id}
                     />

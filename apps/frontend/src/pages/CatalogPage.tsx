@@ -46,9 +46,9 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                 <div className="catalog-featured__content">
                                     <p className="catalog-featured__tag">Programa destacado</p>
                                     <span className="catalog-featured__badge">
-                                        {featured.lessons?.every(l => l.isLive)
+                                        {featured.lessons?.every(l => l.videoData?.isLive)
                                             ? 'Clases en vivo'
-                                            : featured.lessons?.some(l => l.isLive)
+                                            : featured.lessons?.some(l => l.videoData?.isLive)
                                                 ? 'Incluye clases en vivo'
                                                 : 'Clases grabadas'}
                                     </span>
@@ -84,9 +84,9 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                         </div>
                                         <div className="catalog-card__body">
                                             <span className="catalog-card__badge">
-                                                {course.lessons?.every(l => l.isLive)
+                                                {course.lessons?.every(l => l.videoData?.isLive)
                                                     ? 'Clases en vivo'
-                                                    : course.lessons?.some(l => l.isLive)
+                                                    : course.lessons?.some(l => l.videoData?.isLive)
                                                         ? 'Incluye clases en vivo'
                                                         : 'Clases grabadas'}
                                             </span>

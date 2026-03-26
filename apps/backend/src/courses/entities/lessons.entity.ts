@@ -4,14 +4,36 @@ import {
   Column,
   ManyToOne,
   OneToMany,
+  OneToOne,
   Index,
 } from 'typeorm';
-import { Lesson as ILesson, LessonType } from '@maris-nails/shared';
+import { LessonType } from '@maris-nails/shared';
 import { Course } from './course.entity';
 import { QuizQuestion } from './quiz-question.entity';
+import { VideoLesson } from './video-lesson.entity';
+import { ExamLesson } from './exam-lesson.entity';
 
+/**
+ * Lesson — Entidad BASE de toda lección.
+ *
+ * Solo contiene los campos comunes a TODOS los tipos de lección:
+ * title, description, type, order.
+ *
+ * Los datos específicos de cada tipo viven en tablas hijas:
+ *   - type='class' → VideoLesson (videoUrl, duration, isLive)
+ *   - type='exam'  → ExamLesson (passingScore)
+ *
+ * Esto es Joined Table Inheritance:
+ *   lessons ──1:1──> video_lessons   (si type='class')
+ *   lessons ──1:1──> exam_lessons    (si type='exam')
+ *
+ * cascade: true  → al guardar una Lesson con videoData/examData,
+ *                   TypeORM guarda la fila hija automáticamente.
+ * eager: true    → al cargar una Lesson, TypeORM hace JOIN con
+ *                   las tablas hijas y devuelve los datos completos.
+ */
 @Entity('lessons')
-export class Lesson implements ILesson {
+export class Lesson {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -21,34 +43,28 @@ export class Lesson implements ILesson {
   @Column('text')
   description: string;
 
-  // Discriminador de tipo: 'class' (video) o 'exam' (quiz).
-  // Default 'class' para que las lecciones existentes en producción
-  // no se rompan al correr la migración — simplemente obtienen type='class'.
+  // Discriminador: indica qué tabla hija tiene los datos específicos.
   // Default 'class' como string literal porque el CLI de TypeORM (CommonJS)
   // no resuelve los imports del shared package en runtime.
   @Column({ default: 'class' })
   type: LessonType;
 
-  @Column({ nullable: true })
-  duration: string;
-
-  // Ahora nullable porque las lecciones tipo 'exam' no tienen video.
-  // Las lecciones existentes ya tienen valor, así que no pierden nada.
-  @Column({ nullable: true })
-  videoUrl: string;
-
   @Column({ default: 0 })
   order: number;
 
-  @Column({ default: false })
-  isLive: boolean;
+  // ── Relaciones a tablas hijas ────────────────────────────────────────
+  // Solo una de las dos estará presente según el valor de `type`.
 
-  // Solo para tipo 'exam': cuántas respuestas correctas necesita el alumno para aprobar.
-  @Column({ type: 'int', nullable: true })
-  passingScore: number;
+  @OneToOne(() => VideoLesson, (v) => v.lesson, { cascade: true, eager: true })
+  videoData: VideoLesson;
 
-  // cascade: true → al guardar una Lesson con questions[], TypeORM
-  // automáticamente guarda las QuizQuestion (y sus QuizOption por su propio cascade).
+  @OneToOne(() => ExamLesson, (e) => e.lesson, { cascade: true, eager: true })
+  examData: ExamLesson;
+
+  // ── Relaciones existentes ────────────────────────────────────────────
+
+  // Las preguntas del quiz siguen referenciando la tabla lessons (no exam_lessons)
+  // porque el FK quiz_questions.lessonId ya apunta aquí.
   @OneToMany(() => QuizQuestion, (q) => q.lesson, { cascade: true })
   questions: QuizQuestion[];
 

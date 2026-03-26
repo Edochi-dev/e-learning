@@ -223,9 +223,9 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                         </div>
                                         <div className="preview-card__body">
                                             <span className="preview-card__badge">
-                                                {course.lessons?.every(l => l.isLive)
+                                                {course.lessons?.every(l => l.videoData?.isLive)
                                                     ? 'Clases en vivo'
-                                                    : course.lessons?.some(l => l.isLive)
+                                                    : course.lessons?.some(l => l.videoData?.isLive)
                                                         ? 'Incluye clases en vivo'
                                                         : 'Clases grabadas'}
                                             </span>

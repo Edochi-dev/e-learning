@@ -42,11 +42,9 @@ export class DeleteCourseUseCase {
     // solo procesamos el archivo una vez.
     const localVideoUrls = new Set<string>();
     for (const lesson of course.lessons ?? []) {
-      if (
-        lesson.videoUrl &&
-        this.fileStorageGateway.isLocalFile(lesson.videoUrl)
-      ) {
-        localVideoUrls.add(lesson.videoUrl);
+      const videoUrl = lesson.videoData?.videoUrl;
+      if (videoUrl && this.fileStorageGateway.isLocalFile(videoUrl)) {
+        localVideoUrls.add(videoUrl);
       }
     }
 

@@ -17,6 +17,8 @@ import { CourseGateway } from './gateways/course.gateway';
 import { CoursesRepository } from './courses.repository';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
+import { VideoLesson } from './entities/video-lesson.entity';
+import { ExamLesson } from './entities/exam-lesson.entity';
 import { QuizQuestion } from './entities/quiz-question.entity';
 import { QuizOption } from './entities/quiz-option.entity';
 import { StorageModule } from '../storage/storage.module';
@@ -35,7 +37,7 @@ import { StorageModule } from '../storage/storage.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Course, Lesson, QuizQuestion, QuizOption]),
+    TypeOrmModule.forFeature([Course, Lesson, VideoLesson, ExamLesson, QuizQuestion, QuizOption]),
     StorageModule, // Importamos para que FileStorageGateway esté disponible
   ],
   controllers: [CoursesController],

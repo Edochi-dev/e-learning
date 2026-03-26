@@ -160,15 +160,15 @@ function SortableLessonItem({
                         <div className="admin-lesson-meta">
                             {lesson.type === LessonType.EXAM ? (
                                 <>
-                                    <span>✅ Mínimo para aprobar: {lesson.passingScore}</span>
+                                    <span>✅ Mínimo para aprobar: {lesson.examData?.passingScore}</span>
                                     <span>❓ {lesson.questions?.length ?? 0} preguntas</span>
                                 </>
                             ) : (
                                 <>
-                                    <span>⏱ {lesson.duration}</span>
-                                    <span>🎬 {lesson.videoUrl}</span>
-                                    <span className={`lesson-mode-badge ${lesson.isLive ? 'live' : 'recorded'}`}>
-                                        {lesson.isLive ? '🔴 En vivo' : '📼 Grabado'}
+                                    <span>⏱ {lesson.videoData?.duration}</span>
+                                    <span>🎬 {lesson.videoData?.videoUrl}</span>
+                                    <span className={`lesson-mode-badge ${lesson.videoData?.isLive ? 'live' : 'recorded'}`}>
+                                        {lesson.videoData?.isLive ? '🔴 En vivo' : '📼 Grabado'}
                                     </span>
                                 </>
                             )}
@@ -465,14 +465,10 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         setEditLessonForm({
             title: lesson.title,
             description: lesson.description,
-            duration: lesson.duration,
-            videoUrl: lesson.videoUrl,
-            isLive: lesson.isLive,
-            // Para exámenes: cargar passingScore y convertir las questions de la BD
-            // al formato CreateQuizQuestionPayload que espera el QuizQuestionBuilder.
-            // Las questions de la BD traen campos extra (id, order, lesson) que el
-            // builder no necesita — solo pasamos text, relatedLessonId y options.
-            passingScore: lesson.passingScore,
+            duration: lesson.videoData?.duration,
+            videoUrl: lesson.videoData?.videoUrl,
+            isLive: lesson.videoData?.isLive,
+            passingScore: lesson.examData?.passingScore,
             questions: lesson.questions?.map(q => ({
                 text: q.text,
                 relatedLessonId: q.relatedLessonId,

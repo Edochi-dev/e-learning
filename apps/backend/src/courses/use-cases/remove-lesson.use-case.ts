@@ -32,7 +32,7 @@ export class RemoveLessonUseCase {
   async execute(lessonId: string): Promise<void> {
     // Paso 1: leer el videoUrl ANTES de borrar (después ya no existirá en la DB)
     const lesson = await this.courseGateway.findLesson(lessonId);
-    const videoUrl = lesson?.videoUrl ?? null;
+    const videoUrl = lesson?.videoData?.videoUrl ?? null;
 
     // Paso 2: borrar la lección — si falla aquí, el archivo sigue intacto ✅
     await this.courseGateway.removeLesson(lessonId);

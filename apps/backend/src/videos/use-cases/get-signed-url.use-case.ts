@@ -25,8 +25,9 @@ export class GetSignedUrlUseCase {
       throw new NotFoundException(`Lección con id "${lessonId}" no encontrada`);
     }
 
-    // Si la lección no tiene videoUrl (es un examen), no hay video que firmar
-    if (!lesson.videoUrl) {
+    // Si la lección no tiene videoData (es un examen), no hay video que firmar
+    const videoUrl = lesson.videoData?.videoUrl;
+    if (!videoUrl) {
       throw new NotFoundException('Esta lección no tiene video');
     }
 
@@ -35,15 +36,15 @@ export class GetSignedUrlUseCase {
     //    Esto cubre el caso en que el admin guardó el URL completo en lugar de la ruta relativa.
     let cleanPath: string;
     try {
-      cleanPath = new URL(lesson.videoUrl).pathname;
+      cleanPath = new URL(videoUrl).pathname;
     } catch {
       // Si no es un URL válido con host, ya es una ruta relativa
-      cleanPath = lesson.videoUrl;
+      cleanPath = videoUrl;
     }
 
     // 3. Si no apunta a nuestro directorio estático, es un video externo (YouTube, Vimeo...)
     if (!cleanPath.startsWith('/static/')) {
-      return { url: lesson.videoUrl, expires: 0 };
+      return { url: videoUrl, expires: 0 };
     }
 
     // 4. Extraer la ruta relativa del video

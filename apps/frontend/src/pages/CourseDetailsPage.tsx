@@ -95,7 +95,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
 
     const sortedLessons = [...(course.lessons ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const totalDuration = sortedLessons.reduce((sum, l) => {
-        const parts = l.duration?.split(':') ?? [];
+        const parts = l.videoData?.duration?.split(':') ?? [];
         return sum + (parseInt(parts[0] ?? '0', 10) * 60 + parseInt(parts[1] ?? '0', 10));
     }, 0);
     const durationHours = Math.floor(totalDuration / 3600);
@@ -136,7 +136,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                             <span className="cd-stat__icon">⏱️</span>
                             {durationLabel}
                         </span>
-                        {sortedLessons.some(l => l.isLive) && (
+                        {sortedLessons.some(l => l.videoData?.isLive) && (
                             <span className="cd-stat cd-stat--live">
                                 <span className="cd-stat__icon">🔴</span>
                                 Incluye sesión en vivo
@@ -168,12 +168,12 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                                         <div className="cd-timeline__header">
                                             <h3 className="cd-timeline__title">{lesson.title}</h3>
                                             <div className="cd-timeline__meta">
-                                                <span className={`cd-timeline__badge ${lesson.isLive ? 'cd-timeline__badge--live' : 'cd-timeline__badge--recorded'}`}>
-                                                    {lesson.isLive ? 'En vivo' : 'Grabada'}
+                                                <span className={`cd-timeline__badge ${lesson.videoData?.isLive ? 'cd-timeline__badge--live' : 'cd-timeline__badge--recorded'}`}>
+                                                    {lesson.videoData?.isLive ? 'En vivo' : 'Grabada'}
                                                 </span>
-                                                {!lesson.isLive && lesson.duration && (
+                                                {!lesson.videoData?.isLive && lesson.videoData?.duration && (
                                                     <span className="cd-timeline__duration">
-                                                        {lesson.duration}
+                                                        {lesson.videoData.duration}
                                                     </span>
                                                 )}
                                             </div>

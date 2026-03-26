@@ -5,6 +5,8 @@ import { CourseGateway } from './gateways/course.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
+import { VideoLesson } from './entities/video-lesson.entity';
+import { ExamLesson } from './entities/exam-lesson.entity';
 import { QuizQuestion } from './entities/quiz-question.entity';
 
 /**
@@ -23,6 +25,10 @@ export class CoursesRepository implements CourseGateway {
     private readonly courseRepository: Repository<Course>,
     @InjectRepository(Lesson)
     private readonly lessonRepository: Repository<Lesson>,
+    @InjectRepository(VideoLesson)
+    private readonly videoLessonRepository: Repository<VideoLesson>,
+    @InjectRepository(ExamLesson)
+    private readonly examLessonRepository: Repository<ExamLesson>,
     @InjectRepository(QuizQuestion)
     private readonly quizQuestionRepository: Repository<QuizQuestion>,
   ) {}
@@ -38,7 +44,7 @@ export class CoursesRepository implements CourseGateway {
 
   async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
     const [data, total] = await this.courseRepository.findAndCount({
-      relations: ['lessons'],
+      relations: ['lessons', 'lessons.videoData', 'lessons.examData'],
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -50,7 +56,7 @@ export class CoursesRepository implements CourseGateway {
       where: { id },
       // Cargamos lessons + sus questions + options para que el admin vea el quiz completo.
       // Para el alumno, el Use Case filtra isCorrect antes de devolver.
-      relations: ['lessons', 'lessons.questions', 'lessons.questions.options'],
+      relations: ['lessons', 'lessons.videoData', 'lessons.examData', 'lessons.questions', 'lessons.questions.options'],
       order: {
         lessons: {
           order: 'ASC',
@@ -94,19 +100,40 @@ export class CoursesRepository implements CourseGateway {
 
   async addLesson(
     courseId: string,
-    lessonData: Partial<Lesson>,
+    lessonData: Partial<Lesson> & Record<string, any>,
   ): Promise<Lesson> {
     const course = await this.findOne(courseId);
     if (!course) {
       throw new NotFoundException(`Course with id ${courseId} not found`);
     }
 
-    // La nueva lección va al final: su order es igual al total actual de lecciones
+    // Crear la entidad base con solo los campos comunes
     const lesson = this.lessonRepository.create({
-      ...lessonData,
+      title: lessonData.title,
+      description: lessonData.description,
+      type: lessonData.type,
       order: course.lessons?.length ?? 0,
       course,
     });
+
+    // Crear la entidad hija según el tipo.
+    // cascade: true en Lesson hace que save() persista ambas filas.
+    if (lessonData.type === 'class') {
+      lesson.videoData = this.videoLessonRepository.create({
+        videoUrl: lessonData.videoUrl,
+        duration: lessonData.duration,
+        isLive: lessonData.isLive ?? false,
+      });
+    } else if (lessonData.type === 'exam') {
+      lesson.examData = this.examLessonRepository.create({
+        passingScore: lessonData.passingScore,
+      });
+      // Las questions vienen en lessonData y se guardan por cascade del @OneToMany
+      if (lessonData.questions) {
+        lesson.questions = lessonData.questions;
+      }
+    }
+
     return this.lessonRepository.save(lesson);
   }
 
@@ -129,33 +156,42 @@ export class CoursesRepository implements CourseGateway {
   /**
    * Actualiza los campos de una lección existente.
    *
-   * Si data incluye questions[] (edición de un examen), usamos la estrategia
-   * "borrar todo y reinsertar": eliminamos todas las preguntas viejas y dejamos
-   * que el cascade de TypeORM inserte las nuevas al guardar.
+   * Actualiza campos base (title, description) directamente en la entidad Lesson.
+   * Actualiza campos del hijo (videoUrl, passingScore, etc.) en la entidad hija
+   * correspondiente (VideoLesson o ExamLesson).
    *
-   * ¿Por qué borrar y reinsertar en vez de hacer un diff pregunta por pregunta?
-   * Porque para 5-20 preguntas la diferencia de rendimiento es despreciable,
-   * y el código queda mucho más simple y menos propenso a bugs.
-   *
-   * El flujo cuando hay questions:
-   * 1. DELETE FROM quiz_questions WHERE lessonId = X
-   *    → CASCADE de la DB borra automáticamente las quiz_options asociadas
-   * 2. Object.assign() pone las questions nuevas en la entidad
-   * 3. save() con cascade: true inserta las questions (y sus options) nuevas
+   * Para questions: estrategia "borrar todo y reinsertar".
    */
-  async updateLesson(lessonId: string, data: Partial<Lesson>): Promise<Lesson> {
-    const lesson = await this.findLesson(lessonId);
+  async updateLesson(lessonId: string, data: Partial<Lesson> & Record<string, any>): Promise<Lesson> {
+    const lesson = await this.lessonRepository.findOne({
+      where: { id: lessonId },
+      relations: ['videoData', 'examData'],
+    });
     if (!lesson) {
       throw new NotFoundException(`Lesson with id ${lessonId} not found`);
     }
 
-    // Si vienen preguntas nuevas, borrar las viejas primero.
-    // Sin esto, TypeORM insertaría las nuevas SIN borrar las viejas → duplicados.
-    if (data.questions) {
-      await this.quizQuestionRepository.delete({ lesson: { id: lessonId } });
+    // Actualizar campos base
+    if (data.title !== undefined) lesson.title = data.title;
+    if (data.description !== undefined) lesson.description = data.description;
+
+    // Actualizar campos del hijo según el tipo
+    if (lesson.videoData) {
+      if (data.videoUrl !== undefined) lesson.videoData.videoUrl = data.videoUrl;
+      if (data.duration !== undefined) lesson.videoData.duration = data.duration;
+      if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;
     }
 
-    Object.assign(lesson, data);
+    if (lesson.examData) {
+      if (data.passingScore !== undefined) lesson.examData.passingScore = data.passingScore;
+    }
+
+    // Reemplazo de preguntas (borrar viejas, insertar nuevas por cascade)
+    if (data.questions) {
+      await this.quizQuestionRepository.delete({ lesson: { id: lessonId } });
+      lesson.questions = data.questions;
+    }
+
     return this.lessonRepository.save(lesson);
   }
 
@@ -176,18 +212,16 @@ export class CoursesRepository implements CourseGateway {
 
   /**
    * ¿Alguna OTRA lección (distinta a excludeLessonId) usa este videoUrl?
-   *
-   * Se usa en UPDATE: la lección sigue viva en la DB mientras actualizamos,
-   * por eso excluimos su propio ID para no contarse a sí misma.
+   * Ahora consulta la tabla video_lessons donde vive videoUrl.
    */
   async isVideoUrlReferenced(
     videoUrl: string,
     excludeLessonId: string,
   ): Promise<boolean> {
-    const count = await this.lessonRepository.count({
+    const count = await this.videoLessonRepository.count({
       where: {
         videoUrl,
-        id: Not(excludeLessonId),
+        lessonId: Not(excludeLessonId),
       },
     });
     return count > 0;
@@ -195,12 +229,9 @@ export class CoursesRepository implements CourseGateway {
 
   /**
    * ¿Alguna lección (cualquiera) usa este videoUrl?
-   *
-   * Se usa en DELETE: la lección ya fue borrada antes de llamar este método,
-   * así que no hay nada que excluir — una sola query sin condiciones extra.
    */
   async isVideoUrlInUse(videoUrl: string): Promise<boolean> {
-    const count = await this.lessonRepository.count({ where: { videoUrl } });
+    const count = await this.videoLessonRepository.count({ where: { videoUrl } });
     return count > 0;
   }
 
@@ -228,7 +259,7 @@ export class CoursesRepository implements CourseGateway {
   async findLessonWithQuestions(lessonId: string): Promise<Lesson | null> {
     return this.lessonRepository.findOne({
       where: { id: lessonId },
-      relations: ['questions', 'questions.options'],
+      relations: ['videoData', 'examData', 'questions', 'questions.options'],
       order: { questions: { order: 'ASC' } },
     });
   }

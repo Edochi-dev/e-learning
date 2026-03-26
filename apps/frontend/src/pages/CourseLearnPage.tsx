@@ -248,7 +248,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
 
     // Los videos de YouTube no permiten tracking desde fuera del iframe,
     // así que los exoneramos del requisito de progreso.
-    const isYoutubeLesson = activeLesson.videoUrl?.includes('youtube.com') || activeLesson.videoUrl?.includes('youtu.be');
+    const isYoutubeLesson = activeLesson.videoData?.videoUrl?.includes('youtube.com') || activeLesson.videoData?.videoUrl?.includes('youtu.be');
     const hasWatchedEnough = isExamLesson || isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
 
     // Navegación entre lecciones
@@ -283,7 +283,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                     <>
                         <div className="course-learn__video">
                             <VideoPlayer
-                                src={activeLesson.videoUrl ?? ''}
+                                src={activeLesson.videoData?.videoUrl ?? ''}
                                 title={activeLesson.title}
                                 lessonId={activeLesson.id}
                                 onWatchProgress={handleWatchProgress}
