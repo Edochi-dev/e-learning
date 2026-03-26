@@ -44,14 +44,16 @@ interface SortableLessonItemProps {
     onStartEditing: (lesson: Lesson) => void;
     onCancelEditing: () => void;
     onEditChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+    onEditFormUpdate: (partial: Partial<UpdateLessonPayload>) => void;
     onUpdateLesson: (e: React.FormEvent) => void;
     onRemoveLesson: (id: string) => void;
+    classLessons: Lesson[];
 }
 
 function SortableLessonItem({
     lesson, index, editingLessonId, editLessonForm,
     isSubmittingLesson, onStartEditing, onCancelEditing,
-    onEditChange, onUpdateLesson, onRemoveLesson,
+    onEditChange, onEditFormUpdate, onUpdateLesson, onRemoveLesson, classLessons,
 }: SortableLessonItemProps) {
     // useSortable le da a este elemento sus superpoderes de drag-and-drop.
     // - attributes: aria-* para accesibilidad
@@ -105,13 +107,28 @@ function SortableLessonItem({
                             </div>
                         </>
                     )}
-                    {/* Para exámenes: info de solo lectura (las preguntas se editan recreando) */}
+                    {/* Para exámenes: editor de passingScore + preguntas */}
                     {lesson.type === LessonType.EXAM && (
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
-                            📝 {lesson.questions?.length ?? 0} preguntas · Mínimo para aprobar: {lesson.passingScore}
-                            <br />
-                            <span style={{ fontSize: '0.78rem' }}>Para editar las preguntas, elimina este examen y créalo de nuevo.</span>
-                        </div>
+                        <>
+                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                                <label>Respuestas correctas para aprobar</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={editLessonForm.passingScore ?? ''}
+                                    onChange={(e) => onEditFormUpdate({ passingScore: Number(e.target.value) })}
+                                    required
+                                />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                                <label>Preguntas del examen</label>
+                                <QuizQuestionBuilder
+                                    questions={editLessonForm.questions ?? []}
+                                    onChange={(questions) => onEditFormUpdate({ questions })}
+                                    classLessons={classLessons}
+                                />
+                            </div>
+                        </>
                     )}
                     <div className="admin-actions">
                         <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
@@ -453,6 +470,19 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             duration: lesson.duration,
             videoUrl: lesson.videoUrl,
             isLive: lesson.isLive,
+            // Para exámenes: cargar passingScore y convertir las questions de la BD
+            // al formato CreateQuizQuestionPayload que espera el QuizQuestionBuilder.
+            // Las questions de la BD traen campos extra (id, order, lesson) que el
+            // builder no necesita — solo pasamos text, relatedLessonId y options.
+            passingScore: lesson.passingScore,
+            questions: lesson.questions?.map(q => ({
+                text: q.text,
+                relatedLessonId: q.relatedLessonId,
+                options: q.options?.map(o => ({
+                    text: o.text,
+                    isCorrect: o.isCorrect,
+                })) ?? [],
+            })),
         });
     };
 
@@ -646,8 +676,10 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                         onStartEditing={startEditing}
                                         onCancelEditing={cancelEditing}
                                         onEditChange={handleEditLessonChange}
+                                        onEditFormUpdate={(partial) => setEditLessonForm(prev => ({ ...prev, ...partial }))}
                                         onUpdateLesson={handleUpdateLesson}
                                         onRemoveLesson={handleRemoveLesson}
+                                        classLessons={lessons.filter(l => (l.type ?? LessonType.CLASS) === LessonType.CLASS)}
                                     />
                                 ))}
                             </div>

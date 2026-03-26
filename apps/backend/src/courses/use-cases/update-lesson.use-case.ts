@@ -47,7 +47,16 @@ export class UpdateLessonUseCase {
       await this.cleanupOrphanedFile(oldVideoUrl, lessonId);
     }
 
-    // 3. Actualizar la lección
+    // 3. Si vienen preguntas, asignar el campo order según su posición en el array.
+    //    El frontend las envía en el orden correcto, pero no manda el campo order.
+    //    Nosotros lo calculamos aquí para que la BD las devuelva siempre ordenadas.
+    if (dto.questions) {
+      dto.questions.forEach((q, index) => {
+        (q as any).order = index;
+      });
+    }
+
+    // 4. Actualizar la lección
     return this.courseGateway.updateLesson(
       lessonId,
       dto as unknown as Partial<Lesson>,

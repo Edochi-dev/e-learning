@@ -5,6 +5,7 @@ import { CourseGateway } from './gateways/course.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
+import { QuizQuestion } from './entities/quiz-question.entity';
 
 /**
  * CoursesRepository — Implementación concreta del CourseGateway
@@ -22,6 +23,8 @@ export class CoursesRepository implements CourseGateway {
     private readonly courseRepository: Repository<Course>,
     @InjectRepository(Lesson)
     private readonly lessonRepository: Repository<Lesson>,
+    @InjectRepository(QuizQuestion)
+    private readonly quizQuestionRepository: Repository<QuizQuestion>,
   ) {}
 
   // ==========================================
@@ -125,13 +128,31 @@ export class CoursesRepository implements CourseGateway {
 
   /**
    * Actualiza los campos de una lección existente.
-   * Object.assign() fusiona los datos nuevos con los existentes,
-   * y save() los persiste en la base de datos.
+   *
+   * Si data incluye questions[] (edición de un examen), usamos la estrategia
+   * "borrar todo y reinsertar": eliminamos todas las preguntas viejas y dejamos
+   * que el cascade de TypeORM inserte las nuevas al guardar.
+   *
+   * ¿Por qué borrar y reinsertar en vez de hacer un diff pregunta por pregunta?
+   * Porque para 5-20 preguntas la diferencia de rendimiento es despreciable,
+   * y el código queda mucho más simple y menos propenso a bugs.
+   *
+   * El flujo cuando hay questions:
+   * 1. DELETE FROM quiz_questions WHERE lessonId = X
+   *    → CASCADE de la DB borra automáticamente las quiz_options asociadas
+   * 2. Object.assign() pone las questions nuevas en la entidad
+   * 3. save() con cascade: true inserta las questions (y sus options) nuevas
    */
   async updateLesson(lessonId: string, data: Partial<Lesson>): Promise<Lesson> {
     const lesson = await this.findLesson(lessonId);
     if (!lesson) {
       throw new NotFoundException(`Lesson with id ${lessonId} not found`);
+    }
+
+    // Si vienen preguntas nuevas, borrar las viejas primero.
+    // Sin esto, TypeORM insertaría las nuevas SIN borrar las viejas → duplicados.
+    if (data.questions) {
+      await this.quizQuestionRepository.delete({ lesson: { id: lessonId } });
     }
 
     Object.assign(lesson, data);
