@@ -4573,3 +4573,101 @@ input:checked+.slider .icon-moon {
     padding: 0.5rem 0.65rem;
   }
 }
+
+/* ============================================================================
+   TOAST NOTIFICATIONS
+   Notificaciones flotantes fijas en el viewport.
+   Siempre visibles sin importar el scroll del usuario.
+   ============================================================================ */
+
+/* Contenedor fixed: se ancla al top-center del viewport.
+   pointer-events: none evita que el contenedor invisible bloquee clicks.
+   Cada toast individual reactiva pointer-events para ser interactivo. */
+.toast-container {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+  width: max-content;
+  max-width: 90vw;
+}
+
+/* Card del toast: entra deslizándose desde arriba */
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.25rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.88rem;
+  font-weight: 500;
+  font-family: var(--font-body);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+  animation: toastSlideIn 0.35s var(--ease-out);
+}
+
+.toast--success {
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  color: #166534;
+  border: 1px solid rgba(22, 101, 52, 0.15);
+}
+
+.toast--error {
+  background: linear-gradient(135deg, #fff0f0, #ffe8e8);
+  color: #991b1b;
+  border: 1px solid rgba(153, 27, 27, 0.15);
+}
+
+[data-theme='dark'] .toast--success {
+  background: linear-gradient(135deg, #14532d, #166534);
+  color: #bbf7d0;
+  border-color: rgba(187, 247, 208, 0.15);
+}
+
+[data-theme='dark'] .toast--error {
+  background: linear-gradient(135deg, #7f1d1d, #991b1b);
+  color: #fecaca;
+  border-color: rgba(254, 202, 202, 0.15);
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.toast__message {
+  line-height: 1.4;
+}
+
+/* Animación de salida */
+.toast--exit {
+  animation: toastSlideOut 0.3s var(--ease-out) forwards;
+}
+
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+}

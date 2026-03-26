@@ -6,6 +6,7 @@ import type { CourseGateway } from '../../gateways/CourseGateway';
 import { LessonType, type Course, type Lesson, type UpdateCoursePayload, type CreateLessonPayload, type UpdateLessonPayload, type CreateQuizQuestionPayload } from '@maris-nails/shared';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import { QuizQuestionBuilder } from '../../components/QuizQuestionBuilder';
+import { useToast } from '../../components/Toast';
 import {
     DndContext,
     closestCenter,
@@ -207,8 +208,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     // Estado general
     const [course, setCourse] = useState<Course | null>(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const toast = useToast();
 
     // Estado LOCAL de las lecciones (separado de course para el optimistic update del drag)
     const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -279,7 +279,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 features: data.features ?? [],
             });
         } catch (err: any) {
-            setError(err.message || 'Error al cargar el curso');
+            toast.error(err.message || 'Error al cargar el curso');
         } finally {
             setIsLoading(false);
         }
@@ -330,14 +330,14 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         const file = await thumbnailRef.current?.getCroppedFile();
         if (!file) return;
         setIsSubmittingThumbnail(true);
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             const updated = await courseGateway.updateThumbnail(courseId, file);
             setCourse(updated);
-            setSuccessMessage('¡Miniatura actualizada!');
+            toast.success('¡Miniatura actualizada!');
         } catch (err: any) {
-            setError(err.message || 'Error al actualizar la miniatura');
+            toast.error(err.message || 'Error al actualizar la miniatura');
         } finally {
             setIsSubmittingThumbnail(false);
         }
@@ -347,14 +347,14 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         if (!courseId) return;
         if (!window.confirm('¿Eliminar la miniatura del curso?')) return;
         setIsDeletingThumbnail(true);
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             await courseGateway.deleteThumbnail(courseId);
             setCourse(prev => prev ? { ...prev, thumbnailUrl: undefined } : prev);
-            setSuccessMessage('Miniatura eliminada.');
+            toast.success('Miniatura eliminada.');
         } catch (err: any) {
-            setError(err.message || 'Error al eliminar la miniatura');
+            toast.error(err.message || 'Error al eliminar la miniatura');
         } finally {
             setIsDeletingThumbnail(false);
         }
@@ -364,13 +364,13 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         e.preventDefault();
         if (!courseId) return;
         setIsSubmittingCourse(true);
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             await courseGateway.update(courseId, courseForm);
-            setSuccessMessage('¡Curso actualizado correctamente!');
+            toast.success('¡Curso actualizado correctamente!');
         } catch (err: any) {
-            setError(err.message || 'Error al actualizar el curso');
+            toast.error(err.message || 'Error al actualizar el curso');
         } finally {
             setIsSubmittingCourse(false);
         }
@@ -399,17 +399,17 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         // los ítems "regresan" visualmente por un frame antes de que React pinte el nuevo orden.
         flushSync(() => {
             setLessons(reordered);
-            setError(null);
-            setSuccessMessage(null);
+
+
         });
 
         try {
             await courseGateway.reorderLessons(courseId, reordered.map(l => l.id));
-            setSuccessMessage('¡Orden guardado!');
+            toast.success('¡Orden guardado!');
         } catch (err: any) {
             // Revertir al orden anterior si el backend falló
             setLessons(previousLessons);
-            setError(err.message || 'Error al guardar el orden');
+            toast.error(err.message || 'Error al guardar el orden');
         }
     };
 
@@ -427,16 +427,16 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         e.preventDefault();
         if (!courseId) return;
         setIsSubmittingLesson(true);
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             await courseGateway.addLesson(courseId, lessonForm);
             setLessonForm({ title: '', description: '', type: LessonType.CLASS, duration: '', videoUrl: '', isLive: false, passingScore: undefined, questions: [] });
             setIsAddingLesson(false); // Cerrar el panel tras agregar
-            setSuccessMessage('¡Lección agregada exitosamente!');
+            toast.success('¡Lección agregada exitosamente!');
             await loadCourse();
         } catch (err: any) {
-            setError(err.message || 'Error al agregar la lección');
+            toast.error(err.message || 'Error al agregar la lección');
         } finally {
             setIsSubmittingLesson(false);
         }
@@ -447,14 +447,14 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     const handleRemoveLesson = async (lessonId: string) => {
         if (!courseId) return;
         if (!window.confirm('¿Estás seguro de que quieres eliminar esta lección?')) return;
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             await courseGateway.removeLesson(courseId, lessonId);
-            setSuccessMessage('Lección eliminada.');
+            toast.success('Lección eliminada.');
             await loadCourse();
         } catch (err: any) {
-            setError(err.message || 'Error al eliminar la lección');
+            toast.error(err.message || 'Error al eliminar la lección');
         }
     };
 
@@ -498,15 +498,15 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         e.preventDefault();
         if (!courseId || !editingLessonId) return;
         setIsSubmittingLesson(true);
-        setError(null);
-        setSuccessMessage(null);
+
+
         try {
             await courseGateway.updateLesson(courseId, editingLessonId, editLessonForm);
             setEditingLessonId(null);
-            setSuccessMessage('¡Lección actualizada!');
+            toast.success('¡Lección actualizada!');
             await loadCourse();
         } catch (err: any) {
-            setError(err.message || 'Error al actualizar la lección');
+            toast.error(err.message || 'Error al actualizar la lección');
         } finally {
             setIsSubmittingLesson(false);
         }
@@ -526,8 +526,6 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         <div className="admin-page" style={{ maxWidth: '1100px' }}>
             <Link to="/admin" className="back-link">← Volver al Panel</Link>
 
-            {error && <div className="alert alert-error">⚠️ {error}</div>}
-            {successMessage && <div className="alert alert-success">✅ {successMessage}</div>}
 
             {/* Fila superior: datos del curso + miniatura lado a lado en desktop */}
             <div className="edit-course-top-row">

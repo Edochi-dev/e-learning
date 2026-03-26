@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary } from '../../gateways/CertificateGateway';
+import { useToast } from '../../components/Toast';
 
 interface Props {
     gateway: CertificateGateway;
@@ -13,11 +14,11 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
     const [generated, setGenerated] = useState<GeneratedCertificateSummary[]>([]);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const toast = useToast();
 
     useEffect(() => {
         gateway.listTemplates().then(setTemplates).catch((err: unknown) => {
-            setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
+            toast.error(err instanceof Error ? err.message : 'Error al cargar las plantillas');
         });
     }, [gateway]);
 
@@ -27,13 +28,12 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
         if (names.length === 0) return;
 
         setLoading(true);
-        setError(null);
         try {
             const result = await gateway.generateBatch(selectedTemplateId, names);
             setGenerated(result);
             setSelected(new Set(result.map(c => c.id)));
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al generar certificados');
+            toast.error(err instanceof Error ? err.message : 'Error al generar certificados');
         } finally {
             setLoading(false);
         }
@@ -62,7 +62,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
             a.click();
             setTimeout(() => URL.revokeObjectURL(url), 100);
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al descargar');
+            toast.error(err instanceof Error ? err.message : 'Error al descargar');
         } finally {
             setLoading(false);
         }
@@ -114,10 +114,6 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway }) => {
                         {namesText.split('\n').filter(n => n.trim()).length} nombre(s)
                     </p>
                 </div>
-
-                {error && (
-                    <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</p>
-                )}
 
                 <button
                     className="btn-primary"

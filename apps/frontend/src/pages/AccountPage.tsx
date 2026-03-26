@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserAvatar, getColorFromName } from '../components/UserAvatar';
+import { useToast } from '../components/Toast';
 import type { AuthGateway } from '../gateways/AuthGateway';
 
 interface Props {
@@ -32,9 +33,8 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordError, setPasswordError] = useState<string | null>(null);
-    const [passwordSuccess, setPasswordSuccess] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
+    const toast = useToast();
 
     if (!user) return null;
 
@@ -49,18 +49,16 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
         e.preventDefault();
         if (!canSubmitPassword) return;
 
-        setPasswordError(null);
-        setPasswordSuccess(false);
         setChangingPassword(true);
 
         try {
             await gateway.changePassword(currentPassword, newPassword);
-            setPasswordSuccess(true);
+            toast.success('Contraseña actualizada correctamente.');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
         } catch (err) {
-            setPasswordError(err instanceof Error ? err.message : 'Error al cambiar la contraseña');
+            toast.error(err instanceof Error ? err.message : 'Error al cambiar la contraseña');
         } finally {
             setChangingPassword(false);
         }
@@ -152,7 +150,7 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
                                         type="password"
                                         className="form-input"
                                         value={newPassword}
-                                        onChange={e => { setNewPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
+                                        onChange={e => setNewPassword(e.target.value)}
                                         autoComplete="new-password"
                                     />
                                     {newPassword && !passwordValid && (
@@ -169,7 +167,7 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
                                         type="password"
                                         className="form-input"
                                         value={confirmPassword}
-                                        onChange={e => { setConfirmPassword(e.target.value); setPasswordError(null); setPasswordSuccess(false); }}
+                                        onChange={e => setConfirmPassword(e.target.value)}
                                         autoComplete="new-password"
                                     />
                                     {confirmPassword && !passwordsMatch && (
@@ -178,15 +176,6 @@ export const AccountPage: React.FC<Props> = ({ gateway }) => {
                                         </p>
                                     )}
                                 </div>
-
-                                {passwordError && (
-                                    <p className="account-field__hint account-field__hint--error">{passwordError}</p>
-                                )}
-                                {passwordSuccess && (
-                                    <p className="account-field__hint account-field__hint--success">
-                                        Contraseña actualizada correctamente.
-                                    </p>
-                                )}
 
                                 <button
                                     type="submit"

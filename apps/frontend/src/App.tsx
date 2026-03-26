@@ -34,6 +34,7 @@ import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
+import { ToastProvider } from './components/Toast';
 
 function AppContent() {
   const { user } = useAuth();
@@ -137,7 +138,9 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider gateway={authGateway}>
-        <AppContent />
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

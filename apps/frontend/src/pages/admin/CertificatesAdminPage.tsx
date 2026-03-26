@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
+import { useToast } from '../../components/Toast';
 
 interface Props {
     gateway: CertificateGateway;
@@ -16,7 +17,7 @@ interface DeleteState {
 export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const toast = useToast();
     const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -26,7 +27,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
         gateway.listTemplates()
             .then(setTemplates)
             .catch((err: unknown) => {
-                setError(err instanceof Error ? err.message : 'Error al cargar las plantillas');
+                toast.error(err instanceof Error ? err.message : 'Error al cargar las plantillas');
             })
             .finally(() => setLoading(false));
     }, [gateway]);
@@ -85,9 +86,6 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                 <p>Administra plantillas y genera certificados para tus alumnos.</p>
             </div>
 
-            {error && (
-                <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem' }}>{error}</p>
-            )}
 
             <div className="admin-grid">
                 <div className="admin-card">

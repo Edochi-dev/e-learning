@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
+import { useToast } from '../../components/Toast';
 import type { CreateCoursePayload } from '@maris-nails/shared';
 
 interface CreateCoursePageProps {
@@ -11,7 +12,7 @@ interface CreateCoursePageProps {
 export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: courseGateway }) => {
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+    const toast = useToast();
     // useRef en lugar de useState: no necesitamos re-renderizar al cambiar el archivo.
     // Solo necesitamos acceder al componente en el momento del submit para pedir
     // el archivo ya recortado con getCroppedFile().
@@ -36,7 +37,6 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        setError(null);
 
         try {
             // Pedimos al componente hijo el archivo ya recortado con Canvas.
@@ -45,7 +45,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
             await courseGateway.create(formData, croppedFile ?? undefined);
             navigate('/admin');
         } catch (err: any) {
-            setError(err.message || 'Error al crear el curso');
+            toast.error(err.message || 'Error al crear el curso');
         } finally {
             setIsLoading(false);
         }
@@ -58,8 +58,6 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
             <div className="admin-form">
                 <h1>Crear Nuevo Curso</h1>
                 <p className="admin-form-subtitle">Completa los datos para agregar un curso a la plataforma.</p>
-
-                {error && <div className="alert alert-error">⚠️ {error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
