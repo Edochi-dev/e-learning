@@ -119,4 +119,10 @@ export class HttpCertificateGateway implements CertificateGateway {
         if (!res.ok) throw new Error('Certificado no encontrado');
         return res.json();
     }
+
+    async downloadCertificatePdf(filePath: string): Promise<Blob> {
+        const res = await fetch(`${this.baseUrl}${filePath}`);
+        if (!res.ok) throw new Error('Error al descargar el certificado PDF');
+        return res.blob();
+    }
 }

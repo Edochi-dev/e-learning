@@ -7,22 +7,25 @@ interface Props {
     gateway: CertificateGateway;
 }
 
-import { API_URL } from '../../config';
-
 export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();
     const { certificate, loading, error } = useCertificate(gateway, id!);
     const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-    // Descargamos el PDF como Blob para evitar el bloqueo CSP del iframe
-    // (el backend tiene frame-ancestors 'self', que bloquea iframes desde otro origen)
+    // Descargamos el PDF como Blob via gateway para:
+    //   1. Evitar que la página conozca la URL del backend (Clean Architecture)
+    //   2. Evitar bloqueos CSP de frame-ancestors en el iframe
     useEffect(() => {
         if (!certificate) return;
         const controller = new AbortController();
-        const pdfUrl = `${API_URL}${certificate.filePath}`;
-        fetch(pdfUrl, { signal: controller.signal })
-            .then(res => res.blob())
-            .then(blob => setBlobUrl(URL.createObjectURL(blob)))
+        let url: string | null = null;
+
+        gateway.downloadCertificatePdf(certificate.filePath)
+            .then(blob => {
+                if (controller.signal.aborted) return;
+                url = URL.createObjectURL(blob);
+                setBlobUrl(url);
+            })
             .catch((err: unknown) => {
                 if ((err as Error).name === 'AbortError') return;
                 setBlobUrl(null);
@@ -30,9 +33,9 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
 
         return () => {
             controller.abort();
-            setBlobUrl(prev => { if (prev) URL.revokeObjectURL(prev); return null; });
+            if (url) URL.revokeObjectURL(url);
         };
-    }, [certificate]);
+    }, [certificate, gateway]);
 
     if (loading) {
         return (
@@ -66,8 +69,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     }
 
     const handleDownload = async () => {
-        const res = await fetch(`${API_URL}${certificate.filePath}`);
-        const blob = await res.blob();
+        const blob = await gateway.downloadCertificatePdf(certificate.filePath);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;

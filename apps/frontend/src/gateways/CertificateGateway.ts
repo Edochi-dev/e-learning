@@ -83,4 +83,16 @@ export interface CertificateGateway {
     // Público
     getCertificate(id: string): Promise<Certificate>;
     lookupByNumber(certificateNumber: string): Promise<{ id: string }>;
+
+    /**
+     * Descarga el PDF de un certificado como Blob.
+     *
+     * Las páginas necesitan el PDF como Blob para:
+     *   - Descarga programática (crear <a> con blob URL)
+     *   - Vista previa en iframe (evita bloqueo CSP de frame-ancestors)
+     *
+     * Recibe el filePath relativo que viene en el objeto Certificate.
+     * La implementación concreta sabe cómo construir la URL completa.
+     */
+    downloadCertificatePdf(filePath: string): Promise<Blob>;
 }

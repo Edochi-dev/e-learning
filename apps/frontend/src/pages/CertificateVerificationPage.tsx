@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import type { CertificateGateway } from '../gateways/CertificateGateway';
 import { useCertificate } from '../hooks/useCertificate';
@@ -6,8 +6,6 @@ import { useCertificate } from '../hooks/useCertificate';
 interface Props {
     gateway: CertificateGateway;
 }
-
-import { API_URL } from '../config';
 
 /**
  * CertificateVerificationPage — Página pública de verificación de certificado
@@ -20,10 +18,39 @@ import { API_URL } from '../config';
  *  - El PDF generado (embed para visualizar)
  *  - Botón de descarga
  *  - Mensaje de validez de la academia
+ *
+ * NOTA: esta página NO importa API_URL. Toda comunicación con el backend
+ * pasa por el gateway — incluyendo la descarga del PDF.
  */
 export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();
     const { certificate, loading, error } = useCertificate(gateway, id!);
+    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+
+    // Descargamos el PDF como Blob via gateway para:
+    //   1. Evitar que la página conozca la URL del backend (Clean Architecture)
+    //   2. Evitar bloqueos CSP de frame-ancestors en el iframe
+    useEffect(() => {
+        if (!certificate) return;
+        const controller = new AbortController();
+        let url: string | null = null;
+
+        gateway.downloadCertificatePdf(certificate.filePath)
+            .then(blob => {
+                if (controller.signal.aborted) return;
+                url = URL.createObjectURL(blob);
+                setBlobUrl(url);
+            })
+            .catch((err: unknown) => {
+                if ((err as Error).name === 'AbortError') return;
+                setBlobUrl(null);
+            });
+
+        return () => {
+            controller.abort();
+            if (url) URL.revokeObjectURL(url);
+        };
+    }, [certificate, gateway]);
 
     if (loading) {
         return (
@@ -55,11 +82,8 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
         );
     }
 
-    const pdfUrl = `${API_URL}${certificate.filePath}`;
-
     const handleDownload = async () => {
-        const res = await fetch(pdfUrl);
-        const blob = await res.blob();
+        const blob = await gateway.downloadCertificatePdf(certificate.filePath);
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -151,14 +175,22 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
                 borderRadius: '12px',
                 overflow: 'hidden',
             }}>
-                <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                    Vista previa del certificado
-                </p>
-                <iframe
-                    src={pdfUrl}
-                    title="Certificado digital"
-                    style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                />
+                {blobUrl ? (
+                    <>
+                        <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                            Vista previa del certificado
+                        </p>
+                        <iframe
+                            src={blobUrl}
+                            title="Certificado digital"
+                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
+                        />
+                    </>
+                ) : (
+                    <p style={{ padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
+                        Cargando vista previa...
+                    </p>
+                )}
             </div>
         </div>
     );
