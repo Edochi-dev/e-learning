@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
 
 /**
  * EnrollmentWithProgress — Forma final de los datos que devolvemos al frontend.
@@ -28,15 +29,18 @@ export interface EnrollmentWithProgress {
  *   progressPercent = (lecciones completadas / total lecciones) * 100
  *
  * Siempre hace exactamente 2 queries a la DB, sin importar cuántos cursos tenga el usuario:
- *   1. findByUserWithCourses()         → matrículas + cursos + lecciones
- *   2. getCompletedLessonIdsByCourse() → todo el progreso del usuario de una vez
+ *   1. findByUserWithCourses()         → matrículas + cursos + lecciones (EnrollmentGateway)
+ *   2. getCompletedLessonIdsByCourse() → todo el progreso del usuario (LessonProgressGateway)
  *
  * El .map() final es SÍNCRONO (no async, no await): solo reorganiza datos que
  * ya están en memoria. No va a la red ni a la base de datos.
  */
 @Injectable()
 export class GetMyEnrollmentsUseCase {
-  constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
+  constructor(
+    private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly lessonProgressGateway: LessonProgressGateway,
+  ) {}
 
   async execute(userId: string): Promise<EnrollmentWithProgress[]> {
     // Query 1: matrículas con sus cursos y lecciones
@@ -46,7 +50,7 @@ export class GetMyEnrollmentsUseCase {
     // Query 2: todo el progreso del usuario, agrupado por courseId
     // Ej: { 'uuid-A': ['uuid-l1', 'uuid-l2'], 'uuid-B': ['uuid-l5'] }
     const completedByCourse =
-      await this.enrollmentGateway.getCompletedLessonIdsByCourse(userId);
+      await this.lessonProgressGateway.getCompletedLessonIdsByCourse(userId);
 
     // Cálculo en memoria: rápido, sin más queries
     return enrollments.map((enrollment) => {

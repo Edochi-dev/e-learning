@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
 /**
@@ -18,14 +19,15 @@ import { LessonGateway } from '../../courses/gateways/lesson.gateway';
  *
  * 2. EXISTENCIA: Verificar que la lección existe en la base de datos.
  *
- * ¿Por qué el controller no hace estos checks?
- *    Los controladores en Clean Architecture son "delgados": solo transforman
- *    HTTP → datos y llaman al Use Case. La lógica de negocio vive AQUÍ.
+ * Depende de 2 gateways segregados:
+ *   - EnrollmentGateway        → verificar matrícula (ownership)
+ *   - LessonProgressGateway    → marcar la lección como completada
  */
 @Injectable()
 export class MarkLessonCompleteUseCase {
   constructor(
     private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly lessonProgressGateway: LessonProgressGateway,
     private readonly lessonGateway: LessonGateway,
   ) {}
 
@@ -50,6 +52,6 @@ export class MarkLessonCompleteUseCase {
     }
 
     // Paso 3: Marcar completa (idempotente: si ya lo estaba, no pasa nada)
-    await this.enrollmentGateway.markLessonComplete(userId, lessonId);
+    await this.lessonProgressGateway.markLessonComplete(userId, lessonId);
   }
 }

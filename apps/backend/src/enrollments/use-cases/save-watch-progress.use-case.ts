@@ -1,9 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
 
+/**
+ * SaveWatchProgressUseCase — Guarda cuánto video ha visto el alumno.
+ *
+ * Depende de 2 gateways segregados:
+ *   - EnrollmentGateway     → verificar matrícula (ownership)
+ *   - WatchProgressGateway  → guardar el porcentaje de video
+ *
+ * Antes, ambas operaciones venían del mismo EnrollmentGateway (god-class).
+ * Ahora este use case NO sabe que existen quizzes o compleción de lecciones.
+ */
 @Injectable()
 export class SaveWatchProgressUseCase {
-  constructor(private readonly enrollmentGateway: EnrollmentGateway) {}
+  constructor(
+    private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly watchProgressGateway: WatchProgressGateway,
+  ) {}
 
   async execute(
     userId: string,
@@ -23,6 +37,6 @@ export class SaveWatchProgressUseCase {
       );
     }
 
-    await this.enrollmentGateway.saveWatchProgress(userId, lessonId, percent);
+    await this.watchProgressGateway.saveWatchProgress(userId, lessonId, percent);
   }
 }

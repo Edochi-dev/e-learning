@@ -7,6 +7,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
+import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { QuizResult, QuizResultDetail } from '@maris-nails/shared';
@@ -14,7 +16,7 @@ import { QuizResult, QuizResultDetail } from '@maris-nails/shared';
 /**
  * SubmitQuizUseCase — Evalúa las respuestas del alumno y devuelve el resultado.
  *
- * Este es el Use Case más complejo del módulo de quizzes. Tiene 6 pasos:
+ * Este es el Use Case más complejo del módulo. Tiene 6 pasos:
  *
  * 1. OWNERSHIP CHECK — ¿El alumno está matriculado? (Seguridad)
  * 2. CARGAR PREGUNTAS — Traer la lección con sus preguntas y opciones
@@ -23,9 +25,10 @@ import { QuizResult, QuizResultDetail } from '@maris-nails/shared';
  * 5. EVALUAR — Comparar respuestas con las correctas
  * 6. GUARDAR + AUTO-COMPLETAR — Si aprobó, marcar lección como completada
  *
- * ¿Por qué toda esta lógica vive aquí y no en el Controller?
- * Porque esto es LÓGICA DE NEGOCIO pura. El Controller solo transforma HTTP → datos.
- * Si mañana este quiz se evalúa desde una app mobile o un CLI, la lógica no cambia.
+ * Depende de 3 gateways segregados (antes todo era EnrollmentGateway):
+ *   - EnrollmentGateway       → verificar matrícula (paso 1)
+ *   - QuizAttemptGateway      → cooldown y guardar intento (pasos 4, 6)
+ *   - LessonProgressGateway   → auto-completar lección al aprobar (paso 6)
  */
 
 // Cooldown entre intentos: 30 minutos en milisegundos
@@ -35,6 +38,8 @@ const COOLDOWN_MS = 30 * 60 * 1000;
 export class SubmitQuizUseCase {
   constructor(
     private readonly enrollmentGateway: EnrollmentGateway,
+    private readonly lessonProgressGateway: LessonProgressGateway,
+    private readonly quizAttemptGateway: QuizAttemptGateway,
     private readonly courseGateway: CourseGateway,
     private readonly lessonGateway: LessonGateway,
   ) {}
@@ -69,7 +74,7 @@ export class SubmitQuizUseCase {
     // ── Paso 4: Cooldown de 30 minutos ───────────────────────────────
     // Buscamos el último intento. Si existe y fue hace menos de 30 min, rechazamos.
     // Esto obliga al alumno a repasar antes de reintentar.
-    const lastAttempt = await this.enrollmentGateway.getLastQuizAttempt(
+    const lastAttempt = await this.quizAttemptGateway.getLastQuizAttempt(
       userId,
       lessonId,
     );
@@ -133,7 +138,7 @@ export class SubmitQuizUseCase {
     const passed = score >= passingScore;
 
     // ── Paso 6: Guardar intento + auto-completar ─────────────────────
-    await this.enrollmentGateway.saveQuizAttempt({
+    await this.quizAttemptGateway.saveQuizAttempt({
       userId,
       lessonId,
       score,
@@ -149,7 +154,7 @@ export class SubmitQuizUseCase {
     // Reutilizamos el mismo markLessonComplete que usa el flujo de video.
     // Es idempotente: si ya aprobó antes, no pasa nada.
     if (passed) {
-      await this.enrollmentGateway.markLessonComplete(userId, lessonId);
+      await this.lessonProgressGateway.markLessonComplete(userId, lessonId);
     }
 
     // ── Resolver títulos de lecciones relacionadas ────────────────────

@@ -1,8 +1,14 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnrollmentsController } from './enrollments.controller';
-import { EnrollmentsRepository } from './enrollments.repository';
 import { EnrollmentGateway } from './gateways/enrollment.gateway';
+import { LessonProgressGateway } from './gateways/lesson-progress.gateway';
+import { WatchProgressGateway } from './gateways/watch-progress.gateway';
+import { QuizAttemptGateway } from './gateways/quiz-attempt.gateway';
+import { EnrollmentsRepository } from './repositories/enrollments.repository';
+import { LessonProgressRepository } from './repositories/lesson-progress.repository';
+import { WatchProgressRepository } from './repositories/watch-progress.repository';
+import { QuizAttemptRepository } from './repositories/quiz-attempt.repository';
 import { Enrollment } from './entities/enrollment.entity';
 import { LessonProgress } from './entities/lesson-progress.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
@@ -18,25 +24,23 @@ import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { CoursesModule } from '../courses/courses.module';
 
 /**
- * EnrollmentsModule — El "pegamento" del módulo de matrículas.
+ * EnrollmentsModule — El "pegamento" del módulo de matrículas y progreso.
  *
- * imports:
- *   - TypeOrmModule.forFeature([Enrollment, LessonProgress])
- *       Registra las entidades para que TypeORM cree los repositorios
- *       que inyectamos con @InjectRepository() en EnrollmentsRepository.
+ * Después de aplicar ISP, tenemos 4 gateways en lugar de 1 god-class:
  *
- *   - CoursesModule
- *       Lo importamos porque EnrollInCourseUseCase y MarkLessonCompleteUseCase
- *       necesitan inyectar CourseGateway (para verificar que el curso y la lección
- *       existen). CoursesModule debe exportar CourseGateway para que esto funcione.
+ *   | Abstracción              | Implementación             | Responsabilidad           |
+ *   |--------------------------|----------------------------|---------------------------|
+ *   | EnrollmentGateway        | EnrollmentsRepository      | Matrículas (CRUD)         |
+ *   | LessonProgressGateway    | LessonProgressRepository   | Completar lecciones       |
+ *   | WatchProgressGateway     | WatchProgressRepository    | Progreso de video         |
+ *   | QuizAttemptGateway       | QuizAttemptRepository      | Intentos de exámenes      |
  *
- * providers:
- *   - El binding { provide: EnrollmentGateway, useClass: EnrollmentsRepository }
- *       es la pieza clave de Clean Architecture: le decimos a NestJS que cuando
- *       alguien pida EnrollmentGateway (abstracción), entregue EnrollmentsRepository (concreto).
+ * Cada Use Case inyecta SOLO los gateways que necesita. Ejemplo:
+ *   - SaveWatchProgressUseCase → EnrollmentGateway + WatchProgressGateway
+ *   - No sabe que existen quizzes o compleción de lecciones.
  *
- *   - EnrollmentOwnershipGuard se registra como provider porque necesita
- *       inyección de dependencias (necesita EnrollmentGateway).
+ * exports: EnrollmentGateway se exporta porque OrdersModule lo necesita
+ * para crear matrículas automáticas tras un pago exitoso.
  */
 @Module({
   imports: [
@@ -45,11 +49,14 @@ import { CoursesModule } from '../courses/courses.module';
   ],
   controllers: [EnrollmentsController],
   providers: [
-    {
-      provide: EnrollmentGateway,
-      useClass: EnrollmentsRepository,
-    },
+    // --- Bindings: abstracción → implementación concreta ---
+    { provide: EnrollmentGateway, useClass: EnrollmentsRepository },
+    { provide: LessonProgressGateway, useClass: LessonProgressRepository },
+    { provide: WatchProgressGateway, useClass: WatchProgressRepository },
+    { provide: QuizAttemptGateway, useClass: QuizAttemptRepository },
+    // --- Guards ---
     EnrollmentOwnershipGuard,
+    // --- Use Cases ---
     EnrollInCourseUseCase,
     GetMyEnrollmentsUseCase,
     MarkLessonCompleteUseCase,
@@ -58,9 +65,7 @@ import { CoursesModule } from '../courses/courses.module';
     GetCourseProgressUseCase,
     SubmitQuizUseCase,
   ],
-  // Exportamos EnrollmentGateway para que otros módulos (como OrdersModule)
-  // puedan inyectarlo en sus Use Cases. Sin esto, NestJS lanza un error
-  // de dependencia no resuelta porque el gateway solo es visible internamente.
+  // OrdersModule necesita EnrollmentGateway para matricular tras pago exitoso.
   exports: [EnrollmentGateway],
 })
 export class EnrollmentsModule {}
