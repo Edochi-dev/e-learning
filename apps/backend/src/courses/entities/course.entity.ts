@@ -1,9 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
-import { Course as ICourse } from '@maris-nails/shared';
 import { Lesson } from './lessons.entity';
 
 @Entity('courses')
-export class Course implements ICourse {
+export class Course {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Lesson } from '@maris-nails/shared';
+import { Lesson } from '../entities/lessons.entity';
 import { CourseGateway } from '../gateways/course.gateway';
 import { LessonGateway } from '../gateways/lesson.gateway';
 import { CreateLessonDto } from '../dto/create-lesson.dto';

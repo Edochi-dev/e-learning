@@ -21,7 +21,9 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { Course, Lesson, UserRole } from '@maris-nails/shared';
+import { UserRole } from '@maris-nails/shared';
+import { Course } from './entities/course.entity';
+import { Lesson } from './entities/lessons.entity';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';

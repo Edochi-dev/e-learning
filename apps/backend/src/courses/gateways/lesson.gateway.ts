@@ -1,4 +1,4 @@
-import { Lesson } from '@maris-nails/shared';
+import { Lesson } from '../entities/lessons.entity';
 
 /**
  * LessonGateway — Contrato abstracto para operaciones de lecciones.
@@ -9,6 +9,10 @@ import { Lesson } from '@maris-nails/shared';
  *
  * La implementación concreta (CoursesRepository) implementa AMBOS gateways.
  * La separación es a nivel de contrato, no de implementación.
+ *
+ * Usa la entidad TypeORM del backend, NO la interfaz de @maris-nails/shared.
+ * Internamente, Lesson tiene relaciones a VideoLesson y ExamLesson (JTI).
+ * La interfaz shared solo ve la forma plana que viaja por HTTP.
  */
 export abstract class LessonGateway {
   abstract addLesson(
