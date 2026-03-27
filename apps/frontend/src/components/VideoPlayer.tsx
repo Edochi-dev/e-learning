@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { API_URL } from '../config';
+import type { VideoGateway } from '../gateways/VideoGateway';
 
 interface VideoPlayerProps {
     src: string;
     title: string;
     lessonId?: string;           // Si se pasa, pide URL firmada al backend
+    videoGateway?: VideoGateway; // Gateway para obtener URLs firmadas
     onWatchProgress?: (percent: number) => void;  // Callback: 0-100
 }
 
@@ -16,7 +17,7 @@ interface VideoPlayerProps {
  * 2. Video local con lessonId → pide URL firmada al backend
  * 3. Video externo sin lessonId → reproduce directo (fallback)
  */
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, onWatchProgress }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, videoGateway, onWatchProgress }) => {
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -71,43 +72,39 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
             return;
         }
 
-        // Si es un video local, pedir URL firmada
-        const controller = new AbortController();
+        // Si no hay gateway, no podemos pedir URL firmada
+        if (!videoGateway) {
+            setVideoSrc(src);
+            return;
+        }
+
+        // Si es un video local, pedir URL firmada via gateway
+        let cancelled = false;
 
         const fetchSignedUrl = async () => {
             setLoading(true);
             setError(null);
             try {
-                const response = await fetch(`${API_URL}/videos/${lessonId}/signed-url`, {
-                    credentials: 'include',
-                    signal: controller.signal,
-                });
+                const data = await videoGateway.getSignedUrl(lessonId);
 
-                if (!response.ok) {
-                    throw new Error('No se pudo obtener el video');
-                }
+                if (cancelled) return;
 
-                const data = await response.json();
-
-                // Si es URL externa (YouTube, etc.), usar directamente
-                if (data.url.startsWith('http')) {
-                    setVideoSrc(data.url);
-                } else {
-                    // URL firmada local: prefijamos con el backend
-                    setVideoSrc(`${API_URL}${data.url}`);
-                }
+                // Si es URL externa (YouTube, etc.), usar directamente.
+                // Si es URL local firmada (/videos/stream?...), el gateway
+                // ya sabe cómo construir la URL completa.
+                setVideoSrc(data.url);
             } catch (err) {
-                if ((err as Error).name === 'AbortError') return;
+                if (cancelled) return;
                 setError('Error al cargar el video. Intenta de nuevo.');
                 console.error('Error fetching signed URL:', err);
             } finally {
-                setLoading(false);
+                if (!cancelled) setLoading(false);
             }
         };
 
         fetchSignedUrl();
-        return () => controller.abort();
-    }, [lessonId, src, isYoutube]);
+        return () => { cancelled = true; };
+    }, [lessonId, src, isYoutube, videoGateway]);
 
     if (isYoutube) {
         return (

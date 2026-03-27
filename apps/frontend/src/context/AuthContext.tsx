@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterPayload } from '@maris-nails/shared';
 import type { AuthGateway } from '../gateways/AuthGateway';
-import { API_URL } from '../config';
 
 interface AuthContextType {
     user: User | null;
@@ -23,20 +22,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // Al montar, intentamos restaurar la sesión preguntando al backend.
+    // Al montar, intentamos restaurar la sesión preguntando al backend via gateway.
     // Si hay una cookie HttpOnly válida, el browser la envía automáticamente
     // y el backend responde con los datos del usuario.
-    // Si no hay cookie o expiró, el backend responde 401 y sabemos que no hay sesión.
+    // Si no hay cookie o expiró, gateway.getMe() devuelve null.
     useEffect(() => {
-        fetch(`${API_URL}/users/me`, { credentials: 'include' })
-            .then(res => {
-                if (!res.ok) throw new Error('No session');
-                return res.json();
-            })
+        gateway.getMe()
             .then(setUser)
             .catch(() => setUser(null))
             .finally(() => setIsLoading(false));
-    }, []);
+    }, [gateway]);
 
     const login = async (credentials: LoginCredentials): Promise<User> => {
         const response = await gateway.login(credentials);

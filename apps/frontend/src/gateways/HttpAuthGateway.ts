@@ -60,4 +60,12 @@ export class HttpAuthGateway implements AuthGateway {
             credentials: 'include',
         });
     }
+
+    async getMe(): Promise<User | null> {
+        const res = await fetch(`${this.baseUrl}/users/me`, {
+            credentials: 'include',
+        });
+        if (!res.ok) return null;
+        return res.json();
+    }
 }

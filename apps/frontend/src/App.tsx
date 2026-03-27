@@ -5,6 +5,7 @@ import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
 import { HttpCourseGateway } from './gateways/HttpCourseGateway';
 import { LocalStorageThemeGateway } from './gateways/LocalStorageThemeGateway';
 import { HttpAuthGateway } from './gateways/HttpAuthGateway';
+import { HttpVideoGateway } from './gateways/HttpVideoGateway';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ComingSoonPage } from './pages/ComingSoonPage';
 import { ComingSoonGuard } from './components/ComingSoonGuard';
@@ -58,6 +59,7 @@ function AppContent() {
   const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
   const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
   const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
+  const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
 
   return (
     <>
@@ -97,13 +99,13 @@ function AppContent() {
           <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
           <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} orderGateway={orderGateway} /></ComingSoonGuard>} />
-          <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} /></ComingSoonGuard>} />
+          <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} videoGateway={videoGateway} /></ComingSoonGuard>} />
 
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
             <Route path="/cuenta" element={<AccountPage gateway={authGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
-            <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} />} />
+            <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} />} />
           </Route>
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}

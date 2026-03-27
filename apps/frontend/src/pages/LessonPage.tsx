@@ -1,13 +1,15 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
+import type { VideoGateway } from '../gateways/VideoGateway';
 import { useCourse } from '../hooks/useCourse';
 import { VideoPlayer } from '../components/VideoPlayer';
 
 interface LessonPageProps {
     gateway: CourseGateway;
+    videoGateway: VideoGateway;
 }
 
-export const LessonPage = ({ gateway }: LessonPageProps) => {
+export const LessonPage = ({ gateway, videoGateway }: LessonPageProps) => {
     const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
     const navigate = useNavigate();
     const { course, loading, error } = useCourse(gateway, courseId);
@@ -34,6 +36,7 @@ export const LessonPage = ({ gateway }: LessonPageProps) => {
                         src={currentLesson.videoData?.videoUrl ?? ''}
                         title={currentLesson.title}
                         lessonId={currentLesson.id}
+                        videoGateway={videoGateway}
                     />
                 </div>
 

@@ -7,6 +7,7 @@ import { useParams, Link } from 'react-router-dom';
 import { LessonType } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
+import type { VideoGateway } from '../gateways/VideoGateway';
 import { useCourse } from '../hooks/useCourse';
 import { useEnrollments } from '../hooks/useEnrollments';
 import { VideoPlayer } from '../components/VideoPlayer';
@@ -45,9 +46,10 @@ import { QuizPlayer } from '../components/QuizPlayer';
 interface CourseLearnPageProps {
     courseGateway: CourseGateway;
     enrollmentGateway: EnrollmentGateway;
+    videoGateway: VideoGateway;
 }
 
-export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLearnPageProps) => {
+export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway }: CourseLearnPageProps) => {
     const { courseId } = useParams<{ courseId: string }>();
     const { course, loading: courseLoading, error: courseError } = useCourse(courseGateway, courseId);
 
@@ -286,6 +288,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway }: CourseLear
                                 src={activeLesson.videoData?.videoUrl ?? ''}
                                 title={activeLesson.title}
                                 lessonId={activeLesson.id}
+                                videoGateway={videoGateway}
                                 onWatchProgress={handleWatchProgress}
                             />
                         </div>
