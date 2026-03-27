@@ -6,6 +6,7 @@ import { PaymentGateway } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
+import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * Tests para CreateOrderUseCase — el Use Case más importante del módulo de órdenes.
@@ -52,7 +53,7 @@ describe('CreateOrderUseCase', () => {
     userId,
     courseId,
     amount: 50,
-    status: 'pending',
+    status: OrderStatus.PENDING,
   } as Order;
 
   /**
@@ -184,7 +185,7 @@ describe('CreateOrderUseCase', () => {
       userId,
       courseId,
       amount: 99.99,
-      status: 'pending',
+      status: OrderStatus.PENDING,
     });
   });
 
@@ -235,11 +236,11 @@ describe('CreateOrderUseCase', () => {
 
     const result = await useCase.execute(userId, courseId);
 
-    // La orden debe terminar en 'completed'
-    expect(result.status).toBe('completed');
+    // La orden debe terminar en COMPLETED
+    expect(result.status).toBe(OrderStatus.COMPLETED);
     expect(orderGateway.updateStatus).toHaveBeenCalledWith(
       fakeOrder.id,
-      'completed',
+      OrderStatus.COMPLETED,
     );
 
     // El usuario debe quedar matriculado automáticamente
@@ -269,11 +270,11 @@ describe('CreateOrderUseCase', () => {
 
     const result = await useCase.execute(userId, courseId);
 
-    // La orden debe terminar en 'failed'
-    expect(result.status).toBe('failed');
+    // La orden debe terminar en FAILED
+    expect(result.status).toBe(OrderStatus.FAILED);
     expect(orderGateway.updateStatus).toHaveBeenCalledWith(
       fakeOrder.id,
-      'failed',
+      OrderStatus.FAILED,
     );
 
     // NUNCA debe intentar matricular al usuario
@@ -308,7 +309,7 @@ describe('CreateOrderUseCase', () => {
     const result = await useCase.execute(userId, courseId);
 
     // La orden se completa normalmente...
-    expect(result.status).toBe('completed');
+    expect(result.status).toBe(OrderStatus.COMPLETED);
 
     // ...pero enroll() NUNCA se llama porque ya existía la matrícula.
     expect(enrollmentGateway.enroll).not.toHaveBeenCalled();

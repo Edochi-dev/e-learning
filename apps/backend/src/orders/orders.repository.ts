@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { OrderGateway } from './gateways/order.gateway';
 import { Order } from './entities/order.entity';
+import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * OrdersRepository — Implementación concreta del OrderGateway con TypeORM.
@@ -28,7 +29,7 @@ export class OrdersRepository implements OrderGateway {
     return this.orderRepository.findOne({ where: { id } });
   }
 
-  async updateStatus(id: string, status: string): Promise<void> {
+  async updateStatus(id: string, status: OrderStatus): Promise<void> {
     await this.orderRepository.update(id, { status });
   }
 
@@ -53,7 +54,7 @@ export class OrdersRepository implements OrderGateway {
     courseId: string,
   ): Promise<Order | null> {
     return this.orderRepository.findOne({
-      where: { userId, courseId, status: 'completed' },
+      where: { userId, courseId, status: OrderStatus.COMPLETED },
     });
   }
 }

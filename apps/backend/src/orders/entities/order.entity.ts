@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Course } from '../../courses/entities/course.entity';
+import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * Order — Registro de una compra de curso.
@@ -55,11 +56,15 @@ export class Order {
   amount: number;
 
   /**
-   * Estado de la orden: 'pending' | 'completed' | 'failed'.
-   * Arranca siempre en 'pending' y el PaymentGateway lo actualiza.
+   * Estado de la orden: OrderStatus.PENDING | COMPLETED | FAILED.
+   * Arranca siempre en PENDING y el PaymentGateway lo actualiza.
+   *
+   * Usamos el enum de @maris-nails/shared para que TypeScript rechace
+   * cualquier string inválido en tiempo de compilación. Un typo como
+   * 'complted' ya no pasa silencioso — el compilador lo atrapa.
    */
-  @Column({ type: 'varchar', length: 20, default: 'pending' })
-  status: string;
+  @Column({ type: 'varchar', length: 20, default: OrderStatus.PENDING })
+  status: OrderStatus;
 
   @CreateDateColumn()
   createdAt: Date;

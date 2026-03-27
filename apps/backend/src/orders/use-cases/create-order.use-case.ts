@@ -8,6 +8,7 @@ import { PaymentGateway } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
+import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * CreateOrderUseCase — Orquesta el flujo completo de compra directa.
@@ -65,7 +66,7 @@ export class CreateOrderUseCase {
       userId,
       courseId,
       amount: course.price,
-      status: 'pending',
+      status: OrderStatus.PENDING,
     });
 
     // 4. Procesar el pago (hoy: auto-aprobado, mañana: Stripe/MercadoPago)
@@ -77,8 +78,8 @@ export class CreateOrderUseCase {
 
     // 5. Actualizar la orden según el resultado del pago
     if (paymentResult.success) {
-      await this.orderGateway.updateStatus(order.id, 'completed');
-      order.status = 'completed';
+      await this.orderGateway.updateStatus(order.id, OrderStatus.COMPLETED);
+      order.status = OrderStatus.COMPLETED;
 
       // 6. Matricular automáticamente al usuario en el curso.
       //    Si ya estaba matriculado (ej: admin le dio acceso antes), no falla
@@ -89,8 +90,8 @@ export class CreateOrderUseCase {
         await this.enrollmentGateway.enroll(userId, courseId);
       }
     } else {
-      await this.orderGateway.updateStatus(order.id, 'failed');
-      order.status = 'failed';
+      await this.orderGateway.updateStatus(order.id, OrderStatus.FAILED);
+      order.status = OrderStatus.FAILED;
     }
 
     return order;

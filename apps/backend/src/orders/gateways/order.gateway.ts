@@ -1,4 +1,5 @@
 import { Order } from '../entities/order.entity';
+import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * OrderGateway — Contrato abstracto para la persistencia de órdenes.
@@ -21,7 +22,7 @@ export abstract class OrderGateway {
   abstract findById(id: string): Promise<Order | null>;
 
   /** Actualiza el estado de una orden existente. */
-  abstract updateStatus(id: string, status: string): Promise<void>;
+  abstract updateStatus(id: string, status: OrderStatus): Promise<void>;
 
   /**
    * Retorna todas las órdenes de un usuario, ordenadas de más reciente a más antigua.
