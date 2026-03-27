@@ -23,16 +23,30 @@ describe('UpdateTemplatePositionsUseCase', () => {
     gateway = module.get(CertificateTemplateGateway);
   });
 
-  it('delega todos los campos del DTO al gateway correctamente', async () => {
+  it('delega los value objects del DTO al gateway correctamente', async () => {
     const dto: UpdateTemplatePositionsDto = {
-      namePositionX: 100,
-      namePositionY: 200,
-      nameFontSize: 32,
-      nameColor: '#ff0000',
-      fontFamily: 'PlayfairDisplay-Regular',
-      qrPositionX: 50,
-      qrPositionY: 60,
-      qrSize: 90,
+      nameStyle: {
+        positionX: 100,
+        positionY: 200,
+        fontSize: 32,
+        color: '#ff0000',
+        fontFamily: 'PlayfairDisplay-Regular',
+        align: 'center',
+      },
+      qrStyle: {
+        positionX: 50,
+        positionY: 60,
+        size: 90,
+      },
+      dateStyle: {
+        show: true,
+        positionX: 100,
+        positionY: 400,
+        fontSize: 18,
+        color: '#000000',
+        fontFamily: 'Helvetica',
+        align: 'left',
+      },
     };
     const updated = { id: 'tpl-1', ...dto } as unknown as CertificateTemplate;
     gateway.update.mockResolvedValue(updated);
@@ -40,14 +54,9 @@ describe('UpdateTemplatePositionsUseCase', () => {
     const result = await useCase.execute('tpl-1', dto);
 
     expect(gateway.update).toHaveBeenCalledWith('tpl-1', {
-      namePositionX: 100,
-      namePositionY: 200,
-      nameFontSize: 32,
-      nameColor: '#ff0000',
-      fontFamily: 'PlayfairDisplay-Regular',
-      qrPositionX: 50,
-      qrPositionY: 60,
-      qrSize: 90,
+      nameStyle: dto.nameStyle,
+      qrStyle: dto.qrStyle,
+      dateStyle: dto.dateStyle,
     });
     expect(result).toBe(updated);
   });

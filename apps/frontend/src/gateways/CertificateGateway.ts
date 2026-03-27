@@ -5,6 +5,35 @@
  * La implementación concreta (HttpCertificateGateway) sabe CÓMO hacerlas via HTTP.
  */
 
+// ── Value Objects de styling ────────────────────────────────────────────
+// Agrupan la configuración visual de cada elemento del certificado.
+// Almacenados como jsonb en el backend.
+
+export interface NameStyle {
+    positionX: number;
+    positionY: number;
+    fontSize: number;
+    color: string;
+    fontFamily: string;
+    align: 'left' | 'center';
+}
+
+export interface QrStyle {
+    positionX: number;
+    positionY: number;
+    size: number;
+}
+
+export interface DateStyle {
+    show: boolean;
+    positionX: number;
+    positionY: number;
+    fontSize: number;
+    color: string;
+    fontFamily: string;
+    align: 'left' | 'center';
+}
+
 export interface CertificateTemplate {
     id: string;
     name: string;
@@ -12,23 +41,10 @@ export interface CertificateTemplate {
     filePath: string;
     pageWidth: number;
     pageHeight: number;
-    namePositionX: number;
-    namePositionY: number;
-    nameFontSize: number;
-    nameColor: string;
-    qrPositionX: number;
-    qrPositionY: number;
-    qrSize: number;
-    fontFamily: string;
-    nameAlign: 'left' | 'center';
     paperFormat: string;
-    showDate: boolean;
-    datePositionX: number;
-    datePositionY: number;
-    dateFontSize: number;
-    dateColor: string;
-    dateFontFamily: string;
-    dateAlign: 'left' | 'center';
+    nameStyle: NameStyle;
+    qrStyle: QrStyle;
+    dateStyle: DateStyle;
     createdAt: string;
     certificateCount?: number;
 }
@@ -49,22 +65,9 @@ export interface GeneratedCertificateSummary {
 }
 
 export interface TemplatePositions {
-    namePositionX: number;
-    namePositionY: number;
-    nameFontSize: number;
-    nameColor: string;
-    fontFamily: string;
-    nameAlign: 'left' | 'center';
-    qrPositionX: number;
-    qrPositionY: number;
-    qrSize: number;
-    showDate: boolean;
-    datePositionX: number;
-    datePositionY: number;
-    dateFontSize: number;
-    dateColor: string;
-    dateFontFamily: string;
-    dateAlign: 'left' | 'center';
+    nameStyle: NameStyle;
+    qrStyle: QrStyle;
+    dateStyle: DateStyle;
 }
 
 export interface CertificateGateway {

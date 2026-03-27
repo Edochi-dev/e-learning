@@ -6,7 +6,31 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Certificate } from './certificate.entity';
+import { NameStyle, DEFAULT_NAME_STYLE } from '../value-objects/name-style.vo';
+import { QrStyle, DEFAULT_QR_STYLE } from '../value-objects/qr-style.vo';
+import { DateStyle, DEFAULT_DATE_STYLE } from '../value-objects/date-style.vo';
 
+/**
+ * CertificateTemplate — Entidad que almacena una plantilla de certificado.
+ *
+ * El styling se agrupa en 3 Value Objects almacenados como jsonb:
+ *
+ *   nameStyle → posición, font, color, alineación del NOMBRE del titular
+ *   qrStyle   → posición y tamaño del código QR
+ *   dateStyle → visibilidad, posición, font, color de la FECHA de emisión
+ *
+ * ¿Por qué jsonb en vez de columnas planas?
+ *
+ *   Antes había 16+ columnas de styling sueltas (namePositionX, namePositionY,
+ *   nameFontSize, nameColor, fontFamily, nameAlign, qrPositionX, ...).
+ *   Eso es una code smell: campos que SIEMPRE se leen y escriben juntos
+ *   deberían estar agrupados.
+ *
+ *   jsonb es ideal aquí porque:
+ *   - Estos campos nunca se filtran individualmente (no hay WHERE nameFontSize > 20)
+ *   - Se leen y escriben como una unidad (el picker visual los guarda todos de golpe)
+ *   - PostgreSQL maneja jsonb de forma eficiente y nativa
+ */
 @Entity('certificate_templates')
 export class CertificateTemplate {
   @PrimaryGeneratedColumn('uuid')
@@ -27,61 +51,21 @@ export class CertificateTemplate {
   @Column('float')
   pageHeight: number;
 
-  @Column('float', { default: 0 })
-  namePositionX: number;
-
-  @Column('float', { default: 0 })
-  namePositionY: number;
-
-  @Column('int', { default: 28 })
-  nameFontSize: number;
-
-  @Column({ default: '#000000' })
-  nameColor: string;
-
-  @Column('float', { default: 0 })
-  qrPositionX: number;
-
-  @Column('float', { default: 0 })
-  qrPositionY: number;
-
-  @Column('float', { default: 80 })
-  qrSize: number;
-
-  // Clave del enum StandardFonts de pdf-lib (ej: 'Helvetica') o nombre del archivo TTF custom
-  @Column({ default: 'Helvetica' })
-  fontFamily: string;
-
-  // 'left' = el X guardado es el borde izquierdo del texto
-  // 'center' = el texto se centra en la página (X se recalcula al generar)
-  @Column({ default: 'left' })
-  nameAlign: string;
-
-  // Formato del papel: 'A4' o 'A3'
   @Column({ default: 'A4' })
   paperFormat: string;
 
-  // ── Fecha de emisión ──────────────────────────────────────────────────────
-  @Column({ default: true })
-  showDate: boolean;
+  // ── Value Objects (jsonb) ─────────────────────────────────────────────
 
-  @Column('float', { default: 0 })
-  datePositionX: number;
+  @Column('jsonb', { default: DEFAULT_NAME_STYLE })
+  nameStyle: NameStyle;
 
-  @Column('float', { default: 0 })
-  datePositionY: number;
+  @Column('jsonb', { default: DEFAULT_QR_STYLE })
+  qrStyle: QrStyle;
 
-  @Column('int', { default: 18 })
-  dateFontSize: number;
+  @Column('jsonb', { default: DEFAULT_DATE_STYLE })
+  dateStyle: DateStyle;
 
-  @Column({ default: '#000000' })
-  dateColor: string;
-
-  @Column({ default: 'Helvetica' })
-  dateFontFamily: string;
-
-  @Column({ default: 'left' })
-  dateAlign: string;
+  // ── Metadata ──────────────────────────────────────────────────────────
 
   @CreateDateColumn()
   createdAt: Date;

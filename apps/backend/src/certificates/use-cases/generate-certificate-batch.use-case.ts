@@ -83,7 +83,7 @@ export class GenerateCertificateBatchUseCase {
       // 3. Generar QR apuntando a la URL de verificación.
       // El tamaño en pixels se calcula para 300 DPI:
       // qrSize está en puntos PDF (1pt = 1/72 pulgada). A 300 DPI: pixels = (pts/72)*300
-      const pixelSize = Math.ceil((template.qrSize / 72) * 300);
+      const pixelSize = Math.ceil((template.qrStyle.size / 72) * 300);
       const qrBuffer = await this.qrGateway.generate(
         verificationUrl,
         pixelSize,
@@ -98,27 +98,29 @@ export class GenerateCertificateBatchUseCase {
       const dateText = `${dd}/${mm}/${yyyy}`;
 
       // 4. Generar el PDF con nombre, QR y (opcionalmente) fecha superpuestos
+      const { nameStyle, qrStyle, dateStyle } = template;
+
       const pdfBuffer = await this.generatorGateway.generate({
         templatePath: templateAbsPath,
         recipientName: trimmedName,
         qrBuffer,
-        namePosition: { x: template.namePositionX, y: template.namePositionY },
-        fontSize: template.nameFontSize,
-        nameColor: template.nameColor,
-        fontFamily: template.fontFamily ?? 'Helvetica',
-        nameAlign: (template.nameAlign ?? 'left') as 'left' | 'center',
-        qrPosition: { x: template.qrPositionX, y: template.qrPositionY },
-        qrSize: template.qrSize,
-        ...(template.showDate && {
+        namePosition: { x: nameStyle.positionX, y: nameStyle.positionY },
+        fontSize: nameStyle.fontSize,
+        nameColor: nameStyle.color,
+        fontFamily: nameStyle.fontFamily ?? 'Helvetica',
+        nameAlign: (nameStyle.align ?? 'left') as 'left' | 'center',
+        qrPosition: { x: qrStyle.positionX, y: qrStyle.positionY },
+        qrSize: qrStyle.size,
+        ...(dateStyle.show && {
           dateText,
           datePosition: {
-            x: template.datePositionX,
-            y: template.datePositionY,
+            x: dateStyle.positionX,
+            y: dateStyle.positionY,
           },
-          dateFontSize: template.dateFontSize,
-          dateColor: template.dateColor,
-          dateFontFamily: template.dateFontFamily,
-          dateAlign: (template.dateAlign ?? 'left') as 'left' | 'center',
+          dateFontSize: dateStyle.fontSize,
+          dateColor: dateStyle.color,
+          dateFontFamily: dateStyle.fontFamily,
+          dateAlign: (dateStyle.align ?? 'left') as 'left' | 'center',
         }),
       });
 

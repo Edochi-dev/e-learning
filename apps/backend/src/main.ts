@@ -39,9 +39,22 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type'],
     credentials: true,
   });
-  // transform: true permite que el DTO convierta "49.99" (string de multipart)
-  // a número automáticamente, usando @Type(() => Number) en los campos del DTO.
-  app.useGlobalPipes(new ValidationPipe({ transform: true }));
+  // ── Validación global de DTOs ─────────────────────────────────────────
+  // transform: true  → convierte "49.99" (string de multipart) a número automáticamente.
+  // whitelist: true  → ELIMINA silenciosamente cualquier campo que no esté en el DTO.
+  // forbidNonWhitelisted: true → además de eliminar, RECHAZA la request con 400 Bad Request.
+  //
+  // Sin estas dos opciones, un atacante podría enviar campos extra que no están
+  // en el DTO pero SÍ existen en la entidad (ej: { "role": "admin" }) y si el
+  // use case hace Object.assign(entity, dto), esos campos se asignarían.
+  // Esto se llama "mass assignment" y es un ataque OWASP Top 10.
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
   await app.listen(process.env.PORT ?? 3000);
 }

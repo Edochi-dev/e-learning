@@ -30,14 +30,28 @@ describe('GenerateCertificateBatchUseCase', () => {
     id: 'tpl-1',
     courseAbbreviation: 'MR',
     filePath: '/static/certificates/templates/tpl-1.pdf',
-    namePositionX: 100,
-    namePositionY: 200,
-    nameFontSize: 28,
-    nameColor: '#000000',
-    fontFamily: 'Helvetica',
-    qrPositionX: 50,
-    qrPositionY: 50,
-    qrSize: 80,
+    nameStyle: {
+      positionX: 100,
+      positionY: 200,
+      fontSize: 28,
+      color: '#000000',
+      fontFamily: 'Helvetica',
+      align: 'left' as const,
+    },
+    qrStyle: {
+      positionX: 50,
+      positionY: 50,
+      size: 80,
+    },
+    dateStyle: {
+      show: false,
+      positionX: 0,
+      positionY: 0,
+      fontSize: 18,
+      color: '#000000',
+      fontFamily: 'Helvetica',
+      align: 'left' as const,
+    },
   } as CertificateTemplate;
 
   beforeEach(async () => {
@@ -178,8 +192,11 @@ describe('GenerateCertificateBatchUseCase', () => {
   });
 
   it('calcula el pixelSize del QR correctamente a 300 DPI (pts → inches → pixels)', async () => {
-    // qrSize = 72 pts → (72/72) * 300 = 300 pixels exactos
-    const templateWith72pts = { ...fakeTemplate, qrSize: 72 };
+    // qrStyle.size = 72 pts → (72/72) * 300 = 300 pixels exactos
+    const templateWith72pts = {
+      ...fakeTemplate,
+      qrStyle: { ...fakeTemplate.qrStyle, size: 72 },
+    };
     templateGateway.findOne.mockResolvedValue(
       templateWith72pts as CertificateTemplate,
     );

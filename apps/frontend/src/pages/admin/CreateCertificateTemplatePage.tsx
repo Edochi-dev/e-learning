@@ -302,22 +302,28 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
         setError(null);
         try {
             await gateway.updateTemplatePositions(template.id, {
-                namePositionX: namePct.x * pdfDims.w,
-                namePositionY: namePct.y * pdfDims.h,
-                nameFontSize:  fontSize,
-                nameColor,
-                fontFamily,
-                nameAlign,
-                qrPositionX:   qrPct.x * pdfDims.w,
-                qrPositionY:   qrPct.y * pdfDims.h,
-                qrSize,
-                showDate,
-                datePositionX: datePct.x * pdfDims.w,
-                datePositionY: datePct.y * pdfDims.h,
-                dateFontSize,
-                dateColor,
-                dateFontFamily,
-                dateAlign,
+                nameStyle: {
+                    positionX: namePct.x * pdfDims.w,
+                    positionY: namePct.y * pdfDims.h,
+                    fontSize,
+                    color: nameColor,
+                    fontFamily,
+                    align: nameAlign,
+                },
+                qrStyle: {
+                    positionX: qrPct.x * pdfDims.w,
+                    positionY: qrPct.y * pdfDims.h,
+                    size: qrSize,
+                },
+                dateStyle: {
+                    show: showDate,
+                    positionX: datePct.x * pdfDims.w,
+                    positionY: datePct.y * pdfDims.h,
+                    fontSize: dateFontSize,
+                    color: dateColor,
+                    fontFamily: dateFontFamily,
+                    align: dateAlign,
+                },
             });
             navigate('/admin/certificados');
         } catch (err) {

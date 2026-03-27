@@ -1,94 +1,121 @@
 import {
   IsNumber,
   IsString,
-  IsOptional,
   IsBoolean,
   Matches,
   Min,
   Max,
   IsIn,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 const HEX_COLOR = /^#[0-9A-Fa-f]{6}$/;
 const ALIGN_VALUES = ['left', 'center'] as const;
 
-export class UpdateTemplatePositionsDto {
+/**
+ * NameStyleDto — Validación del value object de estilo del nombre.
+ *
+ * Cada sub-DTO valida los campos de su grupo.
+ * @ValidateNested() en el padre delega la validación al sub-DTO.
+ * @Type(() => NameStyleDto) le dice a class-transformer cómo instanciar
+ * el objeto plano que llega del JSON body.
+ */
+export class NameStyleDto {
   @IsNumber()
   @Min(0)
   @Max(2000)
-  namePositionX: number;
+  positionX: number;
 
   @IsNumber()
   @Min(0)
   @Max(2000)
-  namePositionY: number;
+  positionY: number;
 
   @IsNumber()
   @Min(1)
   @Max(300)
-  nameFontSize: number;
+  fontSize: number;
 
   @Matches(HEX_COLOR, {
-    message: 'nameColor must be a valid hex color (#RRGGBB)',
+    message: 'color must be a valid hex color (#RRGGBB)',
   })
-  nameColor: string;
-
-  @IsNumber()
-  @Min(0)
-  @Max(2000)
-  qrPositionX: number;
-
-  @IsNumber()
-  @Min(0)
-  @Max(2000)
-  qrPositionY: number;
-
-  @IsNumber()
-  @Min(10)
-  @Max(500)
-  qrSize: number;
+  color: string;
 
   @IsString()
   fontFamily: string;
 
-  @IsOptional()
   @IsIn(ALIGN_VALUES)
-  nameAlign?: string;
+  align: 'left' | 'center';
+}
 
-  // ── Fecha de emisión ──────────────────────────────────────────────────────
-  @IsOptional()
+export class QrStyleDto {
+  @IsNumber()
+  @Min(0)
+  @Max(2000)
+  positionX: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(2000)
+  positionY: number;
+
+  @IsNumber()
+  @Min(10)
+  @Max(500)
+  size: number;
+}
+
+export class DateStyleDto {
   @IsBoolean()
-  showDate?: boolean;
+  show: boolean;
 
-  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(2000)
-  datePositionX?: number;
+  positionX: number;
 
-  @IsOptional()
   @IsNumber()
   @Min(0)
   @Max(2000)
-  datePositionY?: number;
+  positionY: number;
 
-  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(300)
-  dateFontSize?: number;
+  fontSize: number;
 
-  @IsOptional()
   @Matches(HEX_COLOR, {
-    message: 'dateColor must be a valid hex color (#RRGGBB)',
+    message: 'color must be a valid hex color (#RRGGBB)',
   })
-  dateColor?: string;
+  color: string;
 
-  @IsOptional()
   @IsString()
-  dateFontFamily?: string;
+  fontFamily: string;
 
-  @IsOptional()
   @IsIn(ALIGN_VALUES)
-  dateAlign?: string;
+  align: 'left' | 'center';
+}
+
+/**
+ * UpdateTemplatePositionsDto — DTO agrupado por value objects.
+ *
+ * El frontend envía un JSON con 3 objetos nested:
+ *   { nameStyle: {...}, qrStyle: {...}, dateStyle: {...} }
+ *
+ * @ValidateNested() + @Type() aseguran que class-validator
+ * valide DENTRO de cada sub-objeto, no solo en el nivel raíz.
+ */
+export class UpdateTemplatePositionsDto {
+  @ValidateNested()
+  @Type(() => NameStyleDto)
+  nameStyle: NameStyleDto;
+
+  @ValidateNested()
+  @Type(() => QrStyleDto)
+  qrStyle: QrStyleDto;
+
+  @ValidateNested()
+  @Type(() => DateStyleDto)
+  dateStyle: DateStyleDto;
 }

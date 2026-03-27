@@ -8,6 +8,10 @@ import { UpdateTemplatePositionsDto } from '../dto/update-template-positions.dto
  *
  * Guarda las coordenadas elegidas por el admin en el picker visual del frontend.
  * Todas las posiciones se almacenan en puntos PDF (el sistema de coordenadas nativo).
+ *
+ * Ahora el DTO llega agrupado en value objects (nameStyle, qrStyle, dateStyle).
+ * El gateway.update() recibe los mismos value objects y TypeORM los guarda
+ * directamente como jsonb — sin mapeo manual campo por campo.
  */
 @Injectable()
 export class UpdateTemplatePositionsUseCase {
@@ -18,22 +22,9 @@ export class UpdateTemplatePositionsUseCase {
     dto: UpdateTemplatePositionsDto,
   ): Promise<CertificateTemplate> {
     return this.templateGateway.update(id, {
-      namePositionX: dto.namePositionX,
-      namePositionY: dto.namePositionY,
-      nameFontSize: dto.nameFontSize,
-      nameColor: dto.nameColor,
-      fontFamily: dto.fontFamily,
-      nameAlign: dto.nameAlign ?? 'left',
-      qrPositionX: dto.qrPositionX,
-      qrPositionY: dto.qrPositionY,
-      qrSize: dto.qrSize,
-      showDate: dto.showDate ?? true,
-      datePositionX: dto.datePositionX ?? 0,
-      datePositionY: dto.datePositionY ?? 0,
-      dateFontSize: dto.dateFontSize ?? 18,
-      dateColor: dto.dateColor ?? '#000000',
-      dateFontFamily: dto.dateFontFamily ?? 'Helvetica',
-      dateAlign: dto.dateAlign ?? 'left',
+      nameStyle: dto.nameStyle,
+      qrStyle: dto.qrStyle,
+      dateStyle: dto.dateStyle,
     });
   }
 }
