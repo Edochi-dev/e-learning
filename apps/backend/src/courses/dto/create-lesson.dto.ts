@@ -12,6 +12,7 @@ import {
   IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { LessonType } from '@maris-nails/shared';
 
 // ─── Sub-DTOs para las preguntas del quiz ──────────────────────────────
 
@@ -50,8 +51,8 @@ export class CreateLessonDto {
   description: string;
 
   // El discriminador: 'class' (video) o 'exam' (quiz).
-  @IsIn(['class', 'exam'])
-  type: string;
+  @IsIn([LessonType.CLASS, LessonType.EXAM])
+  type: LessonType;
 
   // ─── Campos exclusivos de type='class' ─────────────────────────────
 

@@ -129,9 +129,13 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
       lesson.examData = this.examLessonRepository.create({
         passingScore: lessonData.passingScore,
       });
-      // Las questions vienen en lessonData y se guardan por cascade del @OneToMany
+      // Las questions vienen en lessonData y se guardan por cascade del @OneToMany.
+      // Usamos .create() para convertir los objetos planos en instancias parciales
+      // de QuizQuestion — TypeORM les asignará id y lesson al hacer save().
       if (lessonData.questions) {
-        lesson.questions = lessonData.questions;
+        lesson.questions = lessonData.questions.map((q) =>
+          this.quizQuestionRepository.create(q),
+        );
       }
     }
 
@@ -190,7 +194,9 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     // Reemplazo de preguntas (borrar viejas, insertar nuevas por cascade)
     if (data.questions) {
       await this.quizQuestionRepository.delete({ lesson: { id: lessonId } });
-      lesson.questions = data.questions;
+      lesson.questions = data.questions.map((q) =>
+        this.quizQuestionRepository.create(q),
+      );
     }
 
     return this.lessonRepository.save(lesson);
