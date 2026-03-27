@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
+import { QuizAttemptGateway, CreateQuizAttemptData } from '../gateways/quiz-attempt.gateway';
 import { QuizAttempt } from '../entities/quiz-attempt.entity';
 
 /**
@@ -21,9 +21,9 @@ export class QuizAttemptRepository implements QuizAttemptGateway {
   ) {}
 
   async saveQuizAttempt(
-    attempt: Partial<QuizAttempt>,
+    data: CreateQuizAttemptData,
   ): Promise<QuizAttempt> {
-    const entity = this.quizAttemptRepository.create(attempt);
+    const entity = this.quizAttemptRepository.create(data);
     return this.quizAttemptRepository.save(entity);
   }
 

@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
 import { CourseGateway } from './gateways/course.gateway';
-import { LessonGateway } from './gateways/lesson.gateway';
+import { LessonGateway, LessonData } from './gateways/lesson.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
@@ -101,7 +101,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
 
   async addLesson(
     courseId: string,
-    lessonData: Partial<Lesson> & Record<string, any>,
+    lessonData: LessonData,
   ): Promise<Lesson> {
     const course = await this.findOne(courseId);
     if (!course) {
@@ -163,7 +163,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
    *
    * Para questions: estrategia "borrar todo y reinsertar".
    */
-  async updateLesson(lessonId: string, data: Partial<Lesson> & Record<string, any>): Promise<Lesson> {
+  async updateLesson(lessonId: string, data: LessonData): Promise<Lesson> {
     const lesson = await this.lessonRepository.findOne({
       where: { id: lessonId },
       relations: ['videoData', 'examData'],

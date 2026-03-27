@@ -1,6 +1,27 @@
 import { QuizAttempt } from '../entities/quiz-attempt.entity';
 
 /**
+ * CreateQuizAttemptData — Tipo intermedio para guardar un intento de quiz.
+ *
+ * ¿Por qué no usar Partial<QuizAttempt> directamente?
+ *
+ * Porque QuizAttempt.answers es QuizAttemptAnswer[] (entidades con relaciones,
+ * PK, FK a QuizAttempt, etc.). El Use Case no debería construir entidades —
+ * solo pasa los datos planos. El repositorio es quien crea las entidades.
+ */
+export interface CreateQuizAttemptData {
+  userId: string;
+  lessonId: string;
+  score: number;
+  passed: boolean;
+  answers: {
+    questionId: string;
+    selectedOptionId: string;
+    correct: boolean;
+  }[];
+}
+
+/**
  * QuizAttemptGateway -- Contrato abstracto para intentos de quiz.
  *
  * Responsabilidad UNICA: persistir y consultar intentos de exámenes.
@@ -18,7 +39,7 @@ export abstract class QuizAttemptGateway {
    * cascade: true en la entidad guarda las QuizAttemptAnswer automáticamente.
    */
   abstract saveQuizAttempt(
-    attempt: Partial<QuizAttempt>,
+    data: CreateQuizAttemptData,
   ): Promise<QuizAttempt>;
 
   /**

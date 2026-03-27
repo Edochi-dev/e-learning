@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Lesson } from '../entities/lessons.entity';
-import { LessonGateway } from '../gateways/lesson.gateway';
+import { LessonGateway, LessonData } from '../gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { UpdateLessonDto } from '../dto/update-lesson.dto';
 
@@ -47,20 +47,19 @@ export class UpdateLessonUseCase {
       await this.cleanupOrphanedFile(oldVideoUrl, lessonId);
     }
 
-    // 3. Si vienen preguntas, asignar el campo order según su posición en el array.
+    // 3. Construir LessonData con las preguntas ordenadas.
     //    El frontend las envía en el orden correcto, pero no manda el campo order.
     //    Nosotros lo calculamos aquí para que la BD las devuelva siempre ordenadas.
-    if (dto.questions) {
-      dto.questions.forEach((q, index) => {
-        (q as any).order = index;
-      });
-    }
+    const data: LessonData = {
+      ...dto,
+      questions: dto.questions?.map((q, index) => ({
+        ...q,
+        order: index,
+      })),
+    };
 
     // 4. Actualizar la lección
-    return this.lessonGateway.updateLesson(
-      lessonId,
-      dto as unknown as Partial<Lesson>,
-    );
+    return this.lessonGateway.updateLesson(lessonId, data);
   }
 
   /**

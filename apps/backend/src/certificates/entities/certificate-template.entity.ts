@@ -6,9 +6,14 @@ import {
   OneToMany,
 } from 'typeorm';
 import { Certificate } from './certificate.entity';
-import { NameStyle, DEFAULT_NAME_STYLE } from '../value-objects/name-style.vo';
-import { QrStyle, DEFAULT_QR_STYLE } from '../value-objects/qr-style.vo';
-import { DateStyle, DEFAULT_DATE_STYLE } from '../value-objects/date-style.vo';
+import {
+  NameStyle,
+  DEFAULT_NAME_STYLE,
+  QrStyle,
+  DEFAULT_QR_STYLE,
+  DateStyle,
+  DEFAULT_DATE_STYLE,
+} from '../value-objects';
 
 /**
  * CertificateTemplate — Entidad que almacena una plantilla de certificado.

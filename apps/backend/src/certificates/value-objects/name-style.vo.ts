@@ -1,13 +1,11 @@
 /**
  * NameStyle — Value Object que agrupa toda la configuración visual del nombre.
  *
- * En DDD, un Value Object es un objeto definido por sus atributos, no por una identidad.
- * No tiene ID propio — dos NameStyle con los mismos valores son iguales.
- *
- * Antes, estos 6 campos vivían sueltos como columnas planas en CertificateTemplate.
- * Ahora son un grupo cohesivo almacenado como jsonb en PostgreSQL.
+ * Es una CLASE (no interface) porque TypeORM + emitDecoratorMetadata necesita
+ * un tipo que exista en runtime. Las interfaces se borran al compilar y el
+ * decorador @Column('jsonb') no puede referenciarlas.
  */
-export interface NameStyle {
+export class NameStyle {
   positionX: number;
   positionY: number;
   fontSize: number;

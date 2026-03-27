@@ -148,7 +148,7 @@ export class SubmitQuizUseCase {
         selectedOptionId: a.selectedOptionId,
         correct: a.correct,
       })),
-    } as any);
+    });
 
     // Si aprobó, marcamos la lección como completada automáticamente.
     // Reutilizamos el mismo markLessonComplete que usa el flujo de video.

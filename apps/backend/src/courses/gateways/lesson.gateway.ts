@@ -1,4 +1,40 @@
 import { Lesson } from '../entities/lessons.entity';
+import { LessonType } from '@maris-nails/shared';
+
+/**
+ * LessonData — Tipo intermedio para crear/actualizar lecciones.
+ *
+ * ¿Por qué no usar Partial<Lesson> directamente?
+ *
+ * Porque la entidad Lesson usa Joined Table Inheritance:
+ *   - videoUrl, isLive, duration → viven en VideoLesson (entidad hija)
+ *   - passingScore → vive en ExamLesson (entidad hija)
+ *   - questions → relación OneToMany con QuizQuestion
+ *
+ * Pero los DTOs del frontend envían todo en formato PLANO:
+ *   { title, type, videoUrl, isLive, passingScore, questions }
+ *
+ * Este tipo permite que el gateway reciba datos planos sin necesidad
+ * de que el Use Case conozca la estructura interna de las entidades hijas.
+ * El repositorio es quien sabe cómo repartir los campos entre las tablas.
+ */
+export interface LessonData {
+  title?: string;
+  description?: string;
+  type?: LessonType;
+  // Campos de video (type='class')
+  videoUrl?: string;
+  duration?: string;
+  isLive?: boolean;
+  // Campos de examen (type='exam')
+  passingScore?: number;
+  questions?: {
+    text: string;
+    order?: number;
+    relatedLessonId?: string;
+    options: { text: string; isCorrect: boolean }[];
+  }[];
+}
 
 /**
  * LessonGateway — Contrato abstracto para operaciones de lecciones.
@@ -9,15 +45,11 @@ import { Lesson } from '../entities/lessons.entity';
  *
  * La implementación concreta (CoursesRepository) implementa AMBOS gateways.
  * La separación es a nivel de contrato, no de implementación.
- *
- * Usa la entidad TypeORM del backend, NO la interfaz de @maris-nails/shared.
- * Internamente, Lesson tiene relaciones a VideoLesson y ExamLesson (JTI).
- * La interfaz shared solo ve la forma plana que viaja por HTTP.
  */
 export abstract class LessonGateway {
   abstract addLesson(
     courseId: string,
-    lesson: Partial<Lesson>,
+    data: LessonData,
   ): Promise<Lesson>;
 
   abstract removeLesson(lessonId: string): Promise<void>;
@@ -26,7 +58,7 @@ export abstract class LessonGateway {
 
   abstract updateLesson(
     lessonId: string,
-    data: Partial<Lesson>,
+    data: LessonData,
   ): Promise<Lesson>;
 
   abstract reorderLessons(

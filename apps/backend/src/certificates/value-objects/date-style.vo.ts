@@ -1,15 +1,10 @@
 /**
  * DateStyle — Value Object que agrupa la configuración visual de la fecha.
  *
- * Similar a NameStyle pero con un campo adicional: `show`.
- * Si show=false, el generador de PDF no renderiza la fecha.
- *
- * ¿Por qué no extender NameStyle?
- * Porque son conceptos de negocio distintos. El nombre y la fecha
- * pueden evolucionar independientemente (ej: la fecha podría tener
- * un campo de formato "DD/MM/YYYY" vs "Month DD, YYYY" en el futuro).
+ * Clase (no interface) porque TypeORM + emitDecoratorMetadata necesita
+ * un tipo que exista en runtime para el decorador @Column('jsonb').
  */
-export interface DateStyle {
+export class DateStyle {
   show: boolean;
   positionX: number;
   positionY: number;
