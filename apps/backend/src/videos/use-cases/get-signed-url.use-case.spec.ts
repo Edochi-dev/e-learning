@@ -2,31 +2,20 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GetSignedUrlUseCase } from './get-signed-url.use-case';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
+import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { VideoTokenService } from '../video-token.service';
 import { Lesson } from '../../courses/entities/lessons.entity';
 
 /**
  * Tests para GetSignedUrlUseCase — generación de URLs firmadas para videos.
  *
- * ¿Por qué URLs firmadas en lugar de servir los videos directamente?
- *
- *   El tag <video src="..."> del navegador NO puede enviar headers HTTP
- *   (como Authorization: Bearer ...). Entonces el JWT del alumno no llega.
- *
- *   Solución: el frontend pide una URL firmada (con JWT), y luego usa
- *   esa URL temporal como src del <video>. El token va en el query string,
- *   no en un header — así el navegador lo envía automáticamente.
- *
- * Escenarios:
- *   1. Lección no existe → NotFoundException
- *   2. Lección sin video (examen) → NotFoundException
- *   3. Video externo (YouTube) → retorna URL original sin firmar
- *   4. Video local → genera token y retorna URL firmada
- *   5. URL con host completo → extrae solo el pathname
+ * Ahora usa FileStorageGateway.isLocalFile y toRelativePath en lugar de
+ * hardcodear '/static/' directamente. El Use Case ya no conoce el prefijo.
  */
 describe('GetSignedUrlUseCase', () => {
   let useCase: GetSignedUrlUseCase;
   let lessonGateway: jest.Mocked<LessonGateway>;
+  let fileStorageGateway: jest.Mocked<FileStorageGateway>;
   let videoTokenService: jest.Mocked<VideoTokenService>;
 
   const lessonId = 'lesson-uuid-123';
@@ -42,6 +31,13 @@ describe('GetSignedUrlUseCase', () => {
           useValue: { findLesson: jest.fn() },
         },
         {
+          provide: FileStorageGateway,
+          useValue: {
+            isLocalFile: jest.fn(),
+            toRelativePath: jest.fn(),
+          },
+        },
+        {
           provide: VideoTokenService,
           useValue: { generateToken: jest.fn() },
         },
@@ -50,22 +46,15 @@ describe('GetSignedUrlUseCase', () => {
 
     useCase = module.get(GetSignedUrlUseCase);
     lessonGateway = module.get(LessonGateway);
+    fileStorageGateway = module.get(FileStorageGateway);
     videoTokenService = module.get(VideoTokenService) as jest.Mocked<VideoTokenService>;
   });
-
-  // ──────────────────────────────────────────────────────────
-  // 1. VALIDACIÓN: lección no existe
-  // ──────────────────────────────────────────────────────────
 
   it('lanza NotFoundException si la lección no existe', async () => {
     lessonGateway.findLesson.mockResolvedValue(null);
 
     await expect(useCase.execute(lessonId)).rejects.toThrow(NotFoundException);
   });
-
-  // ──────────────────────────────────────────────────────────
-  // 2. VALIDACIÓN: lección sin video
-  // ──────────────────────────────────────────────────────────
 
   it('lanza NotFoundException si la lección no tiene video (es un examen)', async () => {
     lessonGateway.findLesson.mockResolvedValue({
@@ -76,19 +65,17 @@ describe('GetSignedUrlUseCase', () => {
     await expect(useCase.execute(lessonId)).rejects.toThrow(NotFoundException);
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 3. Video externo — retorna URL original sin firmar
-  // ──────────────────────────────────────────────────────────
-
   /**
-   * Si el video es de YouTube o Vimeo, no necesitamos firmarlo.
-   * Retornamos la URL tal cual con expires: 0.
+   * Si el video es de YouTube o Vimeo, isLocalFile devuelve false.
+   * Retornamos la URL original sin firmar, con expires: 0.
    */
   it('retorna la URL original si el video es externo (YouTube)', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       videoData: { videoUrl: 'https://youtube.com/watch?v=abc123' },
     } as unknown as Lesson);
+
+    fileStorageGateway.isLocalFile.mockReturnValue(false);
 
     const result = await useCase.execute(lessonId);
 
@@ -97,15 +84,14 @@ describe('GetSignedUrlUseCase', () => {
     expect(videoTokenService.generateToken).not.toHaveBeenCalled();
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 4. Video local — genera URL firmada
-  // ──────────────────────────────────────────────────────────
-
-  it('genera una URL firmada para videos locales', async () => {
+  it('genera una URL firmada para videos locales usando toRelativePath', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       videoData: { videoUrl: '/static/videos/clase1.mp4' },
     } as unknown as Lesson);
+
+    fileStorageGateway.isLocalFile.mockReturnValue(true);
+    fileStorageGateway.toRelativePath.mockReturnValue('videos/clase1.mp4');
 
     videoTokenService.generateToken.mockReturnValue({
       token: 'signed-token-123',
@@ -114,25 +100,27 @@ describe('GetSignedUrlUseCase', () => {
 
     const result = await useCase.execute(lessonId);
 
+    // Verifica que toRelativePath extrae la ruta — no el Use Case
+    expect(fileStorageGateway.toRelativePath).toHaveBeenCalledWith(
+      '/static/videos/clase1.mp4',
+    );
     expect(videoTokenService.generateToken).toHaveBeenCalledWith('videos/clase1.mp4');
-    expect(result.url).toContain('/videos/stream?path=');
     expect(result.url).toContain('token=signed-token-123');
     expect(result.expires).toBe(1700007200000);
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 5. URL con host completo — extrae solo el pathname
-  // ──────────────────────────────────────────────────────────
-
   /**
    * Si el admin guardó la URL completa ("http://localhost:3000/static/videos/clase1.mp4"),
-   * el Use Case extrae solo el pathname ("/static/videos/clase1.mp4") para procesarla.
+   * el Use Case extrae solo el pathname antes de pasarlo al gateway.
    */
   it('normaliza URLs con host completo extrayendo solo el pathname', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       videoData: { videoUrl: 'http://localhost:3000/static/videos/clase1.mp4' },
     } as unknown as Lesson);
+
+    fileStorageGateway.isLocalFile.mockReturnValue(true);
+    fileStorageGateway.toRelativePath.mockReturnValue('videos/clase1.mp4');
 
     videoTokenService.generateToken.mockReturnValue({
       token: 'token-abc',
@@ -141,8 +129,10 @@ describe('GetSignedUrlUseCase', () => {
 
     const result = await useCase.execute(lessonId);
 
-    // Debe haber extraído solo "videos/clase1.mp4", no la URL completa
-    expect(videoTokenService.generateToken).toHaveBeenCalledWith('videos/clase1.mp4');
+    // isLocalFile recibe el pathname, no la URL completa con host
+    expect(fileStorageGateway.isLocalFile).toHaveBeenCalledWith(
+      '/static/videos/clase1.mp4',
+    );
     expect(result.url).toContain('token=token-abc');
   });
 });

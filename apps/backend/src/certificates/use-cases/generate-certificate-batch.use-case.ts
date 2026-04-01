@@ -1,12 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { join } from 'path';
-import { mkdir, writeFile } from 'fs/promises';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { CertificateGateway } from '../gateways/certificate.gateway';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateGeneratorGateway } from '../gateways/certificate-generator.gateway';
 import { QrCodeGateway } from '../gateways/qr-code.gateway';
+import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { Certificate } from '../entities/certificate.entity';
 import { GenerateCertificateBatchDto } from '../dto/generate-certificate-batch.dto';
 
@@ -24,22 +23,27 @@ export interface GeneratedCertificateSummary {
  *  1. Calcula el número de certificado (ej. MR-00003)
  *  2. Genera el QR que apunta a la página de verificación pública
  *  3. Genera el PDF con el nombre y el QR superpuestos en la plantilla
- *  4. Guarda el PDF en disco
+ *  4. Guarda el PDF en disco via FileStorageGateway
  *  5. Persiste el registro en la base de datos
  *
  * IMPORTANTE: Este use case usa ConfigService para obtener FRONTEND_URL.
  * El QR debe apuntar al FRONTEND (donde vive la página de verificación),
  * no al backend. Por eso necesitamos la URL del frontend como variable de entorno.
+ *
+ * Nota: CertificateGeneratorGateway.generate() recibe un templatePath absoluto.
+ * Usamos FileStorageGateway.resolveAbsolutePath() — pero como ese método no existe
+ * aún, por ahora le pasamos la URL y dejamos que el generator la resuelva.
+ * Alternativa: le pasamos el Buffer del template (leído via readFileByUrl).
+ * Elegimos pasar el buffer para mantener limpia la abstracción.
  */
 @Injectable()
 export class GenerateCertificateBatchUseCase {
-  private readonly publicDir = join(__dirname, '..', '..', '..', 'public');
-
   constructor(
     private readonly certificateGateway: CertificateGateway,
     private readonly templateGateway: CertificateTemplateGateway,
     private readonly generatorGateway: CertificateGeneratorGateway,
     private readonly qrGateway: QrCodeGateway,
+    private readonly fileStorageGateway: FileStorageGateway,
     private readonly configService: ConfigService,
   ) {}
 
@@ -50,11 +54,10 @@ export class GenerateCertificateBatchUseCase {
     if (!template)
       throw new NotFoundException(`Plantilla ${dto.templateId} no encontrada`);
 
-    // Convertimos la ruta URL del template a ruta del filesystem
-    // "/static/certificates/templates/xxx.pdf" → "public/certificates/templates/xxx.pdf"
-    const templateAbsPath = join(
-      this.publicDir,
-      template.filePath.replace('/static/', ''),
+    // Leer el PDF de la plantilla via el gateway — el Use Case no sabe
+    // dónde vive el archivo ni cómo se estructura la URL.
+    const templateBuffer = await this.fileStorageGateway.readFileByUrl(
+      template.filePath,
     );
 
     const frontendUrl = this.configService.get<string>(
@@ -62,9 +65,6 @@ export class GenerateCertificateBatchUseCase {
       'http://localhost:5173',
     );
     const results: GeneratedCertificateSummary[] = [];
-
-    const destFolder = join(this.publicDir, 'certificates', 'generated');
-    await mkdir(destFolder, { recursive: true });
 
     for (const name of dto.names) {
       const trimmedName = name.trim();
@@ -101,7 +101,7 @@ export class GenerateCertificateBatchUseCase {
       const { nameStyle, qrStyle, dateStyle } = template;
 
       const pdfBuffer = await this.generatorGateway.generate({
-        templatePath: templateAbsPath,
+        templatePath: templateBuffer,
         recipientName: trimmedName,
         qrBuffer,
         namePosition: { x: nameStyle.positionX, y: nameStyle.positionY },
@@ -124,10 +124,13 @@ export class GenerateCertificateBatchUseCase {
         }),
       });
 
-      // 5. Guardar el PDF generado en disco
+      // 5. Guardar el PDF generado via FileStorageGateway
       const filename = `${certId}.pdf`;
-      await writeFile(join(destFolder, filename), pdfBuffer);
-      const filePath = `/static/certificates/generated/${filename}`;
+      const filePath = await this.fileStorageGateway.saveBuffer(
+        pdfBuffer,
+        'certificates/generated',
+        filename,
+      );
 
       // 6. Persistir en la base de datos
       const cert = await this.certificateGateway.create({

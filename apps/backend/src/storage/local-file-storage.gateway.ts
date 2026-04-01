@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { join, extname } from 'path';
-import { unlink, writeFile, mkdir } from 'fs/promises';
+import { unlink, writeFile, mkdir, readFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { FileStorageGateway } from './gateways/file-storage.gateway';
@@ -118,5 +118,52 @@ export class LocalFileStorageGateway implements FileStorageGateway {
 
     const relativePath = url.replace(this.STATIC_PREFIX, '');
     await this.deleteFile(relativePath);
+  }
+
+  /**
+   * Lee un archivo dado su URL pública.
+   *
+   * Ejemplo:
+   *   readFileByUrl('/static/certificates/templates/tpl.pdf')
+   *     → lee de: public/certificates/templates/tpl.pdf
+   *     → retorna: Buffer con los bytes del PDF
+   */
+  async readFileByUrl(url: string): Promise<Buffer> {
+    const relativePath = url.replace(this.STATIC_PREFIX, '');
+    const absolutePath = join(this.publicDir, relativePath);
+    return readFile(absolutePath);
+  }
+
+  /**
+   * Guarda un buffer crudo en una subcarpeta de public/.
+   *
+   * Ejemplo:
+   *   saveBuffer(pdfBytes, 'certificates/generated', 'abc-123.pdf')
+   *     → crea: public/certificates/generated/abc-123.pdf
+   *     → retorna: '/static/certificates/generated/abc-123.pdf'
+   */
+  async saveBuffer(
+    buffer: Buffer,
+    folder: string,
+    filename: string,
+  ): Promise<string> {
+    const destFolder = join(this.publicDir, folder);
+    await mkdir(destFolder, { recursive: true });
+
+    const destPath = join(destFolder, filename);
+    await writeFile(destPath, buffer);
+
+    this.logger.log(`Buffer guardado: ${destPath}`);
+    return `${this.STATIC_PREFIX}${folder}/${filename}`;
+  }
+
+  /**
+   * Extrae la ruta relativa de una URL pública.
+   *
+   * Ejemplo:
+   *   toRelativePath('/static/videos/clase1.mp4') → 'videos/clase1.mp4'
+   */
+  toRelativePath(url: string): string {
+    return url.replace(this.STATIC_PREFIX, '');
   }
 }

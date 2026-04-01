@@ -31,7 +31,7 @@ const fontkit = fontkitModule.default ?? fontkitModule;
  */
 describe('PdfCertificateGenerator — text integrity', () => {
   let generator: PdfCertificateGenerator;
-  let templatePath: string;
+  let templatePath: Buffer;
   let qrBuffer: Buffer;
 
   // Nombres largos con diferentes consonantes — así se manifestó el bug en prod.
@@ -76,9 +76,8 @@ describe('PdfCertificateGenerator — text integrity', () => {
     blankPdf.addPage([595, 842]); // A4 en puntos PDF
     const blankBytes = await blankPdf.save();
 
-    // Lo guardamos en /tmp para que el generador lo pueda leer
-    templatePath = path.join('/tmp', 'test-template-blank.pdf');
-    fs.writeFileSync(templatePath, blankBytes);
+    // Ahora templatePath es un Buffer (el generador ya no lee del filesystem)
+    templatePath = Buffer.from(blankBytes);
 
     // QR mínimo (1x1 pixel PNG transparente) — solo necesitamos que sea un PNG válido
     qrBuffer = createMinimalPng();
@@ -86,11 +85,7 @@ describe('PdfCertificateGenerator — text integrity', () => {
     generator = new PdfCertificateGenerator();
   });
 
-  afterAll(() => {
-    if (fs.existsSync(templatePath)) {
-      fs.unlinkSync(templatePath);
-    }
-  });
+  // Ya no necesitamos afterAll: no hay archivo temporal que limpiar
 
   /**
    * Genera los params estándar para un test.
