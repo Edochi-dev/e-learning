@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { StorageModule } from '../storage/storage.module';
 import { CertificatesController } from './certificates.controller';
 import { CertificateTemplate } from './entities/certificate-template.entity';
 import { Certificate } from './entities/certificate.entity';
@@ -39,6 +40,7 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
   imports: [
     TypeOrmModule.forFeature([CertificateTemplate, Certificate]),
     ConfigModule, // Necesario para ConfigService en GenerateCertificateBatchUseCase
+    StorageModule, // Necesario para FileStorageGateway en delete use cases
   ],
   controllers: [CertificatesController],
   providers: [

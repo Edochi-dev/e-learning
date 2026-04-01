@@ -2,19 +2,21 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DeleteCertificateUseCase } from './delete-certificate.use-case';
 import { CertificateGateway } from '../gateways/certificate.gateway';
+import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { Certificate } from '../entities/certificate.entity';
 
-// Mockeamos el módulo fs/promises completo para aislar los tests del filesystem real
-jest.mock('fs/promises', () => ({
-  unlink: jest.fn(),
-}));
-
-import { unlink } from 'fs/promises';
-const unlinkMock = unlink as jest.MockedFunction<typeof unlink>;
-
+/**
+ * Tests para DeleteCertificateUseCase — eliminación de certificado y su PDF.
+ *
+ * Después del refactor:
+ *   - Ya no mockea fs/promises directamente
+ *   - Usa FileStorageGateway.deleteByUrl (la abstracción correcta)
+ *   - El Use Case no sabe nada del filesystem
+ */
 describe('DeleteCertificateUseCase', () => {
   let useCase: DeleteCertificateUseCase;
   let gateway: jest.Mocked<CertificateGateway>;
+  let fileStorageGateway: jest.Mocked<FileStorageGateway>;
 
   const fakeCert = {
     id: 'cert-uuid',
@@ -31,11 +33,16 @@ describe('DeleteCertificateUseCase', () => {
           provide: CertificateGateway,
           useValue: { findOne: jest.fn(), delete: jest.fn() },
         },
+        {
+          provide: FileStorageGateway,
+          useValue: { deleteByUrl: jest.fn() },
+        },
       ],
     }).compile();
 
     useCase = module.get(DeleteCertificateUseCase);
     gateway = module.get(CertificateGateway);
+    fileStorageGateway = module.get(FileStorageGateway);
   });
 
   it('lanza NotFoundException si el certificado no existe en BD', async () => {
@@ -47,30 +54,17 @@ describe('DeleteCertificateUseCase', () => {
     expect(gateway.delete).not.toHaveBeenCalled();
   });
 
-  it('elimina el archivo del disco y el registro de la BD', async () => {
+  it('llama a deleteByUrl con el filePath y luego elimina el registro de la BD', async () => {
     gateway.findOne.mockResolvedValue(fakeCert);
-    unlinkMock.mockResolvedValue(undefined);
     gateway.delete.mockResolvedValue(undefined);
 
     await useCase.execute('cert-uuid');
 
-    // Verifica que se intentó borrar el archivo
-    expect(unlinkMock).toHaveBeenCalledTimes(1);
-    // Verifica que eliminó el registro de la BD
-    expect(gateway.delete).toHaveBeenCalledWith('cert-uuid');
-  });
-
-  it('sigue eliminando el registro de la BD aunque el archivo ya no exista en disco (desincronización)', async () => {
-    // Edge case importante en producción: el archivo fue borrado manualmente del servidor
-    // pero el registro sigue en la BD. El .catch(() => {}) debe absorber el error.
-    gateway.findOne.mockResolvedValue(fakeCert);
-    unlinkMock.mockRejectedValue(
-      new Error('ENOENT: no such file or directory'),
+    // Verifica que deleteByUrl recibe la URL completa del PDF
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      '/static/certificates/generated/cert-uuid.pdf',
     );
-    gateway.delete.mockResolvedValue(undefined);
-
-    // No debe lanzar error
-    await expect(useCase.execute('cert-uuid')).resolves.toBeUndefined();
+    // Verifica que eliminó el registro de la BD
     expect(gateway.delete).toHaveBeenCalledWith('cert-uuid');
   });
 });
