@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
+import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { VideoTokenService } from '../video-token.service';
 
 /**
@@ -15,6 +16,7 @@ import { VideoTokenService } from '../video-token.service';
 export class GetSignedUrlUseCase {
   constructor(
     private readonly lessonGateway: LessonGateway,
+    private readonly fileStorageGateway: FileStorageGateway,
     private readonly videoTokenService: VideoTokenService,
   ) {}
 
@@ -42,19 +44,19 @@ export class GetSignedUrlUseCase {
       cleanPath = videoUrl;
     }
 
-    // 3. Si no apunta a nuestro directorio estático, es un video externo (YouTube, Vimeo...)
-    if (!cleanPath.startsWith('/static/')) {
+    // 3. Si no apunta a nuestro storage, es un video externo (YouTube, Vimeo...)
+    if (!this.fileStorageGateway.isLocalFile(cleanPath)) {
       return { url: videoUrl, expires: 0 };
     }
 
-    // 4. Extraer la ruta relativa del video
-    // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
-    const videoPath = cleanPath.replace('/static/', '');
+    // 4. Extraer la ruta relativa del video via el gateway
+    // El Use Case no sabe que "/static/" es el prefijo — eso lo maneja el gateway.
+    const videoPath = this.fileStorageGateway.toRelativePath(cleanPath);
 
-    // 4. Generar token firmado
+    // 5. Generar token firmado
     const { token, expires } = this.videoTokenService.generateToken(videoPath);
 
-    // 5. Construir la URL firmada
+    // 6. Construir la URL firmada
     const url = `/videos/stream?path=${encodeURIComponent(videoPath)}&token=${token}`;
 
     return { url, expires };

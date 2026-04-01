@@ -119,8 +119,10 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
       dateAlign,
     } = params;
 
-    const templateBytes = fs.readFileSync(templatePath);
-    const pdfDoc = await PDFDocument.load(templateBytes);
+    // templatePath ahora es un Buffer (leído por el Use Case via FileStorageGateway).
+    // Antes era una ruta del filesystem, lo cual filtraba detalles de infraestructura
+    // al generador de PDFs. PDFDocument.load() acepta Buffer directamente.
+    const pdfDoc = await PDFDocument.load(templatePath);
 
     const page = pdfDoc.getPages()[0];
     const { height: pageHeight } = page.getSize();

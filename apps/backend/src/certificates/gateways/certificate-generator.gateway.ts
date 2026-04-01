@@ -1,5 +1,6 @@
 export interface GenerateCertificateParams {
-  templatePath: string;
+  /** Buffer del PDF de la plantilla (leído via FileStorageGateway) */
+  templatePath: Buffer;
   recipientName: string;
   qrBuffer: Buffer;
   namePosition: { x: number; y: number };

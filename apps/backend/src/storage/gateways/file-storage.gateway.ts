@@ -48,4 +48,45 @@ export abstract class FileStorageGateway {
    *   capa de negocio. Si migramos a S3, cada Use Case se rompería.
    */
   abstract deleteByUrl(url: string): Promise<void>;
+
+  /**
+   * Lee un archivo a partir de su URL pública y devuelve su contenido como Buffer.
+   *
+   * Ejemplo:
+   *   readFileByUrl('/static/certificates/templates/tpl.pdf') → Buffer con el PDF
+   *
+   * El Use Case no sabe si el archivo está en disco local, en S3, o en otro lado.
+   * Solo pasa la URL que guardó en la BD y recibe el contenido.
+   */
+  abstract readFileByUrl(url: string): Promise<Buffer>;
+
+  /**
+   * Guarda un buffer crudo (no un archivo Multer) en una subcarpeta del storage.
+   *
+   * @param buffer   Los bytes del archivo a guardar
+   * @param folder   Subcarpeta destino (ej: "certificates/generated")
+   * @param filename Nombre del archivo (ej: "uuid.pdf")
+   * @returns        La URL pública del archivo guardado
+   *
+   * Diferencia con saveFile:
+   *   - saveFile recibe un Express.Multer.File (upload HTTP)
+   *   - saveBuffer recibe un Buffer (generado en código, ej: un PDF)
+   */
+  abstract saveBuffer(
+    buffer: Buffer,
+    folder: string,
+    filename: string,
+  ): Promise<string>;
+
+  /**
+   * Convierte una URL pública en la ruta relativa del storage.
+   *
+   * Ejemplo:
+   *   toRelativePath('/static/videos/clase1.mp4') → 'videos/clase1.mp4'
+   *
+   * Usado por el flujo de signed URLs: el token se firma con la ruta relativa,
+   * no con la URL completa. Este método encapsula el conocimiento de cómo
+   * se estructuran las URLs del storage.
+   */
+  abstract toRelativePath(url: string): string;
 }

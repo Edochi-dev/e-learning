@@ -6,6 +6,7 @@ import { VideoTokenService } from './video-token.service';
 import { VideoStreamGateway } from './gateways/video-stream.gateway';
 import { LocalVideoStreamGateway } from './local-video-stream.gateway';
 import { CoursesModule } from '../courses/courses.module';
+import { StorageModule } from '../storage/storage.module';
 
 /**
  * VideosModule — Módulo de streaming de video
@@ -24,7 +25,7 @@ import { CoursesModule } from '../courses/courses.module';
  * QuizQuestionRepository). Importar el módulo es la forma correcta en NestJS.
  */
 @Module({
-  imports: [CoursesModule],
+  imports: [CoursesModule, StorageModule],
   controllers: [VideosController],
   providers: [
     GetSignedUrlUseCase,

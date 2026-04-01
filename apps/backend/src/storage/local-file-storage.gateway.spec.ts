@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { unlink } from 'fs/promises';
+import { unlink, readFile, writeFile, mkdir } from 'fs/promises';
 import { LocalFileStorageGateway } from './local-file-storage.gateway';
 
 /**
@@ -23,10 +23,14 @@ jest.mock('fs/promises', () => ({
   unlink: jest.fn(),
   writeFile: jest.fn(),
   mkdir: jest.fn(),
+  readFile: jest.fn(),
 }));
 
 const mockedExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
 const mockedUnlink = unlink as jest.MockedFunction<typeof unlink>;
+const mockedReadFile = readFile as jest.MockedFunction<typeof readFile>;
+const mockedWriteFile = writeFile as jest.MockedFunction<typeof writeFile>;
+const mockedMkdir = mkdir as jest.MockedFunction<typeof mkdir>;
 
 describe('LocalFileStorageGateway', () => {
   let gateway: LocalFileStorageGateway;
@@ -110,5 +114,58 @@ describe('LocalFileStorageGateway', () => {
     const calledPath = mockedUnlink.mock.calls[0][0] as string;
     expect(calledPath).toContain('certificates/generated/abc.pdf');
     expect(calledPath).not.toContain('/static/');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // toRelativePath — extrae ruta relativa de una URL pública
+  // ──────────────────────────────────────────────────────────
+
+  it('toRelativePath extrae la ruta relativa quitando /static/', () => {
+    expect(gateway.toRelativePath('/static/videos/clase1.mp4')).toBe(
+      'videos/clase1.mp4',
+    );
+    expect(
+      gateway.toRelativePath('/static/certificates/generated/abc.pdf'),
+    ).toBe('certificates/generated/abc.pdf');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // readFileByUrl — lee un archivo dado su URL pública
+  // ──────────────────────────────────────────────────────────
+
+  it('readFileByUrl lee el archivo del filesystem usando la ruta relativa', async () => {
+    const fakeBuffer = Buffer.from('pdf-content');
+    mockedReadFile.mockResolvedValue(fakeBuffer);
+
+    const result = await gateway.readFileByUrl(
+      '/static/certificates/templates/tpl.pdf',
+    );
+
+    expect(result).toBe(fakeBuffer);
+    const calledPath = mockedReadFile.mock.calls[0][0] as string;
+    expect(calledPath).toContain('certificates/templates/tpl.pdf');
+    expect(calledPath).not.toContain('/static/');
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // saveBuffer — guarda un buffer y retorna la URL pública
+  // ──────────────────────────────────────────────────────────
+
+  it('saveBuffer crea la carpeta, escribe el archivo, y retorna la URL pública', async () => {
+    mockedMkdir.mockResolvedValue(undefined);
+    mockedWriteFile.mockResolvedValue(undefined);
+
+    const result = await gateway.saveBuffer(
+      Buffer.from('pdf-bytes'),
+      'certificates/generated',
+      'abc.pdf',
+    );
+
+    expect(result).toBe('/static/certificates/generated/abc.pdf');
+    expect(mockedMkdir).toHaveBeenCalledTimes(1);
+    expect(mockedWriteFile).toHaveBeenCalledTimes(1);
+
+    const writtenPath = mockedWriteFile.mock.calls[0][0] as string;
+    expect(writtenPath).toContain('certificates/generated/abc.pdf');
   });
 });

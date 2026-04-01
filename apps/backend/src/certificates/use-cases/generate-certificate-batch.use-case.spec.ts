@@ -6,13 +6,19 @@ import { CertificateGateway } from '../gateways/certificate.gateway';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateGeneratorGateway } from '../gateways/certificate-generator.gateway';
 import { QrCodeGateway } from '../gateways/qr-code.gateway';
+import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
 import { Certificate } from '../entities/certificate.entity';
 
-jest.mock('fs/promises', () => ({
-  mkdir: jest.fn().mockResolvedValue(undefined),
-  writeFile: jest.fn().mockResolvedValue(undefined),
-}));
+/**
+ * Tests para GenerateCertificateBatchUseCase — generación masiva de certificados.
+ *
+ * Después del refactor:
+ *   - Ya no mockea fs/promises (mkdir, writeFile)
+ *   - Usa FileStorageGateway.readFileByUrl para leer la plantilla
+ *   - Usa FileStorageGateway.saveBuffer para guardar los PDFs generados
+ *   - El template se pasa como Buffer al generator (no como ruta del filesystem)
+ */
 
 jest.mock('crypto', () => ({
   randomUUID: jest.fn().mockReturnValue('cert-uuid-123'),
@@ -24,6 +30,7 @@ describe('GenerateCertificateBatchUseCase', () => {
   let certGateway: jest.Mocked<CertificateGateway>;
   let generatorGateway: jest.Mocked<CertificateGeneratorGateway>;
   let qrGateway: jest.Mocked<QrCodeGateway>;
+  let fileStorageGateway: jest.Mocked<FileStorageGateway>;
   let configService: jest.Mocked<ConfigService>;
 
   const fakeTemplate = {
@@ -54,6 +61,8 @@ describe('GenerateCertificateBatchUseCase', () => {
     },
   } as CertificateTemplate;
 
+  const templateBuffer = Buffer.from('fake-template-pdf');
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -77,6 +86,13 @@ describe('GenerateCertificateBatchUseCase', () => {
           useValue: { generate: jest.fn() },
         },
         {
+          provide: FileStorageGateway,
+          useValue: {
+            readFileByUrl: jest.fn(),
+            saveBuffer: jest.fn(),
+          },
+        },
+        {
           provide: ConfigService,
           useValue: { get: jest.fn() },
         },
@@ -88,7 +104,15 @@ describe('GenerateCertificateBatchUseCase', () => {
     certGateway = module.get(CertificateGateway);
     generatorGateway = module.get(CertificateGeneratorGateway);
     qrGateway = module.get(QrCodeGateway);
+    fileStorageGateway = module.get(FileStorageGateway);
     configService = module.get(ConfigService);
+
+    // Default: readFileByUrl retorna el buffer de la plantilla
+    fileStorageGateway.readFileByUrl.mockResolvedValue(templateBuffer);
+    // Default: saveBuffer retorna la URL pública del PDF guardado
+    fileStorageGateway.saveBuffer.mockResolvedValue(
+      '/static/certificates/generated/cert-uuid-123.pdf',
+    );
   });
 
   it('lanza NotFoundException si la plantilla no existe', async () => {
@@ -97,6 +121,42 @@ describe('GenerateCertificateBatchUseCase', () => {
     await expect(
       useCase.execute({ templateId: 'tpl-inexistente', names: ['Ana'] }),
     ).rejects.toThrow(NotFoundException);
+  });
+
+  it('lee la plantilla via readFileByUrl (no accede al filesystem directamente)', async () => {
+    templateGateway.findOne.mockResolvedValue(fakeTemplate);
+    configService.get.mockReturnValue('http://localhost:5173');
+    certGateway.countByAbbreviation.mockResolvedValue(0);
+    qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
+    generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
+    certGateway.create.mockImplementation(
+      async (data) => ({ ...data }) as Certificate,
+    );
+
+    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+
+    expect(fileStorageGateway.readFileByUrl).toHaveBeenCalledWith(
+      '/static/certificates/templates/tpl-1.pdf',
+    );
+  });
+
+  it('guarda los PDFs generados via saveBuffer (no accede al filesystem directamente)', async () => {
+    templateGateway.findOne.mockResolvedValue(fakeTemplate);
+    configService.get.mockReturnValue('http://localhost:5173');
+    certGateway.countByAbbreviation.mockResolvedValue(0);
+    qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
+    generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
+    certGateway.create.mockImplementation(
+      async (data) => ({ ...data }) as Certificate,
+    );
+
+    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+
+    expect(fileStorageGateway.saveBuffer).toHaveBeenCalledWith(
+      Buffer.from('pdf'),
+      'certificates/generated',
+      'cert-uuid-123.pdf',
+    );
   });
 
   it('retorna array vacío si todos los nombres son solo espacios en blanco', async () => {
@@ -129,7 +189,6 @@ describe('GenerateCertificateBatchUseCase', () => {
       names: ['   ', 'Ana García', '', '  '],
     });
 
-    // Solo 1 nombre válido
     expect(result).toHaveLength(1);
     expect(result[0].recipientName).toBe('Ana García');
   });
@@ -137,7 +196,6 @@ describe('GenerateCertificateBatchUseCase', () => {
   it('genera el número de certificado con el formato ABREVIATURA-NNNNN', async () => {
     templateGateway.findOne.mockResolvedValue(fakeTemplate);
     configService.get.mockReturnValue('http://localhost:5173');
-    // Ya existen 42 certificados con esta abreviatura
     certGateway.countByAbbreviation.mockResolvedValue(42);
     qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
     generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
@@ -165,7 +223,6 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
 
-    // El QR debe apuntar al frontend, no al backend
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'https://maris-nails.com/certificados/cert-uuid-123',
       expect.any(Number),
@@ -174,7 +231,6 @@ describe('GenerateCertificateBatchUseCase', () => {
 
   it('usa http://localhost:5173 como FRONTEND_URL cuando no está configurado', async () => {
     templateGateway.findOne.mockResolvedValue(fakeTemplate);
-    // ConfigService.get devuelve el valor por defecto cuando la key no existe
     configService.get.mockImplementation((_key, defaultVal) => defaultVal);
     certGateway.countByAbbreviation.mockResolvedValue(0);
     qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
@@ -192,7 +248,6 @@ describe('GenerateCertificateBatchUseCase', () => {
   });
 
   it('calcula el pixelSize del QR correctamente a 300 DPI (pts → inches → pixels)', async () => {
-    // qrStyle.size = 72 pts → (72/72) * 300 = 300 pixels exactos
     const templateWith72pts = {
       ...fakeTemplate,
       qrStyle: { ...fakeTemplate.qrStyle, size: 72 },
@@ -216,7 +271,6 @@ describe('GenerateCertificateBatchUseCase', () => {
   it('procesa múltiples nombres en orden secuencial y retorna todos los resúmenes', async () => {
     templateGateway.findOne.mockResolvedValue(fakeTemplate);
     configService.get.mockReturnValue('http://localhost:5173');
-    // Cada llamada a countByAbbreviation devuelve el count anterior (0, 1, 2)
     certGateway.countByAbbreviation
       .mockResolvedValueOnce(0)
       .mockResolvedValueOnce(1)
@@ -233,7 +287,6 @@ describe('GenerateCertificateBatchUseCase', () => {
     });
 
     expect(result).toHaveLength(3);
-    // Los números se asignan de forma correlativa basados en el count actual
     expect(result[0].certificateNumber).toBe('MR-00001');
     expect(result[1].certificateNumber).toBe('MR-00002');
     expect(result[2].certificateNumber).toBe('MR-00003');
@@ -244,15 +297,10 @@ describe('GenerateCertificateBatchUseCase', () => {
    * Si dos requests llegan simultáneamente con la misma abreviatura, ambos hacen
    * countByAbbreviation al mismo tiempo y obtienen el mismo valor → generan el mismo
    * certificateNumber → la constraint UNIQUE en la BD rechazará el segundo insert.
-   *
-   * Solución futura: usar un SELECT ... FOR UPDATE o un sequence en PostgreSQL.
-   * Por ahora, este test documenta el comportamiento esperado del código actual.
    */
   it('RACE CONDITION: dos requests simultáneos podrían generar el mismo certificateNumber', async () => {
     templateGateway.findOne.mockResolvedValue(fakeTemplate);
     configService.get.mockReturnValue('http://localhost:5173');
-
-    // Ambas llamadas reciben el mismo count porque son "simultáneas"
     certGateway.countByAbbreviation.mockResolvedValue(5);
     qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
     generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
@@ -266,13 +314,11 @@ describe('GenerateCertificateBatchUseCase', () => {
         certificateNumber: 'MR-00006',
         recipientName: 'Ana',
       } as Certificate)
-      .mockRejectedValueOnce(dbError); // El segundo falla por duplicado
+      .mockRejectedValueOnce(dbError);
 
-    // La primera request tiene éxito
     const r1 = await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
     expect(r1[0].certificateNumber).toBe('MR-00006');
 
-    // La segunda request (con el mismo count) lanzaría un error de BD
     await expect(
       useCase.execute({ templateId: 'tpl-1', names: ['Luis'] }),
     ).rejects.toThrow('duplicate key');
