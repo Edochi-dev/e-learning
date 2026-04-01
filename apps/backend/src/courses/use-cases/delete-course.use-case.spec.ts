@@ -12,20 +12,10 @@ import { Course } from '../entities/course.entity';
  * Este es el Use Case más complejo del módulo porque coordina:
  *   - Lectura del curso (para anotar rutas ANTES de borrar)
  *   - Borrado en cascada de la DB
- *   - Limpieza best-effort de videos y thumbnail
+ *   - Limpieza best-effort de videos y thumbnail via deleteByUrl
  *
- * La estrategia "DB primero, archivos después" significa que si el borrado
- * de la DB falla, los archivos quedan intactos (nada roto).
- * Si el borrado de archivos falla, solo tenemos basura en disco (recuperable).
- *
- * Escenarios a testear:
- *   1. Curso no existe → NotFoundException
- *   2. Curso sin lecciones ni thumbnail → solo borra DB
- *   3. Curso con videos locales huérfanos → borra archivos
- *   4. Video compartido por otro curso → NO borra el archivo
- *   5. Thumbnail huérfana → borra archivo
- *   6. Thumbnail compartida → NO borra
- *   7. Videos con URLs externas (YouTube) → NO intenta borrar
+ * Después del refactor, el Use Case ya no sabe cómo se estructuran las URLs
+ * del storage ("/static/" etc.). Delega eso a deleteByUrl del gateway.
  */
 describe('DeleteCourseUseCase', () => {
   let useCase: DeleteCourseUseCase;
@@ -58,8 +48,7 @@ describe('DeleteCourseUseCase', () => {
         {
           provide: FileStorageGateway,
           useValue: {
-            isLocalFile: jest.fn(),
-            deleteFile: jest.fn(),
+            deleteByUrl: jest.fn(),
           },
         },
       ],
@@ -99,23 +88,14 @@ describe('DeleteCourseUseCase', () => {
     await useCase.execute(courseId);
 
     expect(courseGateway.delete).toHaveBeenCalledWith(courseId);
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
-  // 3. Videos locales huérfanos — borra los archivos
+  // 3. Videos huérfanos — deleteByUrl se encarga
   // ──────────────────────────────────────────────────────────
 
-  /**
-   * Si el curso tiene lecciones con videos locales y esos videos NO son
-   * usados por ninguna otra lección, deben borrarse del disco.
-   *
-   * Flujo:
-   *   1. isLocalFile('/static/videos/clase1.mp4') → true
-   *   2. isVideoUrlInUse('/static/videos/clase1.mp4') → false (huérfano)
-   *   3. deleteFile('videos/clase1.mp4') ← quita el /static/ prefix
-   */
-  it('borra videos locales huérfanos después de eliminar el curso', async () => {
+  it('llama a deleteByUrl para cada video huérfano después de eliminar el curso', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: null,
@@ -126,28 +106,20 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlInUse.mockResolvedValue(false); // huérfanos
 
     await useCase.execute(courseId);
 
-    // Primero borra de DB
     expect(courseGateway.delete).toHaveBeenCalledWith(courseId);
-
-    // Luego borra cada video huérfano (sin el /static/ prefix)
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('videos/clase1.mp4');
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('videos/clase2.mp4');
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith('/static/videos/clase1.mp4');
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith('/static/videos/clase2.mp4');
   });
 
   // ──────────────────────────────────────────────────────────
   // 4. Video compartido — NO borra el archivo
   // ──────────────────────────────────────────────────────────
 
-  /**
-   * Si otra lección (de otro curso) usa el mismo video, NO debemos borrarlo.
-   * isVideoUrlInUse devuelve true → el archivo se conserva.
-   */
-  it('NO borra un video si otra lección lo sigue usando', async () => {
+  it('NO llama a deleteByUrl si otra lección sigue usando el video', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: null,
@@ -157,19 +129,18 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlInUse.mockResolvedValue(true); // en uso
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
-  // 5. Thumbnail huérfana — borra el archivo
+  // 5. Thumbnail huérfana — deleteByUrl se encarga
   // ──────────────────────────────────────────────────────────
 
-  it('borra la thumbnail si ya no la usa ningún otro curso', async () => {
+  it('llama a deleteByUrl para la thumbnail si ya no la usa ningún otro curso', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/portada.jpg',
@@ -177,13 +148,12 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     courseGateway.isThumbnailUrlInUse.mockResolvedValue(false); // huérfana
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith(
-      'thumbnails/portada.jpg',
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      '/static/thumbnails/portada.jpg',
     );
   });
 
@@ -191,7 +161,7 @@ describe('DeleteCourseUseCase', () => {
   // 6. Thumbnail compartida — NO borra
   // ──────────────────────────────────────────────────────────
 
-  it('NO borra la thumbnail si otro curso la sigue usando', async () => {
+  it('NO llama a deleteByUrl si otro curso sigue usando la thumbnail', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/compartida.jpg',
@@ -199,24 +169,23 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     courseGateway.isThumbnailUrlInUse.mockResolvedValue(true); // en uso
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
-  // 7. URLs externas — ignora archivos que no son locales
+  // 7. URLs externas — deleteByUrl las ignora silenciosamente
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Si el video es un link de YouTube o un embed externo, isLocalFile
-   * devuelve false y el Use Case no intenta borrarlo del filesystem.
-   * Intentar borrar una URL externa causaría un error en el filesystem.
+   * Después del refactor, el Use Case ya no filtra URLs externas —
+   * recopila TODOS los videoUrls y deleteByUrl se encarga.
+   * Si el video es de YouTube, deleteByUrl no hace nada.
    */
-  it('ignora videos con URLs externas (no intenta borrar del filesystem)', async () => {
+  it('recopila URLs externas pero deleteByUrl las ignora', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: null,
@@ -226,12 +195,13 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(false); // URL externa
+    lessonGateway.isVideoUrlInUse.mockResolvedValue(false);
 
     await useCase.execute(courseId);
 
-    // No debe preguntar si está en uso ni intentar borrar
-    expect(lessonGateway.isVideoUrlInUse).not.toHaveBeenCalled();
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    // El Use Case llama a deleteByUrl — el gateway decide no borrar
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      'https://youtube.com/watch?v=abc123',
+    );
   });
 });

@@ -8,18 +8,10 @@ import { Lesson } from '../entities/lessons.entity';
 /**
  * Tests para UpdateLessonUseCase — actualización con orphan cleanup y order calc.
  *
- * Este Use Case tiene dos responsabilidades:
- *
- * 1. ORPHAN CLEANUP: si el admin cambia el video de una lección,
- *    el video viejo podría quedar huérfano (nadie lo usa). El Use Case:
- *    a) Verifica que el video viejo es local (no YouTube)
- *    b) Verifica que ninguna otra lección lo referencia
- *    c) Si es huérfano → borra del disco
- *
- * 2. ORDER CALCULATION: el frontend envía las preguntas del quiz en el
- *    orden correcto, pero sin un campo `order`. Este Use Case calcula
- *    el order basándose en el índice del array: [0, 1, 2, ...]
- *    Así la DB siempre devuelve las preguntas en el mismo orden.
+ * Después del refactor:
+ *   - cleanupOrphanedFile ya no llama a isLocalFile ni replace('/static/')
+ *   - Solo verifica isVideoUrlReferenced y luego delega a deleteByUrl
+ *   - deleteByUrl se encarga de verificar si es local y de la ruta
  */
 describe('UpdateLessonUseCase', () => {
   let useCase: UpdateLessonUseCase;
@@ -45,8 +37,7 @@ describe('UpdateLessonUseCase', () => {
         {
           provide: FileStorageGateway,
           useValue: {
-            isLocalFile: jest.fn(),
-            deleteFile: jest.fn(),
+            deleteByUrl: jest.fn(),
           },
         },
       ],
@@ -72,17 +63,16 @@ describe('UpdateLessonUseCase', () => {
   });
 
   // ──────────────────────────────────────────────────────────
-  // 2. ORPHAN CLEANUP: video cambió → borra el viejo si es huérfano
+  // 2. ORPHAN CLEANUP: video cambió → deleteByUrl si nadie más lo usa
   // ──────────────────────────────────────────────────────────
 
-  it('borra el video viejo si cambió, es local, y nadie más lo usa', async () => {
+  it('llama a deleteByUrl para el video viejo si cambió y nadie más lo usa', async () => {
     const currentLesson = {
       id: lessonId,
       videoData: { videoUrl: '/static/videos/viejo.mp4' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlReferenced.mockResolvedValue(false);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
@@ -90,23 +80,22 @@ describe('UpdateLessonUseCase', () => {
       videoUrl: '/static/videos/nuevo.mp4',
     } as any);
 
-    // Verifica que la verificación excluye la lección actual
     expect(lessonGateway.isVideoUrlReferenced).toHaveBeenCalledWith(
       '/static/videos/viejo.mp4',
       lessonId,
     );
-
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('videos/viejo.mp4');
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      '/static/videos/viejo.mp4',
+    );
   });
 
-  it('NO borra el video viejo si otra lección lo referencia', async () => {
+  it('NO llama a deleteByUrl si otra lección referencia el video viejo', async () => {
     const currentLesson = {
       id: lessonId,
       videoData: { videoUrl: '/static/videos/compartido.mp4' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlReferenced.mockResolvedValue(true); // en uso
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
@@ -114,25 +103,31 @@ describe('UpdateLessonUseCase', () => {
       videoUrl: '/static/videos/nuevo.mp4',
     } as any);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
-  it('NO intenta limpiar si el video viejo es una URL externa', async () => {
+  /**
+   * Con deleteByUrl, el Use Case ya no necesita verificar isLocalFile.
+   * Si el video viejo era de YouTube y nadie más lo referencia,
+   * deleteByUrl lo ignora silenciosamente.
+   */
+  it('delega a deleteByUrl incluso con URLs externas (el gateway decide)', async () => {
     const currentLesson = {
       id: lessonId,
       videoData: { videoUrl: 'https://youtube.com/watch?v=abc' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(false);
+    lessonGateway.isVideoUrlReferenced.mockResolvedValue(false);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
     await useCase.execute(lessonId, {
       videoUrl: '/static/videos/nuevo.mp4',
     } as any);
 
-    expect(lessonGateway.isVideoUrlReferenced).not.toHaveBeenCalled();
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      'https://youtube.com/watch?v=abc',
+    );
   });
 
   it('NO intenta limpiar si el videoUrl no cambió', async () => {
@@ -144,26 +139,18 @@ describe('UpdateLessonUseCase', () => {
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
-    // Enviamos el mismo videoUrl que ya tenía
     await useCase.execute(lessonId, {
       videoUrl: '/static/videos/mismo.mp4',
     } as any);
 
-    expect(fileStorageGateway.isLocalFile).not.toHaveBeenCalled();
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(lessonGateway.isVideoUrlReferenced).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
   // 3. ORDER CALCULATION: preguntas reciben su índice como order
   // ──────────────────────────────────────────────────────────
 
-  /**
-   * El frontend envía: [{ text: "P1" }, { text: "P2" }, { text: "P3" }]
-   * El Use Case calcula: [{ text: "P1", order: 0 }, { text: "P2", order: 1 }, ...]
-   *
-   * Esto garantiza que la DB devuelva las preguntas en el mismo orden
-   * que el admin las organizó en el panel.
-   */
   it('asigna order = índice a cada pregunta antes de actualizar', async () => {
     const currentLesson = {
       id: lessonId,

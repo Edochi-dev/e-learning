@@ -32,4 +32,20 @@ export abstract class FileStorageGateway {
    * intentar borrar archivos del filesystem.
    */
   abstract isLocalFile(url: string): boolean;
+
+  /**
+   * Borra un archivo a partir de su URL pública (ej: "/static/videos/clase1.mp4").
+   *
+   * Encapsula toda la lógica de limpieza de archivos locales:
+   *   1. ¿Es un archivo local? Si no, ignora silenciosamente (YouTube, Vimeo, etc.)
+   *   2. Extrae la ruta relativa (detalle de implementación del storage)
+   *   3. Borra el archivo del almacenamiento
+   *
+   * ¿Por qué este método existe?
+   *   Sin él, cada Use Case que borra archivos necesita saber CÓMO se estructuran
+   *   las URLs del storage (ej: que "/static/" es el prefijo). Ese conocimiento
+   *   es un detalle de implementación que debe vivir en el gateway, no en la
+   *   capa de negocio. Si migramos a S3, cada Use Case se rompería.
+   */
+  abstract deleteByUrl(url: string): Promise<void>;
 }

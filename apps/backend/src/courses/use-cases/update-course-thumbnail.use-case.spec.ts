@@ -10,7 +10,7 @@ import { Course } from '../entities/course.entity';
  *
  * Flujo:
  *   1. Verificar que el curso existe
- *   2. Si había thumbnail local anterior → borrar del disco
+ *   2. Si había thumbnail anterior → deleteByUrl (el gateway decide si es local)
  *   3. Guardar la nueva thumbnail → obtener URL
  *   4. Actualizar el curso con la nueva URL
  *
@@ -44,8 +44,7 @@ describe('UpdateCourseThumbnailUseCase', () => {
         {
           provide: FileStorageGateway,
           useValue: {
-            isLocalFile: jest.fn(),
-            deleteFile: jest.fn(),
+            deleteByUrl: jest.fn(),
             saveFile: jest.fn(),
           },
         },
@@ -67,54 +66,55 @@ describe('UpdateCourseThumbnailUseCase', () => {
     expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
   });
 
-  it('borra la thumbnail local anterior antes de guardar la nueva', async () => {
+  it('borra la thumbnail anterior via deleteByUrl antes de guardar la nueva', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/vieja.jpg',
     } as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     fileStorageGateway.saveFile.mockResolvedValue('/static/thumbnails/nueva.jpg');
     courseGateway.update.mockResolvedValue({} as Course);
 
     await useCase.execute(courseId, fakeFile);
 
-    // Borra la vieja primero
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('thumbnails/vieja.jpg');
+    // deleteByUrl recibe la URL completa — el gateway se encarga del resto
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      '/static/thumbnails/vieja.jpg',
+    );
 
-    // Guarda la nueva
     expect(fileStorageGateway.saveFile).toHaveBeenCalledWith(fakeFile, 'thumbnails');
-
-    // Actualiza con la nueva URL
     expect(courseGateway.update).toHaveBeenCalledWith(
       courseId,
       { thumbnailUrl: '/static/thumbnails/nueva.jpg' },
     );
   });
 
-  it('NO intenta borrar si la thumbnail anterior era una URL externa', async () => {
+  /**
+   * Si la thumbnail anterior era una URL externa (YouTube, CDN, etc.),
+   * deleteByUrl la ignora silenciosamente. El Use Case ya no necesita
+   * verificar isLocalFile — esa responsabilidad es del gateway.
+   */
+  it('delega a deleteByUrl incluso con URLs externas (el gateway decide)', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: 'https://cdn.example.com/img.jpg',
     } as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(false);
     fileStorageGateway.saveFile.mockResolvedValue('/static/thumbnails/nueva.jpg');
     courseGateway.update.mockResolvedValue({} as Course);
 
     await useCase.execute(courseId, fakeFile);
 
-    // No borra la URL externa
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
-
-    // Pero sí guarda la nueva y actualiza
+    // El Use Case llama a deleteByUrl siempre — el gateway decide si borrar o no
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      'https://cdn.example.com/img.jpg',
+    );
     expect(fileStorageGateway.saveFile).toHaveBeenCalled();
-    expect(courseGateway.update).toHaveBeenCalled();
   });
 
-  it('funciona correctamente cuando el curso no tenía thumbnail previa', async () => {
+  it('no llama a deleteByUrl cuando el curso no tenía thumbnail previa', async () => {
     const course = { id: courseId, thumbnailUrl: null } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
@@ -123,7 +123,7 @@ describe('UpdateCourseThumbnailUseCase', () => {
 
     await useCase.execute(courseId, fakeFile);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
     expect(fileStorageGateway.saveFile).toHaveBeenCalled();
   });
 });

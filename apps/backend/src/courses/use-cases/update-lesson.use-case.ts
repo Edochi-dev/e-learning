@@ -66,18 +66,13 @@ export class UpdateLessonUseCase {
    * Limpia un archivo que ya no será usado por esta lección.
    *
    * Condiciones para borrar:
-   * 1. Debe ser un archivo local (no YouTube/externo)
-   * 2. Ninguna OTRA lección debe estar usándolo
+   * 1. Ninguna OTRA lección debe estar usándolo
+   * 2. deleteByUrl se encarga de verificar si es local y de extraer la ruta
    */
   private async cleanupOrphanedFile(
     videoUrl: string,
     excludeLessonId: string,
   ): Promise<void> {
-    // ¿Es un archivo local? (ej: /static/videos/clase1.mp4)
-    if (!this.fileStorageGateway.isLocalFile(videoUrl)) {
-      return; // Es YouTube u otra URL externa, no hay nada que borrar
-    }
-
     // ¿Alguna otra lección lo usa?
     const isReferenced = await this.lessonGateway.isVideoUrlReferenced(
       videoUrl,
@@ -87,9 +82,8 @@ export class UpdateLessonUseCase {
       return; // Otra lección lo necesita, no borrar
     }
 
-    // Nadie más lo usa → extraer la ruta relativa y borrar
-    // "/static/videos/clase1.mp4" → "videos/clase1.mp4"
-    const relativePath = videoUrl.replace('/static/', '');
-    await this.fileStorageGateway.deleteFile(relativePath);
+    // Nadie más lo usa → deleteByUrl se encarga de verificar si es local
+    // y de extraer la ruta relativa. URLs externas se ignoran silenciosamente.
+    await this.fileStorageGateway.deleteByUrl(videoUrl);
   }
 }

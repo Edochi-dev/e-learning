@@ -14,10 +14,8 @@ export class DeleteCourseThumbnailUseCase {
     const course = await this.courseGateway.findOne(id);
     if (!course) throw new NotFoundException(`Curso ${id} no encontrado`);
 
-    if (course.thumbnailUrl && this.fileStorageGateway.isLocalFile(course.thumbnailUrl)) {
-      await this.fileStorageGateway.deleteFile(
-        course.thumbnailUrl.replace('/static/', ''),
-      );
+    if (course.thumbnailUrl) {
+      await this.fileStorageGateway.deleteByUrl(course.thumbnailUrl);
     }
 
     return this.courseGateway.update(id, { thumbnailUrl: undefined } as unknown as Partial<Course>);

@@ -97,4 +97,26 @@ export class LocalFileStorageGateway implements FileStorageGateway {
   isLocalFile(url: string): boolean {
     return url.startsWith(this.STATIC_PREFIX);
   }
+
+  /**
+   * Borra un archivo a partir de su URL pública.
+   *
+   * Ejemplo:
+   *   deleteByUrl('/static/videos/clase1.mp4')
+   *     → isLocalFile? sí
+   *     → relativePath = 'videos/clase1.mp4'
+   *     → deleteFile('videos/clase1.mp4')
+   *
+   *   deleteByUrl('https://youtube.com/watch?v=abc')
+   *     → isLocalFile? no → ignora silenciosamente
+   *
+   * El conocimiento de que '/static/' es el prefijo queda AQUÍ,
+   * encapsulado en la capa de infraestructura.
+   */
+  async deleteByUrl(url: string): Promise<void> {
+    if (!this.isLocalFile(url)) return;
+
+    const relativePath = url.replace(this.STATIC_PREFIX, '');
+    await this.deleteFile(relativePath);
+  }
 }

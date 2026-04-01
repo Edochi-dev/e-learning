@@ -15,11 +15,9 @@ export class UpdateCourseThumbnailUseCase {
     if (!course) throw new NotFoundException(`Curso ${id} no encontrado`);
 
     // Si ya había miniatura local, la borramos del disco antes de guardar la nueva.
-    // isLocalFile() nos protege de intentar borrar URLs externas (YouTube, etc.).
-    if (course.thumbnailUrl && this.fileStorageGateway.isLocalFile(course.thumbnailUrl)) {
-      await this.fileStorageGateway.deleteFile(
-        course.thumbnailUrl.replace('/static/', ''),
-      );
+    // deleteByUrl ignora silenciosamente URLs externas (YouTube, etc.).
+    if (course.thumbnailUrl) {
+      await this.fileStorageGateway.deleteByUrl(course.thumbnailUrl);
     }
 
     const thumbnailUrl = await this.fileStorageGateway.saveFile(file, 'thumbnails');

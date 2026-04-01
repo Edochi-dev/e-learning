@@ -10,11 +10,8 @@ import { Course } from '../entities/course.entity';
  *
  * Flujo:
  *   1. Verificar que el curso existe
- *   2. Si tiene thumbnail local → borrar archivo del disco
+ *   2. Si tiene thumbnail → deleteByUrl (el gateway decide si es local)
  *   3. Actualizar curso con thumbnailUrl = undefined
- *
- * Después de esto, el curso queda sin miniatura (se mostrará un placeholder
- * en el frontend).
  */
 describe('DeleteCourseThumbnailUseCase', () => {
   let useCase: DeleteCourseThumbnailUseCase;
@@ -39,8 +36,7 @@ describe('DeleteCourseThumbnailUseCase', () => {
         {
           provide: FileStorageGateway,
           useValue: {
-            isLocalFile: jest.fn(),
-            deleteFile: jest.fn(),
+            deleteByUrl: jest.fn(),
           },
         },
       ],
@@ -59,46 +55,47 @@ describe('DeleteCourseThumbnailUseCase', () => {
     expect(courseGateway.update).not.toHaveBeenCalled();
   });
 
-  it('borra el archivo local y setea thumbnailUrl a undefined', async () => {
+  it('llama a deleteByUrl con la URL y setea thumbnailUrl a undefined', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/portada.jpg',
     } as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     courseGateway.update.mockResolvedValue({} as Course);
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('thumbnails/portada.jpg');
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      '/static/thumbnails/portada.jpg',
+    );
     expect(courseGateway.update).toHaveBeenCalledWith(
       courseId,
       { thumbnailUrl: undefined },
     );
   });
 
-  it('NO intenta borrar si la thumbnail era una URL externa', async () => {
+  it('delega a deleteByUrl incluso con URLs externas (el gateway decide)', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: 'https://cdn.example.com/img.jpg',
     } as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    fileStorageGateway.isLocalFile.mockReturnValue(false);
     courseGateway.update.mockResolvedValue({} as Course);
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
-    // Pero sí actualiza thumbnailUrl a undefined
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      'https://cdn.example.com/img.jpg',
+    );
     expect(courseGateway.update).toHaveBeenCalledWith(
       courseId,
       { thumbnailUrl: undefined },
     );
   });
 
-  it('no borra nada si el curso no tenía thumbnail', async () => {
+  it('no llama a deleteByUrl si el curso no tenía thumbnail', async () => {
     const course = { id: courseId, thumbnailUrl: null } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
@@ -106,6 +103,6 @@ describe('DeleteCourseThumbnailUseCase', () => {
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 });

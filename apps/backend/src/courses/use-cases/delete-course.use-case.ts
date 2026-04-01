@@ -39,14 +39,14 @@ export class DeleteCourseUseCase {
       throw new NotFoundException(`Curso con id ${id} no encontrado`);
     }
 
-    // Recopilar videoUrls locales únicos de todas las lecciones.
+    // Recopilar videoUrls únicos de todas las lecciones.
     // Set<string> elimina duplicados: si dos lecciones compartieran video,
     // solo procesamos el archivo una vez.
-    const localVideoUrls = new Set<string>();
+    const videoUrls = new Set<string>();
     for (const lesson of course.lessons ?? []) {
       const videoUrl = lesson.videoData?.videoUrl;
-      if (videoUrl && this.fileStorageGateway.isLocalFile(videoUrl)) {
-        localVideoUrls.add(videoUrl);
+      if (videoUrl) {
+        videoUrls.add(videoUrl);
       }
     }
 
@@ -61,23 +61,22 @@ export class DeleteCourseUseCase {
     // de "¿sigue en uso?" son simples conteos sin exclusiones.
 
     // Paso 3: limpiar videos de las lecciones
+    // deleteByUrl ignora silenciosamente URLs externas (YouTube, etc.)
     await Promise.allSettled(
-      [...localVideoUrls].map(async (videoUrl) => {
+      [...videoUrls].map(async (videoUrl) => {
         const stillInUse = await this.lessonGateway.isVideoUrlInUse(videoUrl);
         if (!stillInUse) {
-          const relativePath = videoUrl.replace('/static/', '');
-          await this.fileStorageGateway.deleteFile(relativePath);
+          await this.fileStorageGateway.deleteByUrl(videoUrl);
         }
       }),
     );
 
     // Paso 4: limpiar la miniatura del curso
-    if (thumbnailUrl && this.fileStorageGateway.isLocalFile(thumbnailUrl)) {
+    if (thumbnailUrl) {
       const stillInUse =
         await this.courseGateway.isThumbnailUrlInUse(thumbnailUrl);
       if (!stillInUse) {
-        const relativePath = thumbnailUrl.replace('/static/', '');
-        await this.fileStorageGateway.deleteFile(relativePath);
+        await this.fileStorageGateway.deleteByUrl(thumbnailUrl);
       }
     }
   }

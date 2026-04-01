@@ -10,15 +10,7 @@ import { Lesson } from '../entities/lessons.entity';
  * Misma estrategia "DB primero" que DeleteCourseUseCase, pero más simple:
  *   1. Leer videoUrl de la lección (antes de borrar)
  *   2. Borrar la lección de la DB
- *   3. Si el video es local y huérfano → borrar archivo
- *
- * Escenarios:
- *   - Lección sin video → solo borra de DB
- *   - Video local huérfano → borra archivo
- *   - Video compartido → NO borra archivo
- *   - Video externo (YouTube) → ignora
- *   - Lección no existe (findLesson devuelve null) → borra igual
- *     (podría ya estar eliminada por cascade, el removeLesson es idempotente)
+ *   3. Si el video es huérfano → deleteByUrl (el gateway maneja local vs externo)
  */
 describe('RemoveLessonUseCase', () => {
   let useCase: RemoveLessonUseCase;
@@ -44,8 +36,7 @@ describe('RemoveLessonUseCase', () => {
         {
           provide: FileStorageGateway,
           useValue: {
-            isLocalFile: jest.fn(),
-            deleteFile: jest.fn(),
+            deleteByUrl: jest.fn(),
           },
         },
       ],
@@ -64,55 +55,56 @@ describe('RemoveLessonUseCase', () => {
     await useCase.execute(lessonId);
 
     expect(lessonGateway.removeLesson).toHaveBeenCalledWith(lessonId);
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
-  it('borra el video local huérfano después de eliminar la lección', async () => {
+  it('llama a deleteByUrl para el video huérfano después de eliminar la lección', async () => {
     const lesson = {
       id: lessonId,
       videoData: { videoUrl: '/static/videos/clase.mp4' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(lesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlInUse.mockResolvedValue(false);
 
     await useCase.execute(lessonId);
 
-    // DB primero
     expect(lessonGateway.removeLesson).toHaveBeenCalledWith(lessonId);
-    // Archivo después
-    expect(fileStorageGateway.deleteFile).toHaveBeenCalledWith('videos/clase.mp4');
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith('/static/videos/clase.mp4');
   });
 
-  it('NO borra el video si otra lección lo sigue usando', async () => {
+  it('NO llama a deleteByUrl si otra lección sigue usando el video', async () => {
     const lesson = {
       id: lessonId,
       videoData: { videoUrl: '/static/videos/compartido.mp4' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(lesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(true);
     lessonGateway.isVideoUrlInUse.mockResolvedValue(true);
 
     await useCase.execute(lessonId);
 
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
-  it('ignora videos con URLs externas (YouTube, etc.)', async () => {
+  /**
+   * URLs externas: el Use Case ahora pasa la URL a isVideoUrlInUse
+   * sin filtrar por isLocalFile. Si es huérfana, deleteByUrl la ignora.
+   */
+  it('verifica referencia y delega a deleteByUrl incluso con URLs externas', async () => {
     const lesson = {
       id: lessonId,
       videoData: { videoUrl: 'https://youtube.com/video123' },
     } as unknown as Lesson;
 
     lessonGateway.findLesson.mockResolvedValue(lesson);
-    fileStorageGateway.isLocalFile.mockReturnValue(false);
+    lessonGateway.isVideoUrlInUse.mockResolvedValue(false);
 
     await useCase.execute(lessonId);
 
-    expect(lessonGateway.isVideoUrlInUse).not.toHaveBeenCalled();
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+      'https://youtube.com/video123',
+    );
   });
 
   it('borra de la DB incluso si la lección no se encontró (idempotente)', async () => {
@@ -121,6 +113,6 @@ describe('RemoveLessonUseCase', () => {
     await useCase.execute(lessonId);
 
     expect(lessonGateway.removeLesson).toHaveBeenCalledWith(lessonId);
-    expect(fileStorageGateway.deleteFile).not.toHaveBeenCalled();
+    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 });

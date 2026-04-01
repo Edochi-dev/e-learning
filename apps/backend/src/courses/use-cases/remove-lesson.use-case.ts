@@ -38,13 +38,12 @@ export class RemoveLessonUseCase {
     await this.lessonGateway.removeLesson(lessonId);
 
     // Paso 3 y 4: limpieza de archivo (best-effort, el usuario ya no lo verá)
-    if (videoUrl && this.fileStorageGateway.isLocalFile(videoUrl)) {
+    if (videoUrl) {
       // La lección ya no existe en la DB, así que preguntamos sin exclusiones:
       // "¿alguna lección restante sigue usando este archivo?"
       const stillInUse = await this.lessonGateway.isVideoUrlInUse(videoUrl);
       if (!stillInUse) {
-        const relativePath = videoUrl.replace('/static/', '');
-        await this.fileStorageGateway.deleteFile(relativePath);
+        await this.fileStorageGateway.deleteByUrl(videoUrl);
       }
     }
   }
