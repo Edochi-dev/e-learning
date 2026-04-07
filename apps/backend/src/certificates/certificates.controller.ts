@@ -15,7 +15,6 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   HttpCode,
-  StreamableFile,
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
@@ -26,10 +25,12 @@ import { UserRole } from '@maris-nails/shared';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateCertificateTemplateDto } from './dto/create-certificate-template.dto';
+import { EditCertificateTemplateDto } from './dto/edit-certificate-template.dto';
 import { UpdateTemplatePositionsDto } from './dto/update-template-positions.dto';
 import { GenerateCertificateBatchDto } from './dto/generate-certificate-batch.dto';
 import { DownloadCertificateBatchDto } from './dto/download-certificate-batch.dto';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
+import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplatePositionsUseCase } from './use-cases/update-template-positions.use-case';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -45,6 +46,7 @@ import { CertificateGateway } from './gateways/certificate.gateway';
 export class CertificatesController {
   constructor(
     private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
+    private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
     private readonly updatePositionsUseCase: UpdateTemplatePositionsUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
@@ -89,6 +91,44 @@ export class CertificatesController {
     @Body() dto: UpdateTemplatePositionsDto,
   ) {
     return this.updatePositionsUseCase.execute(id, dto);
+  }
+
+  /**
+   * PATCH /admin/certificate-templates/:id
+   *
+   * Edita una plantilla existente. Soporta:
+   *   - Solo metadata: petición JSON con name/courseAbbreviation/paperFormat
+   *   - Reemplazo de PDF base: multipart/form-data con campo 'file'
+   *   - Combinación de ambos
+   *
+   * Endpoint separado de /:id/positions porque las posiciones tienen su propio
+   * flujo (picker visual) y no se mezclan con la edición de metadata + PDF.
+   *
+   * SAFETY: esta operación NO toca certificados ya emitidos. Cada certificado
+   * tiene su propio PDF rasterizado en disco y un templateSnapshot inmutable
+   * que congeló los metadatos en el momento de emisión.
+   */
+  @Patch('admin/certificate-templates/:id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(
+    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+  )
+  editTemplate(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: EditCertificateTemplateDto,
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: 'application/pdf' }),
+        ],
+        fileIsRequired: false,
+      }),
+    )
+    file?: Express.Multer.File,
+  ) {
+    return this.editTemplateUseCase.execute(id, dto, file);
   }
 
   @Get('admin/certificate-templates')
