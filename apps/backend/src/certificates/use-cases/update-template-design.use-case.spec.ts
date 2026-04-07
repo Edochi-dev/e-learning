@@ -1,17 +1,17 @@
 import { Test } from '@nestjs/testing';
-import { UpdateTemplatePositionsUseCase } from './update-template-positions.use-case';
+import { UpdateTemplateDesignUseCase } from './update-template-design.use-case';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
-import { UpdateTemplatePositionsDto } from '../dto/update-template-positions.dto';
+import { UpdateTemplateDesignDto } from '../dto/update-template-design.dto';
 
-describe('UpdateTemplatePositionsUseCase', () => {
-  let useCase: UpdateTemplatePositionsUseCase;
+describe('UpdateTemplateDesignUseCase', () => {
+  let useCase: UpdateTemplateDesignUseCase;
   let gateway: jest.Mocked<CertificateTemplateGateway>;
 
   beforeEach(async () => {
     const module = await Test.createTestingModule({
       providers: [
-        UpdateTemplatePositionsUseCase,
+        UpdateTemplateDesignUseCase,
         {
           provide: CertificateTemplateGateway,
           useValue: { update: jest.fn() },
@@ -19,12 +19,12 @@ describe('UpdateTemplatePositionsUseCase', () => {
       ],
     }).compile();
 
-    useCase = module.get(UpdateTemplatePositionsUseCase);
+    useCase = module.get(UpdateTemplateDesignUseCase);
     gateway = module.get(CertificateTemplateGateway);
   });
 
   it('delega los value objects del DTO al gateway correctamente', async () => {
-    const dto: UpdateTemplatePositionsDto = {
+    const dto: UpdateTemplateDesignDto = {
       nameStyle: {
         positionX: 100,
         positionY: 200,

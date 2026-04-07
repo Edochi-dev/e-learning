@@ -14,8 +14,8 @@ import { IsString, IsNotEmpty, IsIn, IsOptional } from 'class-validator';
  * El use case orquesta qué se actualiza: solo escribe en BD los campos
  * que efectivamente vinieron en la petición. Los demás se quedan tal cual.
  *
- * Nota arquitectónica: las posiciones (nameStyle/qrStyle/dateStyle) NO se
- * editan por aquí — tienen su propio endpoint PATCH /:id/positions
+ * Nota arquitectónica: el diseño visual (nameStyle/qrStyle/dateStyle) NO se
+ * edita por aquí — tiene su propio endpoint PATCH /:id/design
  * (Single Responsibility Principle). Este endpoint es para metadata + PDF.
  */
 export class EditCertificateTemplateDto {

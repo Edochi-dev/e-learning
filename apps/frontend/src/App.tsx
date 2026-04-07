@@ -24,6 +24,7 @@ import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
 import { CreateCertificateTemplatePage } from './pages/admin/CreateCertificateTemplatePage';
 import { EditCertificateTemplatePage } from './pages/admin/EditCertificateTemplatePage';
+import { EditTemplateDesignPage } from './pages/admin/EditTemplateDesignPage';
 import { GenerateCertificatesPage } from './pages/admin/GenerateCertificatesPage';
 import { SearchCertificatesPage } from './pages/admin/SearchCertificatesPage';
 import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdminPage';
@@ -117,6 +118,7 @@ function AppContent() {
             <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/:id/editar" element={<EditCertificateTemplatePage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/plantillas/:id/diseno" element={<EditTemplateDesignPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/buscar" element={<SearchCertificatesPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/ver/:id" element={<CertificateDetailAdminPage gateway={certificateGateway} />} />

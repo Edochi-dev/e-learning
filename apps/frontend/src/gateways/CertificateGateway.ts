@@ -87,7 +87,15 @@ export interface GeneratedCertificateSummary {
     recipientName: string;
 }
 
-export interface TemplatePositions {
+/**
+ * TemplateDesign — diseño visual completo de una plantilla.
+ *
+ * Incluye TODO el styling: posiciones, tipografía, tamaños, colores,
+ * alineaciones y visibilidad. NO es solo coordenadas — el nombre lo refleja
+ * honestamente. Es lo que el picker visual del frontend persiste de una vez
+ * cuando el admin pulsa "Guardar".
+ */
+export interface TemplateDesign {
     nameStyle: NameStyle;
     qrStyle: QrStyle;
     dateStyle: DateStyle;
@@ -102,8 +110,8 @@ export interface TemplatePositions {
  *   - Solo el PDF base (ver updateTemplate file param)
  *   - Ambos a la vez
  *
- * Las posiciones (nameStyle/qrStyle/dateStyle) NO van por aquí — tienen su
- * propio endpoint /positions con su propio flujo (picker visual).
+ * El diseño visual (nameStyle/qrStyle/dateStyle) NO va por aquí — tiene su
+ * propio endpoint /design con su propio flujo (picker visual).
  */
 export interface EditTemplatePayload {
     name?: string;
@@ -114,7 +122,7 @@ export interface EditTemplatePayload {
 export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
-    updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate>;
+    updateTemplateDesign(id: string, design: TemplateDesign): Promise<CertificateTemplate>;
     /**
      * Edita una plantilla existente (metadata y/u opcionalmente el PDF base).
      *

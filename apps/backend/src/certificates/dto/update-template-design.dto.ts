@@ -98,15 +98,20 @@ export class DateStyleDto {
 }
 
 /**
- * UpdateTemplatePositionsDto — DTO agrupado por value objects.
+ * UpdateTemplateDesignDto — DTO completo del diseño visual de una plantilla.
  *
  * El frontend envía un JSON con 3 objetos nested:
  *   { nameStyle: {...}, qrStyle: {...}, dateStyle: {...} }
  *
+ * Incluye TODO el diseño visual, no solo coordenadas: posiciones,
+ * tipografía, tamaños, colores, alineaciones y visibilidad. El nombre
+ * "design" refleja honestamente lo que el DTO representa — el nombre
+ * anterior ("positions") era engañoso.
+ *
  * @ValidateNested() + @Type() aseguran que class-validator
  * valide DENTRO de cada sub-objeto, no solo en el nivel raíz.
  */
-export class UpdateTemplatePositionsDto {
+export class UpdateTemplateDesignDto {
   @ValidateNested()
   @Type(() => NameStyleDto)
   nameStyle: NameStyleDto;

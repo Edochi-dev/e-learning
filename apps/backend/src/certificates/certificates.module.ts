@@ -17,7 +17,7 @@ import { QrCodeService } from './qr-code.service';
 import { ArchiverZipGateway } from './archiver-zip.gateway';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
-import { UpdateTemplatePositionsUseCase } from './use-cases/update-template-positions.use-case';
+import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -49,7 +49,7 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
     // Use Cases
     UploadCertificateTemplateUseCase,
     EditCertificateTemplateUseCase,
-    UpdateTemplatePositionsUseCase,
+    UpdateTemplateDesignUseCase,
     ListCertificateTemplatesUseCase,
     GetCertificateTemplateUseCase,
     GenerateCertificateBatchUseCase,

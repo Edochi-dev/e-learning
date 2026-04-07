@@ -1,4 +1,4 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplatePositions, EditTemplatePayload } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload } from './CertificateGateway';
 
 export class HttpCertificateGateway implements CertificateGateway {
     private readonly baseUrl: string;
@@ -46,14 +46,14 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate> {
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}/positions`, {
+    async updateTemplateDesign(id: string, design: TemplateDesign): Promise<CertificateTemplate> {
+        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}/design`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify(positions),
+            body: JSON.stringify(design),
         });
-        if (!res.ok) throw new Error(`Error al actualizar posiciones: ${res.statusText}`);
+        if (!res.ok) throw new Error(`Error al actualizar el diseño: ${res.statusText}`);
         return res.json();
     }
 

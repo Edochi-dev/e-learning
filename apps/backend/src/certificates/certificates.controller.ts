@@ -26,12 +26,12 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { CreateCertificateTemplateDto } from './dto/create-certificate-template.dto';
 import { EditCertificateTemplateDto } from './dto/edit-certificate-template.dto';
-import { UpdateTemplatePositionsDto } from './dto/update-template-positions.dto';
+import { UpdateTemplateDesignDto } from './dto/update-template-design.dto';
 import { GenerateCertificateBatchDto } from './dto/generate-certificate-batch.dto';
 import { DownloadCertificateBatchDto } from './dto/download-certificate-batch.dto';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
-import { UpdateTemplatePositionsUseCase } from './use-cases/update-template-positions.use-case';
+import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -48,7 +48,7 @@ export class CertificatesController {
   constructor(
     private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
     private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
-    private readonly updatePositionsUseCase: UpdateTemplatePositionsUseCase,
+    private readonly updateDesignUseCase: UpdateTemplateDesignUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
     private readonly getTemplateUseCase: GetCertificateTemplateUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
@@ -85,14 +85,25 @@ export class CertificatesController {
     return this.uploadTemplateUseCase.execute(dto, file);
   }
 
-  @Patch('admin/certificate-templates/:id/positions')
+  /**
+   * PATCH /admin/certificate-templates/:id/design
+   *
+   * Guarda el diseño visual completo de la plantilla: posiciones, tipografías,
+   * tamaños, colores, alineaciones y visibilidad. Es lo que persiste el picker
+   * visual del frontend cuando el admin pulsa "Guardar".
+   *
+   * Renombrado desde /positions: el endpoint anterior tenía nombre engañoso
+   * porque sugería que solo guardaba coordenadas, cuando en realidad el body
+   * incluye TODO el styling.
+   */
+  @Patch('admin/certificate-templates/:id/design')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  updatePositions(
+  updateDesign(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateTemplatePositionsDto,
+    @Body() dto: UpdateTemplateDesignDto,
   ) {
-    return this.updatePositionsUseCase.execute(id, dto);
+    return this.updateDesignUseCase.execute(id, dto);
   }
 
   /**
@@ -103,7 +114,7 @@ export class CertificatesController {
    *   - Reemplazo de PDF base: multipart/form-data con campo 'file'
    *   - Combinación de ambos
    *
-   * Endpoint separado de /:id/positions porque las posiciones tienen su propio
+   * Endpoint separado de /:id/design porque el diseño visual tiene su propio
    * flujo (picker visual) y no se mezclan con la edición de metadata + PDF.
    *
    * SAFETY: esta operación NO toca certificados ya emitidos. Cada certificado

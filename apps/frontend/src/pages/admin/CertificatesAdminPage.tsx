@@ -152,6 +152,20 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     Editar
                                 </button>
                                 <button
+                                    onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/diseno`)}
+                                    style={{
+                                        background: 'none',
+                                        border: '1px solid var(--gold, #d4a574)',
+                                        color: 'var(--gold, #d4a574)',
+                                        borderRadius: '6px',
+                                        padding: '0.25rem 0.75rem',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    Diseño
+                                </button>
+                                <button
                                     onClick={() => handleDeleteClick(t)}
                                     style={{
                                         background: 'none',

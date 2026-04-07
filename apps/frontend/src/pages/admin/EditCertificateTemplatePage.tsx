@@ -124,12 +124,16 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 toast.success(
                     'Plantilla actualizada. Las dimensiones del PDF nuevo son distintas, ' +
                     'así que se resetearon las posiciones del nombre y el QR. ' +
-                    'Tendrás que reposicionar los elementos en una próxima edición de posiciones.',
+                    'Te llevamos al editor de diseño para que las ajustes.',
                 );
+                // Cerramos el círculo del flujo: si reseteamos, mandamos al
+                // admin directamente al picker para que reajuste el diseño
+                // antes de generar el siguiente certificado con esta plantilla.
+                navigate(`/admin/certificados/plantillas/${id}/diseno`);
             } else {
                 toast.success('Plantilla actualizada correctamente');
+                navigate('/admin/certificados');
             }
-            navigate('/admin/certificados');
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Error al guardar los cambios');
         } finally {
