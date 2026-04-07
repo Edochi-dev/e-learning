@@ -1,4 +1,4 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplatePositions } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplatePositions, EditTemplatePayload } from './CertificateGateway';
 
 export class HttpCertificateGateway implements CertificateGateway {
     private readonly baseUrl: string;
@@ -23,6 +23,29 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
+    async updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate> {
+        // Siempre enviamos multipart/form-data porque el endpoint del backend
+        // está montado con FileInterceptor (acepta tanto JSON-en-form-data como
+        // un archivo opcional). Mantener un único content-type simplifica el
+        // contrato y evita ramas innecesarias en el cliente.
+        const body = new FormData();
+        if (payload.name !== undefined) body.append('name', payload.name);
+        if (payload.courseAbbreviation !== undefined) body.append('courseAbbreviation', payload.courseAbbreviation);
+        if (payload.paperFormat !== undefined) body.append('paperFormat', payload.paperFormat);
+        if (file) body.append('file', file);
+
+        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+            method: 'PATCH',
+            credentials: 'include',
+            body,
+        });
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({}));
+            throw new Error(errBody.message ?? `Error al editar plantilla: ${res.statusText}`);
+        }
+        return res.json();
+    }
+
     async updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate> {
         const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}/positions`, {
             method: 'PATCH',
@@ -39,6 +62,17 @@ export class HttpCertificateGateway implements CertificateGateway {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar plantillas: ${res.statusText}`);
+        return res.json();
+    }
+
+    async getTemplate(id: string): Promise<CertificateTemplate> {
+        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message ?? `Error al cargar la plantilla: ${res.statusText}`);
+        }
         return res.json();
     }
 

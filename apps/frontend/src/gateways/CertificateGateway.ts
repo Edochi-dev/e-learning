@@ -93,11 +93,43 @@ export interface TemplatePositions {
     dateStyle: DateStyle;
 }
 
+/**
+ * EditTemplatePayload — campos editables de una plantilla.
+ *
+ * TODOS opcionales: el endpoint hace PATCH semántico estricto, solo escribe
+ * los campos que efectivamente vienen. El admin puede editar:
+ *   - Solo metadata
+ *   - Solo el PDF base (ver updateTemplate file param)
+ *   - Ambos a la vez
+ *
+ * Las posiciones (nameStyle/qrStyle/dateStyle) NO van por aquí — tienen su
+ * propio endpoint /positions con su propio flujo (picker visual).
+ */
+export interface EditTemplatePayload {
+    name?: string;
+    courseAbbreviation?: string;
+    paperFormat?: string;
+}
+
 export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
     updateTemplatePositions(id: string, positions: TemplatePositions): Promise<CertificateTemplate>;
+    /**
+     * Edita una plantilla existente (metadata y/u opcionalmente el PDF base).
+     *
+     * No-destructivo: NO afecta a certificados ya emitidos. Cada certificado
+     * tiene su propio PDF rasterizado en disco y un templateSnapshot inmutable.
+     *
+     * Si se sube un PDF nuevo con dimensiones distintas a las del actual, el
+     * backend resetea las posiciones (nameStyle/qrStyle/dateStyle) a sus
+     * defaults para evitar dejar la plantilla visualmente rota. La respuesta
+     * incluye los nuevos pageWidth/pageHeight, así que el caller puede
+     * detectar si hubo reset comparando con las dimensiones previas.
+     */
+    updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate>;
     listTemplates(): Promise<CertificateTemplate[]>;
+    getTemplate(id: string): Promise<CertificateTemplate>;
     generateBatch(templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]>;
     listCertificates(): Promise<Certificate[]>;
     searchCertificates(query: string): Promise<Certificate[]>;

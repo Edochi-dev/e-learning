@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { useToast } from '../../components/Toast';
 
@@ -15,6 +15,7 @@ interface DeleteState {
 }
 
 export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
+    const navigate = useNavigate();
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [loading, setLoading] = useState(true);
     const toast = useToast();
@@ -136,9 +137,23 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     )}
                                 </span>
                                 <button
-                                    onClick={() => handleDeleteClick(t)}
+                                    onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/editar`)}
                                     style={{
                                         marginLeft: 'auto',
+                                        background: 'none',
+                                        border: '1px solid var(--primary)',
+                                        color: 'var(--primary)',
+                                        borderRadius: '6px',
+                                        padding: '0.25rem 0.75rem',
+                                        cursor: 'pointer',
+                                        fontSize: '0.85rem',
+                                    }}
+                                >
+                                    Editar
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteClick(t)}
+                                    style={{
                                         background: 'none',
                                         border: '1px solid var(--error, #e53e3e)',
                                         color: 'var(--error, #e53e3e)',

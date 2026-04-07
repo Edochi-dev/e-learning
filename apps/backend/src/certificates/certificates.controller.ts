@@ -33,6 +33,7 @@ import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplatePositionsUseCase } from './use-cases/update-template-positions.use-case';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
+import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
@@ -49,6 +50,7 @@ export class CertificatesController {
     private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
     private readonly updatePositionsUseCase: UpdateTemplatePositionsUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
+    private readonly getTemplateUseCase: GetCertificateTemplateUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
     private readonly getCertificateUseCase: GetCertificateUseCase,
     private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
@@ -136,6 +138,13 @@ export class CertificatesController {
   @Roles(UserRole.ADMIN)
   listTemplates() {
     return this.listTemplatesUseCase.execute();
+  }
+
+  @Get('admin/certificate-templates/:id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  getTemplate(@Param('id', ParseUUIDPipe) id: string) {
+    return this.getTemplateUseCase.execute(id);
   }
 
   @Delete('admin/certificate-templates/:id')

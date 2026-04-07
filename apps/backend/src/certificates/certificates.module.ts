@@ -19,6 +19,7 @@ import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplatePositionsUseCase } from './use-cases/update-template-positions.use-case';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
+import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
@@ -50,6 +51,7 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
     EditCertificateTemplateUseCase,
     UpdateTemplatePositionsUseCase,
     ListCertificateTemplatesUseCase,
+    GetCertificateTemplateUseCase,
     GenerateCertificateBatchUseCase,
     GetCertificateUseCase,
     DownloadCertificateBatchUseCase,
