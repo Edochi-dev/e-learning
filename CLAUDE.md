@@ -18,9 +18,9 @@ docker-compose up -d        # PostgreSQL 16 on port 5432
 ```bash
 npm run start:dev           # Dev server with watch (port 3000)
 npm run build               # Compile TypeScript → dist/
-npm run lint                # ESLint with autofix
+npm run lint                # ESLint with autofix — DO NOT RUN (see warning below)
 npm run test                # Jest (all spec files)
-npm run test -- --testPathPattern=courses   # Run a single test file by pattern
+npm run test -- --testPathPatterns=courses  # Run a single test file by pattern (note: --testPathPatterns, plural)
 
 # TypeORM Migrations (requires DB running and apps/backend/.env present)
 npm run migration:generate  # Diff entities vs DB → new migration file in src/database/migrations/
@@ -36,6 +36,14 @@ npm run lint                # ESLint
 ```
 
 Both servers must be running simultaneously for full functionality. The frontend calls the backend at `http://localhost:3000` (hardcoded in `App.tsx`).
+
+## ⚠️ Lint hygiene (CRÍTICO)
+
+**Nunca ejecutar `npm run lint` (ni en `apps/backend/` ni en `apps/frontend/`).** Ambos scripts corren ESLint con `--fix` sobre **todo el workspace** (`{src,apps,libs,test}/**/*.ts` en backend, `.` en frontend), no solo sobre los archivos modificados en la sesión actual. Eso reescribe en disco decenas de archivos no relacionados con la tarea (cambios cosméticos: comillas, comas finales, orden de imports, etc.) y contamina el `git status` con ruido fuera del scope del commit.
+
+**Regla:** validar lint solo con `npx eslint <ruta/al/archivo>` (sin `--fix`) y solo sobre los archivos que la sesión actual tocó. Si hay errores de lint preexistentes en otros archivos del repo, **no son responsabilidad de la tarea actual** — proponerlos como un commit aparte y consciente, nunca arrastrarlos como efecto colateral.
+
+Si por error se ejecutó `npm run lint` y aparecen archivos modificados fuera del scope, revertirlos inmediatamente con `git checkout HEAD -- <archivos no relacionados>` antes de stagear nada.
 
 ## Instructions
 
