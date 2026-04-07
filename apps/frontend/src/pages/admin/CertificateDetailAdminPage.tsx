@@ -153,12 +153,10 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de Emisión</p>
                         <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
                     </div>
-                    {certificate.template && (
-                        <div>
-                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
-                            <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.template.name}</p>
-                        </div>
-                    )}
+                    <div>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
+                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.templateSnapshot.name}</p>
+                    </div>
                 </div>
 
                 {/* Botón de descarga — esquina inferior derecha del bloque de info */}

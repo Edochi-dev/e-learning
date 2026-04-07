@@ -35,7 +35,9 @@ describe('GenerateCertificateBatchUseCase', () => {
 
   const fakeTemplate = {
     id: 'tpl-1',
+    name: 'Manicure Ruso',
     courseAbbreviation: 'MR',
+    paperFormat: 'A4 Horizontal',
     filePath: '/static/certificates/templates/tpl-1.pdf',
     nameStyle: {
       positionX: 100,
@@ -266,6 +268,29 @@ describe('GenerateCertificateBatchUseCase', () => {
     await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(expect.any(String), 300);
+  });
+
+  it('congela el templateSnapshot al persistir el certificado (no lo lee de la plantilla viva después)', async () => {
+    templateGateway.findOne.mockResolvedValue(fakeTemplate);
+    configService.get.mockReturnValue('http://localhost:5173');
+    certGateway.countByAbbreviation.mockResolvedValue(0);
+    qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
+    generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
+    certGateway.create.mockImplementation(
+      async (data) => ({ ...data }) as Certificate,
+    );
+
+    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+
+    expect(certGateway.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        templateSnapshot: {
+          name: 'Manicure Ruso',
+          courseAbbreviation: 'MR',
+          paperFormat: 'A4 Horizontal',
+        },
+      }),
+    );
   });
 
   it('procesa múltiples nombres en orden secuencial y retorna todos los resúmenes', async () => {

@@ -108,7 +108,7 @@ export class GenerateCertificateBatchUseCase {
         fontSize: nameStyle.fontSize,
         nameColor: nameStyle.color,
         fontFamily: nameStyle.fontFamily ?? 'Helvetica',
-        nameAlign: (nameStyle.align ?? 'left') as 'left' | 'center',
+        nameAlign: nameStyle.align ?? 'left',
         qrPosition: { x: qrStyle.positionX, y: qrStyle.positionY },
         qrSize: qrStyle.size,
         ...(dateStyle.show && {
@@ -120,7 +120,7 @@ export class GenerateCertificateBatchUseCase {
           dateFontSize: dateStyle.fontSize,
           dateColor: dateStyle.color,
           dateFontFamily: dateStyle.fontFamily,
-          dateAlign: (dateStyle.align ?? 'left') as 'left' | 'center',
+          dateAlign: dateStyle.align ?? 'left',
         }),
       });
 
@@ -133,11 +133,22 @@ export class GenerateCertificateBatchUseCase {
       );
 
       // 6. Persistir en la base de datos
+      //
+      // CONGELAR el snapshot de plantilla AHORA: una vez que esta fila se
+      // inserta, los metadatos `templateSnapshot` se quedan inmutables. Si
+      // mañana el admin edita la plantilla, este certificado seguirá
+      // mostrando los datos que recibió el alumno en su momento. La FK
+      // `template` se mantiene para auditoría pero NO se lee en la UI.
       const cert = await this.certificateGateway.create({
         id: certId,
         certificateNumber,
         recipientName: trimmedName,
         template,
+        templateSnapshot: {
+          name: template.name,
+          courseAbbreviation: template.courseAbbreviation,
+          paperFormat: template.paperFormat,
+        },
         filePath,
       } as Partial<Certificate>);
 

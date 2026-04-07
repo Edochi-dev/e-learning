@@ -40,6 +40,7 @@ import { Migration1774364896058 } from './migrations/1774364896058-Migration';
 import { Migration1774464520488 } from './migrations/1774464520488-Migration';
 import { SplitLessonInheritance1774500000000 } from './migrations/1774500000000-SplitLessonInheritance';
 import { ConsolidateTemplateStyles1774600000000 } from './migrations/1774600000000-ConsolidateTemplateStyles';
+import { AddCertificateTemplateSnapshot1774700000000 } from './migrations/1774700000000-AddCertificateTemplateSnapshot';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -91,5 +92,6 @@ export const AppDataSource = new DataSource({
     Migration1774464520488,
     SplitLessonInheritance1774500000000,
     ConsolidateTemplateStyles1774600000000,
+    AddCertificateTemplateSnapshot1774700000000,
   ],
 });

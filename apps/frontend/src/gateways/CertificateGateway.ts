@@ -49,11 +49,34 @@ export interface CertificateTemplate {
     certificateCount?: number;
 }
 
+/**
+ * TemplateSnapshot — copia inmutable de los metadatos de la plantilla
+ * al momento de emisión del certificado. Esta es la fuente de verdad
+ * para mostrar info de plantilla en la UI: NUNCA leer `cert.template`
+ * para mostrar al usuario, porque la plantilla viva puede haber sido
+ * editada o borrada después de emitir el certificado.
+ */
+export interface TemplateSnapshot {
+    name: string;
+    courseAbbreviation: string;
+    paperFormat: string;
+}
+
 export interface Certificate {
     id: string;
     certificateNumber: string;
     recipientName: string;
-    template: CertificateTemplate;
+    /**
+     * Snapshot congelado de la plantilla en el momento de emisión.
+     * Úsalo SIEMPRE para mostrar info de plantilla al usuario.
+     */
+    templateSnapshot: TemplateSnapshot;
+    /**
+     * Referencia opcional a la plantilla viva. Solo para auditoría
+     * (saber si la plantilla todavía existe). NO usar para mostrar
+     * datos al usuario — usar templateSnapshot.
+     */
+    template: CertificateTemplate | null;
     filePath: string;
     issuedAt: string;
 }

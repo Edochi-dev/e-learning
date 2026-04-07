@@ -94,10 +94,10 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
                                 {new Date(cert.issuedAt).toLocaleDateString('es-MX')}
                             </span>
                             <span className="admin-course-link-meta" style={{
-                                color: cert.template ? 'var(--text-muted)' : 'var(--gold)',
+                                color: 'var(--text-muted)',
                                 fontSize: '0.8rem',
                             }}>
-                                {cert.template ? cert.template.name : '⚠ Plantilla eliminada'}
+                                {cert.templateSnapshot.name}
                             </span>
                             <button
                                 onClick={() => navigate(`/admin/certificados/ver/${cert.id}`)}
