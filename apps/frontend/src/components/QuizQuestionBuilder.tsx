@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Lesson, CreateQuizQuestionPayload, CreateQuizOptionPayload } from '@maris-nails/shared';
+import type { Lesson, CreateQuizQuestionPayload } from '@maris-nails/shared';
 
 /**
  * QuizQuestionBuilder — Editor visual de preguntas para el admin.

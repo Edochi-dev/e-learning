@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
 import type { CourseGateway } from '../../gateways/CourseGateway';
-import { LessonType, type Course, type Lesson, type UpdateCoursePayload, type CreateLessonPayload, type UpdateLessonPayload, type CreateQuizQuestionPayload } from '@maris-nails/shared';
+import { LessonType, type Course, type Lesson, type UpdateCoursePayload, type CreateLessonPayload, type UpdateLessonPayload } from '@maris-nails/shared';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import { QuizQuestionBuilder } from '../../components/QuizQuestionBuilder';
 import { useToast } from '../../components/Toast';
