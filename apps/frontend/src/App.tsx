@@ -19,6 +19,7 @@ import { ThemeSwitch } from './components/ThemeSwitch';
 import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
+import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
 import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
@@ -112,7 +113,8 @@ function AppContent() {
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
-            <Route path="/admin" element={<AdminDashboardPage gateway={courseGateway} />} />
+            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage gateway={courseGateway} />} />
             <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />

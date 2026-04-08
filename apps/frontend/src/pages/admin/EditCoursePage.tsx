@@ -520,7 +520,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     return (
         <div className="admin-page" style={{ maxWidth: '1100px' }}>
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
+            <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
 
             {/* Fila superior: datos del curso + miniatura lado a lado en desktop */}
