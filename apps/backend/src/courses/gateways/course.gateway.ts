@@ -27,5 +27,21 @@ export abstract class CourseGateway {
 
   abstract delete(id: string): Promise<void>;
 
+  /**
+   * ¿Algún curso usa esta thumbnailUrl? Útil DESPUÉS de borrar el curso,
+   * cuando ya no necesitamos excluirlo de la búsqueda.
+   */
   abstract isThumbnailUrlInUse(thumbnailUrl: string): Promise<boolean>;
+
+  /**
+   * ¿Algún OTRO curso (distinto a excludeCourseId) usa esta thumbnailUrl?
+   *
+   * Espejo de LessonGateway.isVideoUrlReferenced — se usa cuando el curso
+   * AÚN existe en la DB con ese thumbnailUrl asignado y queremos saber si
+   * algún otro lo comparte antes de borrar el archivo del storage.
+   */
+  abstract isThumbnailUrlReferenced(
+    thumbnailUrl: string,
+    excludeCourseId: string,
+  ): Promise<boolean>;
 }

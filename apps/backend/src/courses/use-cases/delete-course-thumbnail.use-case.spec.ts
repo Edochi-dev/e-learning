@@ -2,21 +2,22 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DeleteCourseThumbnailUseCase } from './delete-course-thumbnail.use-case';
 import { CourseGateway } from '../gateways/course.gateway';
-import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { Course } from '../entities/course.entity';
 
 /**
- * Tests para DeleteCourseThumbnailUseCase — eliminación de miniatura.
+ * Tests para DeleteCourseThumbnailUseCase.
  *
- * Flujo:
- *   1. Verificar que el curso existe
- *   2. Si tiene thumbnail → deleteByUrl (el gateway decide si es local)
- *   3. Actualizar curso con thumbnailUrl = undefined
+ * Cubrimos:
+ *   - Validación de existencia del curso.
+ *   - Que se invoca al cleaner con la URL vieja y un checker que excluye
+ *     al curso actual (bug fix: antes se borraba sin chequear referencias).
+ *   - Que el campo thumbnailUrl se setea a undefined en el update final.
  */
 describe('DeleteCourseThumbnailUseCase', () => {
   let useCase: DeleteCourseThumbnailUseCase;
   let courseGateway: jest.Mocked<CourseGateway>;
-  let fileStorageGateway: jest.Mocked<FileStorageGateway>;
+  let orphanFileCleaner: jest.Mocked<OrphanFileCleaner>;
 
   const courseId = 'course-uuid-123';
 
@@ -31,12 +32,13 @@ describe('DeleteCourseThumbnailUseCase', () => {
           useValue: {
             findOne: jest.fn(),
             update: jest.fn(),
+            isThumbnailUrlReferenced: jest.fn(),
           },
         },
         {
-          provide: FileStorageGateway,
+          provide: OrphanFileCleaner,
           useValue: {
-            deleteByUrl: jest.fn(),
+            deleteIfOrphan: jest.fn(),
           },
         },
       ],
@@ -44,7 +46,7 @@ describe('DeleteCourseThumbnailUseCase', () => {
 
     useCase = module.get(DeleteCourseThumbnailUseCase);
     courseGateway = module.get(CourseGateway);
-    fileStorageGateway = module.get(FileStorageGateway);
+    orphanFileCleaner = module.get(OrphanFileCleaner);
   });
 
   it('lanza NotFoundException si el curso no existe', async () => {
@@ -53,9 +55,10 @@ describe('DeleteCourseThumbnailUseCase', () => {
     await expect(useCase.execute(courseId)).rejects.toThrow(NotFoundException);
 
     expect(courseGateway.update).not.toHaveBeenCalled();
+    expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 
-  it('llama a deleteByUrl con la URL y setea thumbnailUrl a undefined', async () => {
+  it('invoca al cleaner con la thumbnail y un checker que excluye al curso actual', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/portada.jpg',
@@ -63,39 +66,29 @@ describe('DeleteCourseThumbnailUseCase', () => {
 
     courseGateway.findOne.mockResolvedValue(course);
     courseGateway.update.mockResolvedValue({} as Course);
+    courseGateway.isThumbnailUrlReferenced.mockResolvedValue(false);
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+    expect(orphanFileCleaner.deleteIfOrphan).toHaveBeenCalledWith(
       '/static/thumbnails/portada.jpg',
+      expect.any(Function),
     );
+
+    const checker = orphanFileCleaner.deleteIfOrphan.mock.calls[0][1];
+    await checker();
+    expect(courseGateway.isThumbnailUrlReferenced).toHaveBeenCalledWith(
+      '/static/thumbnails/portada.jpg',
+      courseId,
+    );
+
     expect(courseGateway.update).toHaveBeenCalledWith(
       courseId,
       { thumbnailUrl: undefined },
     );
   });
 
-  it('delega a deleteByUrl incluso con URLs externas (el gateway decide)', async () => {
-    const course = {
-      id: courseId,
-      thumbnailUrl: 'https://cdn.example.com/img.jpg',
-    } as Course;
-
-    courseGateway.findOne.mockResolvedValue(course);
-    courseGateway.update.mockResolvedValue({} as Course);
-
-    await useCase.execute(courseId);
-
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
-      'https://cdn.example.com/img.jpg',
-    );
-    expect(courseGateway.update).toHaveBeenCalledWith(
-      courseId,
-      { thumbnailUrl: undefined },
-    );
-  });
-
-  it('no llama a deleteByUrl si el curso no tenía thumbnail', async () => {
+  it('no invoca al cleaner si el curso no tenía thumbnail', async () => {
     const course = { id: courseId, thumbnailUrl: null } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
@@ -103,6 +96,6 @@ describe('DeleteCourseThumbnailUseCase', () => {
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
+    expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 });

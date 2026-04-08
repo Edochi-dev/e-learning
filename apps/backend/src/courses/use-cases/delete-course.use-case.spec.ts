@@ -3,25 +3,25 @@ import { Test } from '@nestjs/testing';
 import { DeleteCourseUseCase } from './delete-course.use-case';
 import { CourseGateway } from '../gateways/course.gateway';
 import { LessonGateway } from '../gateways/lesson.gateway';
-import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { Course } from '../entities/course.entity';
 
 /**
- * Tests para DeleteCourseUseCase — eliminación con limpieza de archivos huérfanos.
+ * Tests para DeleteCourseUseCase.
  *
- * Este es el Use Case más complejo del módulo porque coordina:
- *   - Lectura del curso (para anotar rutas ANTES de borrar)
- *   - Borrado en cascada de la DB
- *   - Limpieza best-effort de videos y thumbnail via deleteByUrl
+ * Después del refactor, el use case ya no llama a deleteByUrl directamente:
+ * delega a OrphanFileCleaner.deleteIfOrphan, pasándole un closure que sabe
+ * preguntar al gateway correcto si el archivo aún está en uso.
  *
- * Después del refactor, el Use Case ya no sabe cómo se estructuran las URLs
- * del storage ("/static/" etc.). Delega eso a deleteByUrl del gateway.
+ * Por eso aquí mockeamos OrphanFileCleaner como una caja negra: nos basta con
+ * verificar que el use case lo invoca con la URL correcta y un checker que,
+ * al ejecutarse, llama al gateway esperado.
  */
 describe('DeleteCourseUseCase', () => {
   let useCase: DeleteCourseUseCase;
   let courseGateway: jest.Mocked<CourseGateway>;
   let lessonGateway: jest.Mocked<LessonGateway>;
-  let fileStorageGateway: jest.Mocked<FileStorageGateway>;
+  let orphanFileCleaner: jest.Mocked<OrphanFileCleaner>;
 
   const courseId = 'course-uuid-123';
 
@@ -46,9 +46,9 @@ describe('DeleteCourseUseCase', () => {
           },
         },
         {
-          provide: FileStorageGateway,
+          provide: OrphanFileCleaner,
           useValue: {
-            deleteByUrl: jest.fn(),
+            deleteIfOrphan: jest.fn(),
           },
         },
       ],
@@ -57,12 +57,8 @@ describe('DeleteCourseUseCase', () => {
     useCase = module.get(DeleteCourseUseCase);
     courseGateway = module.get(CourseGateway);
     lessonGateway = module.get(LessonGateway);
-    fileStorageGateway = module.get(FileStorageGateway);
+    orphanFileCleaner = module.get(OrphanFileCleaner);
   });
-
-  // ──────────────────────────────────────────────────────────
-  // 1. VALIDACIÓN: ¿El curso existe?
-  // ──────────────────────────────────────────────────────────
 
   it('lanza NotFoundException si el curso no existe', async () => {
     courseGateway.findOne.mockResolvedValue(null);
@@ -70,13 +66,10 @@ describe('DeleteCourseUseCase', () => {
     await expect(useCase.execute(courseId)).rejects.toThrow(NotFoundException);
 
     expect(courseGateway.delete).not.toHaveBeenCalled();
+    expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 2. Curso sin archivos — solo borra de la DB
-  // ──────────────────────────────────────────────────────────
-
-  it('borra el curso de la DB sin intentar limpiar archivos si no hay lecciones ni thumbnail', async () => {
+  it('borra el curso de la DB y NO invoca al cleaner si no hay lecciones ni thumbnail', async () => {
     const course = {
       id: courseId,
       lessons: [],
@@ -88,14 +81,10 @@ describe('DeleteCourseUseCase', () => {
     await useCase.execute(courseId);
 
     expect(courseGateway.delete).toHaveBeenCalledWith(courseId);
-    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
+    expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 3. Videos huérfanos — deleteByUrl se encarga
-  // ──────────────────────────────────────────────────────────
-
-  it('llama a deleteByUrl para cada video huérfano después de eliminar el curso', async () => {
+  it('invoca al cleaner para cada video de las lecciones después de borrar el curso', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: null,
@@ -106,41 +95,48 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    lessonGateway.isVideoUrlInUse.mockResolvedValue(false); // huérfanos
 
     await useCase.execute(courseId);
 
     expect(courseGateway.delete).toHaveBeenCalledWith(courseId);
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith('/static/videos/clase1.mp4');
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith('/static/videos/clase2.mp4');
+    expect(orphanFileCleaner.deleteIfOrphan).toHaveBeenCalledWith(
+      '/static/videos/clase1.mp4',
+      expect.any(Function),
+    );
+    expect(orphanFileCleaner.deleteIfOrphan).toHaveBeenCalledWith(
+      '/static/videos/clase2.mp4',
+      expect.any(Function),
+    );
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 4. Video compartido — NO borra el archivo
-  // ──────────────────────────────────────────────────────────
-
-  it('NO llama a deleteByUrl si otra lección sigue usando el video', async () => {
+  it('el checker pasado al cleaner consulta lessonGateway.isVideoUrlInUse', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: null,
-      lessons: [
-        { videoData: { videoUrl: '/static/videos/compartido.mp4' } },
-      ],
+      lessons: [{ videoData: { videoUrl: '/static/videos/clase1.mp4' } }],
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    lessonGateway.isVideoUrlInUse.mockResolvedValue(true); // en uso
+    lessonGateway.isVideoUrlInUse.mockResolvedValue(true);
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
+    // Tomamos el checker que el use case le pasó al cleaner y lo ejecutamos
+    // para verificar que delega al gateway correcto.
+    const videoCall = orphanFileCleaner.deleteIfOrphan.mock.calls.find(
+      ([url]) => url === '/static/videos/clase1.mp4',
+    );
+    expect(videoCall).toBeDefined();
+    const checker = videoCall![1];
+    const result = await checker();
+
+    expect(lessonGateway.isVideoUrlInUse).toHaveBeenCalledWith(
+      '/static/videos/clase1.mp4',
+    );
+    expect(result).toBe(true);
   });
 
-  // ──────────────────────────────────────────────────────────
-  // 5. Thumbnail huérfana — deleteByUrl se encarga
-  // ──────────────────────────────────────────────────────────
-
-  it('llama a deleteByUrl para la thumbnail si ya no la usa ningún otro curso', async () => {
+  it('invoca al cleaner para la thumbnail con un checker que consulta courseGateway.isThumbnailUrlInUse', async () => {
     const course = {
       id: courseId,
       thumbnailUrl: '/static/thumbnails/portada.jpg',
@@ -148,60 +144,20 @@ describe('DeleteCourseUseCase', () => {
     } as unknown as Course;
 
     courseGateway.findOne.mockResolvedValue(course);
-    courseGateway.isThumbnailUrlInUse.mockResolvedValue(false); // huérfana
+    courseGateway.isThumbnailUrlInUse.mockResolvedValue(false);
 
     await useCase.execute(courseId);
 
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
+    const thumbCall = orphanFileCleaner.deleteIfOrphan.mock.calls.find(
+      ([url]) => url === '/static/thumbnails/portada.jpg',
+    );
+    expect(thumbCall).toBeDefined();
+    const checker = thumbCall![1];
+    const result = await checker();
+
+    expect(courseGateway.isThumbnailUrlInUse).toHaveBeenCalledWith(
       '/static/thumbnails/portada.jpg',
     );
-  });
-
-  // ──────────────────────────────────────────────────────────
-  // 6. Thumbnail compartida — NO borra
-  // ──────────────────────────────────────────────────────────
-
-  it('NO llama a deleteByUrl si otro curso sigue usando la thumbnail', async () => {
-    const course = {
-      id: courseId,
-      thumbnailUrl: '/static/thumbnails/compartida.jpg',
-      lessons: [],
-    } as unknown as Course;
-
-    courseGateway.findOne.mockResolvedValue(course);
-    courseGateway.isThumbnailUrlInUse.mockResolvedValue(true); // en uso
-
-    await useCase.execute(courseId);
-
-    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
-  });
-
-  // ──────────────────────────────────────────────────────────
-  // 7. URLs externas — deleteByUrl las ignora silenciosamente
-  // ──────────────────────────────────────────────────────────
-
-  /**
-   * Después del refactor, el Use Case ya no filtra URLs externas —
-   * recopila TODOS los videoUrls y deleteByUrl se encarga.
-   * Si el video es de YouTube, deleteByUrl no hace nada.
-   */
-  it('recopila URLs externas pero deleteByUrl las ignora', async () => {
-    const course = {
-      id: courseId,
-      thumbnailUrl: null,
-      lessons: [
-        { videoData: { videoUrl: 'https://youtube.com/watch?v=abc123' } },
-      ],
-    } as unknown as Course;
-
-    courseGateway.findOne.mockResolvedValue(course);
-    lessonGateway.isVideoUrlInUse.mockResolvedValue(false);
-
-    await useCase.execute(courseId);
-
-    // El Use Case llama a deleteByUrl — el gateway decide no borrar
-    expect(fileStorageGateway.deleteByUrl).toHaveBeenCalledWith(
-      'https://youtube.com/watch?v=abc123',
-    );
+    expect(result).toBe(false);
   });
 });

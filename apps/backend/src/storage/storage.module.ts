@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { FileStorageGateway } from './gateways/file-storage.gateway';
 import { LocalFileStorageGateway } from './local-file-storage.gateway';
+import { OrphanFileCleaner } from './services/orphan-file-cleaner.service';
 
 /**
  * StorageModule — Módulo de almacenamiento
@@ -20,7 +21,8 @@ import { LocalFileStorageGateway } from './local-file-storage.gateway';
       provide: FileStorageGateway,
       useClass: LocalFileStorageGateway,
     },
+    OrphanFileCleaner,
   ],
-  exports: [FileStorageGateway],
+  exports: [FileStorageGateway, OrphanFileCleaner],
 })
 export class StorageModule {}

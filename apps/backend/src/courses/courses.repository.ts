@@ -256,6 +256,26 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
   }
 
   /**
+   * ¿Algún OTRO curso (distinto a excludeCourseId) usa esta thumbnailUrl?
+   *
+   * Necesario cuando el curso aún tiene asignada la thumbnail en la DB
+   * (caso update/delete-thumbnail): si contáramos sin excluirlo, siempre
+   * habría ≥1 referencia y nunca borraríamos el archivo.
+   */
+  async isThumbnailUrlReferenced(
+    thumbnailUrl: string,
+    excludeCourseId: string,
+  ): Promise<boolean> {
+    const count = await this.courseRepository.count({
+      where: {
+        thumbnailUrl,
+        id: Not(excludeCourseId),
+      },
+    });
+    return count > 0;
+  }
+
+  /**
    * Carga una lección con sus preguntas y opciones.
    *
    * relations funciona como un "JOIN automático": le dice a TypeORM que además
