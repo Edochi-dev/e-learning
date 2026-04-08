@@ -13,6 +13,6 @@ export class UpdateCourseUseCase {
       throw new NotFoundException(`Course with id ${id} not found`);
     }
 
-    return this.courseGateway.update(id, dto as unknown as Partial<Course>);
+    return this.courseGateway.update(id, dto);
   }
 }

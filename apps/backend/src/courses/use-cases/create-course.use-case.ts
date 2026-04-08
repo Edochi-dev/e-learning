@@ -33,6 +33,6 @@ export class CreateCourseUseCase {
       );
     }
 
-    return this.courseGateway.create({ ...dto, thumbnailUrl } as unknown as Course);
+    return this.courseGateway.create({ ...dto, thumbnailUrl });
   }
 }

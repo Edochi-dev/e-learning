@@ -29,8 +29,6 @@ export class DeleteCourseThumbnailUseCase {
       );
     }
 
-    return this.courseGateway.update(id, {
-      thumbnailUrl: undefined,
-    } as unknown as Partial<Course>);
+    return this.courseGateway.update(id, { thumbnailUrl: undefined });
   }
 }

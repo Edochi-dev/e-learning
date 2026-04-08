@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
-import { CourseGateway } from './gateways/course.gateway';
+import {
+  CourseGateway,
+  CreateCourseData,
+  UpdateCourseData,
+} from './gateways/course.gateway';
 import { LessonGateway, LessonData } from './gateways/lesson.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 import { Course } from './entities/course.entity';
@@ -38,8 +42,10 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
   // Operaciones de Cursos
   // ==========================================
 
-  async create(course: Course): Promise<Course> {
-    const newCourse = this.courseRepository.create(course);
+  async create(data: CreateCourseData): Promise<Course> {
+    // TypeORM acepta DeepPartial<Course>; CreateCourseData es estructuralmente
+    // compatible (todos sus campos son columnas válidas de Course).
+    const newCourse = this.courseRepository.create(data);
     return this.courseRepository.save(newCourse);
   }
 
@@ -67,7 +73,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     });
   }
 
-  async update(id: string, data: Partial<Course>): Promise<Course> {
+  async update(id: string, data: UpdateCourseData): Promise<Course> {
     const course = await this.findOne(id);
     if (!course) {
       throw new NotFoundException(`Course with id ${id} not found`);

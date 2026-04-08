@@ -41,8 +41,6 @@ export class UpdateCourseThumbnailUseCase {
       'thumbnails',
     );
 
-    return this.courseGateway.update(id, {
-      thumbnailUrl,
-    } as unknown as Partial<Course>);
+    return this.courseGateway.update(id, { thumbnailUrl });
   }
 }
