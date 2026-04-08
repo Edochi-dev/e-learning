@@ -63,7 +63,13 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
       where: { id },
       // Cargamos lessons + sus questions + options para que el admin vea el quiz completo.
       // Para el alumno, el Use Case filtra isCorrect antes de devolver.
-      relations: ['lessons', 'lessons.videoData', 'lessons.examData', 'lessons.questions', 'lessons.questions.options'],
+      relations: [
+        'lessons',
+        'lessons.videoData',
+        'lessons.examData',
+        'lessons.questions',
+        'lessons.questions.options',
+      ],
       order: {
         lessons: {
           order: 'ASC',
@@ -105,10 +111,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
   // Operaciones de Lecciones
   // ==========================================
 
-  async addLesson(
-    courseId: string,
-    lessonData: LessonData,
-  ): Promise<Lesson> {
+  async addLesson(courseId: string, lessonData: LessonData): Promise<Lesson> {
     const course = await this.findOne(courseId);
     if (!course) {
       throw new NotFoundException(`Course with id ${courseId} not found`);
@@ -188,13 +191,16 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
 
     // Actualizar campos del hijo según el tipo
     if (lesson.videoData) {
-      if (data.videoUrl !== undefined) lesson.videoData.videoUrl = data.videoUrl;
-      if (data.duration !== undefined) lesson.videoData.duration = data.duration;
+      if (data.videoUrl !== undefined)
+        lesson.videoData.videoUrl = data.videoUrl;
+      if (data.duration !== undefined)
+        lesson.videoData.duration = data.duration;
       if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;
     }
 
     if (lesson.examData) {
-      if (data.passingScore !== undefined) lesson.examData.passingScore = data.passingScore;
+      if (data.passingScore !== undefined)
+        lesson.examData.passingScore = data.passingScore;
     }
 
     // Reemplazo de preguntas (borrar viejas, insertar nuevas por cascade)
@@ -244,7 +250,9 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
    * ¿Alguna lección (cualquiera) usa este videoUrl?
    */
   async isVideoUrlInUse(videoUrl: string): Promise<boolean> {
-    const count = await this.videoLessonRepository.count({ where: { videoUrl } });
+    const count = await this.videoLessonRepository.count({
+      where: { videoUrl },
+    });
     return count > 0;
   }
 
