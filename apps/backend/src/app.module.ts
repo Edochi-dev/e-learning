@@ -12,6 +12,7 @@ import { User } from './users/entities/user.entity';
 import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CertificatesModule } from './certificates/certificates.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
@@ -33,7 +34,23 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
         // Servidor — opcional, tiene default
         PORT: Joi.number().integer().default(3000),
         FRONTEND_URL: Joi.string().uri().default('http://localhost:5173'),
-      }),
+        // Notificaciones SMTP — TODAS opcionales.
+        // Si SMTP_HOST está presente, las demás (excepto SMTP_SECURE) se vuelven
+        // obligatorias por la regla `.with()` de abajo: queremos fail-fast en boot
+        // si alguien configura SMTP a medias en lugar de descubrirlo en el primer email.
+        // Si SMTP_HOST NO está presente, NotificationsModule cae a ConsoleNotificationGateway.
+        SMTP_HOST: Joi.string().optional(),
+        SMTP_PORT: Joi.number().integer().optional(),
+        SMTP_SECURE: Joi.string().valid('true', 'false').optional(),
+        SMTP_USER: Joi.string().optional(),
+        SMTP_PASS: Joi.string().optional(),
+        SMTP_FROM: Joi.string().optional(),
+      }).with('SMTP_HOST', [
+        'SMTP_PORT',
+        'SMTP_USER',
+        'SMTP_PASS',
+        'SMTP_FROM',
+      ]),
     }),
 
     // 2. Conectamos TypeORM a PostgreSQL usando el .env
@@ -68,6 +85,7 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     EnrollmentsModule,
     OrdersModule,
     CertificatesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule implements NestModule {
