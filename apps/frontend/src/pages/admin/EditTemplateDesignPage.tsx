@@ -93,6 +93,32 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                 <p>Edita la posición, tipografía, tamaño, color y alineación de los elementos sobre "{template.name}".</p>
             </div>
 
+            {/* ── Banner de advertencia (siempre visible) ─────────────────────
+                Aplica la MISMA garantía que EditCertificateTemplatePage: editar
+                el diseño de la plantilla solo afecta a certificados generados a
+                partir de ahora. Los certificados ya emitidos conservan intacto
+                su PDF rasterizado original y su templateSnapshot inmutable. */}
+            <div
+                role="alert"
+                style={{
+                    border: '1px solid var(--gold, #d4a574)',
+                    background: 'rgba(212, 165, 116, 0.08)',
+                    borderRadius: '8px',
+                    padding: '1rem 1.25rem',
+                    marginBottom: '1.5rem',
+                }}
+            >
+                <p style={{ margin: 0, fontWeight: 700, color: 'var(--gold, #d4a574)' }}>
+                    ⚠ Edición no destructiva
+                </p>
+                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-muted)', lineHeight: 1.5, fontSize: '0.9rem' }}>
+                    Cambiar el diseño de la plantilla <strong>solo afecta a los certificados que generes a partir de ahora</strong>.
+                    Los certificados ya emitidos con esta plantilla <strong>conservarán intacto su diseño original</strong>,
+                    porque se almacenan como archivos PDF independientes en el momento de su emisión. No es posible — ni
+                    recomendable — modificar un documento ya entregado a un alumno.
+                </p>
+            </div>
+
             <TemplateDesignPicker
                 template={template}
                 pdfSource={pdfBlob}
