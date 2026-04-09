@@ -6,6 +6,7 @@
 export const LessonType = {
     CLASS: 'class',
     EXAM: 'exam',
+    CORRECTION: 'correction',
 } as const;
 
 export type LessonType = typeof LessonType[keyof typeof LessonType];
@@ -41,6 +42,11 @@ export interface ExamLessonData {
     passingScore: number;    // Respuestas correctas mínimas para aprobar
 }
 
+export interface AssignmentLessonData {
+    referenceImageUrl: string;  // Foto de referencia que sube la profesora
+    instructions: string;       // Instrucciones del ejercicio para la alumna
+}
+
 // ─── Lesson (base) ───────────────────────────────────────────────────
 // Campos comunes a TODA lección. Los datos específicos de cada tipo
 // viven en videoData o examData — nunca ambos a la vez.
@@ -52,9 +58,10 @@ export interface Lesson {
     description: string;
     type: LessonType;
     order: number;
-    videoData?: VideoLessonData;      // Presente solo si type === 'class'
-    examData?: ExamLessonData;        // Presente solo si type === 'exam'
-    questions?: QuizQuestion[];       // Presente solo si type === 'exam'
+    videoData?: VideoLessonData;          // Presente solo si type === 'class'
+    examData?: ExamLessonData;            // Presente solo si type === 'exam'
+    questions?: QuizQuestion[];           // Presente solo si type === 'exam'
+    assignmentData?: AssignmentLessonData; // Presente solo si type === 'correction'
 }
 
 export interface Course {
@@ -114,6 +121,9 @@ export interface CreateLessonPayload {
     // Campos de examen (solo cuando type === 'exam')
     passingScore?: number;
     questions?: CreateQuizQuestionPayload[];
+    // Campos de corrección (solo cuando type === 'correction')
+    referenceImageUrl?: string;
+    instructions?: string;
 }
 
 export interface CreateQuizQuestionPayload {
@@ -144,6 +154,9 @@ export interface UpdateLessonPayload {
     isLive?: boolean;
     passingScore?: number;
     questions?: CreateQuizQuestionPayload[];
+    // Campos de corrección (solo cuando type === 'correction')
+    referenceImageUrl?: string;
+    instructions?: string;
 }
 
 export interface RegisterPayload {
