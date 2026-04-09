@@ -11,6 +11,7 @@ import { Certificate } from '../certificates/entities/certificate.entity';
 import { Order } from '../orders/entities/order.entity';
 import { VideoLesson } from '../courses/entities/video-lesson.entity';
 import { ExamLesson } from '../courses/entities/exam-lesson.entity';
+import { AssignmentLesson } from '../courses/entities/assignment-lesson.entity';
 import { QuizQuestion } from '../courses/entities/quiz-question.entity';
 import { QuizOption } from '../courses/entities/quiz-option.entity';
 import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
@@ -41,6 +42,7 @@ import { Migration1774464520488 } from './migrations/1774464520488-Migration';
 import { SplitLessonInheritance1774500000000 } from './migrations/1774500000000-SplitLessonInheritance';
 import { ConsolidateTemplateStyles1774600000000 } from './migrations/1774600000000-ConsolidateTemplateStyles';
 import { AddCertificateTemplateSnapshot1774700000000 } from './migrations/1774700000000-AddCertificateTemplateSnapshot';
+import { AddAssignmentLessons1775754021697 } from './migrations/1775754021697-AddAssignmentLessons';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -57,6 +59,7 @@ export const AppDataSource = new DataSource({
     Lesson,
     VideoLesson,
     ExamLesson,
+    AssignmentLesson,
     Enrollment,
     LessonProgress,
     CertificateTemplate,
@@ -93,5 +96,6 @@ export const AppDataSource = new DataSource({
     SplitLessonInheritance1774500000000,
     ConsolidateTemplateStyles1774600000000,
     AddCertificateTemplateSnapshot1774700000000,
+    AddAssignmentLessons1775754021697,
   ],
 });

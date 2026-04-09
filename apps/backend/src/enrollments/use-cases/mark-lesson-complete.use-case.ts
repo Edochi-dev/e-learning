@@ -1,8 +1,10 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { LessonType } from '@maris-nails/shared';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
@@ -51,7 +53,16 @@ export class MarkLessonCompleteUseCase {
       throw new NotFoundException('Lección no encontrada');
     }
 
-    // Paso 3: Marcar completa (idempotente: si ya lo estaba, no pasa nada)
+    // Paso 3: ¿Es una lección de corrección?
+    // Las correcciones solo pueden completarse a través del flujo de revisión
+    // de la profesora (ReviewCorrectionUseCase), no por acción directa de la alumna.
+    if (lesson.type === LessonType.CORRECTION) {
+      throw new BadRequestException(
+        'Las lecciones de corrección se completan al ser aprobadas por la profesora',
+      );
+    }
+
+    // Paso 4: Marcar completa (idempotente: si ya lo estaba, no pasa nada)
     await this.lessonProgressGateway.markLessonComplete(userId, lessonId);
   }
 }

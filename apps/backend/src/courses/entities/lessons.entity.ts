@@ -12,6 +12,7 @@ import { Course } from './course.entity';
 import { QuizQuestion } from './quiz-question.entity';
 import { VideoLesson } from './video-lesson.entity';
 import { ExamLesson } from './exam-lesson.entity';
+import { AssignmentLesson } from './assignment-lesson.entity';
 
 /**
  * Lesson — Entidad BASE de toda lección.
@@ -60,6 +61,12 @@ export class Lesson {
 
   @OneToOne(() => ExamLesson, (e) => e.lesson, { cascade: true, eager: true })
   examData: ExamLesson;
+
+  @OneToOne(() => AssignmentLesson, (a) => a.lesson, {
+    cascade: true,
+    eager: true,
+  })
+  assignmentData: AssignmentLesson;
 
   // ── Relaciones existentes ────────────────────────────────────────────
 

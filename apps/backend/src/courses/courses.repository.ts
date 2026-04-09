@@ -12,6 +12,7 @@ import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
 import { VideoLesson } from './entities/video-lesson.entity';
 import { ExamLesson } from './entities/exam-lesson.entity';
+import { AssignmentLesson } from './entities/assignment-lesson.entity';
 import { QuizQuestion } from './entities/quiz-question.entity';
 
 /**
@@ -34,6 +35,8 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     private readonly videoLessonRepository: Repository<VideoLesson>,
     @InjectRepository(ExamLesson)
     private readonly examLessonRepository: Repository<ExamLesson>,
+    @InjectRepository(AssignmentLesson)
+    private readonly assignmentLessonRepository: Repository<AssignmentLesson>,
     @InjectRepository(QuizQuestion)
     private readonly quizQuestionRepository: Repository<QuizQuestion>,
   ) {}
@@ -51,7 +54,12 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
 
   async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
     const [data, total] = await this.courseRepository.findAndCount({
-      relations: ['lessons', 'lessons.videoData', 'lessons.examData'],
+      relations: [
+        'lessons',
+        'lessons.videoData',
+        'lessons.examData',
+        'lessons.assignmentData',
+      ],
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -67,6 +75,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
         'lessons',
         'lessons.videoData',
         'lessons.examData',
+        'lessons.assignmentData',
         'lessons.questions',
         'lessons.questions.options',
       ],
@@ -149,9 +158,10 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
         }
         break;
       case 'correction':
-        // La entidad AssignmentLesson se creará en Fase 3.
-        // Por ahora el case existe para que el switch sea exhaustivo
-        // y TypeScript no se queje cuando agreguemos el hijo.
+        lesson.assignmentData = this.assignmentLessonRepository.create({
+          referenceImageUrl: lessonData.referenceImageUrl,
+          instructions: lessonData.instructions,
+        });
         break;
     }
 
@@ -186,7 +196,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
   async updateLesson(lessonId: string, data: LessonData): Promise<Lesson> {
     const lesson = await this.lessonRepository.findOne({
       where: { id: lessonId },
-      relations: ['videoData', 'examData'],
+      relations: ['videoData', 'examData', 'assignmentData'],
     });
     if (!lesson) {
       throw new NotFoundException(`Lesson with id ${lessonId} not found`);
@@ -224,7 +234,12 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
         }
         break;
       case 'correction':
-        // Se implementará en Fase 3 con AssignmentLesson.
+        if (lesson.assignmentData) {
+          if (data.referenceImageUrl !== undefined)
+            lesson.assignmentData.referenceImageUrl = data.referenceImageUrl;
+          if (data.instructions !== undefined)
+            lesson.assignmentData.instructions = data.instructions;
+        }
         break;
     }
 
@@ -317,7 +332,13 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
   async findLessonWithQuestions(lessonId: string): Promise<Lesson | null> {
     return this.lessonRepository.findOne({
       where: { id: lessonId },
-      relations: ['videoData', 'examData', 'questions', 'questions.options'],
+      relations: [
+        'videoData',
+        'examData',
+        'assignmentData',
+        'questions',
+        'questions.options',
+      ],
       order: { questions: { order: 'ASC' } },
     });
   }

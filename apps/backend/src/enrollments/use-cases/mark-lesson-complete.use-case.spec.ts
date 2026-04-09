@@ -1,10 +1,15 @@
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { MarkLessonCompleteUseCase } from './mark-lesson-complete.use-case';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
+import { Lesson } from '../../courses/entities/lessons.entity';
 
 /**
  * Tests para MarkLessonCompleteUseCase — marcar una lección como completada.
@@ -70,12 +75,14 @@ describe('MarkLessonCompleteUseCase', () => {
   it('lanza ForbiddenException si el usuario no está matriculado', async () => {
     enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute(userId, lessonId, courseId),
-    ).rejects.toThrow(ForbiddenException);
+    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
+      ForbiddenException,
+    );
 
     // Ni siquiera busca la lección — fail fast
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonGateway.findLesson).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonProgressGateway.markLessonComplete).not.toHaveBeenCalled();
   });
 
@@ -89,10 +96,11 @@ describe('MarkLessonCompleteUseCase', () => {
     } as Enrollment);
     lessonGateway.findLesson.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute(userId, lessonId, courseId),
-    ).rejects.toThrow(NotFoundException);
+    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
+      NotFoundException,
+    );
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonProgressGateway.markLessonComplete).not.toHaveBeenCalled();
   });
 
@@ -104,13 +112,38 @@ describe('MarkLessonCompleteUseCase', () => {
     enrollmentGateway.findByUserAndCourse.mockResolvedValue({
       id: 'enrollment-1',
     } as Enrollment);
-    lessonGateway.findLesson.mockResolvedValue({ id: lessonId } as any);
+    lessonGateway.findLesson.mockResolvedValue({
+      id: lessonId,
+      type: 'class',
+    } as unknown as Lesson);
 
     await useCase.execute(userId, lessonId, courseId);
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonProgressGateway.markLessonComplete).toHaveBeenCalledWith(
       userId,
       lessonId,
     );
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // 4. BLOQUEO: Las correcciones no se completan manualmente
+  // ──────────────────────────────────────────────────────────
+
+  it('lanza BadRequestException si la lección es de tipo correction', async () => {
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
+      id: 'enrollment-1',
+    } as Enrollment);
+    lessonGateway.findLesson.mockResolvedValue({
+      id: lessonId,
+      type: 'correction',
+    } as unknown as Lesson);
+
+    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
+      BadRequestException,
+    );
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(lessonProgressGateway.markLessonComplete).not.toHaveBeenCalled();
   });
 });
