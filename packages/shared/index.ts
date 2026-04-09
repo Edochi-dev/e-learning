@@ -254,6 +254,42 @@ export interface CreateOrderPayload {
     courseId: string;
 }
 
+// ─── Assignment Submission (Correcciones) ────────────────────────────
+
+/**
+ * SubmissionStatus — Ciclo de vida de una entrega de corrección.
+ *
+ * El flujo es:
+ *   Alumna sube foto  → PENDING
+ *   Profesora aprueba → APPROVED  (lección se marca completa)
+ *   Profesora rechaza  → REJECTED  (alumna puede re-enviar → vuelve a PENDING)
+ */
+export const SubmissionStatus = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+} as const;
+
+export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
+
+/**
+ * AssignmentSubmission — Entrega de una alumna para una lección tipo corrección.
+ *
+ * Una sola fila por (alumna, lección). Si la alumna re-envía, se sobreescribe
+ * la foto y el status vuelve a PENDING. El feedback de la profesora se mantiene
+ * como audit trail.
+ */
+export interface AssignmentSubmission {
+    id: string;
+    lessonId: string;
+    studentId: string;
+    photoUrl: string;
+    status: SubmissionStatus;
+    feedback?: string;       // Texto de la profesora (obligatorio al revisar)
+    submittedAt: string;     // ISO 8601 — cuándo se envió/re-envió
+    reviewedAt?: string;     // ISO 8601 — cuándo la profesora revisó
+}
+
 // ─── Quiz Submission & Results ─────────────────────────────────────────
 
 /**

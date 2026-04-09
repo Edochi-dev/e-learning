@@ -13,6 +13,7 @@ import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { CorrectionsModule } from './corrections/corrections.module';
 import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
@@ -86,6 +87,7 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
     OrdersModule,
     CertificatesModule,
     NotificationsModule,
+    CorrectionsModule,
   ],
 })
 export class AppModule implements NestModule {

@@ -16,6 +16,7 @@ import { QuizQuestion } from '../courses/entities/quiz-question.entity';
 import { QuizOption } from '../courses/entities/quiz-option.entity';
 import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from '../enrollments/entities/quiz-attempt-answer.entity';
+import { AssignmentSubmission } from '../corrections/entities/assignment-submission.entity';
 
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema';
 import { Migration1771952849166 } from './migrations/1771952849166-Migration';
@@ -43,6 +44,7 @@ import { SplitLessonInheritance1774500000000 } from './migrations/1774500000000-
 import { ConsolidateTemplateStyles1774600000000 } from './migrations/1774600000000-ConsolidateTemplateStyles';
 import { AddCertificateTemplateSnapshot1774700000000 } from './migrations/1774700000000-AddCertificateTemplateSnapshot';
 import { AddAssignmentLessons1775754021697 } from './migrations/1775754021697-AddAssignmentLessons';
+import { AddAssignmentSubmissions1775761357710 } from './migrations/1775761357710-AddAssignmentSubmissions';
 
 // Este DataSource es exclusivo para el CLI de TypeORM (migration:generate, migration:run, etc.)
 // La configuración de runtime vive en app.module.ts
@@ -69,6 +71,7 @@ export const AppDataSource = new DataSource({
     QuizOption,
     QuizAttempt,
     QuizAttemptAnswer,
+    AssignmentSubmission,
   ],
   migrations: [
     InitialSchema1740000000000,
@@ -97,5 +100,6 @@ export const AppDataSource = new DataSource({
     ConsolidateTemplateStyles1774600000000,
     AddCertificateTemplateSnapshot1774700000000,
     AddAssignmentLessons1775754021697,
+    AddAssignmentSubmissions1775761357710,
   ],
 });
