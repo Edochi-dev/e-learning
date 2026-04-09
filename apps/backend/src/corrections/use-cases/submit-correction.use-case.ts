@@ -66,13 +66,32 @@ export class SubmitCorrectionUseCase {
       throw new BadRequestException('Esta lección no es de tipo corrección');
     }
 
-    // 3. Procesar imagen: convertir HEIC→JPEG si es necesario
+    // 3. Procesar imagen: convertir HEIC→JPEG si es necesario.
+    //    Retry 2 veces por si sharp falla transitoriamente (ej. pico de memoria).
+    //    Si persiste, asumimos archivo problemático y damos mensaje amigable.
     let processedFile = file;
     if (this.imageProcessor.isHeic(file.mimetype)) {
-      const jpegBuffer = await this.imageProcessor.convertToJpeg(file.buffer);
+      const maxAttempts = 3;
+      let jpegBuffer: Buffer | null = null;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          jpegBuffer = await this.imageProcessor.convertToJpeg(file.buffer);
+          break;
+        } catch {
+          if (attempt === maxAttempts) {
+            throw new BadRequestException(
+              'No pudimos procesar tu foto HEIC. ' +
+                'Convertila a JPG en https://convertio.co/es/heic-jpg/ ' +
+                'e intentá de nuevo.',
+            );
+          }
+        }
+      }
+
       processedFile = {
         ...file,
-        buffer: jpegBuffer,
+        buffer: jpegBuffer!,
         mimetype: 'image/jpeg',
         originalname: file.originalname.replace(/\.hei[cf]$/i, '.jpg'),
       };

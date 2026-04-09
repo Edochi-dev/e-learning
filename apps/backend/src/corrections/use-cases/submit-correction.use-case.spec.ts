@@ -206,4 +206,55 @@ describe('SubmitCorrectionUseCase', () => {
     const savedFile = fileStorageGateway.saveFile.mock.calls[0][0];
     expect(savedFile.mimetype).toBe('image/jpeg');
   });
+
+  it('reintenta la conversión HEIC y tiene éxito en el segundo intento', async () => {
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    lessonGateway.findLesson.mockResolvedValue({
+      id: lessonId,
+      type: 'correction',
+      title: 'Test',
+    } as unknown as Lesson);
+    correctionGateway.findByStudentAndLesson.mockResolvedValue(null);
+    imageProcessor.isHeic.mockReturnValue(true);
+    imageProcessor.convertToJpeg
+      .mockRejectedValueOnce(new Error('transient'))
+      .mockResolvedValueOnce(Buffer.from('jpeg-ok'));
+    fileStorageGateway.saveFile.mockResolvedValue(
+      '/static/corrections/retry.jpg',
+    );
+    correctionGateway.create.mockResolvedValue({} as AssignmentSubmission);
+
+    const heicFile = {
+      ...mockFile,
+      mimetype: 'image/heic',
+    } as Express.Multer.File;
+
+    await useCase.execute(userId, lessonId, courseId, heicFile);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(imageProcessor.convertToJpeg).toHaveBeenCalledTimes(2);
+  });
+
+  it('lanza BadRequestException con link a convertidor si los 3 intentos fallan', async () => {
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    lessonGateway.findLesson.mockResolvedValue({
+      id: lessonId,
+      type: 'correction',
+      title: 'Test',
+    } as unknown as Lesson);
+    imageProcessor.isHeic.mockReturnValue(true);
+    imageProcessor.convertToJpeg.mockRejectedValue(new Error('corrupt'));
+
+    const heicFile = {
+      ...mockFile,
+      mimetype: 'image/heic',
+    } as Express.Multer.File;
+
+    await expect(
+      useCase.execute(userId, lessonId, courseId, heicFile),
+    ).rejects.toThrow(BadRequestException);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(imageProcessor.convertToJpeg).toHaveBeenCalledTimes(3);
+  });
 });
