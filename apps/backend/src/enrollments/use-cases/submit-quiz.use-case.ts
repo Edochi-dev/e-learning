@@ -7,7 +7,7 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';

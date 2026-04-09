@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { LessonType } from '@maris-nails/shared';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
 /**

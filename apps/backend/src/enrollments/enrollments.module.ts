@@ -2,15 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnrollmentsController } from './enrollments.controller';
 import { EnrollmentGateway } from './gateways/enrollment.gateway';
-import { LessonProgressGateway } from './gateways/lesson-progress.gateway';
-import { WatchProgressGateway } from './gateways/watch-progress.gateway';
 import { QuizAttemptGateway } from './gateways/quiz-attempt.gateway';
 import { EnrollmentsRepository } from './repositories/enrollments.repository';
-import { LessonProgressRepository } from './repositories/lesson-progress.repository';
-import { WatchProgressRepository } from './repositories/watch-progress.repository';
 import { QuizAttemptRepository } from './repositories/quiz-attempt.repository';
 import { Enrollment } from './entities/enrollment.entity';
-import { LessonProgress } from './entities/lesson-progress.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from './entities/quiz-attempt-answer.entity';
 import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
@@ -22,6 +17,7 @@ import { GetCourseProgressUseCase } from './use-cases/get-course-progress.use-ca
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { CoursesModule } from '../courses/courses.module';
+import { ProgressModule } from '../progress/progress.module';
 
 /**
  * EnrollmentsModule — El "pegamento" del módulo de matrículas y progreso.
@@ -44,15 +40,14 @@ import { CoursesModule } from '../courses/courses.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Enrollment, LessonProgress, QuizAttempt, QuizAttemptAnswer]),
+    TypeOrmModule.forFeature([Enrollment, QuizAttempt, QuizAttemptAnswer]),
     CoursesModule,
+    ProgressModule,
   ],
   controllers: [EnrollmentsController],
   providers: [
     // --- Bindings: abstracción → implementación concreta ---
     { provide: EnrollmentGateway, useClass: EnrollmentsRepository },
-    { provide: LessonProgressGateway, useClass: LessonProgressRepository },
-    { provide: WatchProgressGateway, useClass: WatchProgressRepository },
     { provide: QuizAttemptGateway, useClass: QuizAttemptRepository },
     // --- Guards ---
     EnrollmentOwnershipGuard,

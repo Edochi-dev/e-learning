@@ -2,8 +2,8 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GetCourseProgressUseCase } from './get-course-progress.use-case';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
-import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
+import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
 
 /**

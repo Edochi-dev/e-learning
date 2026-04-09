@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
 import { GetMyEnrollmentsUseCase } from './get-my-enrollments.use-case';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
 
 /**

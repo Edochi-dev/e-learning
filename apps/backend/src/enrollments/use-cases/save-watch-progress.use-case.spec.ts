@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { SaveWatchProgressUseCase } from './save-watch-progress.use-case';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
+import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
 
 /**

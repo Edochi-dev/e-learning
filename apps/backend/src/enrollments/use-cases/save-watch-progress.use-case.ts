@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
+import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
 
 /**
  * SaveWatchProgressUseCase — Guarda cuánto video ha visto el alumno.

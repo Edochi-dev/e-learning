@@ -6,6 +6,7 @@ import { CorrectionsRepository } from './corrections.repository';
 import { CoursesModule } from '../courses/courses.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { StorageModule } from '../storage/storage.module';
+import { ProgressModule } from '../progress/progress.module';
 
 /**
  * CorrectionsModule — Módulo de correcciones (entregas de tareas).
@@ -26,6 +27,7 @@ import { StorageModule } from '../storage/storage.module';
     CoursesModule,
     NotificationsModule,
     StorageModule,
+    ProgressModule,
   ],
   providers: [
     {

@@ -5,7 +5,7 @@ import { User } from '../users/entities/user.entity';
 import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../courses/entities/lessons.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
-import { LessonProgress } from '../enrollments/entities/lesson-progress.entity';
+import { LessonProgress } from '../progress/entities/lesson-progress.entity';
 import { CertificateTemplate } from '../certificates/entities/certificate-template.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
 import { Order } from '../orders/entities/order.entity';

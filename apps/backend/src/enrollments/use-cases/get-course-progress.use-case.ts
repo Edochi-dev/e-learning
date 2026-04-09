@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EnrollmentGateway } from '../gateways/enrollment.gateway';
-import { LessonProgressGateway } from '../gateways/lesson-progress.gateway';
-import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
+import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
 
 export interface CourseProgress {
   completedLessonIds: string[];
