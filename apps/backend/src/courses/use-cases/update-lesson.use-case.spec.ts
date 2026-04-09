@@ -64,6 +64,7 @@ describe('UpdateLessonUseCase', () => {
   it('invoca al cleaner con la URL vieja cuando el videoUrl cambia', async () => {
     const currentLesson = {
       id: lessonId,
+      type: 'class',
       videoData: { videoUrl: '/static/videos/viejo.mp4' },
     } as unknown as Lesson;
 
@@ -83,6 +84,7 @@ describe('UpdateLessonUseCase', () => {
   it('el checker excluye a la lección actual al consultar isVideoUrlReferenced', async () => {
     const currentLesson = {
       id: lessonId,
+      type: 'class',
       videoData: { videoUrl: '/static/videos/viejo.mp4' },
     } as unknown as Lesson;
 
@@ -107,6 +109,7 @@ describe('UpdateLessonUseCase', () => {
   it('NO invoca al cleaner si el videoUrl no cambió', async () => {
     const currentLesson = {
       id: lessonId,
+      type: 'class',
       videoData: { videoUrl: '/static/videos/mismo.mp4' },
     } as unknown as Lesson;
 
@@ -123,6 +126,7 @@ describe('UpdateLessonUseCase', () => {
   it('asigna order = índice a cada pregunta antes de actualizar', async () => {
     const currentLesson = {
       id: lessonId,
+      type: 'exam',
       videoData: null,
     } as unknown as Lesson;
 
@@ -141,8 +145,12 @@ describe('UpdateLessonUseCase', () => {
     await useCase.execute(lessonId, dto);
 
     const data = lessonGateway.updateLesson.mock.calls[0][1];
-    expect(data.questions![0].order).toBe(0);
-    expect(data.questions![1].order).toBe(1);
-    expect(data.questions![2].order).toBe(2);
+    // Narrowing: verificamos que el tipo sea 'exam' para acceder a questions
+    expect(data.type).toBe('exam');
+    if (data.type === 'exam') {
+      expect(data.questions![0].order).toBe(0);
+      expect(data.questions![1].order).toBe(1);
+      expect(data.questions![2].order).toBe(2);
+    }
   });
 });

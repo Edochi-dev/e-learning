@@ -48,16 +48,22 @@ export class UpdateLessonUseCase {
       );
     }
 
-    // 3. Construir LessonData con las preguntas ordenadas.
-    //    El frontend las envía en el orden correcto, pero no manda el campo order.
-    //    Nosotros lo calculamos aquí para que la BD las devuelva siempre ordenadas.
+    // 3. Construir LessonData con el tipo de la lección actual.
+    //    LessonData es una unión discriminada: necesita `type` para que TypeScript
+    //    sepa qué forma tiene. Usamos el tipo de la lección existente en la DB
+    //    (no se permite cambiar el tipo de una lección vía update).
+    //    Para exámenes, ordenamos las preguntas porque el frontend no manda el campo order.
     const data: LessonData = {
       ...dto,
-      questions: dto.questions?.map((q, index) => ({
-        ...q,
-        order: index,
-      })),
-    };
+      type: currentLesson.type,
+      questions:
+        currentLesson.type === 'exam'
+          ? dto.questions?.map((q, index) => ({
+              ...q,
+              order: index,
+            }))
+          : undefined,
+    } as LessonData;
 
     // 4. Actualizar la lección
     return this.lessonGateway.updateLesson(lessonId, data);

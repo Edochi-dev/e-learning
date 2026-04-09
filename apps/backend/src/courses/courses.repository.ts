@@ -128,24 +128,31 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
 
     // Crear la entidad hija según el tipo.
     // cascade: true en Lesson hace que save() persista ambas filas.
-    if (lessonData.type === 'class') {
-      lesson.videoData = this.videoLessonRepository.create({
-        videoUrl: lessonData.videoUrl,
-        duration: lessonData.duration,
-        isLive: lessonData.isLive ?? false,
-      });
-    } else if (lessonData.type === 'exam') {
-      lesson.examData = this.examLessonRepository.create({
-        passingScore: lessonData.passingScore,
-      });
-      // Las questions vienen en lessonData y se guardan por cascade del @OneToMany.
-      // Usamos .create() para convertir los objetos planos en instancias parciales
-      // de QuizQuestion — TypeORM les asignará id y lesson al hacer save().
-      if (lessonData.questions) {
-        lesson.questions = lessonData.questions.map((q) =>
-          this.quizQuestionRepository.create(q),
-        );
-      }
+    // Gracias a la unión discriminada, TypeScript sabe exactamente qué campos
+    // están disponibles dentro de cada rama del switch — no hay casts ni guesses.
+    switch (lessonData.type) {
+      case 'class':
+        lesson.videoData = this.videoLessonRepository.create({
+          videoUrl: lessonData.videoUrl,
+          duration: lessonData.duration,
+          isLive: lessonData.isLive ?? false,
+        });
+        break;
+      case 'exam':
+        lesson.examData = this.examLessonRepository.create({
+          passingScore: lessonData.passingScore,
+        });
+        if (lessonData.questions) {
+          lesson.questions = lessonData.questions.map((q) =>
+            this.quizQuestionRepository.create(q),
+          );
+        }
+        break;
+      case 'correction':
+        // La entidad AssignmentLesson se creará en Fase 3.
+        // Por ahora el case existe para que el switch sea exhaustivo
+        // y TypeScript no se queje cuando agreguemos el hijo.
+        break;
     }
 
     return this.lessonRepository.save(lesson);
@@ -185,30 +192,40 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
       throw new NotFoundException(`Lesson with id ${lessonId} not found`);
     }
 
-    // Actualizar campos base
+    // Actualizar campos base (comunes a todos los tipos)
     if (data.title !== undefined) lesson.title = data.title;
     if (data.description !== undefined) lesson.description = data.description;
 
-    // Actualizar campos del hijo según el tipo
-    if (lesson.videoData) {
-      if (data.videoUrl !== undefined)
-        lesson.videoData.videoUrl = data.videoUrl;
-      if (data.duration !== undefined)
-        lesson.videoData.duration = data.duration;
-      if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;
-    }
-
-    if (lesson.examData) {
-      if (data.passingScore !== undefined)
-        lesson.examData.passingScore = data.passingScore;
-    }
-
-    // Reemplazo de preguntas (borrar viejas, insertar nuevas por cascade)
-    if (data.questions) {
-      await this.quizQuestionRepository.delete({ lesson: { id: lessonId } });
-      lesson.questions = data.questions.map((q) =>
-        this.quizQuestionRepository.create(q),
-      );
+    // Actualizar campos del hijo según el tipo.
+    // Cada rama del switch solo accede a los campos que le corresponden
+    // gracias a la unión discriminada de LessonData.
+    switch (data.type) {
+      case 'class':
+        if (lesson.videoData) {
+          if (data.videoUrl !== undefined)
+            lesson.videoData.videoUrl = data.videoUrl;
+          if (data.duration !== undefined)
+            lesson.videoData.duration = data.duration;
+          if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;
+        }
+        break;
+      case 'exam':
+        if (lesson.examData) {
+          if (data.passingScore !== undefined)
+            lesson.examData.passingScore = data.passingScore;
+        }
+        if (data.questions) {
+          await this.quizQuestionRepository.delete({
+            lesson: { id: lessonId },
+          });
+          lesson.questions = data.questions.map((q) =>
+            this.quizQuestionRepository.create(q),
+          );
+        }
+        break;
+      case 'correction':
+        // Se implementará en Fase 3 con AssignmentLesson.
+        break;
     }
 
     return this.lessonRepository.save(lesson);

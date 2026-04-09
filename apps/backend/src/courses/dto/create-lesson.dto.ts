@@ -50,15 +50,15 @@ export class CreateLessonDto {
   @IsString()
   description: string;
 
-  // El discriminador: 'class' (video) o 'exam' (quiz).
-  @IsIn([LessonType.CLASS, LessonType.EXAM])
+  // El discriminador: 'class' (video), 'exam' (quiz) o 'correction' (tarea con foto).
+  @IsIn([LessonType.CLASS, LessonType.EXAM, LessonType.CORRECTION])
   type: LessonType;
 
   // ─── Campos exclusivos de type='class' ─────────────────────────────
 
   // @ValidateIf(o => o.type === 'class') significa:
   // "solo valida este campo si type es 'class'".
-  // Para exámenes, videoUrl se ignora completamente.
+  // Para exámenes o correcciones, videoUrl se ignora completamente.
   @ValidateIf((o) => o.type === 'class')
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   videoUrl?: string;
@@ -83,4 +83,14 @@ export class CreateLessonDto {
   @ValidateNested({ each: true })
   @Type(() => CreateQuizQuestionDto)
   questions?: CreateQuizQuestionDto[];
+
+  // ─── Campos exclusivos de type='correction' ────────────────────────
+
+  @ValidateIf((o) => o.type === 'correction')
+  @IsString()
+  referenceImageUrl?: string;
+
+  @ValidateIf((o) => o.type === 'correction')
+  @IsString()
+  instructions?: string;
 }

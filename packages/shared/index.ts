@@ -110,21 +110,41 @@ export interface CreateCoursePayload {
     features?: string[];
 }
 
-export interface CreateLessonPayload {
+// ─── Create Lesson Payloads (Discriminated Union) ────────────────────
+// Cada tipo de lección define su propia forma de payload.
+// El campo `type` actúa como discriminador: TypeScript sabe exactamente
+// qué campos son válidos según el tipo. Imposible mezclar campos de
+// un tipo con otro — el compilador lo impide.
+
+interface CreateClassLessonPayload {
+    type: typeof LessonType.CLASS;
     title: string;
     description: string;
-    type: LessonType;
-    // Campos de video (solo cuando type === 'class')
-    videoUrl?: string;
+    videoUrl: string;
     duration?: string;
     isLive?: boolean;
-    // Campos de examen (solo cuando type === 'exam')
-    passingScore?: number;
-    questions?: CreateQuizQuestionPayload[];
-    // Campos de corrección (solo cuando type === 'correction')
-    referenceImageUrl?: string;
-    instructions?: string;
 }
+
+interface CreateExamLessonPayload {
+    type: typeof LessonType.EXAM;
+    title: string;
+    description: string;
+    passingScore: number;
+    questions: CreateQuizQuestionPayload[];
+}
+
+interface CreateCorrectionLessonPayload {
+    type: typeof LessonType.CORRECTION;
+    title: string;
+    description: string;
+    referenceImageUrl: string;
+    instructions: string;
+}
+
+export type CreateLessonPayload =
+    | CreateClassLessonPayload
+    | CreateExamLessonPayload
+    | CreateCorrectionLessonPayload;
 
 export interface CreateQuizQuestionPayload {
     text: string;
@@ -145,19 +165,40 @@ export interface UpdateCoursePayload {
     features?: string[];
 }
 
-export interface UpdateLessonPayload {
+// ─── Update Lesson Payloads (Discriminated Union) ────────────────────
+// Mismo principio que Create, pero todos los campos son opcionales
+// (actualización parcial). El `type` es obligatorio porque al actualizar
+// ya sabés qué tipo de lección es — y eso determina qué campos aceptás.
+
+interface UpdateClassLessonPayload {
+    type: typeof LessonType.CLASS;
     title?: string;
     description?: string;
-    type?: LessonType;
-    duration?: string;
     videoUrl?: string;
+    duration?: string;
     isLive?: boolean;
+}
+
+interface UpdateExamLessonPayload {
+    type: typeof LessonType.EXAM;
+    title?: string;
+    description?: string;
     passingScore?: number;
     questions?: CreateQuizQuestionPayload[];
-    // Campos de corrección (solo cuando type === 'correction')
+}
+
+interface UpdateCorrectionLessonPayload {
+    type: typeof LessonType.CORRECTION;
+    title?: string;
+    description?: string;
     referenceImageUrl?: string;
     instructions?: string;
 }
+
+export type UpdateLessonPayload =
+    | UpdateClassLessonPayload
+    | UpdateExamLessonPayload
+    | UpdateCorrectionLessonPayload;
 
 export interface RegisterPayload {
     fullName: string;
