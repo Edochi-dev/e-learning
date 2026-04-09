@@ -37,24 +37,23 @@ import { SmtpNotificationGateway } from './adapters/smtp-notification.gateway';
 @Module({
   imports: [ConfigModule],
   providers: [
-    // Ambos adapters están registrados como providers individuales para que
-    // NestJS sepa cómo instanciarlos cuando la factory los elija.
-    ConsoleNotificationGateway,
-    SmtpNotificationGateway,
     {
       provide: NotificationGateway,
-      inject: [
-        ConfigService,
-        ConsoleNotificationGateway,
-        SmtpNotificationGateway,
-      ],
-      useFactory: (
-        config: ConfigService,
-        consoleGateway: ConsoleNotificationGateway,
-        smtpGateway: SmtpNotificationGateway,
-      ): NotificationGateway => {
+      inject: [ConfigService],
+      useFactory: (config: ConfigService): NotificationGateway => {
         const smtpHost = config.get<string>('SMTP_HOST');
-        return smtpHost ? smtpGateway : consoleGateway;
+
+        if (smtpHost) {
+          // Solo construimos el SmtpNotificationGateway cuando hay config.
+          // Su onModuleInit NO corre automáticamente porque lo creamos
+          // nosotros (no NestJS). Llamamos a onModuleInit manualmente
+          // para que construya el transporter.
+          const smtp = new SmtpNotificationGateway(config);
+          smtp.onModuleInit();
+          return smtp;
+        }
+
+        return new ConsoleNotificationGateway();
       },
     },
   ],
