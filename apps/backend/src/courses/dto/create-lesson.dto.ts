@@ -59,7 +59,7 @@ export class CreateLessonDto {
   // @ValidateIf(o => o.type === 'class') significa:
   // "solo valida este campo si type es 'class'".
   // Para exámenes o correcciones, videoUrl se ignora completamente.
-  @ValidateIf((o) => o.type === 'class')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'class')
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   videoUrl?: string;
 
@@ -67,18 +67,18 @@ export class CreateLessonDto {
   @IsString()
   duration?: string;
 
-  @ValidateIf((o) => o.type === 'class')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'class')
   @IsBoolean()
   isLive?: boolean;
 
   // ─── Campos exclusivos de type='exam' ──────────────────────────────
 
-  @ValidateIf((o) => o.type === 'exam')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'exam')
   @IsInt()
   @Min(1)
   passingScore?: number;
 
-  @ValidateIf((o) => o.type === 'exam')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'exam')
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateQuizQuestionDto)
@@ -86,11 +86,11 @@ export class CreateLessonDto {
 
   // ─── Campos exclusivos de type='correction' ────────────────────────
 
-  @ValidateIf((o) => o.type === 'correction')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'correction')
   @IsString()
   referenceImageUrl?: string;
 
-  @ValidateIf((o) => o.type === 'correction')
+  @ValidateIf((o: CreateLessonDto) => o.type === 'correction')
   @IsString()
   instructions?: string;
 }

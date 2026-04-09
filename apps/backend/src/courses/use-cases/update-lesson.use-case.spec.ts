@@ -4,6 +4,7 @@ import { UpdateLessonUseCase } from './update-lesson.use-case';
 import { LessonGateway } from '../gateways/lesson.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { Lesson } from '../entities/lessons.entity';
+import { UpdateLessonDto } from '../dto/update-lesson.dto';
 
 /**
  * Tests para UpdateLessonUseCase.
@@ -53,11 +54,15 @@ describe('UpdateLessonUseCase', () => {
   it('lanza NotFoundException si la lección no existe', async () => {
     lessonGateway.findLesson.mockResolvedValue(null);
 
-    await expect(
-      useCase.execute(lessonId, { title: 'Nuevo' } as any),
-    ).rejects.toThrow(NotFoundException);
+    const dto = Object.assign(new UpdateLessonDto(), { title: 'Nuevo' });
 
+    await expect(useCase.execute(lessonId, dto)).rejects.toThrow(
+      NotFoundException,
+    );
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonGateway.updateLesson).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 
@@ -71,10 +76,13 @@ describe('UpdateLessonUseCase', () => {
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
-    await useCase.execute(lessonId, {
+    const dto = Object.assign(new UpdateLessonDto(), {
       videoUrl: '/static/videos/nuevo.mp4',
-    } as any);
+    });
 
+    await useCase.execute(lessonId, dto);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(orphanFileCleaner.deleteIfOrphan).toHaveBeenCalledWith(
       '/static/videos/viejo.mp4',
       expect.any(Function),
@@ -92,13 +100,16 @@ describe('UpdateLessonUseCase', () => {
     lessonGateway.isVideoUrlReferenced.mockResolvedValue(true);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
-    await useCase.execute(lessonId, {
+    const dto = Object.assign(new UpdateLessonDto(), {
       videoUrl: '/static/videos/nuevo.mp4',
-    } as any);
+    });
+
+    await useCase.execute(lessonId, dto);
 
     const checker = orphanFileCleaner.deleteIfOrphan.mock.calls[0][1];
     const result = await checker();
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonGateway.isVideoUrlReferenced).toHaveBeenCalledWith(
       '/static/videos/viejo.mp4',
       lessonId,
@@ -116,10 +127,13 @@ describe('UpdateLessonUseCase', () => {
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
-    await useCase.execute(lessonId, {
+    const dto = Object.assign(new UpdateLessonDto(), {
       videoUrl: '/static/videos/mismo.mp4',
-    } as any);
+    });
 
+    await useCase.execute(lessonId, dto);
+
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 
@@ -133,19 +147,18 @@ describe('UpdateLessonUseCase', () => {
     lessonGateway.findLesson.mockResolvedValue(currentLesson);
     lessonGateway.updateLesson.mockResolvedValue({} as Lesson);
 
-    const dto = {
+    const dto = Object.assign(new UpdateLessonDto(), {
       title: 'Examen Final',
       questions: [
         { text: 'Pregunta A', options: [] },
         { text: 'Pregunta B', options: [] },
         { text: 'Pregunta C', options: [] },
       ],
-    } as any;
+    });
 
     await useCase.execute(lessonId, dto);
 
     const data = lessonGateway.updateLesson.mock.calls[0][1];
-    // Narrowing: verificamos que el tipo sea 'exam' para acceder a questions
     expect(data.type).toBe('exam');
     if (data.type === 'exam') {
       expect(data.questions![0].order).toBe(0);

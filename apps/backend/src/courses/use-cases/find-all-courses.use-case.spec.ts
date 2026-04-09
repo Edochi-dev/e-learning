@@ -10,7 +10,7 @@ import { Course } from '../entities/course.entity';
  * delega al gateway, y retorna el resultado tal cual.
  *
  * A diferencia de FindAllUsersUseCase, este retorna un PaginatedResult
- * (data + meta con total, page, limit) en lugar de un array simple.
+ * (data + total + page + limit) en lugar de un array simple.
  */
 describe('FindAllCoursesUseCase', () => {
   let useCase: FindAllCoursesUseCase;
@@ -38,7 +38,9 @@ describe('FindAllCoursesUseCase', () => {
   it('delega la paginación al gateway y retorna el resultado', async () => {
     const paginatedResult = {
       data: [{ id: '1', title: 'Manicure Básico' }] as Course[],
-      meta: { total: 1, page: 1, limit: 10, totalPages: 1 },
+      total: 1,
+      page: 1,
+      limit: 10,
     };
 
     courseGateway.findAll.mockResolvedValue(paginatedResult);
@@ -46,13 +48,16 @@ describe('FindAllCoursesUseCase', () => {
     const result = await useCase.execute(1, 10);
 
     expect(result).toBe(paginatedResult);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(courseGateway.findAll).toHaveBeenCalledWith(1, 10);
   });
 
   it('retorna resultado vacío si no hay cursos', async () => {
     const emptyResult = {
       data: [] as Course[],
-      meta: { total: 0, page: 1, limit: 10, totalPages: 0 },
+      total: 0,
+      page: 1,
+      limit: 10,
     };
 
     courseGateway.findAll.mockResolvedValue(emptyResult);
@@ -60,6 +65,6 @@ describe('FindAllCoursesUseCase', () => {
     const result = await useCase.execute(1, 10);
 
     expect(result.data).toEqual([]);
-    expect(result.meta.total).toBe(0);
+    expect(result.total).toBe(0);
   });
 });
