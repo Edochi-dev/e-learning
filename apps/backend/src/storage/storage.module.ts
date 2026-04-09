@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { FileStorageGateway } from './gateways/file-storage.gateway';
 import { LocalFileStorageGateway } from './local-file-storage.gateway';
 import { OrphanFileCleaner } from './services/orphan-file-cleaner.service';
+import { ImageProcessorService } from './services/image-processor.service';
 
 /**
  * StorageModule — Módulo de almacenamiento
@@ -22,7 +23,8 @@ import { OrphanFileCleaner } from './services/orphan-file-cleaner.service';
       useClass: LocalFileStorageGateway,
     },
     OrphanFileCleaner,
+    ImageProcessorService,
   ],
-  exports: [FileStorageGateway, OrphanFileCleaner],
+  exports: [FileStorageGateway, OrphanFileCleaner, ImageProcessorService],
 })
 export class StorageModule {}
