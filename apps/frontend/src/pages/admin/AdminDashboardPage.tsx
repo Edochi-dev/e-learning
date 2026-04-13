@@ -1,24 +1,35 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import type { CorrectionGateway } from '../../gateways/CorrectionGateway';
 
 /**
  * AdminDashboardPage — Hub principal del panel de administración.
  *
  * Su única responsabilidad es ser un router de intenciones: cada card es
  * una puerta a un sub-panel donde se opera con un dominio concreto (cursos,
- * certificados, etc.). Aquí NO se opera nada — no hay listas inline, no
- * hay editores, no hay delete buttons.
+ * certificados, correcciones, etc.). Aquí NO se opera nada — no hay listas
+ * inline, no hay editores, no hay delete buttons.
  *
- * Antes este componente mezclaba "puertas" con un editor inline de cursos.
- * Eso rompía la coherencia mental: el panel principal debe ser tan delgado
- * como un menú de navegación, y la operación real vive en sub-paneles
- * especializados (CoursesAdminPage, CertificatesAdminPage, ...).
- *
- * Beneficio adicional: cuando aparezca un nuevo dominio (ej. correcciones),
- * solo añadimos una card más aquí — sin tocar lógica, sin tocar gateways,
- * sin riesgo de regresión en los demás módulos.
+ * La card de Correcciones muestra un badge con el conteo de entregas
+ * pendientes de revisión. Es la única card que hace fetch — las demás son
+ * estáticas porque no tienen un concepto de "pendientes" que requiera
+ * atención inmediata.
  */
-export const AdminDashboardPage: React.FC = () => {
+
+interface Props {
+    correctionGateway: CorrectionGateway;
+}
+
+export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway }) => {
+    const [pendingCount, setPendingCount] = useState<number>(0);
+
+    useEffect(() => {
+        correctionGateway
+            .listPending()
+            .then((submissions) => setPendingCount(submissions.length))
+            .catch(() => setPendingCount(0));
+    }, [correctionGateway]);
+
     return (
         <div className="admin-page">
             <div className="admin-header">
@@ -44,6 +55,21 @@ export const AdminDashboardPage: React.FC = () => {
                     <p>Sube plantillas y genera certificados con QR para tus alumnas presenciales.</p>
                     <Link to="/admin/certificados" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
                         Gestionar Certificados
+                    </Link>
+                </div>
+
+                {/* Correcciones */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">✏️</div>
+                    <h3>
+                        Correcciones
+                        {pendingCount > 0 && (
+                            <span className="admin-badge">{pendingCount}</span>
+                        )}
+                    </h3>
+                    <p>Revisa las entregas de tus alumnas, aprueba o pide correcciones con feedback.</p>
+                    <Link to="/admin/correcciones" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                        Revisar Correcciones
                     </Link>
                 </div>
             </div>

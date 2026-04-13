@@ -1465,6 +1465,24 @@ input:checked+.slider .icon-moon {
   color: var(--text-primary);
 }
 
+.admin-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin-left: 0.5rem;
+  border-radius: 11px;
+  background: var(--primary, #e84393);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 .admin-card p {
   color: var(--text-muted);
   font-size: 0.9rem;

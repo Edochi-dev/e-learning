@@ -35,6 +35,7 @@ import { AccountPage } from './pages/AccountPage';
 import { MyCoursesPage } from './pages/MyCoursesPage';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
+import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -63,6 +64,7 @@ function AppContent() {
   const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
   const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
   const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
+  const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
 
   return (
     <>
@@ -113,7 +115,7 @@ function AppContent() {
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
-            <Route path="/admin" element={<AdminDashboardPage />} />
+            <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage gateway={courseGateway} />} />
