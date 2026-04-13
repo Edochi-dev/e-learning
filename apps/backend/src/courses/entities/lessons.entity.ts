@@ -5,6 +5,7 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
 import { LessonType } from '@maris-nails/shared';
@@ -75,7 +76,15 @@ export class Lesson {
   @OneToMany(() => QuizQuestion, (q) => q.lesson, { cascade: true })
   questions: QuizQuestion[];
 
+  // FK explícito: permite acceder al courseId sin cargar la relación completa.
+  // La columna ya existe en la DB (TypeORM la creó del @ManyToOne).
+  // Tener ambos (@Column + @ManyToOne + @JoinColumn) es el patrón estándar
+  // de TypeORM para exponer FKs como propiedades tipadas.
+  @Column('uuid')
+  courseId: string;
+
   @Index()
   @ManyToOne(() => Course, (course) => course.lessons, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'courseId' })
   course: Course;
 }

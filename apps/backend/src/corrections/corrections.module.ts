@@ -9,6 +9,7 @@ import { GetMyCorrectionStatusUseCase } from './use-cases/get-my-correction-stat
 import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-corrections.use-case';
 import { ListAllCorrectionsUseCase } from './use-cases/list-all-corrections.use-case';
 import { ReviewCorrectionUseCase } from './use-cases/review-correction.use-case';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { CoursesModule } from '../courses/courses.module';
 import { EnrollmentsModule } from '../enrollments/enrollments.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -20,7 +21,7 @@ import { ProgressModule } from '../progress/progress.module';
  *
  * Importa:
  *   - CoursesModule: LessonGateway (verificar que la lección existe y es tipo correction).
- *   - EnrollmentsModule: EnrollmentGateway (ownership check — ¿está matriculada?).
+ *   - EnrollmentsModule: EnrollmentGateway (para EnrollmentGuard — ownership check).
  *   - NotificationsModule: NotificationGateway (avisar a la profesora).
  *   - StorageModule: FileStorageGateway + OrphanFileCleaner + ImageProcessorService.
  *   - ProgressModule: LessonProgressGateway (para marcar lección completa al aprobar).
@@ -37,6 +38,7 @@ import { ProgressModule } from '../progress/progress.module';
   controllers: [CorrectionsController],
   providers: [
     { provide: CorrectionGateway, useClass: CorrectionsRepository },
+    EnrollmentGuard,
     SubmitCorrectionUseCase,
     GetMyCorrectionStatusUseCase,
     ListPendingCorrectionsUseCase,

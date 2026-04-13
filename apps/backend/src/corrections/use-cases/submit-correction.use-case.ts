@@ -1,12 +1,10 @@
 import {
   Injectable,
-  ForbiddenException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
 import { LessonType } from '@maris-nails/shared';
 import { CorrectionGateway } from '../gateways/correction.gateway';
-import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
@@ -18,12 +16,12 @@ import { AssignmentSubmission } from '../entities/assignment-submission.entity';
  * SubmitCorrectionUseCase — La alumna envía su foto para una lección de corrección.
  *
  * Flujo completo:
- *   1. Ownership check: ¿está matriculada en el curso?
- *   2. Lesson check: ¿la lección existe y es de tipo 'correction'?
- *   3. Image processing: ¿es HEIC? → convertir a JPEG
- *   4. Re-submit check: ¿ya tiene una entrega anterior? → borrar foto vieja
- *   5. Save: guardar foto nueva + crear/actualizar submission
- *   6. Notify: avisarle a la profesora que hay una nueva entrega
+ *   0. Enrollment check → lo hace EnrollmentGuard ANTES de llegar aquí
+ *   1. Lesson check: ¿la lección existe y es de tipo 'correction'?
+ *   2. Image processing: ¿es HEIC? → convertir a JPEG
+ *   3. Re-submit check: ¿ya tiene una entrega anterior? → borrar foto vieja
+ *   4. Save: guardar foto nueva + crear/actualizar submission
+ *   5. Notify: avisarle a la profesora que hay una nueva entrega
  *
  * Re-envíos:
  *   Si la alumna ya envió y la profesora rechazó, puede re-enviar.
@@ -34,7 +32,6 @@ import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 export class SubmitCorrectionUseCase {
   constructor(
     private readonly correctionGateway: CorrectionGateway,
-    private readonly enrollmentGateway: EnrollmentGateway,
     private readonly lessonGateway: LessonGateway,
     private readonly fileStorageGateway: FileStorageGateway,
     private readonly orphanFileCleaner: OrphanFileCleaner,
@@ -48,16 +45,8 @@ export class SubmitCorrectionUseCase {
     courseId: string,
     file: Express.Multer.File,
   ): Promise<AssignmentSubmission> {
-    // 1. ¿Está matriculada?
-    const enrollment = await this.enrollmentGateway.findByUserAndCourse(
-      userId,
-      courseId,
-    );
-    if (!enrollment) {
-      throw new ForbiddenException('No estás matriculada en este curso');
-    }
-
-    // 2. ¿La lección existe y es tipo corrección?
+    // 1. ¿La lección existe y es tipo corrección?
+    //    (El enrollment check lo hace EnrollmentGuard antes de llegar aquí)
     const lesson = await this.lessonGateway.findLesson(lessonId);
     if (!lesson) {
       throw new NotFoundException('Lección no encontrada');
@@ -66,7 +55,7 @@ export class SubmitCorrectionUseCase {
       throw new BadRequestException('Esta lección no es de tipo corrección');
     }
 
-    // 3. Procesar imagen: convertir HEIC→JPEG si es necesario.
+    // 2. Procesar imagen: convertir HEIC→JPEG si es necesario.
     //    Retry 2 veces por si sharp falla transitoriamente (ej. pico de memoria).
     //    Si persiste, asumimos archivo problemático y damos mensaje amigable.
     let processedFile = file;
@@ -97,20 +86,20 @@ export class SubmitCorrectionUseCase {
       };
     }
 
-    // 4. ¿Ya tiene una entrega anterior? → preparar limpieza de foto vieja
+    // 3. ¿Ya tiene una entrega anterior? → preparar limpieza de foto vieja
     const existing = await this.correctionGateway.findByStudentAndLesson(
       userId,
       lessonId,
     );
     const oldPhotoUrl = existing?.photoUrl;
 
-    // 5. Guardar nueva foto
+    // 4. Guardar nueva foto
     const photoUrl = await this.fileStorageGateway.saveFile(
       processedFile,
       'corrections',
     );
 
-    // 6. Crear o actualizar la submission
+    // 5. Crear o actualizar la submission
     let submission: AssignmentSubmission;
     if (existing) {
       submission = await this.correctionGateway.update(existing.id, {
@@ -127,7 +116,7 @@ export class SubmitCorrectionUseCase {
       });
     }
 
-    // 7. Borrar foto vieja (después de guardar la nueva — orden seguro)
+    // 6. Borrar foto vieja (después de guardar la nueva — orden seguro)
     if (oldPhotoUrl) {
       await this.orphanFileCleaner.deleteIfOrphan(
         oldPhotoUrl,
@@ -135,7 +124,7 @@ export class SubmitCorrectionUseCase {
       );
     }
 
-    // 8. Notificar a la profesora
+    // 7. Notificar a la profesora
     await this.notificationGateway.sendEmail({
       to: 'admin', // Se resolverá a la dirección real en el adapter
       subject: 'Nueva entrega de corrección',

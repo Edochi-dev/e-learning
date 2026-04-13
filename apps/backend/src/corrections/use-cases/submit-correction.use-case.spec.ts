@@ -1,25 +1,18 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { SubmitCorrectionUseCase } from './submit-correction.use-case';
 import { CorrectionGateway } from '../gateways/correction.gateway';
-import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { ImageProcessorService } from '../../storage/services/image-processor.service';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
-import { Enrollment } from '../../enrollments/entities/enrollment.entity';
 import { Lesson } from '../../courses/entities/lessons.entity';
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 
 describe('SubmitCorrectionUseCase', () => {
   let useCase: SubmitCorrectionUseCase;
   let correctionGateway: jest.Mocked<CorrectionGateway>;
-  let enrollmentGateway: jest.Mocked<EnrollmentGateway>;
   let lessonGateway: jest.Mocked<LessonGateway>;
   let fileStorageGateway: jest.Mocked<FileStorageGateway>;
   let orphanFileCleaner: jest.Mocked<OrphanFileCleaner>;
@@ -51,10 +44,6 @@ describe('SubmitCorrectionUseCase', () => {
           },
         },
         {
-          provide: EnrollmentGateway,
-          useValue: { findByUserAndCourse: jest.fn() },
-        },
-        {
           provide: LessonGateway,
           useValue: { findLesson: jest.fn() },
         },
@@ -82,7 +71,6 @@ describe('SubmitCorrectionUseCase', () => {
 
     useCase = module.get(SubmitCorrectionUseCase);
     correctionGateway = module.get(CorrectionGateway);
-    enrollmentGateway = module.get(EnrollmentGateway);
     lessonGateway = module.get(LessonGateway);
     fileStorageGateway = module.get(FileStorageGateway);
     orphanFileCleaner = module.get(OrphanFileCleaner);
@@ -90,16 +78,10 @@ describe('SubmitCorrectionUseCase', () => {
     notificationGateway = module.get(NotificationGateway);
   });
 
-  it('lanza ForbiddenException si la alumna no está matriculada', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
-
-    await expect(
-      useCase.execute(userId, lessonId, courseId, mockFile),
-    ).rejects.toThrow(ForbiddenException);
-  });
+  // Nota: el enrollment check ahora lo hace EnrollmentGuard,
+  // no el use case. Por eso no hay test de ForbiddenException aquí.
 
   it('lanza NotFoundException si la lección no existe', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue(null);
 
     await expect(
@@ -108,7 +90,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('lanza BadRequestException si la lección no es tipo correction', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'class',
@@ -120,7 +101,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('crea una submission nueva cuando no existe entrega previa', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',
@@ -149,7 +129,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('actualiza la submission existente en un re-envío y borra la foto vieja', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',
@@ -179,7 +158,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('convierte HEIC a JPEG antes de guardar', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',
@@ -208,7 +186,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('reintenta la conversión HEIC y tiene éxito en el segundo intento', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',
@@ -236,7 +213,6 @@ describe('SubmitCorrectionUseCase', () => {
   });
 
   it('lanza BadRequestException con link a convertidor si los 3 intentos fallan', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',

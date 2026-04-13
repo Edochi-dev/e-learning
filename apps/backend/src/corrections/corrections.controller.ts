@@ -19,7 +19,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { UserRole } from '@maris-nails/shared';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { Roles } from '../common/decorators/roles.decorator';
+import { EnrollmentCheck } from '../common/decorators/enrollment-check.decorator';
 import { SubmitCorrectionUseCase } from './use-cases/submit-correction.use-case';
 import { GetMyCorrectionStatusUseCase } from './use-cases/get-my-correction-status.use-case';
 import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-corrections.use-case';
@@ -125,8 +127,13 @@ export class CorrectionsController {
   }
 
   // ── Rutas Alumna ──────────────────────────────────────────────────────
+  // EnrollmentGuard verifica matrícula ANTES de llegar al use case.
+  // El guard lee la metadata de @EnrollmentCheck() para saber dónde
+  // encontrar el courseId o cómo resolverlo desde un lessonId.
 
   @Post('submit')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'body' })
   @UseInterceptors(FileInterceptor('photo'))
   async submit(
     @Req() req: { user: { id: string } },
@@ -152,6 +159,8 @@ export class CorrectionsController {
   }
 
   @Get('me/:lessonId')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ lessonIdFrom: 'params', lessonIdField: 'lessonId' })
   async getMyStatus(
     @Req() req: { user: { id: string } },
     @Param('lessonId', ParseUUIDPipe) lessonId: string,
