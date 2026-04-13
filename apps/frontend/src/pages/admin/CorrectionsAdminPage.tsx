@@ -230,10 +230,17 @@ const statusLabels: Record<string, { text: string; className: string }> = {
  *   3. Se monta/desmonta con la tab → limpia su estado solo
  */
 const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
-    // Filtros
+    // Filtros locales (lo que el usuario está seleccionando)
     const [courseId, setCourseId] = useState('');
     const [status, setStatus] = useState('');
     const [selectedMonth, setSelectedMonth] = useState('');
+
+    // Filtros aplicados (lo que se envió al backend)
+    // Se separan de los locales para que el fetch solo ocurra al
+    // pulsar "Aplicar", no en cada cambio de dropdown.
+    const [appliedFilters, setAppliedFilters] = useState<{
+        courseId: string; status: string; selectedMonth: string;
+    }>({ courseId: '', status: '', selectedMonth: '' });
 
     // Datos
     const [courses, setCourses] = useState<Course[]>([]);
@@ -248,17 +255,20 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
             .catch((err) => console.error('Error cargando cursos', err));
     }, [courseGateway]);
 
-    // Cargar histórico cuando cambian filtros o página
+    // Cargar histórico solo cuando cambian los filtros APLICADOS o la página
     const loadHistory = useCallback(() => {
         setIsLoading(true);
 
-        const parsed = selectedMonth
-            ? { month: monthOptions[parseInt(selectedMonth, 10)].month, year: monthOptions[parseInt(selectedMonth, 10)].year }
+        const parsed = appliedFilters.selectedMonth
+            ? {
+                month: monthOptions[parseInt(appliedFilters.selectedMonth, 10)].month,
+                year: monthOptions[parseInt(appliedFilters.selectedMonth, 10)].year,
+            }
             : {};
 
         gateway.listHistory({
-            status: status || undefined,
-            courseId: courseId || undefined,
+            status: appliedFilters.status || undefined,
+            courseId: appliedFilters.courseId || undefined,
             ...parsed,
             page,
             limit: ITEMS_PER_PAGE,
@@ -266,13 +276,12 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
             .then(setResult)
             .catch((err) => console.error('Error cargando histórico', err))
             .finally(() => setIsLoading(false));
-    }, [gateway, courseId, status, selectedMonth, page]);
+    }, [gateway, appliedFilters, page]);
 
     useEffect(() => { loadHistory(); }, [loadHistory]);
 
-    // Resetear página cuando cambian filtros
-    const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
-        setter(value);
+    const handleApply = () => {
+        setAppliedFilters({ courseId, status, selectedMonth });
         setPage(1);
     };
 
@@ -287,7 +296,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                 <select
                     className="history-filter-select"
                     value={courseId}
-                    onChange={(e) => handleFilterChange(setCourseId)(e.target.value)}
+                    onChange={(e) => setCourseId(e.target.value)}
                 >
                     <option value="">Todos los cursos</option>
                     {courses.map((c) => (
@@ -298,7 +307,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                 <select
                     className="history-filter-select"
                     value={status}
-                    onChange={(e) => handleFilterChange(setStatus)(e.target.value)}
+                    onChange={(e) => setStatus(e.target.value)}
                 >
                     <option value="">Todos los estados</option>
                     <option value="approved">Aprobadas</option>
@@ -308,13 +317,17 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                 <select
                     className="history-filter-select"
                     value={selectedMonth}
-                    onChange={(e) => handleFilterChange(setSelectedMonth)(e.target.value)}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
                 >
                     <option value="">Cualquier mes</option>
                     {monthOptions.map((m, i) => (
                         <option key={`${m.month}-${m.year}`} value={i}>{m.label}</option>
                     ))}
                 </select>
+
+                <button className="history-apply-btn" onClick={handleApply}>
+                    Aplicar
+                </button>
             </div>
 
             {/* Contenido */}

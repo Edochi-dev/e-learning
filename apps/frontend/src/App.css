@@ -2168,11 +2168,14 @@ input:checked+.slider .icon-moon {
 
 .history-filters {
   display: flex;
-  gap: 0.75rem;
+  align-items: center;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .history-filter-select {
+  flex: 1;
+  min-width: 0;
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -2181,12 +2184,29 @@ input:checked+.slider .icon-moon {
   font-family: var(--font-body);
   font-size: 0.85rem;
   cursor: pointer;
-  min-width: 160px;
 }
 
 .history-filter-select:focus {
   outline: none;
   border-color: var(--primary, #e84393);
+}
+
+.history-apply-btn {
+  padding: 0.5rem 1.2rem;
+  border-radius: var(--radius-md);
+  border: none;
+  background: var(--primary, #e84393);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+.history-apply-btn:hover {
+  opacity: 0.85;
 }
 
 .history-pagination {
