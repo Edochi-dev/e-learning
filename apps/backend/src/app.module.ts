@@ -103,6 +103,7 @@ export class AppModule implements NestModule {
       .forRoutes(
         '/static/images/*path',
         '/static/thumbnails/*path',
+        '/static/corrections/*path',
         '/videos/stream',
         '/static/certificates/*path',
       );
