@@ -17,9 +17,15 @@ export interface SubmissionStudent {
     email: string;
 }
 
+export interface SubmissionCourse {
+    id: string;
+    title: string;
+}
+
 export interface SubmissionLesson {
     id: string;
     title: string;
+    course: SubmissionCourse;
 }
 
 export interface AssignmentSubmission {

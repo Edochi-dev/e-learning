@@ -33,7 +33,7 @@ export class CorrectionsRepository implements CorrectionGateway {
   async findById(id: string): Promise<AssignmentSubmission | null> {
     return this.submissionRepository.findOne({
       where: { id },
-      relations: ['student', 'lesson'],
+      relations: ['student', 'lesson', 'lesson.course'],
     });
   }
 
@@ -65,7 +65,7 @@ export class CorrectionsRepository implements CorrectionGateway {
   async findPending(): Promise<AssignmentSubmission[]> {
     return this.submissionRepository.find({
       where: { status: 'pending' },
-      relations: ['student', 'lesson'],
+      relations: ['student', 'lesson', 'lesson.course'],
       order: { submittedAt: 'ASC' },
     });
   }
@@ -82,7 +82,7 @@ export class CorrectionsRepository implements CorrectionGateway {
 
     return this.submissionRepository.find({
       where,
-      relations: ['student', 'lesson'],
+      relations: ['student', 'lesson', 'lesson.course'],
       order: { submittedAt: 'DESC' },
     });
   }
