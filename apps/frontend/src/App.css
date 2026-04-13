@@ -2164,6 +2164,68 @@ input:checked+.slider .icon-moon {
   color: var(--text-secondary, var(--text-muted));
 }
 
+/* ── History: filtros y paginación ───────────────────────────────────── */
+
+.history-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.history-filter-select {
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.history-filter-select:focus {
+  outline: none;
+  border-color: var(--primary, #e84393);
+}
+
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.history-page-btn {
+  padding: 0.4rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.history-page-btn:hover:not(:disabled) {
+  border-color: var(--primary, #e84393);
+  color: var(--primary, #e84393);
+}
+
+.history-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-page-info {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
 /* ── Corrections: status badges ─────────────────────────────────────── */
 
 .correction-status {

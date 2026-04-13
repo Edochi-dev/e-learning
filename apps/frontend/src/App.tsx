@@ -118,7 +118,7 @@ function AppContent() {
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
             <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} />} />
-            <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} />} />
+            <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} courseGateway={courseGateway} />} />
             <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />

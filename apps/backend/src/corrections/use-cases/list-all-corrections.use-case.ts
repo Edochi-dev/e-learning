@@ -1,35 +1,43 @@
 import { Injectable } from '@nestjs/common';
 import { CorrectionGateway } from '../gateways/correction.gateway';
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
+import { PaginatedResult } from '../../common/types/paginated-result.type';
 
 /**
  * Filtros opcionales para el histórico de correcciones.
  *
- * Son un tipo propio del use case, no del gateway — si mañana agregamos
- * un filtro "por rango de fechas", lo añadimos aquí y el use case
- * transforma los datos antes de delegarlos al gateway.
+ * courseId: filtra por curso (via la relación lesson → course).
+ * month/year: filtra por mes de revisión (reviewedAt).
  */
 export interface CorrectionFilters {
   status?: string;
   lessonId?: string;
   studentId?: string;
+  courseId?: string;
+  month?: number;
+  year?: number;
 }
 
 /**
- * ListAllCorrectionsUseCase — Histórico completo de correcciones con filtros.
+ * ListAllCorrectionsUseCase — Histórico paginado de correcciones ya revisadas.
  *
- * Caso de uso admin: la profesora abre la pestaña "Histórico" y puede
- * filtrar por status (approved/rejected/pending), por lección o por alumna.
- *
- * A diferencia de ListPendingCorrections (que solo muestra pending),
- * este devuelve TODOS los registros, permitiendo a la profesora
- * llevar control de lo que ya revisó.
+ * Regla de negocio: el histórico NUNCA incluye pendientes. Solo muestra
+ * entregas que ya fueron aprobadas o rechazadas. Por eso siempre pasamos
+ * excludeStatus: 'pending' al gateway — defensa en profundidad.
  */
 @Injectable()
 export class ListAllCorrectionsUseCase {
   constructor(private readonly correctionGateway: CorrectionGateway) {}
 
-  async execute(filters?: CorrectionFilters): Promise<AssignmentSubmission[]> {
-    return this.correctionGateway.findAll(filters);
+  async execute(
+    filters: CorrectionFilters,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<AssignmentSubmission>> {
+    return this.correctionGateway.findAll(
+      { ...filters, excludeStatus: 'pending' },
+      page,
+      limit,
+    );
   }
 }

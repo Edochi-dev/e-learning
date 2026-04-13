@@ -1,4 +1,5 @@
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
+import { PaginatedResult } from '../../common/types/paginated-result.type';
 
 /**
  * CreateSubmissionData / UpdateSubmissionData — Tipos planos para el gateway.
@@ -55,10 +56,18 @@ export abstract class CorrectionGateway {
   /** Lista todas las submissions con status 'pending'. */
   abstract findPending(): Promise<AssignmentSubmission[]>;
 
-  /** Lista todas las submissions (con filtros opcionales para el histórico). */
-  abstract findAll(filters?: {
-    status?: string;
-    lessonId?: string;
-    studentId?: string;
-  }): Promise<AssignmentSubmission[]>;
+  /** Lista submissions paginadas con filtros opcionales para el histórico. */
+  abstract findAll(
+    filters: {
+      status?: string;
+      excludeStatus?: string;
+      lessonId?: string;
+      studentId?: string;
+      courseId?: string;
+      month?: number;
+      year?: number;
+    },
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResult<AssignmentSubmission>>;
 }

@@ -81,28 +81,37 @@ export class CorrectionsController {
   }
 
   /**
-   * GET /corrections/history — Histórico completo con filtros opcionales.
+   * GET /corrections/history — Histórico paginado con filtros opcionales.
    *
-   * Solo ADMIN. Permite filtrar por:
-   *   ?status=approved|rejected|pending
-   *   ?lessonId=uuid
-   *   ?studentId=uuid
+   * Solo ADMIN. Query params (todos opcionales):
+   *   ?status=approved|rejected
+   *   ?courseId=uuid
+   *   ?month=1..12&year=2026
+   *   ?page=1&limit=20
    *
-   * Los query params son opcionales — sin filtros devuelve todo.
+   * Siempre excluye 'pending' — el histórico es solo de revisiones hechas.
    */
   @Get('history')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
   async listHistory(
     @Query('status') status?: string,
-    @Query('lessonId') lessonId?: string,
-    @Query('studentId') studentId?: string,
-  ): Promise<AssignmentSubmission[]> {
-    return this.listAllCorrectionsUseCase.execute({
-      status,
-      lessonId,
-      studentId,
-    });
+    @Query('courseId') courseId?: string,
+    @Query('month') monthStr?: string,
+    @Query('year') yearStr?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
+    const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(limitStr ?? '20', 10) || 20));
+    const month = monthStr ? parseInt(monthStr, 10) : undefined;
+    const year = yearStr ? parseInt(yearStr, 10) : undefined;
+
+    return this.listAllCorrectionsUseCase.execute(
+      { status, courseId, month, year },
+      page,
+      limit,
+    );
   }
 
   /**

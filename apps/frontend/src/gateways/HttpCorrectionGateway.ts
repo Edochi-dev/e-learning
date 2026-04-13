@@ -2,6 +2,7 @@ import type {
     CorrectionGateway,
     AssignmentSubmission,
     CorrectionFilters,
+    PaginatedSubmissions,
 } from './CorrectionGateway';
 
 /**
@@ -40,18 +41,21 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         return res.json() as Promise<AssignmentSubmission[]>;
     }
 
-    async listHistory(filters?: CorrectionFilters): Promise<AssignmentSubmission[]> {
+    async listHistory(filters?: CorrectionFilters): Promise<PaginatedSubmissions> {
         const params = new URLSearchParams();
         if (filters?.status) params.set('status', filters.status);
-        if (filters?.lessonId) params.set('lessonId', filters.lessonId);
-        if (filters?.studentId) params.set('studentId', filters.studentId);
+        if (filters?.courseId) params.set('courseId', filters.courseId);
+        if (filters?.month) params.set('month', String(filters.month));
+        if (filters?.year) params.set('year', String(filters.year));
+        if (filters?.page) params.set('page', String(filters.page));
+        if (filters?.limit) params.set('limit', String(filters.limit));
 
         const query = params.toString();
         const url = `${this.baseUrl}/corrections/history${query ? `?${query}` : ''}`;
 
         const res = await fetch(url, { credentials: 'include' });
         if (!res.ok) throw new Error(`Error al listar histórico: ${res.statusText}`);
-        return res.json() as Promise<AssignmentSubmission[]>;
+        return res.json() as Promise<PaginatedSubmissions>;
     }
 
     async review(

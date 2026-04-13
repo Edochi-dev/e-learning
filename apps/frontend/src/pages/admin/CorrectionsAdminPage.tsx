@@ -1,40 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import type { Course } from '@maris-nails/shared';
+import type { CourseGateway } from '../../gateways/CourseGateway';
 import type {
     CorrectionGateway,
     AssignmentSubmission,
+    PaginatedSubmissions,
 } from '../../gateways/CorrectionGateway';
 
 /**
  * CorrectionsAdminPage — Sub-panel de correcciones para la profesora.
  *
  * Dos pestañas:
- *   - "Pendientes": entregas que esperan revisión, agrupadas por curso.
- *     Cada grupo tiene UN botón "Revisar" que lleva a la cola de revisión
- *     de ese curso (flujo tipo Tinder: una submission tras otra).
- *   - "Histórico": solo entregas ya revisadas (approved/rejected).
- *     Sin botones de acción — es un registro de lo que ya se hizo.
+ *   - "Pendientes": agrupadas por curso, colapsables, con botón Revisar
+ *     que lleva a la cola tipo Tinder.
+ *   - "Histórico": paginado con filtros por curso y mes.
+ *     Solo muestra entregas ya revisadas (approved/rejected).
+ *
+ * Recibe DOS gateways (Clean Architecture):
+ *   - CorrectionGateway: para las operaciones de correcciones
+ *   - CourseGateway: para popular el dropdown de cursos del filtro
+ *     (cada gateway es responsable de su dominio)
  */
 
 interface Props {
     gateway: CorrectionGateway;
+    courseGateway: CourseGateway;
 }
 
 type Tab = 'pending' | 'history';
 
-/**
- * Agrupa submissions por curso.
- *
- * Retorna un Map que preserva el orden de inserción:
- * la primera submission de cada curso determina su posición.
- * Como findPending ordena por submittedAt ASC (más antigua primero),
- * los cursos aparecen en el orden en que llegaron las primeras entregas.
- */
 function groupByCourse(
     submissions: AssignmentSubmission[],
 ): Map<string, { courseTitle: string; items: AssignmentSubmission[] }> {
     const groups = new Map<string, { courseTitle: string; items: AssignmentSubmission[] }>();
-
     for (const sub of submissions) {
         const courseId = sub.lesson.course.id;
         const existing = groups.get(courseId);
@@ -47,11 +46,9 @@ function groupByCourse(
             });
         }
     }
-
     return groups;
 }
 
-/** Formatea una fecha ISO a algo legible: "12 abr 2026, 15:30" */
 function formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('es', {
         day: 'numeric',
@@ -62,28 +59,38 @@ function formatDate(iso: string): string {
     });
 }
 
-export const CorrectionsAdminPage: React.FC<Props> = ({ gateway }) => {
+/** Genera las opciones de los últimos 12 meses para el selector. */
+function getLast12Months(): { label: string; month: number; year: number }[] {
+    const months: { label: string; month: number; year: number }[] = [];
+    const now = new Date();
+
+    for (let i = 0; i < 12; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+            label: d.toLocaleDateString('es', { month: 'long', year: 'numeric' }),
+            month: d.getMonth() + 1,
+            year: d.getFullYear(),
+        });
+    }
+
+    return months;
+}
+
+const ITEMS_PER_PAGE = 20;
+const monthOptions = getLast12Months();
+
+export const CorrectionsAdminPage: React.FC<Props> = ({ gateway, courseGateway }) => {
     const [activeTab, setActiveTab] = useState<Tab>('pending');
     const [pending, setPending] = useState<AssignmentSubmission[]>([]);
-    const [history, setHistory] = useState<AssignmentSubmission[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Carga pendientes al montar (siempre, para el badge)
     useEffect(() => {
-        setIsLoading(true);
-
-        if (activeTab === 'pending') {
-            gateway.listPending()
-                .then(setPending)
-                .catch((err) => console.error('Error cargando pendientes', err))
-                .finally(() => setIsLoading(false));
-        } else {
-            // Histórico: solo approved y rejected, nunca pending
-            gateway.listHistory()
-                .then((data) => setHistory(data.filter((s) => s.status !== 'pending')))
-                .catch((err) => console.error('Error cargando histórico', err))
-                .finally(() => setIsLoading(false));
-        }
-    }, [gateway, activeTab]);
+        gateway.listPending()
+            .then(setPending)
+            .catch((err) => console.error('Error cargando pendientes', err))
+            .finally(() => setIsLoading(false));
+    }, [gateway]);
 
     const grouped = groupByCourse(pending);
 
@@ -95,7 +102,6 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway }) => {
                 <p>Revisa las entregas de tus alumnas y da feedback.</p>
             </div>
 
-            {/* Tabs */}
             <div className="admin-tabs">
                 <button
                     className={`admin-tab ${activeTab === 'pending' ? 'admin-tab--active' : ''}`}
@@ -116,13 +122,14 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway }) => {
                 </button>
             </div>
 
-            {/* Contenido */}
-            {isLoading ? (
-                <p style={{ color: 'var(--text-muted)', marginTop: '1.5rem' }}>Cargando...</p>
-            ) : activeTab === 'pending' ? (
-                <PendingTab grouped={grouped} />
+            {activeTab === 'pending' ? (
+                isLoading ? (
+                    <p style={{ color: 'var(--text-muted)', marginTop: '1.5rem' }}>Cargando...</p>
+                ) : (
+                    <PendingTab grouped={grouped} />
+                )
             ) : (
-                <HistoryTab submissions={history} />
+                <HistoryTab gateway={gateway} courseGateway={courseGateway} />
             )}
         </div>
     );
@@ -152,17 +159,6 @@ const PendingTab: React.FC<PendingTabProps> = ({ grouped }) => {
     );
 };
 
-/**
- * CourseGroup — Un grupo de pendientes de un curso, colapsable.
- *
- * Colapsado por defecto: solo muestra el header (nombre, conteo, botón).
- * La profesora puede expandir con click para ver quién entregó, pero
- * no necesita hacerlo — puede entrar directo con "Revisar".
- *
- * ¿Por qué cada grupo tiene su propio estado y no un Map en el padre?
- * Porque al ser componentes independientes, expandir uno no re-renderiza
- * los demás. Más eficiente y más simple.
- */
 const CourseGroup: React.FC<{
     courseId: string;
     group: { courseTitle: string; items: AssignmentSubmission[] };
@@ -213,10 +209,11 @@ const CourseGroup: React.FC<{
     );
 };
 
-// ── Tab Histórico ──────────────────────────────────────────────────────
+// ── Tab Histórico (con filtros y paginación) ───────────────────────────
 
 interface HistoryTabProps {
-    submissions: AssignmentSubmission[];
+    gateway: CorrectionGateway;
+    courseGateway: CourseGateway;
 }
 
 const statusLabels: Record<string, { text: string; className: string }> = {
@@ -224,39 +221,158 @@ const statusLabels: Record<string, { text: string; className: string }> = {
     rejected: { text: 'Rechazada', className: 'status-rejected' },
 };
 
-const HistoryTab: React.FC<HistoryTabProps> = ({ submissions }) => {
-    if (submissions.length === 0) {
-        return (
-            <div className="admin-empty" style={{ marginTop: '1.5rem' }}>
-                Aún no has revisado ninguna entrega.
-            </div>
-        );
-    }
+/**
+ * HistoryTab — Histórico paginado con filtros por curso, status y mes.
+ *
+ * Maneja su propio estado (no depende del padre) porque:
+ *   1. Los filtros y la paginación son internos a esta tab
+ *   2. No necesita re-renderizar al padre cuando cambian
+ *   3. Se monta/desmonta con la tab → limpia su estado solo
+ */
+const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
+    // Filtros
+    const [courseId, setCourseId] = useState('');
+    const [status, setStatus] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState('');
+
+    // Datos
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [result, setResult] = useState<PaginatedSubmissions | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [page, setPage] = useState(1);
+
+    // Cargar lista de cursos para el dropdown
+    useEffect(() => {
+        courseGateway.findAll()
+            .then(setCourses)
+            .catch((err) => console.error('Error cargando cursos', err));
+    }, [courseGateway]);
+
+    // Cargar histórico cuando cambian filtros o página
+    const loadHistory = useCallback(() => {
+        setIsLoading(true);
+
+        const parsed = selectedMonth
+            ? { month: monthOptions[parseInt(selectedMonth, 10)].month, year: monthOptions[parseInt(selectedMonth, 10)].year }
+            : {};
+
+        gateway.listHistory({
+            status: status || undefined,
+            courseId: courseId || undefined,
+            ...parsed,
+            page,
+            limit: ITEMS_PER_PAGE,
+        })
+            .then(setResult)
+            .catch((err) => console.error('Error cargando histórico', err))
+            .finally(() => setIsLoading(false));
+    }, [gateway, courseId, status, selectedMonth, page]);
+
+    useEffect(() => { loadHistory(); }, [loadHistory]);
+
+    // Resetear página cuando cambian filtros
+    const handleFilterChange = (setter: (v: string) => void) => (value: string) => {
+        setter(value);
+        setPage(1);
+    };
+
+    const submissions = result?.data ?? [];
+    const total = result?.total ?? 0;
+    const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
     return (
         <div style={{ marginTop: '1.5rem' }}>
-            <div className="admin-course-links">
-                {submissions.map((sub) => {
-                    const status = statusLabels[sub.status] ?? statusLabels.approved;
-                    return (
-                        <div key={sub.id} className="correction-preview-item">
-                            <span className="correction-row-student">{sub.student.name}</span>
-                            <span className="correction-row-lesson">
-                                {sub.lesson.title}
-                                <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
-                                    — {sub.lesson.course.title}
-                                </span>
-                            </span>
-                            <span className="admin-course-link-meta">
-                                {formatDate(sub.reviewedAt ?? sub.submittedAt)}
-                                <span className={`correction-status ${status.className}`}>
-                                    {status.text}
-                                </span>
-                            </span>
-                        </div>
-                    );
-                })}
+            {/* Filtros */}
+            <div className="history-filters">
+                <select
+                    className="history-filter-select"
+                    value={courseId}
+                    onChange={(e) => handleFilterChange(setCourseId)(e.target.value)}
+                >
+                    <option value="">Todos los cursos</option>
+                    {courses.map((c) => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                    ))}
+                </select>
+
+                <select
+                    className="history-filter-select"
+                    value={status}
+                    onChange={(e) => handleFilterChange(setStatus)(e.target.value)}
+                >
+                    <option value="">Todos los estados</option>
+                    <option value="approved">Aprobadas</option>
+                    <option value="rejected">Rechazadas</option>
+                </select>
+
+                <select
+                    className="history-filter-select"
+                    value={selectedMonth}
+                    onChange={(e) => handleFilterChange(setSelectedMonth)(e.target.value)}
+                >
+                    <option value="">Cualquier mes</option>
+                    {monthOptions.map((m, i) => (
+                        <option key={`${m.month}-${m.year}`} value={i}>{m.label}</option>
+                    ))}
+                </select>
             </div>
+
+            {/* Contenido */}
+            {isLoading ? (
+                <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Cargando...</p>
+            ) : submissions.length === 0 ? (
+                <div className="admin-empty" style={{ marginTop: '1rem' }}>
+                    No hay correcciones que coincidan con los filtros.
+                </div>
+            ) : (
+                <>
+                    <div className="admin-course-links" style={{ marginTop: '1rem' }}>
+                        {submissions.map((sub) => {
+                            const st = statusLabels[sub.status] ?? statusLabels.approved;
+                            return (
+                                <div key={sub.id} className="correction-preview-item">
+                                    <span className="correction-row-student">{sub.student.name}</span>
+                                    <span className="correction-row-lesson">
+                                        {sub.lesson.title}
+                                        <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                                            — {sub.lesson.course.title}
+                                        </span>
+                                    </span>
+                                    <span className="admin-course-link-meta">
+                                        {formatDate(sub.reviewedAt ?? sub.submittedAt)}
+                                        <span className={`correction-status ${st.className}`}>
+                                            {st.text}
+                                        </span>
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Paginación */}
+                    {totalPages > 1 && (
+                        <div className="history-pagination">
+                            <button
+                                className="history-page-btn"
+                                disabled={page <= 1}
+                                onClick={() => setPage((p) => p - 1)}
+                            >
+                                ← Anterior
+                            </button>
+                            <span className="history-page-info">
+                                Página {page} de {totalPages}
+                            </span>
+                            <button
+                                className="history-page-btn"
+                                disabled={page >= totalPages}
+                                onClick={() => setPage((p) => p + 1)}
+                            >
+                                Siguiente →
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
         </div>
     );
 };

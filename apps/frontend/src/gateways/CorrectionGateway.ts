@@ -48,12 +48,22 @@ export interface AssignmentSubmission {
     };
 }
 
-// ── Filtros para el histórico ──────────────────────────────────────────
+// ── Filtros y paginación ──────────────────────────────────────────────
 
 export interface CorrectionFilters {
     status?: string;
-    lessonId?: string;
-    studentId?: string;
+    courseId?: string;
+    month?: number;
+    year?: number;
+    page?: number;
+    limit?: number;
+}
+
+export interface PaginatedSubmissions {
+    data: AssignmentSubmission[];
+    total: number;
+    page: number;
+    limit: number;
 }
 
 // ── Contrato ───────────────────────────────────────────────────────────
@@ -65,8 +75,8 @@ export interface CorrectionGateway {
     /** Admin: lista entregas pendientes de revisión (status = 'pending'). */
     listPending(): Promise<AssignmentSubmission[]>;
 
-    /** Admin: histórico completo con filtros opcionales. */
-    listHistory(filters?: CorrectionFilters): Promise<AssignmentSubmission[]>;
+    /** Admin: histórico paginado con filtros opcionales. */
+    listHistory(filters?: CorrectionFilters): Promise<PaginatedSubmissions>;
 
     /** Admin: aprobar o rechazar una entrega con feedback obligatorio. */
     review(
