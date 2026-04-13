@@ -2094,9 +2094,31 @@ input:checked+.slider .icon-moon {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1.25rem;
   background: var(--surface);
-  border-bottom: 1px solid var(--border);
+}
+
+.correction-group-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+}
+
+.correction-group-arrow {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.correction-group-arrow--open {
+  transform: rotate(90deg);
 }
 
 .correction-group-title {
@@ -2116,6 +2138,7 @@ input:checked+.slider .icon-moon {
 .correction-preview-list {
   display: flex;
   flex-direction: column;
+  border-top: 1px solid var(--border);
 }
 
 .correction-preview-item {

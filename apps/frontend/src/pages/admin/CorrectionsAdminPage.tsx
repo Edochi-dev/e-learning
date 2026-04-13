@@ -146,37 +146,69 @@ const PendingTab: React.FC<PendingTabProps> = ({ grouped }) => {
     return (
         <div style={{ marginTop: '1.5rem' }}>
             {Array.from(grouped.entries()).map(([courseId, group]) => (
-                <div key={courseId} className="correction-group">
-                    <div className="correction-group-header">
-                        <div>
-                            <h3 className="correction-group-title">
-                                {group.courseTitle}
-                            </h3>
-                            <span className="correction-group-count">
-                                {group.items.length} entrega{group.items.length !== 1 ? 's' : ''} pendiente{group.items.length !== 1 ? 's' : ''}
-                            </span>
-                        </div>
-                        <Link
-                            to={`/admin/correcciones/curso/${courseId}`}
-                            className="btn-primary"
-                            style={{ padding: '0.5rem 1.2rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
-                        >
-                            Revisar
-                        </Link>
-                    </div>
-
-                    {/* Preview de las alumnas que entregaron */}
-                    <div className="correction-preview-list">
-                        {group.items.map((sub) => (
-                            <div key={sub.id} className="correction-preview-item">
-                                <span className="correction-row-student">{sub.student.name}</span>
-                                <span className="correction-row-lesson">{sub.lesson.title}</span>
-                                <span className="admin-course-link-meta">{formatDate(sub.submittedAt)}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <CourseGroup key={courseId} courseId={courseId} group={group} />
             ))}
+        </div>
+    );
+};
+
+/**
+ * CourseGroup — Un grupo de pendientes de un curso, colapsable.
+ *
+ * Colapsado por defecto: solo muestra el header (nombre, conteo, botón).
+ * La profesora puede expandir con click para ver quién entregó, pero
+ * no necesita hacerlo — puede entrar directo con "Revisar".
+ *
+ * ¿Por qué cada grupo tiene su propio estado y no un Map en el padre?
+ * Porque al ser componentes independientes, expandir uno no re-renderiza
+ * los demás. Más eficiente y más simple.
+ */
+const CourseGroup: React.FC<{
+    courseId: string;
+    group: { courseTitle: string; items: AssignmentSubmission[] };
+}> = ({ courseId, group }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    return (
+        <div className="correction-group">
+            <div className="correction-group-header">
+                <button
+                    className="correction-group-toggle"
+                    onClick={() => setExpanded((prev) => !prev)}
+                    aria-expanded={expanded}
+                >
+                    <span className={`correction-group-arrow ${expanded ? 'correction-group-arrow--open' : ''}`}>
+                        ▸
+                    </span>
+                    <div>
+                        <h3 className="correction-group-title">
+                            {group.courseTitle}
+                        </h3>
+                        <span className="correction-group-count">
+                            {group.items.length} entrega{group.items.length !== 1 ? 's' : ''} pendiente{group.items.length !== 1 ? 's' : ''}
+                        </span>
+                    </div>
+                </button>
+                <Link
+                    to={`/admin/correcciones/curso/${courseId}`}
+                    className="btn-primary"
+                    style={{ padding: '0.5rem 1.2rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                >
+                    Revisar
+                </Link>
+            </div>
+
+            {expanded && (
+                <div className="correction-preview-list">
+                    {group.items.map((sub) => (
+                        <div key={sub.id} className="correction-preview-item">
+                            <span className="correction-row-student">{sub.student.name}</span>
+                            <span className="correction-row-lesson">{sub.lesson.title}</span>
+                            <span className="admin-course-link-meta">{formatDate(sub.submittedAt)}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
