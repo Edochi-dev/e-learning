@@ -11,6 +11,10 @@ import { SetMetadata } from '@nestjs/common';
  *   1. courseId directo — el request ya trae el courseId:
  *      @EnrollmentCheck({ courseIdFrom: 'body' })    → lee req.body.courseId
  *      @EnrollmentCheck({ courseIdFrom: 'params' })  → lee req.params.courseId
+ *      @EnrollmentCheck({ courseIdFrom: 'query' })   → lee req.query.courseId
+ *
+ *      NOTA: 'query' es necesario para endpoints multipart (FileInterceptor)
+ *      porque los guards corren ANTES de Multer → req.body está vacío.
  *
  *   2. Resolver desde lessonId — el request solo trae lessonId:
  *      @EnrollmentCheck({ lessonIdFrom: 'params', lessonIdField: 'lessonId' })
@@ -23,11 +27,11 @@ import { SetMetadata } from '@nestjs/common';
  *   los decoradores en cada controller.
  */
 export interface EnrollmentCheckOptions {
-  /** Lee courseId directamente del body o params. */
-  courseIdFrom?: 'body' | 'params';
+  /** Lee courseId directamente del body, params o query. */
+  courseIdFrom?: 'body' | 'params' | 'query';
 
-  /** Lee lessonId del body o params para resolver → courseId. */
-  lessonIdFrom?: 'body' | 'params';
+  /** Lee lessonId del body, params o query para resolver → courseId. */
+  lessonIdFrom?: 'body' | 'params' | 'query';
 
   /** Nombre del campo que contiene el lessonId (default: 'lessonId'). */
   lessonIdField?: string;

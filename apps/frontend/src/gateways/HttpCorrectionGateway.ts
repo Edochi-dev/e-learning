@@ -63,10 +63,11 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     async submit(lessonId: string, courseId: string, photo: File): Promise<AssignmentSubmission> {
         const body = new FormData();
         body.append('lessonId', lessonId);
-        body.append('courseId', courseId);
         body.append('photo', photo);
 
-        const res = await fetch(`${this.baseUrl}/corrections/submit`, {
+        // courseId va como query param porque el EnrollmentGuard lo necesita
+        // ANTES de que Multer parsee el body (guards corren antes que interceptors).
+        const res = await fetch(`${this.baseUrl}/corrections/submit?courseId=${courseId}`, {
             method: 'POST',
             credentials: 'include',
             body,

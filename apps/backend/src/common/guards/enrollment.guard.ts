@@ -103,10 +103,7 @@ export class EnrollmentGuard implements CanActivate {
   ): Promise<string> {
     // Camino A: courseId directo
     if (options.courseIdFrom) {
-      const source =
-        options.courseIdFrom === 'body'
-          ? (request.body as Record<string, string>)
-          : (request.params as Record<string, string>);
+      const source = this.getSource(request, options.courseIdFrom);
       const courseId = source?.courseId;
 
       if (!courseId) {
@@ -120,10 +117,7 @@ export class EnrollmentGuard implements CanActivate {
     // Camino B: resolver desde lessonId
     if (options.lessonIdFrom) {
       const field = options.lessonIdField ?? 'lessonId';
-      const source =
-        options.lessonIdFrom === 'body'
-          ? (request.body as Record<string, string>)
-          : (request.params as Record<string, string>);
+      const source = this.getSource(request, options.lessonIdFrom);
       const lessonId = source?.[field];
 
       if (!lessonId) {
@@ -143,5 +137,15 @@ export class EnrollmentGuard implements CanActivate {
     throw new BadRequestException(
       'EnrollmentCheck mal configurado: falta courseIdFrom o lessonIdFrom',
     );
+  }
+
+  /** Resuelve body, params o query como Record<string, string>. */
+  private getSource(
+    request: AuthenticatedRequest,
+    from: 'body' | 'params' | 'query',
+  ): Record<string, string> {
+    if (from === 'body') return request.body as Record<string, string>;
+    if (from === 'query') return request.query as Record<string, string>;
+    return request.params as Record<string, string>;
   }
 }

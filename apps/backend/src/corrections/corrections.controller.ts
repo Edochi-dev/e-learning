@@ -161,10 +161,11 @@ export class CorrectionsController {
 
   @Post('submit')
   @UseGuards(EnrollmentGuard)
-  @EnrollmentCheck({ courseIdFrom: 'body' })
+  @EnrollmentCheck({ courseIdFrom: 'query' })
   @UseInterceptors(FileInterceptor('photo'))
   async submit(
     @Req() req: { user: { id: string } },
+    @Query('courseId', ParseUUIDPipe) courseId: string,
     @Body() dto: SubmitCorrectionDto,
     @UploadedFile(
       new ParseFilePipe({
@@ -181,7 +182,7 @@ export class CorrectionsController {
     return this.submitCorrectionUseCase.execute(
       req.user.id,
       dto.lessonId,
-      dto.courseId,
+      courseId,
       photo,
     );
   }
