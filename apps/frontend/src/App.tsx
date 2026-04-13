@@ -20,6 +20,7 @@ import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CorrectionsAdminPage } from './pages/admin/CorrectionsAdminPage';
+import { ReviewCorrectionPage } from './pages/admin/ReviewCorrectionPage';
 import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
 import { EditCoursePage } from './pages/admin/EditCoursePage';
@@ -118,6 +119,7 @@ function AppContent() {
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
             <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} />} />
             <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} />} />
+            <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />
             <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage gateway={courseGateway} />} />

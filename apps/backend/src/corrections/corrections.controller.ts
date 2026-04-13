@@ -27,6 +27,7 @@ import { GetMyCorrectionStatusUseCase } from './use-cases/get-my-correction-stat
 import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-corrections.use-case';
 import { ListAllCorrectionsUseCase } from './use-cases/list-all-corrections.use-case';
 import { ReviewCorrectionUseCase } from './use-cases/review-correction.use-case';
+import { GetCorrectionByIdUseCase } from './use-cases/get-correction-by-id.use-case';
 import { SubmitCorrectionDto } from './dto/submit-correction.dto';
 import { ReviewCorrectionDto } from './dto/review-correction.dto';
 import { AssignmentSubmission } from './entities/assignment-submission.entity';
@@ -41,6 +42,7 @@ import { AssignmentSubmission } from './entities/assignment-submission.entity';
  * Rutas de admin (JWT + RolesGuard):
  *   GET   /corrections/pending            → Listar entregas pendientes
  *   GET   /corrections/history            → Histórico con filtros
+ *   GET   /corrections/:id               → Detalle de una entrega
  *   PATCH /corrections/:id/review         → Aprobar o rechazar una entrega
  *
  * Nota de diseño: las rutas admin van ANTES de las rutas con parámetros
@@ -59,6 +61,7 @@ export class CorrectionsController {
     private readonly listPendingCorrectionsUseCase: ListPendingCorrectionsUseCase,
     private readonly listAllCorrectionsUseCase: ListAllCorrectionsUseCase,
     private readonly reviewCorrectionUseCase: ReviewCorrectionUseCase,
+    private readonly getCorrectionByIdUseCase: GetCorrectionByIdUseCase,
   ) {}
 
   // ── Rutas Admin ───────────────────────────────────────────────────────
@@ -100,6 +103,22 @@ export class CorrectionsController {
       lessonId,
       studentId,
     });
+  }
+
+  /**
+   * GET /corrections/:id — Detalle de una entrega.
+   *
+   * Solo ADMIN. Carga la submission con todas las relaciones:
+   * student, lesson (con assignmentData: referenceImageUrl + instructions),
+   * y lesson.course. Usado por la página de revisión del frontend.
+   */
+  @Get(':id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getById(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<AssignmentSubmission> {
+    return this.getCorrectionByIdUseCase.execute(id);
   }
 
   /**

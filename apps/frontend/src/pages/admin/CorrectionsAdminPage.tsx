@@ -10,13 +10,10 @@ import type {
  *
  * Dos pestañas:
  *   - "Pendientes": entregas que esperan revisión, agrupadas por curso.
- *   - "Histórico": todas las entregas con filtros (Fase 10 — por ahora placeholder).
- *
- * Cada submission muestra: nombre de la alumna, lección, fecha de envío,
- * y un link para ir a la página de revisión (Fase 9).
- *
- * El agrupamiento por curso facilita que la profesora revise por bloques:
- * "primero todas las de Manicure Básico, luego las de Nail Art".
+ *     Cada grupo tiene UN botón "Revisar" que lleva a la cola de revisión
+ *     de ese curso (flujo tipo Tinder: una submission tras otra).
+ *   - "Histórico": solo entregas ya revisadas (approved/rejected).
+ *     Sin botones de acción — es un registro de lo que ya se hizo.
  */
 
 interface Props {
@@ -71,21 +68,21 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway }) => {
     const [history, setHistory] = useState<AssignmentSubmission[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Cargar data según la tab activa
     useEffect(() => {
         setIsLoading(true);
 
-        const load = activeTab === 'pending'
-            ? gateway.listPending()
-            : gateway.listHistory();
-
-        load
-            .then((data) => {
-                if (activeTab === 'pending') setPending(data);
-                else setHistory(data);
-            })
-            .catch((err) => console.error('Error cargando correcciones', err))
-            .finally(() => setIsLoading(false));
+        if (activeTab === 'pending') {
+            gateway.listPending()
+                .then(setPending)
+                .catch((err) => console.error('Error cargando pendientes', err))
+                .finally(() => setIsLoading(false));
+        } else {
+            // Histórico: solo approved y rejected, nunca pending
+            gateway.listHistory()
+                .then((data) => setHistory(data.filter((s) => s.status !== 'pending')))
+                .catch((err) => console.error('Error cargando histórico', err))
+                .finally(() => setIsLoading(false));
+        }
     }, [gateway, activeTab]);
 
     const grouped = groupByCourse(pending);
@@ -119,7 +116,7 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway }) => {
                 </button>
             </div>
 
-            {/* Contenido de la tab */}
+            {/* Contenido */}
             {isLoading ? (
                 <p style={{ color: 'var(--text-muted)', marginTop: '1.5rem' }}>Cargando...</p>
             ) : activeTab === 'pending' ? (
@@ -150,15 +147,32 @@ const PendingTab: React.FC<PendingTabProps> = ({ grouped }) => {
         <div style={{ marginTop: '1.5rem' }}>
             {Array.from(grouped.entries()).map(([courseId, group]) => (
                 <div key={courseId} className="correction-group">
-                    <h3 className="correction-group-title">
-                        {group.courseTitle}
-                        <span className="correction-group-count">
-                            {group.items.length} pendiente{group.items.length !== 1 ? 's' : ''}
-                        </span>
-                    </h3>
-                    <div className="admin-course-links">
+                    <div className="correction-group-header">
+                        <div>
+                            <h3 className="correction-group-title">
+                                {group.courseTitle}
+                            </h3>
+                            <span className="correction-group-count">
+                                {group.items.length} entrega{group.items.length !== 1 ? 's' : ''} pendiente{group.items.length !== 1 ? 's' : ''}
+                            </span>
+                        </div>
+                        <Link
+                            to={`/admin/correcciones/curso/${courseId}`}
+                            className="btn-primary"
+                            style={{ padding: '0.5rem 1.2rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
+                        >
+                            Revisar
+                        </Link>
+                    </div>
+
+                    {/* Preview de las alumnas que entregaron */}
+                    <div className="correction-preview-list">
                         {group.items.map((sub) => (
-                            <SubmissionRow key={sub.id} submission={sub} />
+                            <div key={sub.id} className="correction-preview-item">
+                                <span className="correction-row-student">{sub.student.name}</span>
+                                <span className="correction-row-lesson">{sub.lesson.title}</span>
+                                <span className="admin-course-link-meta">{formatDate(sub.submittedAt)}</span>
+                            </div>
                         ))}
                     </div>
                 </div>
@@ -167,17 +181,22 @@ const PendingTab: React.FC<PendingTabProps> = ({ grouped }) => {
     );
 };
 
-// ── Tab Histórico (placeholder — Fase 10) ──────────────────────────────
+// ── Tab Histórico ──────────────────────────────────────────────────────
 
 interface HistoryTabProps {
     submissions: AssignmentSubmission[];
 }
 
+const statusLabels: Record<string, { text: string; className: string }> = {
+    approved: { text: 'Aprobada', className: 'status-approved' },
+    rejected: { text: 'Rechazada', className: 'status-rejected' },
+};
+
 const HistoryTab: React.FC<HistoryTabProps> = ({ submissions }) => {
     if (submissions.length === 0) {
         return (
             <div className="admin-empty" style={{ marginTop: '1.5rem' }}>
-                No hay correcciones en el histórico.
+                Aún no has revisado ninguna entrega.
             </div>
         );
     }
@@ -185,55 +204,27 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ submissions }) => {
     return (
         <div style={{ marginTop: '1.5rem' }}>
             <div className="admin-course-links">
-                {submissions.map((sub) => (
-                    <SubmissionRow key={sub.id} submission={sub} showStatus />
-                ))}
+                {submissions.map((sub) => {
+                    const status = statusLabels[sub.status] ?? statusLabels.approved;
+                    return (
+                        <div key={sub.id} className="correction-preview-item">
+                            <span className="correction-row-student">{sub.student.name}</span>
+                            <span className="correction-row-lesson">
+                                {sub.lesson.title}
+                                <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
+                                    — {sub.lesson.course.title}
+                                </span>
+                            </span>
+                            <span className="admin-course-link-meta">
+                                {formatDate(sub.reviewedAt ?? sub.submittedAt)}
+                                <span className={`correction-status ${status.className}`}>
+                                    {status.text}
+                                </span>
+                            </span>
+                        </div>
+                    );
+                })}
             </div>
-        </div>
-    );
-};
-
-// ── Fila de una submission ─────────────────────────────────────────────
-
-interface SubmissionRowProps {
-    submission: AssignmentSubmission;
-    showStatus?: boolean;
-}
-
-const statusLabels: Record<string, { text: string; className: string }> = {
-    pending: { text: 'Pendiente', className: 'status-pending' },
-    approved: { text: 'Aprobada', className: 'status-approved' },
-    rejected: { text: 'Rechazada', className: 'status-rejected' },
-};
-
-const SubmissionRow: React.FC<SubmissionRowProps> = ({ submission, showStatus }) => {
-    const status = statusLabels[submission.status] ?? statusLabels.pending;
-
-    return (
-        <div className="admin-course-row">
-            <div className="correction-row-info">
-                <span className="correction-row-student">
-                    {submission.student.name}
-                </span>
-                <span className="correction-row-lesson">
-                    {submission.lesson.title}
-                </span>
-                <span className="admin-course-link-meta">
-                    {formatDate(submission.submittedAt)}
-                    {showStatus && (
-                        <span className={`correction-status ${status.className}`}>
-                            {status.text}
-                        </span>
-                    )}
-                </span>
-            </div>
-            <Link
-                to={`/admin/correcciones/${submission.id}`}
-                className="btn-primary"
-                style={{ padding: '0.4rem 1rem', fontSize: '0.85rem', whiteSpace: 'nowrap' }}
-            >
-                Revisar
-            </Link>
         </div>
     );
 };

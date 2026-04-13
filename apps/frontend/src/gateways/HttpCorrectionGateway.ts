@@ -24,6 +24,14 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         this.baseUrl = baseUrl;
     }
 
+    async getById(submissionId: string): Promise<AssignmentSubmission> {
+        const res = await fetch(`${this.baseUrl}/corrections/${submissionId}`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`Error al cargar entrega: ${res.statusText}`);
+        return res.json() as Promise<AssignmentSubmission>;
+    }
+
     async listPending(): Promise<AssignmentSubmission[]> {
         const res = await fetch(`${this.baseUrl}/corrections/pending`, {
             credentials: 'include',

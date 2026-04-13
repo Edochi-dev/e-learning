@@ -9,6 +9,7 @@ import { GetMyCorrectionStatusUseCase } from './use-cases/get-my-correction-stat
 import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-corrections.use-case';
 import { ListAllCorrectionsUseCase } from './use-cases/list-all-corrections.use-case';
 import { ReviewCorrectionUseCase } from './use-cases/review-correction.use-case';
+import { GetCorrectionByIdUseCase } from './use-cases/get-correction-by-id.use-case';
 import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { CoursesModule } from '../courses/courses.module';
 import { EnrollmentsModule } from '../enrollments/enrollments.module';
@@ -44,6 +45,7 @@ import { ProgressModule } from '../progress/progress.module';
     ListPendingCorrectionsUseCase,
     ListAllCorrectionsUseCase,
     ReviewCorrectionUseCase,
+    GetCorrectionByIdUseCase,
   ],
   exports: [CorrectionGateway],
 })

@@ -28,6 +28,11 @@ export interface SubmissionLesson {
     course: SubmissionCourse;
 }
 
+export interface AssignmentData {
+    referenceImageUrl: string;
+    instructions: string;
+}
+
 export interface AssignmentSubmission {
     id: string;
     studentId: string;
@@ -38,7 +43,9 @@ export interface AssignmentSubmission {
     submittedAt: string;
     reviewedAt: string | null;
     student: SubmissionStudent;
-    lesson: SubmissionLesson;
+    lesson: SubmissionLesson & {
+        assignmentData?: AssignmentData;
+    };
 }
 
 // ── Filtros para el histórico ──────────────────────────────────────────
@@ -52,6 +59,9 @@ export interface CorrectionFilters {
 // ── Contrato ───────────────────────────────────────────────────────────
 
 export interface CorrectionGateway {
+    /** Admin: obtiene una submission por su ID con todas las relaciones. */
+    getById(submissionId: string): Promise<AssignmentSubmission>;
+
     /** Admin: lista entregas pendientes de revisión (status = 'pending'). */
     listPending(): Promise<AssignmentSubmission[]>;
 
