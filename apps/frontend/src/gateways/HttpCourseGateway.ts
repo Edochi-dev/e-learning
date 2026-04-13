@@ -112,6 +112,22 @@ export class HttpCourseGateway implements CourseGateway {
         }
     }
 
+    async uploadReferenceImage(file: File): Promise<string> {
+        const body = new FormData();
+        body.append('image', file);
+
+        const response = await fetch(`${this.baseUrl}/courses/upload-reference-image`, {
+            method: 'POST',
+            credentials: 'include',
+            body,
+        });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'Error al subir imagen de referencia'));
+        }
+        const data = await response.json() as { url: string };
+        return data.url;
+    }
+
     async addLesson(courseId: string, lesson: CreateLessonPayload): Promise<Lesson> {
         const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
             method: 'POST',

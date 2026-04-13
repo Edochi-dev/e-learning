@@ -13,6 +13,7 @@ import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnail.use-case';
 import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
 import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case';
+import { UploadReferenceImageUseCase } from './use-cases/upload-reference-image.use-case';
 import { CourseGateway } from './gateways/course.gateway';
 import { LessonGateway } from './gateways/lesson.gateway';
 import { CoursesRepository } from './courses.repository';
@@ -64,6 +65,7 @@ import { StorageModule } from '../storage/storage.module';
     UpdateCourseThumbnailUseCase,
     DeleteCourseThumbnailUseCase,
     GetQuizQuestionsUseCase,
+    UploadReferenceImageUseCase,
     {
       provide: CourseGateway,
       useClass: CoursesRepository,

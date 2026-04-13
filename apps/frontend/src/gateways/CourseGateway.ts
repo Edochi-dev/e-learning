@@ -19,6 +19,9 @@ export interface CourseGateway {
     deleteThumbnail(id: string): Promise<void>;
     delete(id: string): Promise<void>;
 
+    // Imágenes
+    uploadReferenceImage(file: File): Promise<string>;
+
     // Lecciones
     addLesson(courseId: string, lesson: CreateLessonPayload): Promise<Lesson>;
     removeLesson(courseId: string, lessonId: string): Promise<void>;

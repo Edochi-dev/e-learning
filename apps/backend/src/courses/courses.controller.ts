@@ -41,6 +41,7 @@ import { DeleteCourseUseCase } from './use-cases/delete-course.use-case';
 import { UpdateCourseThumbnailUseCase } from './use-cases/update-course-thumbnail.use-case';
 import { DeleteCourseThumbnailUseCase } from './use-cases/delete-course-thumbnail.use-case';
 import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case';
+import { UploadReferenceImageUseCase } from './use-cases/upload-reference-image.use-case';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -72,6 +73,7 @@ export class CoursesController {
     private readonly updateCourseThumbnailUseCase: UpdateCourseThumbnailUseCase,
     private readonly deleteCourseThumbnailUseCase: DeleteCourseThumbnailUseCase,
     private readonly getQuizQuestionsUseCase: GetQuizQuestionsUseCase,
+    private readonly uploadReferenceImageUseCase: UploadReferenceImageUseCase,
   ) {}
 
   // ==========================================
@@ -188,6 +190,34 @@ export class CoursesController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<void> {
     await this.deleteCourseThumbnailUseCase.execute(id);
+  }
+
+  /**
+   * POST /courses/upload-reference-image — Sube imagen de referencia.
+   *
+   * Solo ADMIN. Retorna { url: string } con la ruta del archivo guardado.
+   * El admin usa esta URL al crear/editar una lección tipo corrección.
+   *
+   * Ruta SIN :id porque la imagen no pertenece a un curso específico
+   * hasta que se crea la lección — es un upload previo.
+   */
+  @Post('upload-reference-image')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('image'))
+  async uploadReferenceImage(
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }),
+          new FileTypeValidator({ fileType: /image\/(jpeg|png|webp)/ }),
+        ],
+      }),
+    )
+    image: Express.Multer.File,
+  ): Promise<{ url: string }> {
+    const url = await this.uploadReferenceImageUseCase.execute(image);
+    return { url };
   }
 
   // ==========================================

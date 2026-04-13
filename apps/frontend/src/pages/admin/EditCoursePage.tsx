@@ -91,8 +91,8 @@ function SortableLessonItem({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                         <textarea name="description" value={editLessonForm.description} onChange={onEditChange} placeholder="Descripción" rows={2} required />
                     </div>
-                    {/* Solo mostrar campos de video si la lección es tipo class */}
-                    {lesson.type !== LessonType.EXAM && (
+                    {/* Campos de video: solo para tipo class */}
+                    {lesson.type === LessonType.CLASS && (
                         <>
                             <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
@@ -106,7 +106,7 @@ function SortableLessonItem({
                             </div>
                         </>
                     )}
-                    {/* Para exámenes: editor de passingScore + preguntas */}
+                    {/* Campos de examen */}
                     {lesson.type === LessonType.EXAM && (
                         <>
                             <div className="form-group" style={{ marginBottom: '0.5rem' }}>
@@ -125,6 +125,22 @@ function SortableLessonItem({
                                     questions={editLessonForm.questions ?? []}
                                     onChange={(questions) => onEditFormUpdate({ questions })}
                                     classLessons={classLessons}
+                                />
+                            </div>
+                        </>
+                    )}
+                    {/* Campos de corrección */}
+                    {lesson.type === LessonType.CORRECTION && (
+                        <>
+                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                                <label>Instrucciones para la alumna</label>
+                                <textarea
+                                    name="instructions"
+                                    value={editLessonForm.instructions ?? ''}
+                                    onChange={onEditChange}
+                                    required
+                                    rows={4}
+                                    placeholder="Describe qué debe hacer la alumna..."
                                 />
                             </div>
                         </>
@@ -241,16 +257,24 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         isLive: false,
         passingScore: undefined,
         questions: [],
+        referenceImageUrl: '',
+        instructions: '',
     });
+    // Archivo de imagen de referencia (para correcciones).
+    // Se sube primero, se obtiene la URL, y se guarda en lessonForm.referenceImageUrl.
+    const [referenceImageFile, setReferenceImageFile] = useState<File | null>(null);
 
     // Estado de la edición inline de lecciones
     const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
     const [editLessonForm, setEditLessonForm] = useState<UpdateLessonPayload>({
         title: '',
         description: '',
+        type: LessonType.CLASS,
         duration: '',
         videoUrl: '',
         isLive: false,
+        instructions: '',
+        referenceImageUrl: '',
     });
 
     // Configuración de sensores de dnd-kit:
@@ -428,11 +452,19 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         if (!courseId) return;
         setIsSubmittingLesson(true);
 
-
         try {
-            await courseGateway.addLesson(courseId, lessonForm);
-            setLessonForm({ title: '', description: '', type: LessonType.CLASS, duration: '', videoUrl: '', isLive: false, passingScore: undefined, questions: [] });
-            setIsAddingLesson(false); // Cerrar el panel tras agregar
+            let payload = lessonForm;
+
+            // Si es corrección, subir la imagen de referencia primero
+            if (payload.type === LessonType.CORRECTION && referenceImageFile) {
+                const url = await courseGateway.uploadReferenceImage(referenceImageFile);
+                payload = { ...payload, referenceImageUrl: url };
+            }
+
+            await courseGateway.addLesson(courseId, payload);
+            setLessonForm({ title: '', description: '', type: LessonType.CLASS, duration: '', videoUrl: '', isLive: false, passingScore: undefined, questions: [], referenceImageUrl: '', instructions: '' });
+            setReferenceImageFile(null);
+            setIsAddingLesson(false);
             toast.success('¡Lección agregada exitosamente!');
             await loadCourse();
         } catch (err: unknown) {
@@ -463,6 +495,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     const startEditing = (lesson: Lesson) => {
         setEditingLessonId(lesson.id);
         setEditLessonForm({
+            type: lesson.type,
             title: lesson.title,
             description: lesson.description,
             duration: lesson.videoData?.duration,
@@ -477,6 +510,8 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     isCorrect: o.isCorrect,
                 })) ?? [],
             })),
+            referenceImageUrl: lesson.assignmentData?.referenceImageUrl,
+            instructions: lesson.assignmentData?.instructions,
         });
     };
 
@@ -720,6 +755,13 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                     >
                                         📝 Examen
                                     </button>
+                                    <button
+                                        type="button"
+                                        className={`lesson-type-option ${lessonForm.type === LessonType.CORRECTION ? 'active' : ''}`}
+                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.CORRECTION }))}
+                                    >
+                                        ✏️ Corrección
+                                    </button>
                                 </div>
                             </div>
 
@@ -734,7 +776,34 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                             </div>
 
                             {/* Campos condicionales según tipo */}
-                            {lessonForm.type === LessonType.CLASS ? (
+                            {lessonForm.type === LessonType.CORRECTION ? (
+                                <>
+                                    <div className="form-group">
+                                        <label htmlFor="lesson-instructions">Instrucciones para la alumna</label>
+                                        <textarea
+                                            id="lesson-instructions"
+                                            name="instructions"
+                                            value={lessonForm.instructions ?? ''}
+                                            onChange={handleLessonChange}
+                                            required
+                                            rows={4}
+                                            placeholder="Describe qué debe hacer la alumna y cómo tomar la foto..."
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Imagen de referencia</label>
+                                        <input
+                                            type="file"
+                                            accept="image/jpeg,image/png,image/webp"
+                                            onChange={(e) => setReferenceImageFile(e.target.files?.[0] ?? null)}
+                                            required={!lessonForm.referenceImageUrl}
+                                        />
+                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                            Foto del resultado esperado. JPG, PNG o WebP, máx 5 MB.
+                                        </p>
+                                    </div>
+                                </>
+                            ) : lessonForm.type === LessonType.CLASS ? (
                                 <>
                                     <div className="form-group">
                                         <div className="checkbox-group">
@@ -781,7 +850,13 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                             )}
 
                             <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
-                                {isSubmittingLesson ? 'Agregando...' : lessonForm.type === LessonType.EXAM ? 'Agregar Examen' : 'Agregar Lección'}
+                                {isSubmittingLesson
+                                    ? 'Agregando...'
+                                    : lessonForm.type === LessonType.EXAM
+                                        ? 'Agregar Examen'
+                                        : lessonForm.type === LessonType.CORRECTION
+                                            ? 'Agregar Corrección'
+                                            : 'Agregar Lección'}
                             </button>
                         </form>
                     </div>
