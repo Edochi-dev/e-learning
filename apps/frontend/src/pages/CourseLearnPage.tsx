@@ -8,10 +8,12 @@ import { LessonType } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import type { VideoGateway } from '../gateways/VideoGateway';
+import type { CorrectionGateway } from '../gateways/CorrectionGateway';
 import { useCourse } from '../hooks/useCourse';
 import { useEnrollments } from '../hooks/useEnrollments';
 import { VideoPlayer } from '../components/VideoPlayer';
 import { QuizPlayer } from '../components/QuizPlayer';
+import { SubmissionPlayer } from '../components/SubmissionPlayer';
 
 /**
  * CourseLearnPage — Página de ESTUDIO del curso.
@@ -47,9 +49,10 @@ interface CourseLearnPageProps {
     courseGateway: CourseGateway;
     enrollmentGateway: EnrollmentGateway;
     videoGateway: VideoGateway;
+    correctionGateway: CorrectionGateway;
 }
 
-export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway }: CourseLearnPageProps) => {
+export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway, correctionGateway }: CourseLearnPageProps) => {
     const { courseId } = useParams<{ courseId: string }>();
     const { course, loading: courseLoading, error: courseError } = useCourse(courseGateway, courseId);
 
@@ -245,8 +248,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     const activeLessonIndex = course.lessons.findIndex(l => l.id === activeLesson.id);
     const isCurrentCompleted = completedLessonIds.has(activeLesson.id);
 
-    // Determinar si la lección activa es un examen
+    // Determinar el tipo de la lección activa
     const isExamLesson = activeLesson.type === LessonType.EXAM;
+    const isCorrectionLesson = activeLesson.type === LessonType.CORRECTION;
 
     // Los videos de YouTube no permiten tracking desde fuera del iframe,
     // así que los exoneramos del requisito de progreso.
@@ -269,8 +273,18 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     <h2 className="course-learn__course-title">{course.title}</h2>
                 </div>
 
-                {/* Contenido principal: Video o Quiz según tipo de lección */}
-                {isExamLesson ? (
+                {/* Contenido principal: Video, Quiz o Corrección según tipo */}
+                {isCorrectionLesson ? (
+                    <div className="course-learn__quiz">
+                        <SubmissionPlayer
+                            lessonId={activeLesson.id}
+                            courseId={courseId!}
+                            referenceImageUrl={activeLesson.assignmentData?.referenceImageUrl}
+                            instructions={activeLesson.assignmentData?.instructions}
+                            gateway={correctionGateway}
+                        />
+                    </div>
+                ) : isExamLesson ? (
                     <div className="course-learn__quiz">
                         <QuizPlayer
                             courseId={courseId!}
@@ -316,9 +330,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                 <div className="course-learn__lesson-info">
                     <div className="course-learn__lesson-header">
                         <h1 className="course-learn__lesson-title">{activeLesson.title}</h1>
-                        {/* Para exámenes, la lección se completa automáticamente al aprobar.
-                            Solo mostramos el botón manual para lecciones tipo class. */}
-                        {!isExamLesson && (
+                        {/* Para exámenes y correcciones, la lección se completa automáticamente
+                            (al aprobar quiz / al aprobar la profesora). Solo botón manual para class. */}
+                        {!isExamLesson && !isCorrectionLesson && (
                             <button
                                 className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''}`}
                                 onClick={() => handleMarkComplete(activeLesson.id)}
@@ -331,6 +345,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                         {isExamLesson && isCurrentCompleted && (
                             <span className="course-learn__complete-btn course-learn__complete-btn--done">
                                 Aprobado
+                            </span>
+                        )}
+                        {isCorrectionLesson && isCurrentCompleted && (
+                            <span className="course-learn__complete-btn course-learn__complete-btn--done">
+                                Aprobada
                             </span>
                         )}
                     </div>
@@ -385,7 +404,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                                         ? '✓'
                                         : lesson.type === LessonType.EXAM
                                             ? '📝'
-                                            : index + 1}
+                                            : lesson.type === LessonType.CORRECTION
+                                                ? '✏️'
+                                                : index + 1}
                                 </span>
                                 <span className="course-learn__lesson-name">
                                     {lesson.title}

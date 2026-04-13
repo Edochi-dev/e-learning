@@ -84,4 +84,12 @@ export interface CorrectionGateway {
         action: 'approve' | 'reject',
         feedback: string,
     ): Promise<AssignmentSubmission>;
+
+    // ── Métodos de alumna ──────────────────────────────────────────────
+
+    /** Alumna: enviar foto de la tarea. */
+    submit(lessonId: string, courseId: string, photo: File): Promise<AssignmentSubmission>;
+
+    /** Alumna: ver el estado de mi entrega para una lección. */
+    getMyStatus(lessonId: string): Promise<AssignmentSubmission | null>;
 }

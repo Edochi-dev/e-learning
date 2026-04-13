@@ -58,6 +58,41 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         return res.json() as Promise<PaginatedSubmissions>;
     }
 
+    // ── Métodos de alumna ──────────────────────────────────────────────
+
+    async submit(lessonId: string, courseId: string, photo: File): Promise<AssignmentSubmission> {
+        const body = new FormData();
+        body.append('lessonId', lessonId);
+        body.append('courseId', courseId);
+        body.append('photo', photo);
+
+        const res = await fetch(`${this.baseUrl}/corrections/submit`, {
+            method: 'POST',
+            credentials: 'include',
+            body,
+        });
+        if (!res.ok) {
+            const errBody = await res.json().catch(() => ({})) as { message?: string };
+            throw new Error(errBody.message ?? `Error al enviar entrega: ${res.statusText}`);
+        }
+        return res.json() as Promise<AssignmentSubmission>;
+    }
+
+    async getMyStatus(lessonId: string): Promise<AssignmentSubmission | null> {
+        const res = await fetch(`${this.baseUrl}/corrections/me/${lessonId}`, {
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            if (res.status === 404) return null;
+            throw new Error(`Error al consultar estado: ${res.statusText}`);
+        }
+        const data = await res.json();
+        // El backend retorna null si no hay submission
+        return data ?? null;
+    }
+
+    // ── Métodos de admin ───────────────────────────────────────────────
+
     async review(
         submissionId: string,
         action: 'approve' | 'reject',
