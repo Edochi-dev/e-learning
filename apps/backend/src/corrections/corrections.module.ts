@@ -6,6 +6,9 @@ import { CorrectionsRepository } from './corrections.repository';
 import { CorrectionsController } from './corrections.controller';
 import { SubmitCorrectionUseCase } from './use-cases/submit-correction.use-case';
 import { GetMyCorrectionStatusUseCase } from './use-cases/get-my-correction-status.use-case';
+import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-corrections.use-case';
+import { ListAllCorrectionsUseCase } from './use-cases/list-all-corrections.use-case';
+import { ReviewCorrectionUseCase } from './use-cases/review-correction.use-case';
 import { CoursesModule } from '../courses/courses.module';
 import { EnrollmentsModule } from '../enrollments/enrollments.module';
 import { NotificationsModule } from '../notifications/notifications.module';
@@ -36,6 +39,9 @@ import { ProgressModule } from '../progress/progress.module';
     { provide: CorrectionGateway, useClass: CorrectionsRepository },
     SubmitCorrectionUseCase,
     GetMyCorrectionStatusUseCase,
+    ListPendingCorrectionsUseCase,
+    ListAllCorrectionsUseCase,
+    ReviewCorrectionUseCase,
   ],
   exports: [CorrectionGateway],
 })
