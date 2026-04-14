@@ -2506,6 +2506,59 @@ input:checked+.slider .icon-moon {
   }
 }
 
+/* ── Estado APROBADA: layout propio, sin foto ──
+   Al aprobar, el backend borra la foto (ver review-correction.use-case.ts).
+   El texto ocupa todo el ancho y el ícono flota como decoración en la
+   esquina superior derecha — así no interrumpe el flujo de lectura.
+
+   IMPORTANTE: usamos selector combinado `.submission-row.submission-row--approved`
+   para ganar la cascada contra `.submission-row` (ambos serían misma
+   especificidad 0,1,0). Sin esto, `display: grid` del row base puede
+   seguir activo y colocar el feedback en la columna 1fr del grid en
+   lugar de abarcar la fila entera. */
+.submission-row.submission-row--approved {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.65rem;
+  position: relative;
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+.submission-approved__icon {
+  position: absolute;
+  top: 1rem;
+  right: 1.25rem;
+  font-size: 2.25rem;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.submission-row.submission-row--approved > h3 {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  color: #065f46;
+  margin: 0;
+  line-height: 1.25;
+}
+
+.submission-row.submission-row--approved > .submission-feedback {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* El título y el mensaje del approved reservan espacio a la derecha
+   para no colisionar con el ícono ✅. El feedback box, en cambio, va
+   abajo del ícono visualmente y puede extenderse al ancho completo
+   del row — así se ve como un bloque sólido de borde a borde.
+   Selector combinado (doble clase) para asegurar cascada. */
+.submission-row.submission-row--approved > h3,
+.submission-row.submission-row--approved > .submission-cell-text {
+  padding-right: 3rem;
+}
+
 .submission-row h3 {
   font-family: var(--font-heading);
   font-size: 1.1rem;

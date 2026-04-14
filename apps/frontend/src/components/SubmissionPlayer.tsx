@@ -157,123 +157,129 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                 </div>
             </div>
 
-            {/* ── Fila 2: Tu entrega (foto + estado/feedback/acción) ── */}
-            <div className="submission-row">
-                <div className="submission-row__media">
-                    <h3>Tu entrega</h3>
-                    {showUploader ? (
-                        <div className="submission-entry-photo">
-                            <input
-                                ref={fileRef}
-                                type="file"
-                                accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
-                                onChange={handleFileSelect}
-                                className="submission-file-input"
-                                id="submission-file"
-                            />
-                            {preview ? (
-                                <>
-                                    <img src={preview} alt="Vista previa" className="submission-media" />
-                                    <label htmlFor="submission-file" className="submission-file-label--overlay">
-                                        Cambiar
-                                    </label>
-                                </>
-                            ) : (
-                                <label htmlFor="submission-file" className="submission-file-dropzone">
-                                    <span className="submission-file-dropzone-icon" aria-hidden="true">📷</span>
-                                    <span>Seleccionar foto</span>
-                                    <span className="submission-file-dropzone-hint">JPG · PNG · WebP · HEIC · máx 5 MB</span>
-                                </label>
-                            )}
+            {/* ── Fila 2: Tu entrega ──
+                Caso especial: cuando la entrega está APROBADA, el backend
+                ya borró la foto (review-correction.use-case.ts libera el
+                storage). Mostrar un <img> sobre un 404 sería mala UX, así
+                que approved tiene layout propio sin foto — un bloque
+                verde celebratorio con el feedback. */}
+            {submission?.status === 'approved' && !isResubmitting ? (
+                <div className="submission-row submission-row--approved">
+                    <span className="submission-approved__icon" aria-hidden="true">✅</span>
+                    <h3>¡Aprobada!</h3>
+                    <p className="submission-cell-text submission-cell-text--success">
+                        Tu entrega fue aprobada. Esta lección quedó completada.
+                    </p>
+                    {submission.feedback && (
+                        <div className="submission-feedback">
+                            <strong>Feedback de la profesora</strong>
+                            <p>{submission.feedback}</p>
                         </div>
-                    ) : (
-                        photoSrc && <img src={photoSrc} alt="Tu entrega" className="submission-media" />
                     )}
                 </div>
-
-                <div className="submission-row__content">
-                    {showUploader && (
-                        <>
-                            <h3>{submission ? 'Nueva entrega' : 'Envía tu trabajo'}</h3>
-                            <p className="submission-cell-text">
-                                Toma una foto de tu trabajo con buena iluminación. La profesora te dará feedback.
-                            </p>
-                            {error && <p className="submission-error">{error}</p>}
-                            <div className="submission-cell-actions">
-                                <button
-                                    className="btn-primary submission-entry-btn"
-                                    disabled={!preview || isSubmitting}
-                                    onClick={handleSubmit}
-                                >
-                                    {isSubmitting ? 'Enviando...' : submission ? 'Enviar nueva entrega' : 'Enviar entrega'}
-                                </button>
-                                {isResubmitting && (
-                                    <button
-                                        type="button"
-                                        className="btn-secondary submission-entry-btn"
-                                        onClick={() => {
-                                            setIsResubmitting(false);
-                                            setPreview(null);
-                                            setError(null);
-                                            if (fileRef.current) fileRef.current.value = '';
-                                        }}
-                                    >
-                                        Cancelar
-                                    </button>
+            ) : (
+                <div className="submission-row">
+                    <div className="submission-row__media">
+                        <h3>Tu entrega</h3>
+                        {showUploader ? (
+                            <div className="submission-entry-photo">
+                                <input
+                                    ref={fileRef}
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                    onChange={handleFileSelect}
+                                    className="submission-file-input"
+                                    id="submission-file"
+                                />
+                                {preview ? (
+                                    <>
+                                        <img src={preview} alt="Vista previa" className="submission-media" />
+                                        <label htmlFor="submission-file" className="submission-file-label--overlay">
+                                            Cambiar
+                                        </label>
+                                    </>
+                                ) : (
+                                    <label htmlFor="submission-file" className="submission-file-dropzone">
+                                        <span className="submission-file-dropzone-icon" aria-hidden="true">📷</span>
+                                        <span>Seleccionar foto</span>
+                                        <span className="submission-file-dropzone-hint">JPG · PNG · WebP · HEIC · máx 5 MB</span>
+                                    </label>
                                 )}
                             </div>
-                        </>
-                    )}
+                        ) : (
+                            photoSrc && <img src={photoSrc} alt="Tu entrega" className="submission-media" />
+                        )}
+                    </div>
 
-                    {/* El badge vive arriba de la columna derecha, sobre el
-                        mensaje/feedback — queda visualmente conectado con
-                        lo que dijo (o no dijo) la profesora. */}
-                    {!showUploader && submission && (
-                        <StatusBadge status={submission.status} />
-                    )}
+                    <div className="submission-row__content">
+                        {showUploader && (
+                            <>
+                                <h3>{submission ? 'Nueva entrega' : 'Envía tu trabajo'}</h3>
+                                <p className="submission-cell-text">
+                                    Toma una foto de tu trabajo con buena iluminación. La profesora te dará feedback.
+                                </p>
+                                {error && <p className="submission-error">{error}</p>}
+                                <div className="submission-cell-actions">
+                                    <button
+                                        className="btn-primary submission-entry-btn"
+                                        disabled={!preview || isSubmitting}
+                                        onClick={handleSubmit}
+                                    >
+                                        {isSubmitting ? 'Enviando...' : submission ? 'Enviar nueva entrega' : 'Enviar entrega'}
+                                    </button>
+                                    {isResubmitting && (
+                                        <button
+                                            type="button"
+                                            className="btn-secondary submission-entry-btn"
+                                            onClick={() => {
+                                                setIsResubmitting(false);
+                                                setPreview(null);
+                                                setError(null);
+                                                if (fileRef.current) fileRef.current.value = '';
+                                            }}
+                                        >
+                                            Cancelar
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        )}
 
-                    {!showUploader && submission?.status === 'pending' && (
-                        <p className="submission-cell-text">
-                            Tu entrega está en manos de la profesora. Te notificaremos por email cuando tenga feedback.
-                        </p>
-                    )}
+                        {/* Badge del estado arriba del mensaje/feedback —
+                            solo en pending/rejected (approved tiene su layout). */}
+                        {!showUploader && submission && (
+                            <StatusBadge status={submission.status} />
+                        )}
 
-                    {!showUploader && submission?.status === 'approved' && (
-                        <>
-                            <p className="submission-cell-text submission-cell-text--success">
-                                Tu entrega fue aprobada. Esta lección quedó completada.
+                        {!showUploader && submission?.status === 'pending' && (
+                            <p className="submission-cell-text">
+                                Tu entrega está en manos de la profesora. Te notificaremos por email cuando tenga feedback.
                             </p>
-                            {submission.feedback && (
-                                <div className="submission-feedback">
-                                    <strong>Feedback de la profesora</strong>
-                                    <p>{submission.feedback}</p>
-                                </div>
-                            )}
-                        </>
-                    )}
+                        )}
 
-                    {!showUploader && submission?.status === 'rejected' && (
-                        <>
-                            {submission.feedback ? (
-                                <div className="submission-feedback">
-                                    <strong>Feedback de la profesora</strong>
-                                    <p>{submission.feedback}</p>
+                        {!showUploader && submission?.status === 'rejected' && (
+                            <>
+                                {submission.feedback ? (
+                                    <div className="submission-feedback">
+                                        <strong>Feedback de la profesora</strong>
+                                        <p>{submission.feedback}</p>
+                                    </div>
+                                ) : (
+                                    <p className="submission-cell-text">La profesora pidió que re-envíes tu entrega.</p>
+                                )}
+                                <div className="submission-cell-actions">
+                                    <button
+                                        className="btn-primary submission-entry-btn"
+                                        onClick={() => setIsResubmitting(true)}
+                                    >
+                                        Enviar de nuevo
+                                    </button>
                                 </div>
-                            ) : (
-                                <p className="submission-cell-text">La profesora pidió que re-envíes tu entrega.</p>
-                            )}
-                            <div className="submission-cell-actions">
-                                <button
-                                    className="btn-primary submission-entry-btn"
-                                    onClick={() => setIsResubmitting(true)}
-                                >
-                                    Enviar de nuevo
-                                </button>
-                            </div>
-                        </>
-                    )}
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 };
