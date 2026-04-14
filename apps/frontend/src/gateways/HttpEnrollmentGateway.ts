@@ -1,4 +1,4 @@
-import type { QuizResult, QuizAnswer } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
 import type { EnrollmentGateway, EnrollmentWithProgress } from './EnrollmentGateway';
 
 /**
@@ -109,6 +109,17 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
                 message = body.message || message;
             } catch { /* usar mensaje default */ }
             throw new Error(message);
+        }
+        return response.json();
+    }
+
+    async getLastQuizAttempt(lessonId: string, courseId: string): Promise<LastQuizAttemptResponse> {
+        const response = await fetch(
+            `${this.baseUrl}/enrollments/me/quiz/${lessonId}/last-attempt?courseId=${courseId}`,
+            { credentials: 'include' },
+        );
+        if (!response.ok) {
+            throw new Error('Error al obtener el último intento');
         }
         return response.json();
     }

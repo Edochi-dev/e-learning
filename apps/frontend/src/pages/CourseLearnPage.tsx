@@ -96,23 +96,30 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     /**
      * isSidebarOpen: controla el temario colapsable.
      *
-     * Al montar, leemos localStorage: si la alumna ya eligió un estado,
-     * lo respetamos. Si no hay preferencia guardada, usamos un default
-     * razonable — abierto en desktop (ancho ≥ 768px) donde hay espacio
-     * sobrado, cerrado en mobile para que el video tome toda la pantalla.
-     *
-     * La persistencia hace que la elección sobreviva entre sesiones y
-     * lecciones — si cerró el temario, sigue cerrado al cambiar de
-     * lección o al volver al curso mañana.
+     * Reglas:
+     * - En mobile (≤768px), el drawer SIEMPRE arranca cerrado. Un drawer
+     *   abierto en mobile tapa la pantalla entera y bloquea el video —
+     *   ningún caso de uso justifica arrancar así.
+     * - En desktop, respetamos la preferencia guardada en localStorage
+     *   (la alumna puede preferir "modo inmersión" sin temario).
+     * - La persistencia SOLO ocurre en desktop. Así un open temporal en
+     *   mobile no contamina la preferencia desktop ni al revés.
      */
     const SIDEBAR_STORAGE_KEY = 'course-learn.sidebar-open';
+    const MOBILE_MEDIA_QUERY = '(max-width: 768px)';
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return true;
+        if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) return false;
         const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
         if (stored !== null) return stored === 'true';
-        return typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+        return true;
     });
 
     useEffect(() => {
+        if (typeof window === 'undefined') return;
+        // Solo persistimos la preferencia en desktop. En mobile, abrir/cerrar
+        // es una acción de sesión, no una preferencia del usuario.
+        if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) return;
         localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isSidebarOpen));
     }, [isSidebarOpen]);
 
@@ -170,13 +177,19 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
         }
     }, [watchProgress, courseId, activeLessonIdForEffect, enrollmentGateway]);
 
-    // Al cambiar de lección, inicializamos el progreso con el valor guardado en BD
+    // Al cambiar de lección, inicializamos el progreso con el valor guardado en BD.
+    // En mobile, cerramos el drawer automáticamente — si la alumna tocó una
+    // lección del temario, su intención es VER esa lección; mantener el
+    // drawer abierto taparía el video que acaba de pedir.
     const handleLessonChange = useCallback((lessonId: string) => {
         setCurrentLessonId(lessonId);
         const saved = savedWatchProgress[lessonId] ?? 0;
         setWatchProgress(saved);
         lastReportedProgressRef.current = saved;
         lastSavedThresholdRef.current = Math.floor(saved / 5) * 5;
+        if (typeof window !== 'undefined' && window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
+            setIsSidebarOpen(false);
+        }
     }, [savedWatchProgress]);
 
     /**
@@ -286,22 +299,27 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
 
     return (
         <div className={`course-learn ${isSidebarOpen ? '' : 'course-learn--sidebar-closed'}`}>
-            {/* Lengüeta para ABRIR el temario — pegada al borde derecho
-                del viewport. Solo visible cuando el sidebar está cerrado;
-                se desvanece suavemente al abrir para no flotar sobre el
-                video. El botón de CERRAR vive adentro del sidebar header,
-                así nunca sobresale al main cuando el temario está visible. */}
+            {/* Lengüeta toggle del temario.
+                - En DESKTOP: solo aparece cuando el sidebar está cerrado
+                  (se desvanece al abrir para no flotar sobre el video).
+                  El cerrar vive adentro del sidebar-header.
+                - En MOBILE: se queda visible en ambos estados como TOGGLE
+                  único — cambia su ícono/texto a "Cerrar". Así abrir y
+                  cerrar ocurren en el MISMO lugar (bottom-right), cómodo
+                  para el pulgar. El closer del header se oculta en mobile. */}
             <button
                 type="button"
                 className="course-learn__sidebar-opener"
-                onClick={() => setIsSidebarOpen(true)}
+                onClick={() => setIsSidebarOpen(prev => !prev)}
                 aria-expanded={isSidebarOpen}
                 aria-controls="course-learn-sidebar"
-                aria-hidden={isSidebarOpen}
-                tabIndex={isSidebarOpen ? -1 : 0}
             >
-                <span className="course-learn__sidebar-opener-chevron" aria-hidden="true">‹</span>
-                <span className="course-learn__sidebar-opener-label">Temario</span>
+                <span className="course-learn__sidebar-opener-chevron" aria-hidden="true">
+                    {isSidebarOpen ? '›' : '‹'}
+                </span>
+                <span className="course-learn__sidebar-opener-label">
+                    {isSidebarOpen ? 'Cerrar' : 'Temario'}
+                </span>
             </button>
 
             {/* ── Área principal: Video + info ── */}
@@ -355,8 +373,10 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                             <button
                                 className="course-learn__nav-btn"
                                 onClick={() => handleLessonChange(prevLesson.id)}
+                                aria-label={`Lección anterior: ${prevLesson.title}`}
                             >
-                                ← {prevLesson.title}
+                                <span className="course-learn__nav-btn-arrow" aria-hidden="true">←</span>
+                                <span className="course-learn__nav-btn-title">{prevLesson.title}</span>
                             </button>
                         )}
                     </div>
@@ -407,8 +427,10 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                             <button
                                 className="course-learn__nav-btn course-learn__nav-btn--next"
                                 onClick={() => handleLessonChange(nextLesson.id)}
+                                aria-label={`Lección siguiente: ${nextLesson.title}`}
                             >
-                                {nextLesson.title} →
+                                <span className="course-learn__nav-btn-title">{nextLesson.title}</span>
+                                <span className="course-learn__nav-btn-arrow" aria-hidden="true">→</span>
                             </button>
                         )}
                     </div>
@@ -422,6 +444,15 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     )}
                 </div>
             </div>
+
+            {/* Backdrop del drawer en mobile — solo visible cuando el temario
+                está abierto. Click cierra. En desktop CSS lo oculta
+                (el sidebar vive al costado, no hay superposición). */}
+            <div
+                className="course-learn__backdrop"
+                onClick={() => setIsSidebarOpen(false)}
+                aria-hidden="true"
+            />
 
             {/* ── Sidebar: Lista de lecciones ── */}
             <aside id="course-learn-sidebar" className="course-learn__sidebar" aria-hidden={!isSidebarOpen}>

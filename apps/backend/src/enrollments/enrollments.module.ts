@@ -15,6 +15,7 @@ import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
 import { GetCourseProgressUseCase } from './use-cases/get-course-progress.use-case';
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
+import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { CoursesModule } from '../courses/courses.module';
 import { ProgressModule } from '../progress/progress.module';
@@ -59,6 +60,7 @@ import { ProgressModule } from '../progress/progress.module';
     SaveWatchProgressUseCase,
     GetCourseProgressUseCase,
     SubmitQuizUseCase,
+    GetLastQuizAttemptUseCase,
   ],
   // OrdersModule necesita EnrollmentGateway para matricular tras pago exitoso.
   exports: [EnrollmentGateway],

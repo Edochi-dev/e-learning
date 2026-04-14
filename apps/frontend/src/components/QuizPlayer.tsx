@@ -57,6 +57,12 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     // Respuestas del alumno: { questionId → selectedOptionId }
     const [answers, setAnswers] = useState<Record<string, string>>({});
 
+    // Índice de la pregunta actual — el quiz ahora se muestra pregunta por
+    // pregunta (estilo review de correcciones del admin) en vez de un scroll
+    // con todas visibles. Esto evita scroll infinito en quizzes largos y
+    // mejora enfoque: una pregunta, una decisión, avanza.
+    const [currentIndex, setCurrentIndex] = useState(0);
+
     // Estado de envío y resultado
     const [submitting, setSubmitting] = useState(false);
     const [result, setResult] = useState<QuizResult | null>(null);
@@ -64,7 +70,16 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     // Cooldown: milisegundos restantes antes de poder reintentar
     const [cooldownRemaining, setCooldownRemaining] = useState(0);
 
-    // ── Cargar preguntas ──────────────────────────────────────────────
+    // ── Cargar preguntas + último intento ─────────────────────────────
+    // Al montar cargamos en paralelo:
+    //  - Las preguntas del quiz (para poder re-renderizar el detalle si
+    //    hay un intento previo).
+    //  - El último intento del alumno (para decidir si mostrar formulario
+    //    o pantalla de resultados).
+    //
+    // Si hay intento aprobado → quedamos en pantalla de resultados PERMANENTE.
+    // Si hay intento reprobado y cooldown > 0 → pantalla de resultados con countdown.
+    // Si no hay intento previo o cooldown expiró → formulario vacío.
     useEffect(() => {
         let cancelled = false;
 
@@ -73,11 +88,24 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
             setError(null);
             setResult(null);
             setAnswers({});
+            setCurrentIndex(0);
             setCooldownRemaining(0);
 
             try {
-                const data = await courseGateway.getQuizQuestions(courseId, lessonId);
-                if (!cancelled) setQuestions(data);
+                const [questionsData, lastAttempt] = await Promise.all([
+                    courseGateway.getQuizQuestions(courseId, lessonId),
+                    enrollmentGateway.getLastQuizAttempt(lessonId, courseId),
+                ]);
+                if (cancelled) return;
+
+                setQuestions(questionsData);
+
+                // lastAttempt siempre viene como objeto; `result: null`
+                // indica que no hay intentos previos (mostramos formulario).
+                if (lastAttempt.result) {
+                    setResult(lastAttempt.result);
+                    setCooldownRemaining(lastAttempt.cooldownRemainingMs);
+                }
             } catch (err: any) {
                 if (!cancelled) setError(err.message || 'Error al cargar el examen');
             } finally {
@@ -87,7 +115,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
 
         load();
         return () => { cancelled = true; };
-    }, [courseId, lessonId, courseGateway]);
+    }, [courseId, lessonId, courseGateway, enrollmentGateway]);
 
     // ── Countdown timer para cooldown ─────────────────────────────────
     // Se activa cuando cooldownRemaining > 0 (tras reprobar o recibir 429).
@@ -151,6 +179,7 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
     const handleRetry = () => {
         setResult(null);
         setAnswers({});
+        setCurrentIndex(0);
         setError(null);
     };
 
@@ -278,50 +307,107 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
         );
     }
 
-    // ── Render: Formulario de preguntas ───────────────────────────────
+    // ── Render: Formulario de preguntas (una a una) ───────────────────
+    //
+    // El quiz se muestra pregunta por pregunta con una barra de progreso
+    // arriba y botones Anterior/Siguiente abajo. Para avanzar hay que
+    // responder la actual (forzamos selección en vez de permitir skip —
+    // así la alumna nunca llega al final con preguntas sin responder).
+    // La última pregunta intercambia "Siguiente" por "Enviar respuestas".
+    // Puede volver atrás con "Anterior" para cambiar cualquier respuesta.
+
+    const currentQuestion = questions[currentIndex];
+    const isLastQuestion = currentIndex === questions.length - 1;
+    const currentAnswered = currentQuestion && !!answers[currentQuestion.id];
+    const answeredCount = Object.keys(answers).length;
+    const progressPct = ((currentIndex + 1) / questions.length) * 100;
 
     return (
         <div className="quiz-player">
             <div className="quiz-player__header">
-                <h2>Examen</h2>
-                <span className="quiz-player__count">{questions.length} preguntas</span>
+                <div className="quiz-player__heading">
+                    <h2>Examen</h2>
+                    <span className="quiz-player__count">
+                        Pregunta {currentIndex + 1} de {questions.length}
+                    </span>
+                </div>
+                <span className="quiz-player__answered-count" aria-live="polite">
+                    {answeredCount} / {questions.length} respondidas
+                </span>
             </div>
 
-            <div className="quiz-player__questions">
-                {questions.map((q, qIndex) => (
-                    <div key={q.id} className="quiz-question">
-                        <p className="quiz-question__text">
-                            {qIndex + 1}. {q.text}
-                        </p>
-                        <div className="quiz-question__options">
-                            {q.options.map(opt => (
-                                <label
-                                    key={opt.id}
-                                    className={`quiz-option ${answers[q.id] === opt.id ? 'quiz-option--selected' : ''}`}
-                                >
-                                    <input
-                                        type="radio"
-                                        name={`quiz-${q.id}`}
-                                        value={opt.id}
-                                        checked={answers[q.id] === opt.id}
-                                        onChange={() => handleSelectOption(q.id, opt.id)}
-                                    />
-                                    <span className="quiz-option__text">{opt.text}</span>
-                                </label>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            <button
-                type="button"
-                className="btn-primary quiz-player__submit"
-                onClick={handleSubmit}
-                disabled={!allAnswered || submitting}
+            {/* Barra de progreso lineal — refleja qué tan avanzada está la
+                alumna en el quiz. Independiente del número de respuestas
+                correctas: esto es puro "¿dónde voy?". */}
+            <div
+                className="quiz-player__progress"
+                role="progressbar"
+                aria-valuenow={currentIndex + 1}
+                aria-valuemin={1}
+                aria-valuemax={questions.length}
+                aria-label="Progreso del examen"
             >
-                {submitting ? 'Enviando...' : 'Enviar respuestas'}
-            </button>
+                <div
+                    className="quiz-player__progress-fill"
+                    style={{ width: `${progressPct}%` }}
+                />
+            </div>
+
+            {currentQuestion && (
+                <div key={currentQuestion.id} className="quiz-question quiz-question--single">
+                    <p className="quiz-question__text">
+                        {currentQuestion.text}
+                    </p>
+                    <div className="quiz-question__options">
+                        {currentQuestion.options.map(opt => (
+                            <label
+                                key={opt.id}
+                                className={`quiz-option ${answers[currentQuestion.id] === opt.id ? 'quiz-option--selected' : ''}`}
+                            >
+                                <input
+                                    type="radio"
+                                    name={`quiz-${currentQuestion.id}`}
+                                    value={opt.id}
+                                    checked={answers[currentQuestion.id] === opt.id}
+                                    onChange={() => handleSelectOption(currentQuestion.id, opt.id)}
+                                />
+                                <span className="quiz-option__text">{opt.text}</span>
+                            </label>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            <div className="quiz-player__nav">
+                <button
+                    type="button"
+                    className="btn-secondary quiz-player__nav-btn"
+                    onClick={() => setCurrentIndex(i => Math.max(0, i - 1))}
+                    disabled={currentIndex === 0}
+                >
+                    ← Anterior
+                </button>
+
+                {isLastQuestion ? (
+                    <button
+                        type="button"
+                        className="btn-primary quiz-player__nav-btn"
+                        onClick={handleSubmit}
+                        disabled={!allAnswered || submitting}
+                    >
+                        {submitting ? 'Enviando...' : 'Enviar respuestas'}
+                    </button>
+                ) : (
+                    <button
+                        type="button"
+                        className="btn-primary quiz-player__nav-btn"
+                        onClick={() => setCurrentIndex(i => Math.min(questions.length - 1, i + 1))}
+                        disabled={!currentAnswered}
+                    >
+                        Siguiente →
+                    </button>
+                )}
+            </div>
         </div>
     );
 };

@@ -4720,6 +4720,12 @@ input:checked+.slider .icon-moon {
   top: 80px;
   overflow: hidden;
   transition: width 350ms ease, border-left-color 350ms ease;
+  /* z-index 101 lo coloca por encima del header global (z-index: 100).
+     Sin esto, el backdrop-filter del navbar puede crear artefactos
+     visuales sobre el sidebar (blur translúcido que muestra contenido
+     detrás). En desktop no tapa porque están en distintos X, pero el
+     stacking context importa. */
+  z-index: 101;
 }
 
 .course-learn--sidebar-closed .course-learn__sidebar {
@@ -4757,10 +4763,13 @@ input:checked+.slider .icon-moon {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  z-index: 20;
   box-shadow: var(--shadow-sm);
   transition: opacity 300ms ease, transform 300ms ease, background 0.2s, color 0.2s;
   opacity: 1;
+  /* z-index 101 la mantiene por encima del navbar global (.header
+     tiene z-index 100). Sin esto, si la lengüeta queda cerca del borde
+     inferior del navbar (como pasa en mobile), el navbar la tapa. */
+  z-index: 101;
 }
 
 .course-learn__sidebar-opener:hover {
@@ -4923,39 +4932,172 @@ input:checked+.slider .icon-moon {
   width: 100%;
 }
 
-/* ── Responsive: sidebar debajo en móvil ── */
+/* ── Backdrop del drawer ──
+   Solo visible en mobile cuando el sidebar/drawer está abierto.
+   En desktop se mantiene oculto (display: none) porque el sidebar
+   vive al costado y no hay overlay sobre el main. */
+.course-learn__backdrop {
+  display: none;
+}
 
+/* ── Responsive mobile (≤768px) ──
+   Reestructuración completa del layout para pantallas chicas:
+   - Main en column (sin sidebar al costado).
+   - Sidebar como DRAWER fixed desde la derecha, overlay con backdrop.
+   - Videos/navs/info al 100% del ancho (sin el 73% de desktop).
+   - Botones prev/next circulares (solo flechas, sin título).
+   - Tipografía ajustada.
+   La lengüeta "Temario" mantiene su comportamiento pero se recalibra
+   su posición vertical para el viewport mobile. */
 @media (max-width: 768px) {
   .course-learn {
     flex-direction: column;
+    /* El margin-bottom negativo de -6rem compensaba el footer en
+       desktop. En mobile el footer tiene su propio padding reducido
+       y no hace falta absorberlo — además crearía overlap feo. */
+    margin-bottom: 0;
   }
 
   .course-learn__main {
-    padding: 1rem;
+    /* Main ocupa TODO el ancho del viewport (antes compartía con el
+       sidebar al costado). Padding simétrico reducido. */
+    padding: 1rem var(--mobile-pad-x);
+    width: 100%;
   }
 
-  .course-learn__header,
+  /* El 73% de desktop deja de tener sentido cuando el main ya es el
+     ancho completo — forzamos 100% para aprovechar toda la pantalla. */
   .course-learn__video,
-  .course-learn__watch-progress,
+  .course-learn__nav,
   .course-learn__lesson-info {
     width: 100%;
-  }
-
-  .course-learn__sidebar {
-    width: 100%;
-    position: static;
-    max-height: none;
-    border-left: none;
-    border-top: 1px solid var(--border);
   }
 
   .course-learn__lesson-title {
     font-size: 1.35rem;
   }
 
+  .course-learn__lesson-desc {
+    font-size: 0.92rem;
+  }
+
+  /* ── Nav controles (prev / completar / next) ──
+     Prev/next se colapsan a botones circulares de 44×44px mostrando
+     solo la flecha. El título de la lección se oculta con display:none
+     — la alumna ve el próximo título en el temario de todas formas.
+     Esto libera espacio para el botón central "Marcar completada". */
+  .course-learn__nav {
+    gap: 0.5rem;
+  }
+
   .course-learn__nav-btn {
-    font-size: 0.8rem;
-    padding: 0.4rem 0.75rem;
+    width: var(--touch-min);
+    height: var(--touch-min);
+    padding: 0;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .course-learn__nav-btn-title {
+    display: none;
+  }
+
+  /* Botón "Marcar como completada" a ancho completo disponible en mobile
+     — es el CTA principal, no queremos que quede estrangulado. */
+  .course-learn__complete-btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  /* ── Sidebar como DRAWER overlay ──
+     position: fixed lo saca del flujo del main → el main ocupa el 100%.
+     El drawer se desliza desde la derecha con translateX. Cuando está
+     cerrado, se desliza fuera (translateX 100%) — NO animamos el width
+     acá (como en desktop) porque ocupar todo el lado derecho con un
+     drawer flotante es el patrón natural en mobile. */
+  .course-learn__sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(90%, 360px);
+    height: 100vh;
+    max-height: 100vh;
+    /* z-index 110 lo pone por encima del navbar (z-index 100) y del
+       backdrop (z-index 105). En mobile el drawer se comporta como
+       modal: cuando está abierto, cubre todo el viewport incluyendo
+       el navbar. Es el patrón estándar de apps nativas. */
+    z-index: 110;
+    border-left: 1px solid var(--border);
+    transform: translateX(0);
+    transition: transform 300ms ease;
+  }
+
+  .course-learn--sidebar-closed .course-learn__sidebar {
+    transform: translateX(100%);
+    width: min(90%, 360px);
+    border-left-color: var(--border);
+  }
+
+  /* Backdrop visible cuando el drawer está abierto. Click cierra
+     (handler en el JSX). Fade suave para acompañar la animación del
+     drawer. */
+  .course-learn__backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    /* z-index 105: encima del navbar (100), debajo del drawer (110).
+       Así el backdrop oscurece TODO incluyendo el navbar cuando el
+       drawer está abierto — transmite visualmente que estás en un
+       modal, no en la vista normal. */
+    z-index: 105;
+    opacity: 1;
+    transition: opacity 300ms ease;
+    pointer-events: auto;
+  }
+
+  .course-learn--sidebar-closed .course-learn__backdrop {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Lengüeta "Temario" anclada al bottom-right en mobile.
+     En desktop alineaba con el closer del sidebar-header. En mobile
+     al center del viewport tapaba el video o los botones de nav —
+     bottom-right es zona "FAB" donde no hay contenido crítico y
+     queda al alcance natural del pulgar. */
+  .course-learn__sidebar-opener {
+    top: auto;
+    bottom: 1.5rem;
+    transform: none;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* En MOBILE, la lengüeta no se desvanece al abrir — es el toggle
+     único (abre Y cierra). Anulamos la regla del desktop que la
+     escondía y le subimos el z-index para que quede por encima del
+     drawer (110) cuando está abierto. */
+  .course-learn:not(.course-learn--sidebar-closed) .course-learn__sidebar-opener {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    z-index: 111;
+  }
+
+  /* El closer del sidebar-header sobra en mobile: el toggle único (la
+     lengüeta abajo-derecha) ya se encarga de abrir y cerrar. Esconderlo
+     elimina redundancia y la distancia entre abrir/cerrar. */
+  .course-learn__sidebar-closer {
+    display: none;
   }
 }
 
@@ -5227,15 +5369,24 @@ input:checked+.slider .icon-moon {
 
 .quiz-player__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.quiz-player__heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
 
 .quiz-player__header h2 {
   font-family: var(--font-heading);
   font-size: 1.5rem;
   margin: 0;
+  line-height: 1.1;
 }
 
 .quiz-player__count {
@@ -5243,17 +5394,62 @@ input:checked+.slider .icon-moon {
   color: var(--text-muted);
 }
 
-.quiz-player__questions {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
+.quiz-player__answered-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Barra de progreso del quiz — refleja currentIndex / total. Es lineal
+   (una pregunta vale lo mismo que otra visualmente). Separada del fondo
+   con un border-radius para sentir "pill". */
+.quiz-player__progress {
+  width: 100%;
+  height: 6px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+}
+
+.quiz-player__progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  border-radius: var(--radius-full);
+  transition: width 350ms var(--ease-out);
+}
+
+/* Contenedor de una sola pregunta activa. Sin gap entre "preguntas"
+   porque solo se muestra una a la vez — el margin-bottom da aire hasta
+   la navegación. */
+.quiz-question--single {
   margin-bottom: 2rem;
 }
 
-.quiz-player__submit {
-  width: 100%;
-  padding: 0.85rem;
-  font-size: 1rem;
+/* Barra de navegación Anterior / Siguiente|Enviar. Flex con space-between
+   para que prev quede a la izq y next/enviar a la der. Gap para cuando
+   el viewport es angosto y se apilan. */
+.quiz-player__nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.quiz-player__nav-btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+  min-width: 140px;
+}
+
+.quiz-player__nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .quiz-player__cooldown {

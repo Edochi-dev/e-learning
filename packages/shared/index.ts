@@ -334,3 +334,26 @@ export interface QuizResult {
     passingScore: number;
     details: QuizResultDetail[];
 }
+
+/**
+ * LastQuizAttemptResponse — Info del último intento de un alumno en un quiz.
+ *
+ * Se usa al cargar el QuizPlayer para decidir qué mostrar:
+ * - Si el alumno aprobó: mostrar pantalla de resultados PERMANENTE (nunca
+ *   puede re-intentar un quiz ya aprobado, evita confusión).
+ * - Si reprobó y está en cooldown: mostrar resultados con countdown activo.
+ * - Si reprobó y cooldown expiró: mostrar resultados con botón "reintentar".
+ * - Si no hay intentos previos: result === null, el frontend muestra
+ *   el formulario vacío.
+ *
+ * El endpoint SIEMPRE devuelve este objeto (nunca `null` a nivel root)
+ * porque NestJS serializa `return null` como body vacío y rompe
+ * response.json() en el frontend. `result: null` es el caso "sin intentos".
+ *
+ * cooldownRemainingMs es 0 cuando ya no aplica (aprobado, o expiró, o
+ * nunca intentó).
+ */
+export interface LastQuizAttemptResponse {
+    result: QuizResult | null;
+    cooldownRemainingMs: number;
+}

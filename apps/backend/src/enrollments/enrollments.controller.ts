@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   Req,
   HttpCode,
@@ -29,6 +30,7 @@ import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { Enrollment } from './entities/enrollment.entity';
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
+import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use-case';
 
 /**
  * EnrollmentsController — Endpoints HTTP del sistema de matrículas.
@@ -56,6 +58,7 @@ export class EnrollmentsController {
     private readonly saveWatchProgressUseCase: SaveWatchProgressUseCase,
     private readonly getCourseProgressUseCase: GetCourseProgressUseCase,
     private readonly submitQuizUseCase: SubmitQuizUseCase,
+    private readonly getLastQuizAttemptUseCase: GetLastQuizAttemptUseCase,
   ) {}
 
   @Post('me')
@@ -131,6 +134,32 @@ export class EnrollmentsController {
       dto.lessonId,
       dto.courseId,
       dto.answers,
+    );
+  }
+
+  /**
+   * GET /enrollments/me/quiz/:lessonId/last-attempt — Último intento del
+   * alumno en un quiz específico, con cooldown restante si aplica.
+   *
+   * El frontend lo llama al montar el QuizPlayer para decidir qué mostrar:
+   *   - null   → no hay intentos previos, muestra el formulario vacío.
+   *   - passed → mantiene la pantalla de resultados APROBADA (permanente).
+   *   - !passed + cooldownRemainingMs > 0 → resultados + countdown.
+   *   - !passed + cooldownRemainingMs === 0 → resultados + botón reintentar.
+   *
+   * courseId viene como query param porque el use case lo necesita para
+   * el ownership check y para enriquecer hints "Repasa: [lección]".
+   */
+  @Get('me/quiz/:lessonId/last-attempt')
+  async getLastQuizAttempt(
+    @Req() req: any,
+    @Param('lessonId', ParseUUIDPipe) lessonId: string,
+    @Query('courseId', ParseUUIDPipe) courseId: string,
+  ) {
+    return this.getLastQuizAttemptUseCase.execute(
+      req.user.id,
+      lessonId,
+      courseId,
     );
   }
 

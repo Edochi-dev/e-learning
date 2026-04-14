@@ -30,6 +30,11 @@ export class QuizAttemptRepository implements QuizAttemptGateway {
   /**
    * Busca el intento más reciente del alumno en este quiz.
    * ORDER BY submittedAt DESC + findOne = el último intento.
+   *
+   * Cargamos también la relación `answers` para que el consumidor pueda
+   * reconstruir los detalles del intento (qué opción eligió en cada
+   * pregunta, si acertó, etc.). SubmitQuizUseCase no las usa pero el
+   * overhead es mínimo y GetLastQuizAttemptUseCase sí las necesita.
    */
   async getLastQuizAttempt(
     userId: string,
@@ -38,6 +43,7 @@ export class QuizAttemptRepository implements QuizAttemptGateway {
     return this.quizAttemptRepository.findOne({
       where: { userId, lessonId },
       order: { submittedAt: 'DESC' },
+      relations: ['answers'],
     });
   }
 }

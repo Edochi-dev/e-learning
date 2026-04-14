@@ -19,7 +19,7 @@ export interface EnrollmentWithProgress {
     progressPercent: number;
 }
 
-import type { QuizResult, QuizAnswer } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
 
 /**
  * EnrollmentGateway (Frontend) — Contrato para las operaciones de matrículas.
@@ -54,4 +54,14 @@ export interface EnrollmentGateway {
 
     /** Envía las respuestas de un quiz y devuelve el resultado con feedback */
     submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult>;
+
+    /**
+     * Devuelve el último intento del alumno en un quiz.
+     * Si no hay intentos previos, response.result es null (el objeto raíz
+     * siempre existe para que el JSON sea válido).
+     * El QuizPlayer lo usa al montar para decidir si mostrar el formulario
+     * o la pantalla de resultados (aprobado permanente / reprobado con
+     * cooldown).
+     */
+    getLastQuizAttempt(lessonId: string, courseId: string): Promise<LastQuizAttemptResponse>;
 }
