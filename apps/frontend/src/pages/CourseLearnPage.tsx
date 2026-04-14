@@ -93,6 +93,29 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
      */
     const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
 
+    /**
+     * isSidebarOpen: controla el temario colapsable.
+     *
+     * Al montar, leemos localStorage: si la alumna ya eligió un estado,
+     * lo respetamos. Si no hay preferencia guardada, usamos un default
+     * razonable — abierto en desktop (ancho ≥ 768px) donde hay espacio
+     * sobrado, cerrado en mobile para que el video tome toda la pantalla.
+     *
+     * La persistencia hace que la elección sobreviva entre sesiones y
+     * lecciones — si cerró el temario, sigue cerrado al cambiar de
+     * lección o al volver al curso mañana.
+     */
+    const SIDEBAR_STORAGE_KEY = 'course-learn.sidebar-open';
+    const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
+        const stored = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+        if (stored !== null) return stored === 'true';
+        return typeof window !== 'undefined' ? window.innerWidth >= 768 : true;
+    });
+
+    useEffect(() => {
+        localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isSidebarOpen));
+    }, [isSidebarOpen]);
+
     // watchProgress: porcentaje del video actual que el alumno ha visto (0-100).
     const [watchProgress, setWatchProgress] = useState(0);
     const lastReportedProgressRef = useRef(0);
@@ -262,7 +285,25 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     const nextLesson = activeLessonIndex < course.lessons.length - 1 ? course.lessons[activeLessonIndex + 1] : null;
 
     return (
-        <div className="course-learn">
+        <div className={`course-learn ${isSidebarOpen ? '' : 'course-learn--sidebar-closed'}`}>
+            {/* Lengüeta para ABRIR el temario — pegada al borde derecho
+                del viewport. Solo visible cuando el sidebar está cerrado;
+                se desvanece suavemente al abrir para no flotar sobre el
+                video. El botón de CERRAR vive adentro del sidebar header,
+                así nunca sobresale al main cuando el temario está visible. */}
+            <button
+                type="button"
+                className="course-learn__sidebar-opener"
+                onClick={() => setIsSidebarOpen(true)}
+                aria-expanded={isSidebarOpen}
+                aria-controls="course-learn-sidebar"
+                aria-hidden={isSidebarOpen}
+                tabIndex={isSidebarOpen ? -1 : 0}
+            >
+                <span className="course-learn__sidebar-opener-chevron" aria-hidden="true">‹</span>
+                <span className="course-learn__sidebar-opener-label">Temario</span>
+            </button>
+
             {/* ── Área principal: Video + info ── */}
             <div className="course-learn__main">
                 {/* Contenido principal: Video, Quiz o Corrección según tipo */}
@@ -383,8 +424,17 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
             </div>
 
             {/* ── Sidebar: Lista de lecciones ── */}
-            <aside className="course-learn__sidebar">
+            <aside id="course-learn-sidebar" className="course-learn__sidebar" aria-hidden={!isSidebarOpen}>
                 <div className="course-learn__sidebar-header">
+                    <button
+                        type="button"
+                        className="course-learn__sidebar-closer"
+                        onClick={() => setIsSidebarOpen(false)}
+                        aria-label="Cerrar temario"
+                        title="Cerrar temario"
+                    >
+                        ›
+                    </button>
                     <h3>Temario</h3>
                     <span className="course-learn__sidebar-count">
                         {completedLessonIds.size} / {course.lessons.length}

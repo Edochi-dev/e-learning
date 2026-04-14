@@ -4451,6 +4451,8 @@ input:checked+.slider .icon-moon {
      footer globalmente (afectaría otras páginas); lo compenso con un
      margin-bottom negativo que "absorbe" su margin-top. */
   margin-bottom: -6rem;
+  /* Referencia para el posicionamiento absoluto de la lengüeta toggle. */
+  position: relative;
 }
 
 /* ── Área principal (video + info) ── */
@@ -4641,7 +4643,11 @@ input:checked+.slider .icon-moon {
    `position: sticky` + `height` fijo (no max-height) hace que el
    temario siempre ocupe toda la altura visible y te "persiga" al
    scrollear. Sin `height` fijo, si la lista es corta, el sidebar se
-   encoge al contenido y queda un hueco vacío raro al lado del main. */
+   encoge al contenido y queda un hueco vacío raro al lado del main.
+
+   width animado de 320px → 0 para colapsar. overflow: hidden oculta
+   el contenido durante la transición (sin esto, el header/lista se
+   verían achatados asquerosamente al encogerse). */
 
 .course-learn__sidebar {
   width: 320px;
@@ -4653,6 +4659,96 @@ input:checked+.slider .icon-moon {
   height: calc(100vh - 80px);
   position: sticky;
   top: 80px;
+  overflow: hidden;
+  transition: width 350ms ease, border-left-color 350ms ease;
+}
+
+.course-learn--sidebar-closed .course-learn__sidebar {
+  width: 0;
+  border-left-color: transparent;
+}
+
+/* ── Lengüeta para ABRIR el temario ──
+   position: fixed para que quede pegada al borde derecho del viewport
+   independiente del scroll de la página. Solo aparece cuando el sidebar
+   está cerrado — cuando se abre, se desvanece y se desliza hacia fuera
+   para no flotar sobre el video. */
+
+.course-learn__sidebar-opener {
+  position: fixed;
+  /* top posicionada para que el CENTRO vertical de la lengüeta coincida
+     con el CENTRO del botón de cerrar del sidebar-header.
+     Cálculo: 80px (alto del nav global) + 1.25rem (padding-top del
+     sidebar-header) + 14px (mitad del alto del closer). Con el
+     translateY(-50%) que centra la lengüeta respecto a su propio alto,
+     ambos elementos quedan alineados en la misma línea horizontal. */
+  top: calc(80px + 1.25rem + 14px);
+  right: 0;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-right: none;
+  border-top-left-radius: var(--radius-md);
+  border-bottom-left-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: var(--shadow-sm);
+  transition: opacity 300ms ease, transform 300ms ease, background 0.2s, color 0.2s;
+  opacity: 1;
+}
+
+.course-learn__sidebar-opener:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Cuando el sidebar está abierto, la lengüeta se desvanece y se desliza
+   hacia afuera por la derecha. pointer-events: none evita que siga
+   siendo clickeable (aunque invisible) mientras se desvanece. */
+.course-learn:not(.course-learn--sidebar-closed) .course-learn__sidebar-opener {
+  opacity: 0;
+  transform: translate(100%, -50%);
+  pointer-events: none;
+}
+
+.course-learn__sidebar-opener-chevron {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+/* ── Botón para CERRAR desde dentro del sidebar ──
+   Vive en el sidebar-header. Al estar contenido en el sidebar, no
+   sobresale al main ni al video cuando el temario está visible. */
+
+.course-learn__sidebar-closer {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm, var(--radius-md));
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 1.15rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+
+.course-learn__sidebar-closer:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.08);
 }
 
 /* La lista de lecciones ocupa todo el espacio restante del sidebar
