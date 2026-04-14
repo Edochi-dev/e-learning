@@ -116,7 +116,7 @@ export interface CreateCoursePayload {
 // qué campos son válidos según el tipo. Imposible mezclar campos de
 // un tipo con otro — el compilador lo impide.
 
-interface CreateClassLessonPayload {
+export interface CreateClassLessonPayload {
     type: typeof LessonType.CLASS;
     title: string;
     description: string;
@@ -125,7 +125,7 @@ interface CreateClassLessonPayload {
     isLive?: boolean;
 }
 
-interface CreateExamLessonPayload {
+export interface CreateExamLessonPayload {
     type: typeof LessonType.EXAM;
     title: string;
     description: string;
@@ -133,7 +133,7 @@ interface CreateExamLessonPayload {
     questions: CreateQuizQuestionPayload[];
 }
 
-interface CreateCorrectionLessonPayload {
+export interface CreateCorrectionLessonPayload {
     type: typeof LessonType.CORRECTION;
     title: string;
     description: string;
@@ -170,7 +170,7 @@ export interface UpdateCoursePayload {
 // (actualización parcial). El `type` es obligatorio porque al actualizar
 // ya sabés qué tipo de lección es — y eso determina qué campos aceptás.
 
-interface UpdateClassLessonPayload {
+export interface UpdateClassLessonPayload {
     type: typeof LessonType.CLASS;
     title?: string;
     description?: string;
@@ -179,7 +179,7 @@ interface UpdateClassLessonPayload {
     isLive?: boolean;
 }
 
-interface UpdateExamLessonPayload {
+export interface UpdateExamLessonPayload {
     type: typeof LessonType.EXAM;
     title?: string;
     description?: string;
@@ -187,7 +187,7 @@ interface UpdateExamLessonPayload {
     questions?: CreateQuizQuestionPayload[];
 }
 
-interface UpdateCorrectionLessonPayload {
+export interface UpdateCorrectionLessonPayload {
     type: typeof LessonType.CORRECTION;
     title?: string;
     description?: string;

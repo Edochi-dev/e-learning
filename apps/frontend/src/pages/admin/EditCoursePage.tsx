@@ -3,7 +3,20 @@ import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
 import type { CourseGateway } from '../../gateways/CourseGateway';
-import { LessonType, type Course, type Lesson, type UpdateCoursePayload, type CreateLessonPayload, type UpdateLessonPayload } from '@maris-nails/shared';
+import {
+    LessonType,
+    type Course,
+    type Lesson,
+    type UpdateCoursePayload,
+    type CreateLessonPayload,
+    type CreateClassLessonPayload,
+    type CreateExamLessonPayload,
+    type CreateCorrectionLessonPayload,
+    type UpdateLessonPayload,
+    type UpdateClassLessonPayload,
+    type UpdateExamLessonPayload,
+    type UpdateCorrectionLessonPayload,
+} from '@maris-nails/shared';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import { QuizQuestionBuilder } from '../../components/QuizQuestionBuilder';
 import { useToast } from '../../components/Toast';
@@ -91,8 +104,13 @@ function SortableLessonItem({
                     <div className="form-group" style={{ marginBottom: 0 }}>
                         <textarea name="description" value={editLessonForm.description} onChange={onEditChange} placeholder="Descripción" rows={2} required />
                     </div>
-                    {/* Campos de video: solo para tipo class */}
-                    {lesson.type === LessonType.CLASS && (
+                    {/*
+                        Narrow-eamos por `editLessonForm.type` (no por `lesson.type`).
+                        Así TypeScript sabe que dentro del bloque, editLessonForm
+                        es exactamente el variant correspondiente y los campos
+                        específicos (isLive, passingScore, etc.) existen.
+                    */}
+                    {editLessonForm.type === LessonType.CLASS && (
                         <>
                             <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
@@ -100,14 +118,13 @@ function SortableLessonItem({
                             </div>
                             <div className="form-row">
                                 {!editLessonForm.isLive && (
-                                    <input type="text" name="duration" value={editLessonForm.duration} onChange={onEditChange} placeholder="Duración" required />
+                                    <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
                                 )}
-                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl} onChange={onEditChange} placeholder="URL del Video" required />
+                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="URL del Video" required />
                             </div>
                         </>
                     )}
-                    {/* Campos de examen */}
-                    {lesson.type === LessonType.EXAM && (
+                    {editLessonForm.type === LessonType.EXAM && (
                         <>
                             <div className="form-group" style={{ marginBottom: '0.5rem' }}>
                                 <label>Respuestas correctas para aprobar</label>
@@ -129,8 +146,7 @@ function SortableLessonItem({
                             </div>
                         </>
                     )}
-                    {/* Campos de corrección */}
-                    {lesson.type === LessonType.CORRECTION && (
+                    {editLessonForm.type === LessonType.CORRECTION && (
                         <>
                             <div className="form-group" style={{ marginBottom: '0.5rem' }}>
                                 <label>Instrucciones para la alumna</label>
@@ -201,6 +217,81 @@ function SortableLessonItem({
 }
 
 // ============================================================
+// Factories de payloads — una por cada variant de la unión discriminada.
+//
+// Por qué existen:
+// CreateLessonPayload / UpdateLessonPayload son uniones discriminadas
+// por `type`. Un objeto válido DEBE calzar exactamente uno de sus variants
+// (class, exam o correction) — no puede mezclar campos de varios.
+//
+// Construir el objeto "a mano" con todos los campos mezclados produce un
+// valor que no calza NINGÚN variant, y el compilador se queja.
+//
+// La anotación de retorno explícita (": CreateClassLessonPayload") hace
+// que TypeScript valide que el objeto cumple EXACTAMENTE el contrato del
+// variant — ni un campo de más, ni uno de menos. Esto es un contrato
+// comprobado por el compilador.
+// ============================================================
+
+const emptyClassLesson = (): CreateClassLessonPayload => ({
+    type: LessonType.CLASS,
+    title: '',
+    description: '',
+    videoUrl: '',
+    duration: '',
+    isLive: false,
+});
+
+const emptyExamLesson = (): CreateExamLessonPayload => ({
+    type: LessonType.EXAM,
+    title: '',
+    description: '',
+    passingScore: 1,
+    questions: [],
+});
+
+const emptyCorrectionLesson = (): CreateCorrectionLessonPayload => ({
+    type: LessonType.CORRECTION,
+    title: '',
+    description: '',
+    referenceImageUrl: '',
+    instructions: '',
+});
+
+// Factories para el form de EDICIÓN — construyen un variant de Update
+// a partir de una Lesson existente. Al igual que las Create factories,
+// garantizan que el objeto calza EXACTAMENTE un variant de la unión.
+
+const toUpdateClassForm = (lesson: Lesson): UpdateClassLessonPayload => ({
+    type: LessonType.CLASS,
+    title: lesson.title,
+    description: lesson.description,
+    videoUrl: lesson.videoData?.videoUrl ?? '',
+    duration: lesson.videoData?.duration ?? '',
+    isLive: lesson.videoData?.isLive ?? false,
+});
+
+const toUpdateExamForm = (lesson: Lesson): UpdateExamLessonPayload => ({
+    type: LessonType.EXAM,
+    title: lesson.title,
+    description: lesson.description,
+    passingScore: lesson.examData?.passingScore ?? 1,
+    questions: lesson.questions?.map(q => ({
+        text: q.text,
+        relatedLessonId: q.relatedLessonId,
+        options: q.options?.map(o => ({ text: o.text, isCorrect: o.isCorrect })) ?? [],
+    })) ?? [],
+});
+
+const toUpdateCorrectionForm = (lesson: Lesson): UpdateCorrectionLessonPayload => ({
+    type: LessonType.CORRECTION,
+    title: lesson.title,
+    description: lesson.description,
+    referenceImageUrl: lesson.assignmentData?.referenceImageUrl ?? '',
+    instructions: lesson.assignmentData?.instructions ?? '',
+});
+
+// ============================================================
 // Componente principal
 // ============================================================
 
@@ -246,35 +337,29 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     // Estado del panel "Agregar lección" (cerrado por defecto)
     const [isAddingLesson, setIsAddingLesson] = useState(false);
 
-    // Estado del formulario de CREAR lección
+    // Estado del formulario de CREAR lección.
+    // Arranca como una lección de clase vacía (variant class de la unión).
+    // Cuando el usuario cambia de tipo, reemplazamos TODO el form con el
+    // variant correspondiente — no hacemos spread, porque mezclar campos
+    // viola el contrato de la unión discriminada.
     const [isSubmittingLesson, setIsSubmittingLesson] = useState(false);
-    const [lessonForm, setLessonForm] = useState<CreateLessonPayload>({
-        title: '',
-        description: '',
-        type: LessonType.CLASS,
-        duration: '',
-        videoUrl: '',
-        isLive: false,
-        passingScore: undefined,
-        questions: [],
-        referenceImageUrl: '',
-        instructions: '',
-    });
+    const [lessonForm, setLessonForm] = useState<CreateLessonPayload>(emptyClassLesson);
     // Archivo de imagen de referencia (para correcciones).
     // Se sube primero, se obtiene la URL, y se guarda en lessonForm.referenceImageUrl.
     const [referenceImageFile, setReferenceImageFile] = useState<File | null>(null);
 
-    // Estado de la edición inline de lecciones
+    // Estado de la edición inline de lecciones.
+    // Arranca como un form de class vacío; cuando el usuario hace click en
+    // "Editar" sobre una lesson, lo reemplazamos con el variant que
+    // corresponda al tipo de esa lesson (ver startEditing).
     const [editingLessonId, setEditingLessonId] = useState<string | null>(null);
     const [editLessonForm, setEditLessonForm] = useState<UpdateLessonPayload>({
+        type: LessonType.CLASS,
         title: '',
         description: '',
-        type: LessonType.CLASS,
-        duration: '',
         videoUrl: '',
+        duration: '',
         isLive: false,
-        instructions: '',
-        referenceImageUrl: '',
     });
 
     // Configuración de sensores de dnd-kit:
@@ -447,6 +532,24 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         }));
     };
 
+    // Cambia el tipo de la lección que se está creando, preservando los
+    // campos COMUNES (title, description) y descartando los específicos del
+    // tipo anterior. Es decir: si venías llenando una clase y cambiás a
+    // examen, el videoUrl se pierde (ya no aplica) pero el título se conserva.
+    //
+    // OJO: no hacemos `{ ...prev, type: newType }`. Eso dejaría campos del
+    // tipo anterior flotando en el objeto, violando el contrato de la unión
+    // discriminada y produciendo un estado "imposible" que no calza ningún
+    // variant. Siempre reemplazamos con la factory del nuevo tipo.
+    const switchLessonType = (newType: LessonType) => {
+        setLessonForm(prev => {
+            const common = { title: prev.title, description: prev.description };
+            if (newType === LessonType.CLASS) return { ...emptyClassLesson(), ...common };
+            if (newType === LessonType.EXAM) return { ...emptyExamLesson(), ...common };
+            return { ...emptyCorrectionLesson(), ...common };
+        });
+    };
+
     const handleAddLesson = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!courseId) return;
@@ -462,7 +565,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             }
 
             await courseGateway.addLesson(courseId, payload);
-            setLessonForm({ title: '', description: '', type: LessonType.CLASS, duration: '', videoUrl: '', isLive: false, passingScore: undefined, questions: [], referenceImageUrl: '', instructions: '' });
+            setLessonForm(emptyClassLesson());
             setReferenceImageFile(null);
             setIsAddingLesson(false);
             toast.success('¡Lección agregada exitosamente!');
@@ -492,27 +595,19 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     // --- Handlers de lecciones: EDITAR inline ---
 
+    // Al empezar a editar, construimos el form usando la factory del variant
+    // que corresponde al tipo REAL de la lesson. Así el editLessonForm arranca
+    // como un Update{X}LessonPayload concreto, no una unión ambigua — y el
+    // compilador puede hacer type narrowing correctamente en el render.
     const startEditing = (lesson: Lesson) => {
         setEditingLessonId(lesson.id);
-        setEditLessonForm({
-            type: lesson.type,
-            title: lesson.title,
-            description: lesson.description,
-            duration: lesson.videoData?.duration,
-            videoUrl: lesson.videoData?.videoUrl,
-            isLive: lesson.videoData?.isLive,
-            passingScore: lesson.examData?.passingScore,
-            questions: lesson.questions?.map(q => ({
-                text: q.text,
-                relatedLessonId: q.relatedLessonId,
-                options: q.options?.map(o => ({
-                    text: o.text,
-                    isCorrect: o.isCorrect,
-                })) ?? [],
-            })),
-            referenceImageUrl: lesson.assignmentData?.referenceImageUrl,
-            instructions: lesson.assignmentData?.instructions,
-        });
+        if (lesson.type === LessonType.CLASS) {
+            setEditLessonForm(toUpdateClassForm(lesson));
+        } else if (lesson.type === LessonType.EXAM) {
+            setEditLessonForm(toUpdateExamForm(lesson));
+        } else {
+            setEditLessonForm(toUpdateCorrectionForm(lesson));
+        }
     };
 
     const cancelEditing = () => setEditingLessonId(null);
@@ -744,21 +839,21 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                     <button
                                         type="button"
                                         className={`lesson-type-option ${lessonForm.type === LessonType.CLASS ? 'active' : ''}`}
-                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.CLASS }))}
+                                        onClick={() => switchLessonType(LessonType.CLASS)}
                                     >
                                         🎬 Clase (video)
                                     </button>
                                     <button
                                         type="button"
                                         className={`lesson-type-option ${lessonForm.type === LessonType.EXAM ? 'active' : ''}`}
-                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.EXAM }))}
+                                        onClick={() => switchLessonType(LessonType.EXAM)}
                                     >
                                         📝 Examen
                                     </button>
                                     <button
                                         type="button"
                                         className={`lesson-type-option ${lessonForm.type === LessonType.CORRECTION ? 'active' : ''}`}
-                                        onClick={() => setLessonForm(prev => ({ ...prev, type: LessonType.CORRECTION }))}
+                                        onClick={() => switchLessonType(LessonType.CORRECTION)}
                                     >
                                         ✏️ Corrección
                                     </button>
