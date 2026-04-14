@@ -49,6 +49,20 @@
   /* Transitions */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  /* ── Responsive tokens ─────────────────────────────────────────
+     Breakpoints documentados (CSS no permite variables en @media,
+     pero los listamos acá para que TODO el equipo use los mismos):
+       480px  teléfonos pequeños (bp-xs)
+       640px  teléfonos (bp-sm)
+       768px  tablets — nuestro breakpoint "mobile" principal (bp-md)
+      1024px  desktops chicos (bp-lg)
+      1280px  desktops grandes (bp-xl)
+
+     Uso en los componentes: `@media (max-width: 768px) { ... }`
+  */
+  --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
+  --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
 }
 
 /* === DARK MODE === */
@@ -85,6 +99,51 @@
     radial-gradient(ellipse 60% 50% at 0%   100%,  rgba(212, 165, 116, 0.14) 0%, transparent 55%),
     radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(253, 121, 168, 0.06) 0%, transparent 50%);
   background-attachment: fixed;
+}
+
+/* === RESET UNIVERSAL ===
+   box-sizing border-box hace que el ancho declarado INCLUYA padding y
+   border, no los sume por fuera. Sin esto, un `width: 100%` + padding
+   de 1rem se pasa del contenedor padre y causa scroll horizontal. Es
+   el fix más común del mundo moderno y el que evita 80% de los
+   desbordes en mobile. */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* === FIXES TRANSVERSALES MOBILE ===
+   Estos fixes aplican en TODO el sitio. No cambian el diseño — solo
+   previenen bugs típicos de mobile (overflow horizontal, zoom automático
+   en iOS al focusear un input, touch targets muy chicos). */
+
+/* Medios responsivos por default: previene overflow horizontal cuando
+   una imagen viene más ancha que su contenedor. `height: auto` mantiene
+   la proporción. `display: block` evita espacios fantasma por baseline. */
+img, video, picture {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* En mobile (≤768px), los inputs con font-size < 16px causan que iOS
+   haga zoom automático al enfocarlos — rompe el layout y es molesto.
+   Forzamos 16px mínimo. Los botones conocidos aumentan su alto mínimo
+   a 44px (Apple HIG / WCAG AA): cualquier cosa más chica es incómoda
+   de pulsar con el pulgar. */
+@media (max-width: 768px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-cancel,
+  .btn-delete,
+  .btn-edit {
+    min-height: var(--touch-min);
+  }
 }
 
 /* === GLOBAL RESETS === */
