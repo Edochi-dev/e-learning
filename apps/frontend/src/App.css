@@ -4445,6 +4445,12 @@ input:checked+.slider .icon-moon {
   display: flex;
   min-height: calc(100vh - 80px);
   background: var(--bg);
+  /* El footer global tiene margin-top: 6rem (pensado para páginas tipo
+     landing/catálogo). En esta página de estudio ese aire sobra — el
+     sidebar y el main deberían terminar pegados al footer. No toco el
+     footer globalmente (afectaría otras páginas); lo compenso con un
+     margin-bottom negativo que "absorbe" su margin-top. */
+  margin-bottom: -6rem;
 }
 
 /* ── Área principal (video + info) ── */
@@ -4452,92 +4458,31 @@ input:checked+.slider .icon-moon {
 .course-learn__main {
   flex: 1;
   min-width: 0;
-  padding: 1.5rem 2rem;
+  padding: 2rem 2rem 2.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
 }
 
-.course-learn__header {
-  width: 75%;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.course-learn__back {
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color 0.2s;
-}
-
-.course-learn__back:hover {
-  color: var(--primary);
-}
-
-.course-learn__course-title {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  color: var(--text-secondary);
-  margin: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .course-learn__video {
-  width: 75%;
+  width: 73%;
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
 }
 
-/* Barra de progreso de visualización */
-
-.course-learn__watch-progress {
-  width: 75%;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.course-learn__watch-progress-bar {
-  height: 4px;
-  background: var(--border);
-  border-radius: var(--radius-full);
-  overflow: hidden;
-}
-
-.course-learn__watch-progress-fill {
-  height: 100%;
-  background: var(--primary);
-  border-radius: var(--radius-full);
-  transition: width 0.4s ease;
-}
-
-.course-learn__watch-progress-label {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
 /* Info de la lección */
 
 .course-learn__lesson-info {
-  width: 75%;
+  width: 73%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.course-learn__lesson-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  flex-wrap: wrap;
+  /* flex: 1 hace que el lesson-info crezca para ocupar todo el espacio
+     vertical sobrante del main. Así `margin-top: auto` en el nav de
+     adentro lo ancla al bottom en vez de quedar pegado a la descripción. */
+  flex: 1;
 }
 
 .course-learn__lesson-title {
@@ -4553,9 +4498,23 @@ input:checked+.slider .icon-moon {
   margin: 0;
 }
 
-/* Botón "Marcar como completada" */
+/* Botón "Marcar como completada".
+   Integra el progreso de visualización como un "fill" interno que crece
+   con la CSS custom property --watch-fill (seteada desde JSX con el
+   porcentaje visto). Así el botón es simultáneamente CTA + indicador
+   de progreso, sin necesitar una barra separada debajo del video. */
+
+.course-learn__complete-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
 
 .course-learn__complete-btn {
+  position: relative;
+  overflow: hidden;
   padding: 0.6rem 1.25rem;
   border-radius: var(--radius-full);
   border: 2px solid var(--primary);
@@ -4564,8 +4523,29 @@ input:checked+.slider .icon-moon {
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.25s var(--ease-out);
+  transition: color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
   white-space: nowrap;
+}
+
+/* Fill interno que refleja --watch-fill. z-index: 0 lo deja detrás del
+   texto (que tiene z-index: 1 vía .course-learn__complete-btn-label).
+   Se tiñe con el primary — da la sensación de "se está llenando". */
+.course-learn__complete-btn--progress::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--watch-fill, 0%);
+  background: rgba(232, 67, 147, 0.18);
+  transition: width 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.course-learn__complete-btn-label {
+  position: relative;
+  z-index: 1;
 }
 
 .course-learn__complete-btn:hover:not(:disabled) {
@@ -4582,18 +4562,56 @@ input:checked+.slider .icon-moon {
 }
 
 .course-learn__complete-btn:disabled {
-  opacity: 0.7;
+  opacity: 0.85;
+  cursor: not-allowed;
 }
 
-/* Navegación anterior/siguiente */
+.course-learn__complete-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+/* Barra de controles de lección: prev | acción (completar) | next.
+   Grid 3 columnas 1fr auto 1fr garantiza:
+   - prev alineado a la izquierda en su columna (justify-self: start).
+   - acción centrada siempre (columna auto en el medio).
+   - next alineado a la derecha en su columna (justify-self: end).
+   Cuando falta prev o next, la columna queda vacía pero el botón central
+   sigue centrado en la grilla — no "salta" a un costado. */
 
 .course-learn__nav {
-  display: flex;
-  justify-content: space-between;
+  width: 73%;
+  display: grid;
+  /* minmax(0, 1fr) deja que las columnas laterales tomen todo el espacio
+     sobrante después del botón central, pero permite shrink si el contenido
+     del nav-btn tiene que hacer ellipsis. Sin el minmax(0,...), el grid
+     "infla" la columna al contenido y se come el espacio disponible. */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  margin-top: 0.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border);
+  gap: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.course-learn__nav-side {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+
+.course-learn__nav-side--prev {
+  justify-self: start;
+}
+
+.course-learn__nav-side--next {
+  justify-self: end;
+  justify-content: flex-end;
+}
+
+.course-learn__nav-action {
+  justify-self: center;
 }
 
 .course-learn__nav-btn {
@@ -4605,7 +4623,10 @@ input:checked+.slider .icon-moon {
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
-  max-width: 45%;
+  /* El botón ocupa todo el ancho disponible de su columna grid, con
+     ellipsis si el título de la lección es muy largo. Sin max-width
+     fijo: el layout grid ya restringe la columna. */
+  max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -4616,11 +4637,11 @@ input:checked+.slider .icon-moon {
   color: var(--primary);
 }
 
-.course-learn__nav-btn--next {
-  margin-left: auto;
-}
-
-/* ── Sidebar ── */
+/* ── Sidebar ──
+   `position: sticky` + `height` fijo (no max-height) hace que el
+   temario siempre ocupe toda la altura visible y te "persiga" al
+   scrollear. Sin `height` fijo, si la lista es corta, el sidebar se
+   encoge al contenido y queda un hueco vacío raro al lado del main. */
 
 .course-learn__sidebar {
   width: 320px;
@@ -4629,10 +4650,17 @@ input:checked+.slider .icon-moon {
   border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  max-height: calc(100vh - 80px);
+  height: calc(100vh - 80px);
   position: sticky;
   top: 80px;
+}
+
+/* La lista de lecciones ocupa todo el espacio restante del sidebar
+   (después del header) y scrollea internamente si es larga. */
+.course-learn__sidebar .course-learn__lesson-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .course-learn__sidebar-header {
@@ -4768,11 +4796,6 @@ input:checked+.slider .icon-moon {
 
   .course-learn__lesson-title {
     font-size: 1.35rem;
-  }
-
-  .course-learn__lesson-header {
-    flex-direction: column;
-    align-items: flex-start;
   }
 
   .course-learn__nav-btn {
