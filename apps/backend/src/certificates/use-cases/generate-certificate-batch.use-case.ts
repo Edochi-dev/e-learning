@@ -87,6 +87,10 @@ export class GenerateCertificateBatchUseCase {
       const qrBuffer = await this.qrGateway.generate(
         verificationUrl,
         pixelSize,
+        {
+          foregroundColor: template.qrStyle.foregroundColor,
+          backgroundColor: template.qrStyle.backgroundColor,
+        },
       );
 
       // Fecha de emisión en formato DD/MM/YYYY.

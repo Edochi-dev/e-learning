@@ -8,10 +8,14 @@ export class QrStyle {
   positionX: number;
   positionY: number;
   size: number;
+  foregroundColor: string;
+  backgroundColor: string;
 }
 
 export const DEFAULT_QR_STYLE: QrStyle = {
   positionX: 0,
   positionY: 0,
   size: 80,
+  foregroundColor: '#000000',
+  backgroundColor: '#ffffff',
 };

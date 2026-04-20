@@ -190,6 +190,8 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     const [nameColor,      setNameColor]      = useState(initialStyles?.nameStyle.color      ?? '#1a1a1a');
     const [nameAlign,      setNameAlign]      = useState<'left' | 'center'>(initialStyles?.nameStyle.align ?? 'left');
     const [qrSize,         setQrSize]         = useState(initialStyles?.qrStyle.size         ?? 90);
+    const [qrFgColor,     setQrFgColor]     = useState(initialStyles?.qrStyle.foregroundColor ?? '#000000');
+    const [qrBgColor,     setQrBgColor]     = useState(initialStyles?.qrStyle.backgroundColor ?? '#ffffff');
     const [showDate,       setShowDate]       = useState(initialStyles?.dateStyle.show       ?? true);
     const [dateFontSize,   setDateFontSize]   = useState(initialStyles?.dateStyle.fontSize   ?? 18);
     const [dateColor,      setDateColor]      = useState(initialStyles?.dateStyle.color      ?? '#1a1a1a');
@@ -288,6 +290,8 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     positionX: qrPct.x * pdfDims.w,
                     positionY: qrPct.y * pdfDims.h,
                     size: qrSize,
+                    foregroundColor: qrFgColor,
+                    backgroundColor: qrBgColor,
                 },
                 dateStyle: {
                     show: showDate,
@@ -449,7 +453,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     justifyContent: 'center',
                                                     overflow: 'hidden',
                                                 }}>
-                                                    <QRCodeSVG value="https://marsnailsacademy.com/certificados/ejemplo" size={displayQrSize()} />
+                                                    <QRCodeSVG value="https://marsnailsacademy.com/certificados/ejemplo" size={displayQrSize()} fgColor={qrFgColor} bgColor={qrBgColor} />
                                                 </div>
                                             </Draggable>
 
@@ -587,7 +591,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
 
                 <hr style={{ marginBottom: '1.25rem', borderColor: 'var(--border)' }} />
 
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ marginBottom: '1rem' }}>
                     <label className="form-label">Tamaño del QR</label>
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <input type="range" min={30} max={250} step={5} value={qrSize}
@@ -597,6 +601,28 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                             onChange={e => setQrSize(Math.min(250, Math.max(30, Number(e.target.value))))}
                             style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
                         <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                    <label className="form-label">Color del QR (módulos)</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input type="color" value={qrFgColor} onChange={e => setQrFgColor(e.target.value)}
+                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
+                        <input type="text" className="form-input" value={qrFgColor}
+                            onChange={e => setQrFgColor(e.target.value)}
+                            style={{ fontFamily: 'monospace', flex: 1 }} />
+                    </div>
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label">Color de fondo del QR</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input type="color" value={qrBgColor} onChange={e => setQrBgColor(e.target.value)}
+                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
+                        <input type="text" className="form-input" value={qrBgColor}
+                            onChange={e => setQrBgColor(e.target.value)}
+                            style={{ fontFamily: 'monospace', flex: 1 }} />
                     </div>
                 </div>
 

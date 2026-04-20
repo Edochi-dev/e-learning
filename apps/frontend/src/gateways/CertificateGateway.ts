@@ -22,6 +22,8 @@ export interface QrStyle {
     positionX: number;
     positionY: number;
     size: number;
+    foregroundColor?: string;
+    backgroundColor?: string;
 }
 
 export interface DateStyle {

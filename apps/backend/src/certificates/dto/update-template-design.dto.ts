@@ -2,6 +2,7 @@ import {
   IsNumber,
   IsString,
   IsBoolean,
+  IsOptional,
   Matches,
   Min,
   Max,
@@ -64,6 +65,18 @@ export class QrStyleDto {
   @Min(10)
   @Max(500)
   size: number;
+
+  @IsOptional()
+  @Matches(HEX_COLOR, {
+    message: 'foregroundColor must be a valid hex color (#RRGGBB)',
+  })
+  foregroundColor?: string;
+
+  @IsOptional()
+  @Matches(HEX_COLOR, {
+    message: 'backgroundColor must be a valid hex color (#RRGGBB)',
+  })
+  backgroundColor?: string;
 }
 
 export class DateStyleDto {

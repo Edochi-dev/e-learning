@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
 import { UpdateTemplateDesignDto } from '../dto/update-template-design.dto';
+import { DEFAULT_QR_STYLE } from '../value-objects/qr-style.vo';
 
 /**
  * UpdateTemplateDesignUseCase
@@ -28,7 +29,13 @@ export class UpdateTemplateDesignUseCase {
   ): Promise<CertificateTemplate> {
     return this.templateGateway.update(id, {
       nameStyle: dto.nameStyle,
-      qrStyle: dto.qrStyle,
+      qrStyle: {
+        ...dto.qrStyle,
+        foregroundColor:
+          dto.qrStyle.foregroundColor ?? DEFAULT_QR_STYLE.foregroundColor,
+        backgroundColor:
+          dto.qrStyle.backgroundColor ?? DEFAULT_QR_STYLE.backgroundColor,
+      },
       dateStyle: dto.dateStyle,
     });
   }
