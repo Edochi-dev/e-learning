@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Draggable from 'react-draggable';
 import { QRCodeSVG } from 'qrcode.react';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -217,43 +217,42 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     const pdfDims = { w: template.pageWidth, h: template.pageHeight };
 
     // ── Renderizar PDF ────────────────────────────────────────────────────────
-    // Guardamos el render task para cancelarlo si se invoca otra vez antes de
-    // terminar. Sin esto, pdfjs lanza "Cannot use the same canvas during
-    // multiple render() operations" cuando React re-renderiza el componente.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const renderTaskRef = useRef<any>(null);
-
-    const renderPdf = useCallback(async (source: File | Blob) => {
+    // React 18 StrictMode ejecuta useEffect dos veces en desarrollo.
+    // pdfjs no permite dos render() concurrentes en el mismo canvas.
+    // Solución: el cleanup del useEffect cancela el render anterior
+    // ANTES de que React invoque el efecto de nuevo.
+    useEffect(() => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
+        let cancelled = false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let renderTask: any = null;
 
-        // Cancelar render previo si aún está en curso
-        if (renderTaskRef.current) {
-            try { renderTaskRef.current.cancel(); } catch { /* ya terminó */ }
-            renderTaskRef.current = null;
-        }
+        (async () => {
+            const pdf  = await pdfjsLib.getDocument({ data: await pdfSource.arrayBuffer() }).promise;
+            if (cancelled) return;
+            const page = await pdf.getPage(1);
+            if (cancelled) return;
+            const viewport = page.getViewport({ scale: 1 });
+            const scale = Math.min(780 / viewport.width, 1.5);
+            const sv = page.getViewport({ scale });
 
-        const pdf  = await pdfjsLib.getDocument({ data: await source.arrayBuffer() }).promise;
-        const page = await pdf.getPage(1);
-        const viewport = page.getViewport({ scale: 1 });
-        const scale = Math.min(780 / viewport.width, 1.5);
-        const sv = page.getViewport({ scale });
-
-        canvas.width  = sv.width;
-        canvas.height = sv.height;
-        const task = page.render({ canvasContext: canvas.getContext('2d')!, viewport: sv, canvas });
-        renderTaskRef.current = task;
-        await task.promise;
-        renderTaskRef.current = null;
-
-        setCanvasRendered(r => r + 1);
-    }, []);
-
-    useEffect(() => {
-        renderPdf(pdfSource).catch((err: unknown) => {
-            setError(err instanceof Error ? err.message : 'Error al renderizar el PDF');
+            canvas.width  = sv.width;
+            canvas.height = sv.height;
+            renderTask = page.render({ canvasContext: canvas.getContext('2d')!, viewport: sv, canvas });
+            await renderTask.promise;
+            if (!cancelled) setCanvasRendered(r => r + 1);
+        })().catch((err: unknown) => {
+            if (!cancelled) setError(err instanceof Error ? err.message : 'Error al renderizar el PDF');
         });
-    }, [pdfSource, renderPdf]);
+
+        return () => {
+            cancelled = true;
+            if (renderTask) {
+                try { renderTask.cancel(); } catch { /* ya terminó */ }
+            }
+        };
+    }, [pdfSource]);
 
     // Captura el ancho del viewport una vez al montar.
     useLayoutEffect(() => {
