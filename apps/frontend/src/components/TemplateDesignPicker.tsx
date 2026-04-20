@@ -217,9 +217,21 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     const pdfDims = { w: template.pageWidth, h: template.pageHeight };
 
     // ── Renderizar PDF ────────────────────────────────────────────────────────
+    // Guardamos el render task para cancelarlo si se invoca otra vez antes de
+    // terminar. Sin esto, pdfjs lanza "Cannot use the same canvas during
+    // multiple render() operations" cuando React re-renderiza el componente.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const renderTaskRef = useRef<any>(null);
+
     const renderPdf = useCallback(async (source: File | Blob) => {
         if (!canvasRef.current) return;
         const canvas = canvasRef.current;
+
+        // Cancelar render previo si aún está en curso
+        if (renderTaskRef.current) {
+            try { renderTaskRef.current.cancel(); } catch { /* ya terminó */ }
+            renderTaskRef.current = null;
+        }
 
         const pdf  = await pdfjsLib.getDocument({ data: await source.arrayBuffer() }).promise;
         const page = await pdf.getPage(1);
@@ -229,7 +241,10 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
 
         canvas.width  = sv.width;
         canvas.height = sv.height;
-        await page.render({ canvasContext: canvas.getContext('2d')!, viewport: sv, canvas }).promise;
+        const task = page.render({ canvasContext: canvas.getContext('2d')!, viewport: sv, canvas });
+        renderTaskRef.current = task;
+        await task.promise;
+        renderTaskRef.current = null;
 
         setCanvasRendered(r => r + 1);
     }, []);
