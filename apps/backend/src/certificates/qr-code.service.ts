@@ -101,7 +101,7 @@ export class QrCodeService implements QrCodeGateway {
     }
 
     // 5. Logo con margen circular limpio
-    const logoBuffer = options?.logoBuffer ?? (await this.loadDefaultLogo());
+    const logoBuffer = options?.logoBuffer ?? this.loadDefaultLogo();
     if (logoBuffer) {
       await this.drawLogoOnCanvas(ctx, logoBuffer, pixelSize, bgColor);
     }
@@ -220,7 +220,7 @@ export class QrCodeService implements QrCodeGateway {
     bgColor: string,
   ): Promise<void> {
     const logo = await loadImage(logoBuffer);
-    const logoSize = pixelSize * 0.20;
+    const logoSize = pixelSize * 0.2;
     const logoPadding = logoSize * 0.25;
     const totalLogoArea = logoSize + logoPadding * 2;
 
@@ -240,7 +240,7 @@ export class QrCodeService implements QrCodeGateway {
    * Carga el logo por defecto desde el filesystem.
    * Lo cachea en memoria tras la primera lectura — el logo no cambia en runtime.
    */
-  private async loadDefaultLogo(): Promise<Buffer | null> {
+  private loadDefaultLogo(): Buffer | null {
     if (this.cachedLogo) return this.cachedLogo;
 
     if (!fs.existsSync(this.logoPath)) {

@@ -228,6 +228,10 @@ describe('GenerateCertificateBatchUseCase', () => {
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'https://maris-nails.com/certificados/cert-uuid-123',
       expect.any(Number),
+      expect.objectContaining({
+        foregroundColor: undefined,
+        backgroundColor: undefined,
+      }),
     );
   });
 
@@ -246,6 +250,10 @@ describe('GenerateCertificateBatchUseCase', () => {
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'http://localhost:5173/certificados/cert-uuid-123',
       expect.any(Number),
+      expect.objectContaining({
+        foregroundColor: undefined,
+        backgroundColor: undefined,
+      }),
     );
   });
 
@@ -267,7 +275,11 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
 
-    expect(qrGateway.generate).toHaveBeenCalledWith(expect.any(String), 300);
+    expect(qrGateway.generate).toHaveBeenCalledWith(
+      expect.any(String),
+      300,
+      expect.any(Object),
+    );
   });
 
   it('congela el templateSnapshot al persistir el certificado (no lo lee de la plantilla viva después)', async () => {

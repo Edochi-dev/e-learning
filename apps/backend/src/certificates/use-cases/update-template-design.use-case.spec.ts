@@ -55,7 +55,11 @@ describe('UpdateTemplateDesignUseCase', () => {
 
     expect(gateway.update).toHaveBeenCalledWith('tpl-1', {
       nameStyle: dto.nameStyle,
-      qrStyle: dto.qrStyle,
+      qrStyle: {
+        ...dto.qrStyle,
+        foregroundColor: '#000000',
+        backgroundColor: '#ffffff',
+      },
       dateStyle: dto.dateStyle,
     });
     expect(result).toBe(updated);
