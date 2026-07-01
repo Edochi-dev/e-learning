@@ -626,7 +626,7 @@ a {
   font-size: 0.92rem;
   letter-spacing: 0.02em;
   box-shadow: 0 4px 20px var(--primary-glow);
-  transition: all 0.35s var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   border: none;
   position: relative;
   overflow: hidden;
@@ -644,6 +644,14 @@ a {
 .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 32px var(--primary-glow);
+}
+
+/* Feedback de presión: al hacer clic el botón se "hunde" (menos elevación +
+   leve encogimiento). Le da sensación física a la interacción. */
+.btn-primary:active {
+  transform: translateY(-1px) scale(0.98);
+  box-shadow: 0 3px 14px var(--primary-glow);
+  transition-duration: var(--dur-fast);
 }
 
 .btn-primary:hover::before {
@@ -668,7 +676,8 @@ a {
   font-weight: 600;
   font-size: 0.9rem;
   border: 1.5px solid var(--border-strong);
-  transition: all 0.35s var(--ease-out);
+  transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
 
 .btn-secondary:hover {
@@ -676,6 +685,11 @@ a {
   color: var(--primary);
   background: rgba(232, 67, 147, 0.04);
   transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0) scale(0.98);
+  transition-duration: var(--dur-fast);
 }
 
 /* ─── Paginación del catálogo ────────────────────────────── */
@@ -2077,7 +2091,9 @@ input:checked+.slider .icon-moon {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
   font-family: var(--font-body);
 }
 
@@ -2086,6 +2102,11 @@ input:checked+.slider .icon-moon {
   color: white;
   border-color: var(--primary);
   box-shadow: 0 4px 12px var(--primary-glow);
+}
+
+.btn-edit:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-fast);
 }
 
 .btn-delete {
@@ -2097,7 +2118,9 @@ input:checked+.slider .icon-moon {
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
   font-family: var(--font-body);
 }
 
@@ -2106,6 +2129,11 @@ input:checked+.slider .icon-moon {
   color: white;
   border-color: #e74c3c;
   box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-delete:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-fast);
 }
 
 .btn-cancel {
@@ -2117,13 +2145,19 @@ input:checked+.slider .icon-moon {
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
   font-family: var(--font-body);
 }
 
 .btn-cancel:hover {
   border-color: var(--text-secondary);
   color: var(--text-primary);
+}
+
+.btn-cancel:active {
+  transform: scale(0.96);
+  transition-duration: var(--dur-fast);
 }
 
 /* Back link */
