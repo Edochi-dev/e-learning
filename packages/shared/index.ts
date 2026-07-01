@@ -108,6 +108,37 @@ export interface User {
     role: UserRole;
 }
 
+/**
+ * NameChangeRequestStatus — Ciclo de vida de una solicitud de cambio de nombre.
+ *
+ * El alumno NO cambia su nombre libremente (evitaría fraude: varios nombres
+ * para recibir varios certificados). En su lugar SOLICITA el cambio y un admin
+ * lo revisa:
+ *   Alumno solicita → PENDING
+ *   Admin aprueba    → APPROVED  (se aplica el nuevo fullName; las iniciales del
+ *                                 avatar se derivan del nombre, así que se
+ *                                 regeneran solas)
+ *   Admin rechaza    → REJECTED  (con motivo en feedback)
+ */
+export const NameChangeRequestStatus = {
+    PENDING: 'pending',
+    APPROVED: 'approved',
+    REJECTED: 'rejected',
+} as const;
+
+export type NameChangeRequestStatus = typeof NameChangeRequestStatus[keyof typeof NameChangeRequestStatus];
+
+export interface NameChangeRequest {
+    id: string;
+    userId: string;
+    currentName: string;    // Snapshot del nombre al momento de solicitar
+    requestedName: string;
+    status: NameChangeRequestStatus;
+    feedback?: string;      // Nota del admin (motivo al rechazar / comentario)
+    createdAt: string;      // ISO 8601 — cuándo se solicitó
+    reviewedAt?: string;    // ISO 8601 — cuándo el admin revisó
+}
+
 export interface LoginCredentials {
     email: string;
     password: string;
