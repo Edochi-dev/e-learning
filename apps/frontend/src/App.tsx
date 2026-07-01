@@ -11,6 +11,8 @@ import { ComingSoonPage } from './pages/ComingSoonPage';
 import { ComingSoonGuard } from './components/ComingSoonGuard';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
@@ -101,6 +103,8 @@ function AppContent() {
           {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />
+          <Route path="/recuperar" element={<ForgotPasswordPage />} />
+          <Route path="/restablecer" element={<ResetPasswordPage />} />
           <Route path="/certificados/buscar" element={<CertificateLookupPage gateway={certificateGateway} />} />
           <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
 

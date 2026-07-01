@@ -2,6 +2,7 @@ import 'dotenv/config';
 import { DataSource } from 'typeorm';
 
 import { User } from '../users/entities/user.entity';
+import { PasswordResetToken } from '../users/entities/password-reset-token.entity';
 import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../courses/entities/lessons.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
@@ -31,6 +32,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME || 'mn_db',
   entities: [
     User,
+    PasswordResetToken,
     Course,
     Lesson,
     VideoLesson,

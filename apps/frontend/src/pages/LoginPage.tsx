@@ -110,6 +110,17 @@ export const LoginPage = () => {
 
                 <p style={{
                     textAlign: 'center',
+                    marginTop: '0.5rem',
+                    marginBottom: 0,
+                    fontSize: '0.875rem',
+                }}>
+                    <Link to="/recuperar" style={{ color: 'var(--text-muted)' }}>
+                        ¿Olvidaste tu contraseña?
+                    </Link>
+                </p>
+
+                <p style={{
+                    textAlign: 'center',
                     marginTop: '0.75rem',
                     marginBottom: 0,
                     fontSize: '0.875rem',

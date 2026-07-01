@@ -70,6 +70,29 @@ export class HttpAuthGateway implements AuthGateway {
         return response.json();
     }
 
+    async forgotPassword(email: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/users/forgot-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ email }),
+        });
+        if (!res.ok) throw new Error('No se pudo procesar la solicitud. Intenta más tarde.');
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/users/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ token, newPassword }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'No se pudo restablecer la contraseña.');
+        }
+    }
+
     async logout(): Promise<void> {
         await fetch(`${this.baseUrl}/users/logout`, {
             method: 'POST',

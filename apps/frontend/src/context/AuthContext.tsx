@@ -7,6 +7,8 @@ interface AuthContextType {
     login: (credentials: LoginCredentials) => Promise<User>;
     register: (payload: RegisterPayload) => Promise<void>;
     updateProfile: (fullName: string) => Promise<void>;
+    forgotPassword: (email: string) => Promise<void>;
+    resetPassword: (token: string, newPassword: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -62,6 +64,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         setUser(updated);
     };
 
+    // Reset de contraseña: no cambian el estado de sesión, solo delegan al gateway.
+    const forgotPassword = (email: string) => gateway.forgotPassword(email);
+    const resetPassword = (token: string, newPassword: string) =>
+        gateway.resetPassword(token, newPassword);
+
     const logout = async () => {
         await gateway.logout();
         setUser(null);
@@ -73,6 +80,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             login,
             register,
             updateProfile,
+            forgotPassword,
+            resetPassword,
             logout,
             isAuthenticated: !!user,
             isLoading,

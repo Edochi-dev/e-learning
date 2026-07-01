@@ -21,6 +21,10 @@ import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { UpdateProfileUseCase } from './use-cases/update-profile.use-case';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { RequestPasswordResetUseCase } from './use-cases/request-password-reset.use-case';
+import { ResetPasswordUseCase } from './use-cases/reset-password.use-case';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { User } from './entities/user.entity';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -44,6 +48,8 @@ export class UsersController {
     private readonly findAllUsersUseCase: FindAllUsersUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
     private readonly updateProfileUseCase: UpdateProfileUseCase,
+    private readonly requestPasswordResetUseCase: RequestPasswordResetUseCase,
+    private readonly resetPasswordUseCase: ResetPasswordUseCase,
   ) {}
 
   // Máximo 5 registros por minuto por IP para frenar registro masivo
@@ -98,6 +104,25 @@ export class UsersController {
     @Body() dto: UpdateProfileDto,
   ): Promise<User> {
     return this.updateProfileUseCase.execute(req.user.id, dto.fullName);
+  }
+
+  // Paso 1 del reset. Responde 204 SIEMPRE (exista o no el email) para no
+  // revelar qué correos están registrados. Rate-limited contra abuso.
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 60000, limit: 5 } })
+  async forgotPassword(@Body() dto: ForgotPasswordDto): Promise<void> {
+    await this.requestPasswordResetUseCase.execute(dto.email);
+  }
+
+  // Paso 2 del reset: aplica la nueva contraseña usando el token del enlace.
+  @Post('reset-password')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(ThrottlerGuard)
+  @Throttle({ default: { ttl: 60000, limit: 10 } })
+  async resetPassword(@Body() dto: ResetPasswordDto): Promise<void> {
+    await this.resetPasswordUseCase.execute(dto.token, dto.newPassword);
   }
 
   @Get()
