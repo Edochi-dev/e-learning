@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not, ILike, FindOptionsWhere } from 'typeorm';
+import type { CourseLevel } from '@maris-nails/shared';
 import {
   CourseGateway,
   CreateCourseData,
@@ -65,7 +66,9 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     // combinamos cada rama del OR (título/descripción) con los filtros base.
     const baseWhere: FindOptionsWhere<Course> = {};
     if (category) baseWhere.category = category;
-    if (level) baseWhere.level = level;
+    // `level` viene como string crudo del query; casteamos al enum. Si no es un
+    // nivel válido, la condición simplemente no coincide con ningún curso.
+    if (level) baseWhere.level = level as CourseLevel;
 
     const where = search
       ? [

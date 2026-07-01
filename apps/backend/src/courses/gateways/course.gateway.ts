@@ -1,3 +1,4 @@
+import type { CourseLevel } from '@maris-nails/shared';
 import { Course } from '../entities/course.entity';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 
@@ -26,7 +27,7 @@ export interface CreateCourseData {
   // string | null: coincide con la entidad (columnas nullable) y acepta el
   // string | undefined que llega desde el DTO.
   category?: string | null;
-  level?: string | null;
+  level?: CourseLevel | null;
   features?: string[];
   thumbnailUrl?: string;
 }
@@ -39,6 +40,8 @@ export interface CreateCourseData {
 export interface CourseFilters {
   search?: string;
   category?: string;
+  // string crudo del query param: si no es un nivel válido, simplemente no
+  // coincide con ningún curso (no hace falta validarlo aquí).
   level?: string;
 }
 
@@ -54,7 +57,7 @@ export interface UpdateCourseData {
   price?: number;
   description?: string;
   category?: string | null;
-  level?: string | null;
+  level?: CourseLevel | null;
   features?: string[];
   thumbnailUrl?: string;
 }

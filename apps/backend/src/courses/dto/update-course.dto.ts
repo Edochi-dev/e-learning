@@ -1,5 +1,6 @@
 import { IsString, IsNumber, IsOptional, IsArray, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
+import { CourseLevel } from '@maris-nails/shared';
 
 // Definimos los campos actualizables explícitamente en lugar de usar PartialType(CreateCourseDto).
 // Esto nos permite excluir thumbnailUrl: la miniatura solo se puede cambiar subiendo
@@ -22,9 +23,9 @@ export class UpdateCourseDto {
   @IsOptional()
   category?: string;
 
-  @IsIn(['beginner', 'intermediate', 'advanced'])
+  @IsIn(Object.values(CourseLevel))
   @IsOptional()
-  level?: string;
+  level?: CourseLevel;
 
   @IsArray()
   @IsString({ each: true })

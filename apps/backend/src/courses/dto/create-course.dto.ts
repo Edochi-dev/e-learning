@@ -8,6 +8,7 @@ import {
 } from 'class-validator';
 
 import { Type } from 'class-transformer';
+import { CourseLevel } from '@maris-nails/shared';
 
 class CreateLessonDto {
   @IsString()
@@ -40,10 +41,10 @@ export class CreateCourseDto {
   @IsOptional()
   category?: string;
 
-  // Valores permitidos, alineados con CourseLevel de @maris-nails/shared.
-  @IsIn(['beginner', 'intermediate', 'advanced'])
+  // Valores permitidos = fuente única CourseLevel de @maris-nails/shared.
+  @IsIn(Object.values(CourseLevel))
   @IsOptional()
-  level?: string;
+  level?: CourseLevel;
 
   @IsArray()
   @IsString({ each: true })
