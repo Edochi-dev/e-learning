@@ -23,8 +23,23 @@ export interface CreateCourseData {
   title: string;
   price: number;
   description: string;
+  // string | null: coincide con la entidad (columnas nullable) y acepta el
+  // string | undefined que llega desde el DTO.
+  category?: string | null;
+  level?: string | null;
   features?: string[];
   thumbnailUrl?: string;
+}
+
+/**
+ * CourseFilters — Filtros opcionales del catálogo (además de la paginación).
+ *   - search: texto libre a buscar en título/descripción
+ *   - category / level: coincidencia exacta
+ */
+export interface CourseFilters {
+  search?: string;
+  category?: string;
+  level?: string;
 }
 
 /**
@@ -38,6 +53,8 @@ export interface UpdateCourseData {
   title?: string;
   price?: number;
   description?: string;
+  category?: string | null;
+  level?: string | null;
   features?: string[];
   thumbnailUrl?: string;
 }
@@ -59,7 +76,11 @@ export abstract class CourseGateway {
   abstract findAll(
     page: number,
     limit: number,
+    filters?: CourseFilters,
   ): Promise<PaginatedResult<Course>>;
+
+  /** Categorías distintas presentes en los cursos (para el filtro del catálogo). */
+  abstract findDistinctCategories(): Promise<string[]>;
 
   abstract findOne(id: string): Promise<Course | null>;
 

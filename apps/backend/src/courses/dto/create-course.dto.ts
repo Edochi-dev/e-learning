@@ -4,6 +4,7 @@ import {
   IsOptional,
   ValidateNested,
   IsArray,
+  IsIn,
 } from 'class-validator';
 
 import { Type } from 'class-transformer';
@@ -34,6 +35,15 @@ export class CreateCourseDto {
 
   @IsString()
   description: string;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  // Valores permitidos, alineados con CourseLevel de @maris-nails/shared.
+  @IsIn(['beginner', 'intermediate', 'advanced'])
+  @IsOptional()
+  level?: string;
 
   @IsArray()
   @IsString({ each: true })

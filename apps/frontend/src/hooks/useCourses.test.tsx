@@ -14,10 +14,17 @@ import type { CourseGateway } from '../gateways/CourseGateway';
  * efecto asíncrono termine (React actualiza el estado fuera del render inicial).
  */
 
-// Helper: construye un gateway falso con solo lo que el hook necesita.
+// Helper: construye un gateway falso con lo que el hook necesita (findAll +
+// getCategories, que el hook llama al montar para poblar el filtro).
 function fakeGateway(findAll: CourseGateway['findAll']): CourseGateway {
-  return { findAll } as unknown as CourseGateway;
+  return {
+    findAll,
+    getCategories: vi.fn().mockResolvedValue([]),
+  } as unknown as CourseGateway;
 }
+
+// Filtros vacíos que el hook envía cuando no hay búsqueda/categoría/nivel.
+const NO_FILTERS = { search: undefined, category: undefined, level: undefined };
 
 describe('useCourses', () => {
   it('arranca en loading=true y termina con los cursos + paginación', async () => {
@@ -61,11 +68,11 @@ describe('useCourses', () => {
     const { result } = renderHook(() => useCourses(gateway));
     await waitFor(() => expect(result.current.loading).toBe(false));
 
-    // Primera carga: página 1.
-    expect(findAll).toHaveBeenLastCalledWith(1, 12);
+    // Primera carga: página 1 (sin filtros).
+    expect(findAll).toHaveBeenLastCalledWith(1, 12, NO_FILTERS);
 
     // Al cambiar de página, el hook debe re-pedir con el nuevo número.
     act(() => result.current.setPage(2));
-    await waitFor(() => expect(findAll).toHaveBeenLastCalledWith(2, 12));
+    await waitFor(() => expect(findAll).toHaveBeenLastCalledWith(2, 12, NO_FILTERS));
   });
 });

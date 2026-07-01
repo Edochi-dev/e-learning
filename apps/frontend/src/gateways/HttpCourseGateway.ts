@@ -1,5 +1,5 @@
 import type { Course, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
-import type { CourseGateway } from './CourseGateway';
+import type { CourseGateway, CourseFilters } from './CourseGateway';
 
 export class HttpCourseGateway implements CourseGateway {
     private readonly baseUrl: string;
@@ -22,10 +22,23 @@ export class HttpCourseGateway implements CourseGateway {
     // Pide una página concreta al backend (?page&limit) y devuelve la respuesta
     // paginada COMPLETA (data + total + page + limit), para que el hook pueda
     // renderizar los controles de paginación.
-    async findAll(page = 1, limit = 12): Promise<PaginatedResult<Course>> {
-        const response = await fetch(`${this.baseUrl}/courses?page=${page}&limit=${limit}`);
+    async findAll(page = 1, limit = 12, filters?: CourseFilters): Promise<PaginatedResult<Course>> {
+        const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+        if (filters?.search) params.set('search', filters.search);
+        if (filters?.category) params.set('category', filters.category);
+        if (filters?.level) params.set('level', filters.level);
+
+        const response = await fetch(`${this.baseUrl}/courses?${params.toString()}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch courses: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async getCategories(): Promise<string[]> {
+        const response = await fetch(`${this.baseUrl}/courses/categories`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch categories: ${response.statusText}`);
         }
         return response.json();
     }
@@ -43,6 +56,8 @@ export class HttpCourseGateway implements CourseGateway {
         body.append('title', course.title);
         body.append('price', String(course.price));
         body.append('description', course.description);
+        if (course.category) body.append('category', course.category);
+        if (course.level) body.append('level', course.level);
         if (thumbnail) {
             body.append('thumbnail', thumbnail);
         }

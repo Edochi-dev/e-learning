@@ -64,12 +64,27 @@ export interface Lesson {
     assignmentData?: AssignmentLessonData; // Presente solo si type === 'correction'
 }
 
+/**
+ * CourseLevel — Nivel del curso, para clasificar y filtrar en el catálogo.
+ * Mismo patrón "const + as const" que UserRole/LessonType/OrderStatus.
+ */
+export const CourseLevel = {
+    BEGINNER: 'beginner',
+    INTERMEDIATE: 'intermediate',
+    ADVANCED: 'advanced',
+} as const;
+
+export type CourseLevel = typeof CourseLevel[keyof typeof CourseLevel];
+
 export interface Course {
     id: string;
     title: string;
     price: number;
     description: string;
     thumbnailUrl?: string;
+    // Taxonomía para descubrimiento (opcionales: los cursos viejos no la tienen).
+    category?: string;      // Categoría libre, ej: "Uñas Acrílicas", "Nail Art"
+    level?: CourseLevel;    // Nivel: principiante / intermedio / avanzado
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
     lessons: Lesson[];
 }
@@ -106,6 +121,8 @@ export interface CreateCoursePayload {
     title: string;
     price: number;
     description: string;
+    category?: string;
+    level?: CourseLevel;
     thumbnailUrl?: string;
     features?: string[];
 }
@@ -161,6 +178,9 @@ export interface UpdateCoursePayload {
     title?: string;
     price?: number;
     description?: string;
+    // null para PODER limpiar el valor (vaciar categoría/nivel de un curso).
+    category?: string | null;
+    level?: CourseLevel | null;
     thumbnailUrl?: string;
     features?: string[];
 }

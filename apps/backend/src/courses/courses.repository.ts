@@ -1,10 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, ILike, FindOptionsWhere } from 'typeorm';
 import {
   CourseGateway,
   CreateCourseData,
   UpdateCourseData,
+  CourseFilters,
 } from './gateways/course.gateway';
 import { LessonGateway, LessonData } from './gateways/lesson.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
@@ -52,8 +53,29 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     return this.courseRepository.save(newCourse);
   }
 
-  async findAll(page: number, limit: number): Promise<PaginatedResult<Course>> {
+  async findAll(
+    page: number,
+    limit: number,
+    filters?: CourseFilters,
+  ): Promise<PaginatedResult<Course>> {
+    const { search, category, level } = filters ?? {};
+
+    // Filtros exactos (category/level) que se aplican SIEMPRE. Cuando además
+    // hay búsqueda por texto, TypeORM necesita un array de condiciones (OR):
+    // combinamos cada rama del OR (título/descripción) con los filtros base.
+    const baseWhere: FindOptionsWhere<Course> = {};
+    if (category) baseWhere.category = category;
+    if (level) baseWhere.level = level;
+
+    const where = search
+      ? [
+          { ...baseWhere, title: ILike(`%${search}%`) },
+          { ...baseWhere, description: ILike(`%${search}%`) },
+        ]
+      : baseWhere;
+
     const [data, total] = await this.courseRepository.findAndCount({
+      where,
       relations: [
         'lessons',
         'lessons.videoData',
@@ -64,6 +86,16 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
       take: limit,
     });
     return { data, total, page, limit };
+  }
+
+  async findDistinctCategories(): Promise<string[]> {
+    const rows = await this.courseRepository
+      .createQueryBuilder('course')
+      .select('DISTINCT course.category', 'category')
+      .where('course.category IS NOT NULL')
+      .orderBy('course.category', 'ASC')
+      .getRawMany<{ category: string }>();
+    return rows.map((r) => r.category);
   }
 
   async findOne(id: string): Promise<Course | null> {

@@ -48,8 +48,9 @@ describe('FindAllCoursesUseCase', () => {
     const result = await useCase.execute(1, 10);
 
     expect(result).toBe(paginatedResult);
+    // Sin filtros explícitos, el use-case delega con filters = undefined.
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(courseGateway.findAll).toHaveBeenCalledWith(1, 10);
+    expect(courseGateway.findAll).toHaveBeenCalledWith(1, 10, undefined);
   });
 
   it('retorna resultado vacío si no hay cursos', async () => {

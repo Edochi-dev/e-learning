@@ -22,6 +22,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
         title: '',
         description: '',
         price: 0,
+        category: '',
     });
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -98,6 +99,33 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
                             min="0"
                             placeholder="49.99"
                         />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="category">Categoría</label>
+                        <input
+                            type="text"
+                            id="category"
+                            name="category"
+                            value={formData.category ?? ''}
+                            onChange={handleChange}
+                            placeholder="Ej: Uñas Acrílicas, Nail Art"
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="level">Nivel</label>
+                        <select
+                            id="level"
+                            name="level"
+                            value={formData.level ?? ''}
+                            onChange={handleChange}
+                        >
+                            <option value="">Sin especificar</option>
+                            <option value="beginner">Principiante</option>
+                            <option value="intermediate">Intermedio</option>
+                            <option value="advanced">Avanzado</option>
+                        </select>
                     </div>
 
                     <div className="form-group">

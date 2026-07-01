@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CoursesController } from './courses.controller';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
@@ -54,6 +55,7 @@ import { StorageModule } from '../storage/storage.module';
   controllers: [CoursesController],
   providers: [
     FindAllCoursesUseCase,
+    GetCourseCategoriesUseCase,
     FindOneCourseUseCase,
     CreateCourseUseCase,
     UpdateCourseUseCase,

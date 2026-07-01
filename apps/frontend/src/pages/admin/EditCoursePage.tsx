@@ -385,6 +385,8 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 title: data.title,
                 description: data.description,
                 price: data.price,
+                category: data.category ?? '',
+                level: data.level,
                 features: data.features ?? [],
             });
         } catch (err: unknown) {
@@ -400,7 +402,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     // --- Handlers del curso ---
 
-    const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
         setCourseForm(prev => ({
             ...prev,
@@ -476,7 +478,14 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
 
         try {
-            await courseGateway.update(courseId, courseForm);
+            // '' (opción "Sin especificar") → null para limpiar el campo. El
+            // backend valida el nivel con @IsIn, que no acepta '' pero sí null.
+            const payload: UpdateCoursePayload = {
+                ...courseForm,
+                category: courseForm.category?.trim() ? courseForm.category.trim() : null,
+                level: courseForm.level ? courseForm.level : null,
+            };
+            await courseGateway.update(courseId, payload);
             toast.success('¡Curso actualizado correctamente!');
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Error al actualizar el curso');
@@ -673,6 +682,19 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     <div className="form-group">
                         <label htmlFor="price">Precio (USD)</label>
                         <input type="number" id="price" name="price" value={courseForm.price} onChange={handleCourseChange} required min="0" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="category">Categoría</label>
+                        <input type="text" id="category" name="category" value={courseForm.category ?? ''} onChange={handleCourseChange} placeholder="Ej: Uñas Acrílicas, Nail Art" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="level">Nivel</label>
+                        <select id="level" name="level" value={courseForm.level ?? ''} onChange={handleCourseChange}>
+                            <option value="">Sin especificar</option>
+                            <option value="beginner">Principiante</option>
+                            <option value="intermediate">Intermedio</option>
+                            <option value="advanced">Avanzado</option>
+                        </select>
                     </div>
 
                     {/* Editor de features (beneficios del curso) */}

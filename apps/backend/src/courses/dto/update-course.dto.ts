@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 
 // Definimos los campos actualizables explícitamente en lugar de usar PartialType(CreateCourseDto).
@@ -17,6 +17,14 @@ export class UpdateCourseDto {
   @IsString()
   @IsOptional()
   description?: string;
+
+  @IsString()
+  @IsOptional()
+  category?: string;
+
+  @IsIn(['beginner', 'intermediate', 'advanced'])
+  @IsOptional()
+  level?: string;
 
   @IsArray()
   @IsString({ each: true })

@@ -30,6 +30,7 @@ import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
 import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
@@ -62,6 +63,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class CoursesController {
   constructor(
     private readonly findAllCoursesUseCase: FindAllCoursesUseCase,
+    private readonly getCourseCategoriesUseCase: GetCourseCategoriesUseCase,
     private readonly findOneCourseUseCase: FindOneCourseUseCase,
     private readonly createCourseUseCase: CreateCourseUseCase,
     private readonly updateCourseUseCase: UpdateCourseUseCase,
@@ -110,10 +112,23 @@ export class CoursesController {
   async findAll(
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('level') level?: string,
   ): Promise<PaginatedResult<Course>> {
     if (limit > 100)
       throw new BadRequestException('El límite máximo es 100 por página');
-    return this.findAllCoursesUseCase.execute(page, limit);
+    return this.findAllCoursesUseCase.execute(page, limit, {
+      search,
+      category,
+      level,
+    });
+  }
+
+  // Debe ir ANTES de ':id' para que 'categories' no se interprete como un id.
+  @Get('categories')
+  async getCategories(): Promise<string[]> {
+    return this.getCourseCategoriesUseCase.execute();
   }
 
   @Get(':id')

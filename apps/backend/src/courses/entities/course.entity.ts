@@ -15,6 +15,15 @@ export class Course {
   @Column('text')
   description: string;
 
+  // Taxonomía para descubrimiento. Nullable: los cursos existentes no la tienen.
+  // Tipo varchar EXPLÍCITO (no dependemos de un enum de shared) para no acoplar
+  // el backend al paquete compartido ni depender de la inferencia de metadatos.
+  @Column({ type: 'varchar', nullable: true })
+  category: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  level: string | null;
+
   // nullable: true porque los cursos viejos no tienen miniatura.
   // Sin esto, la migración fallaría al intentar agregar una columna NOT NULL
   // en una tabla que ya tiene filas.
