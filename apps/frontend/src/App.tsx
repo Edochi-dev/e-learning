@@ -23,6 +23,7 @@ import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CorrectionsAdminPage } from './pages/admin/CorrectionsAdminPage';
+import { NameChangeRequestsAdminPage } from './pages/admin/NameChangeRequestsAdminPage';
 import { ReviewCorrectionPage } from './pages/admin/ReviewCorrectionPage';
 import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
@@ -125,7 +126,8 @@ function AppContent() {
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
-            <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} />} />
+            <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} nameChangeGateway={nameChangeGateway} />} />
+            <Route path="/admin/cambios-nombre" element={<NameChangeRequestsAdminPage gateway={nameChangeGateway} />} />
             <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} courseGateway={courseGateway} />} />
             <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />

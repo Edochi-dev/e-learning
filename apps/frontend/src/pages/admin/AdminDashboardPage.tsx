@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { CorrectionGateway } from '../../gateways/CorrectionGateway';
+import type { NameChangeGateway } from '../../gateways/NameChangeGateway';
 
 /**
  * AdminDashboardPage — Hub principal del panel de administración.
@@ -18,10 +19,12 @@ import type { CorrectionGateway } from '../../gateways/CorrectionGateway';
 
 interface Props {
     correctionGateway: CorrectionGateway;
+    nameChangeGateway: NameChangeGateway;
 }
 
-export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway }) => {
+export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameChangeGateway }) => {
     const [pendingCount, setPendingCount] = useState<number>(0);
+    const [nameReqCount, setNameReqCount] = useState<number>(0);
 
     useEffect(() => {
         correctionGateway
@@ -29,6 +32,13 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway }) => {
             .then((submissions) => setPendingCount(submissions.length))
             .catch(() => setPendingCount(0));
     }, [correctionGateway]);
+
+    useEffect(() => {
+        nameChangeGateway
+            .listPending()
+            .then((requests) => setNameReqCount(requests.length))
+            .catch(() => setNameReqCount(0));
+    }, [nameChangeGateway]);
 
     return (
         <div className="admin-page">
@@ -70,6 +80,21 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway }) => {
                     <p>Revisa las entregas de tus alumnas, aprueba o pide correcciones con feedback.</p>
                     <Link to="/admin/correcciones" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
                         Revisar Correcciones
+                    </Link>
+                </div>
+
+                {/* Cambios de nombre */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">📝</div>
+                    <h3>
+                        Cambios de Nombre
+                        {nameReqCount > 0 && (
+                            <span className="admin-badge">{nameReqCount}</span>
+                        )}
+                    </h3>
+                    <p>Revisa y aprueba las solicitudes de cambio de nombre de los alumnos.</p>
+                    <Link to="/admin/cambios-nombre" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                        Revisar Solicitudes
                     </Link>
                 </div>
             </div>
