@@ -8,7 +8,6 @@ import * as Joi from 'joi';
 
 import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
-import { User } from './users/entities/user.entity';
 import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
 import { CertificatesModule } from './certificates/certificates.module';
@@ -17,6 +16,7 @@ import { CorrectionsModule } from './corrections/corrections.module';
 import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
+import { buildTypeOrmOptions } from './database/typeorm.config';
 
 @Module({
   imports: [
@@ -54,20 +54,11 @@ import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-o
       ]),
     }),
 
-    // 2. Conectamos TypeORM a PostgreSQL usando el .env
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT || '5432', 10),
-      username: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-      autoLoadEntities: true,
-      entities: [User],
-      synchronize: false,
-      migrations: [join(__dirname, 'database/migrations/*.js')],
-      migrationsRun: true,
-    }),
+    // 2. Conectamos TypeORM a PostgreSQL.
+    // La configuración vive en buildTypeOrmOptions() para poder variar entre
+    // producción (migraciones) y test E2E (esquema efímero) con un guardarraíl
+    // de seguridad que impide tocar bases que no sean de test.
+    TypeOrmModule.forRoot(buildTypeOrmOptions()),
 
     // 3. Rate limiting global (aplicado selectivamente en controladores)
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
