@@ -51,23 +51,34 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
             <section className="container catalog-body">
 
                 {/* ─── FILTROS ─────────────────────────────────── */}
-                <div
-                    className="catalog-filters"
-                    style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '2rem' }}
-                >
-                    <input
-                        type="search"
-                        className="form-input"
-                        placeholder="Buscar programas…"
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        style={{ flex: '1 1 220px', minWidth: '200px' }}
-                    />
+                <div className="catalog-filters">
+                    <div className="catalog-filters__search">
+                        <svg
+                            className="catalog-filters__search-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            aria-hidden="true"
+                        >
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                        <input
+                            type="search"
+                            className="catalog-filters__input"
+                            placeholder="Buscar programas…"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            aria-label="Buscar programas"
+                        />
+                    </div>
                     <select
-                        className="form-input"
+                        className="catalog-filters__select"
                         value={category}
                         onChange={(e) => setCategory(e.target.value)}
-                        style={{ flex: '0 1 200px' }}
                         aria-label="Filtrar por categoría"
                     >
                         <option value="">Todas las categorías</option>
@@ -76,10 +87,9 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                         ))}
                     </select>
                     <select
-                        className="form-input"
+                        className="catalog-filters__select"
                         value={level}
                         onChange={(e) => setLevel(e.target.value)}
-                        style={{ flex: '0 1 180px' }}
                         aria-label="Filtrar por nivel"
                     >
                         <option value="">Todos los niveles</option>
