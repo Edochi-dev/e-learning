@@ -169,8 +169,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 Maria <span className="home-about__name">Sandoval</span>
                             </h2>
                             <p className="home-about__role">
-                                Fundadora de Mari's Nails Academy y formadora de manicuristas e
-                                instructoras en Latinoamérica.
+                                Fundadora de Mari's Nails Academy y educadora de la academia.
                             </p>
                             <p className="home-about__bio">
                                 Mi historia comenzó enseñando desde lo más sencillo, con la convicción de
