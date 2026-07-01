@@ -1,0 +1,34 @@
+# ============================================================
+#  docker-compose.test.yml — PostgreSQL EFÍMERO para tests E2E
+# ------------------------------------------------------------
+#  Base de datos AISLADA de la de desarrollo. Diferencias clave
+#  frente a docker-compose.yml (el de dev):
+#    - Contenedor distinto:  mn_postgres_test  (dev: mn_postgres)
+#    - Puerto distinto:      5433:5432          (dev: 5432:5432)
+#    - Datos en tmpfs (RAM): se BORRAN al parar el contenedor.
+#      No hay volumen persistente, así que es imposible que un
+#      test contamine datos de desarrollo.
+#
+#  Uso:
+#    docker compose -f docker-compose.test.yml up -d   # levantar
+#    npm run test:e2e -w apps/backend                  # correr E2E
+#    docker compose -f docker-compose.test.yml down    # apagar (se borra todo)
+# ============================================================
+# Nombre de proyecto propio: desacopla por completo este stack del de
+# desarrollo. Así docker compose NUNCA trata a mn_postgres (dev) como parte
+# de este grupo, y un `down` de test jamás puede afectarlo.
+name: mn-e2e
+
+services:
+  db-test:
+    image: postgres:16-alpine
+    container_name: mn_postgres_test
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: test
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: marisnails_e2e
+    # Datos en memoria: nada se persiste en disco. Al apagar, desaparecen.
+    tmpfs:
+      - /var/lib/postgresql/data

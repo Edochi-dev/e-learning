@@ -22,6 +22,23 @@ jobs:
     name: Build & test
     runs-on: ubuntu-latest
 
+    # PostgreSQL efímero para los tests E2E. Coincide con apps/backend/.env.test
+    # (localhost:5433, usuario/clave/DB de test). Se destruye al terminar el job.
+    services:
+      postgres-test:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: marisnails_e2e
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d marisnails_e2e"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,10 +61,15 @@ jobs:
       - name: Build backend
         run: npm run build -w apps/backend
 
-      # Tests unitarios: usan mocks de los gateways, NO requieren base
-      # de datos. (Los tests E2E con supertest se añadirán aparte.)
+      # Tests unitarios: usan mocks de los gateways, NO requieren base de datos.
       - name: Test backend (unit)
         run: npm run test -w apps/backend
+
+      # Tests E2E: levantan la app real contra el PostgreSQL de servicio.
+      # setup-e2e.ts carga .env.test (localhost:5433) y global-setup-e2e.ts
+      # provisiona el esquema con las migraciones reales.
+      - name: Test backend (e2e)
+        run: npm run test:e2e -w apps/backend
 
       - name: Build frontend
         run: npm run build -w apps/frontend

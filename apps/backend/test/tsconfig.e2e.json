@@ -1,0 +1,24 @@
+{
+  // tsconfig SOLO para los tests E2E (lo usa ts-jest vía jest-e2e.json).
+  //
+  // La única diferencia con el tsconfig normal es `paths: {}`: así
+  // "@maris-nails/shared" se resuelve desde el paquete COMPILADO (node_modules
+  // -> packages/shared/dist), exactamente como en el build de producción
+  // (tsconfig.build.json también usa paths: {}).
+  //
+  // ¿Por qué importa? Resolver el shared desde el CÓDIGO FUENTE (como hace el
+  // tsconfig normal) hace que emitDecoratorMetadata emita "Object" para las
+  // columnas con tipos unión (p. ej. Lesson.type: LessonType), y TypeORM lo
+  // rechaza al validar entidades. Resolviéndolo desde dist (como prod), el
+  // metadata se emite bien. Requiere que packages/shared esté compilado.
+  //
+  // Además `isolatedModules: false`: ts-jest necesita el type-checker completo
+  // (no el transpile aislado archivo-por-archivo) para deducir que LessonType
+  // es una unión de strings y emitir `design:type = String` (como el build de
+  // prod), en vez de `Object`.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "paths": {},
+    "isolatedModules": false
+  }
+}
