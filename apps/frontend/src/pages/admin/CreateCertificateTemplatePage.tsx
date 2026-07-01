@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import * as pdfjsLib from 'pdfjs-dist';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { TemplateDesignPicker } from '../../components/TemplateDesignPicker';
+import { PdfUploader } from '../../components/PdfUploader';
 import {
     PAPER_FORMATS,
     FORMAT_TOLERANCE_PTS,
@@ -159,17 +160,13 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     </div>
 
                     <div style={{ marginBottom: '1.5rem' }}>
-                        <label className="form-label">Archivo PDF (plantilla en blanco)</label>
-                        <input type="file" accept="application/pdf" className="form-input"
-                            onChange={e => handleFileChange(e.target.files?.[0] ?? null)} />
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-                            Máximo {MAX_FILE_SIZE_MB} MB · El tamaño del PDF debe coincidir con el formato seleccionado.
-                        </p>
-                        {fileError && (
-                            <p style={{ fontSize: '0.85rem', color: 'var(--error, #e53e3e)', marginTop: '0.5rem', lineHeight: 1.5 }}>
-                                ⚠ {fileError}
-                            </p>
-                        )}
+                        <PdfUploader
+                            file={file}
+                            onFileChange={handleFileChange}
+                            error={fileError}
+                            label="Archivo PDF (plantilla en blanco)"
+                            hint={`Máximo ${MAX_FILE_SIZE_MB} MB · El tamaño del PDF debe coincidir con el formato seleccionado.`}
+                        />
                     </div>
 
                     {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem' }}>{error}</p>}

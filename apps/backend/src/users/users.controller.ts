@@ -3,6 +3,8 @@ import {
   Post,
   Body,
   Patch,
+  Param,
+  ParseUUIDPipe,
   HttpCode,
   HttpStatus,
   Get,
@@ -96,14 +98,18 @@ export class UsersController {
     await this.changePasswordUseCase.execute(req.user.id, dto);
   }
 
-  // Actualiza el perfil (por ahora, el nombre) del usuario autenticado.
-  @Patch('me')
-  @UseGuards(AuthGuard('jwt'))
-  async updateProfile(
-    @Req() req: any,
+  // Cambio de nombre DIRECTO: SOLO admin (override).
+  // Los alumnos ya NO cambian su nombre libremente — eso permitiría fraude de
+  // certificados (varios nombres). Deben usar el flujo de solicitud con
+  // aprobación (NameChangeRequestsModule → POST /name-change-requests).
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateName(
+    @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateProfileDto,
   ): Promise<User> {
-    return this.updateProfileUseCase.execute(req.user.id, dto.fullName);
+    return this.updateProfileUseCase.execute(id, dto.fullName);
   }
 
   // Paso 1 del reset. Responde 204 SIEMPRE (exista o no el email) para no

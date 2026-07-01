@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { useToast } from '../../components/Toast';
+import { PdfUploader } from '../../components/PdfUploader';
 
 interface Props {
     gateway: CertificateGateway;
@@ -73,16 +74,11 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
     useEffect(() => { loadTemplate(); }, [loadTemplate]);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selected = e.target.files?.[0] ?? null;
+    // El PdfUploader ya filtra por tipo (accept + guard en drop); aquí solo
+    // validamos el tamaño antes de aceptar el archivo.
+    const handleFile = (selected: File | null) => {
         if (selected && selected.size > MAX_FILE_SIZE_BYTES) {
             toast.error(`El archivo supera el límite de ${MAX_FILE_SIZE_MB} MB`);
-            e.target.value = '';
-            return;
-        }
-        if (selected && selected.type !== 'application/pdf') {
-            toast.error('El archivo debe ser un PDF');
-            e.target.value = '';
             return;
         }
         setFile(selected);
@@ -238,21 +234,12 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                    <label htmlFor="edit-file" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600 }}>
-                        Reemplazar PDF base (opcional)
-                    </label>
-                    <input
-                        id="edit-file"
-                        type="file"
-                        accept="application/pdf"
-                        onChange={handleFileChange}
-                        disabled={saving}
+                    <PdfUploader
+                        file={file}
+                        onFileChange={handleFile}
+                        label="Reemplazar PDF base (opcional)"
+                        hint="Sube un nuevo PDF si necesitas actualizar el diseño (logo nuevo, datos del curso, etc.). Si las dimensiones del PDF nuevo son distintas, las posiciones del nombre y el QR se resetearán a defaults — tendrás que reposicionarlas después."
                     />
-                    <small style={{ display: 'block', marginTop: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                        Sube un nuevo PDF si necesitas actualizar el diseño (logo nuevo, datos del curso, etc.).
-                        Si las dimensiones del PDF nuevo son distintas, las posiciones del nombre y el QR se
-                        resetearán a defaults — tendrás que reposicionarlas después.
-                    </small>
                 </div>
 
                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>

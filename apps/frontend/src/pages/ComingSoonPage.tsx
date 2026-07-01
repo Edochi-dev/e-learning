@@ -12,7 +12,7 @@ export const ComingSoonPage = () => {
         <div style={styles.wrapper}>
             <div style={styles.card}>
                 <img
-                    src="/images/Logo%20dorado.PNG"
+                    src="/images/logo.png"
                     alt="Mari's Nails Academy"
                     style={styles.badge}
                 />

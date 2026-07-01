@@ -17,6 +17,9 @@
   --gold-light: #E2C97E;
   --gold-dark: #9A7A28;
   --gold-glow: rgba(201, 168, 76, 0.3);
+  /* Texto legible sobre fondo dorado. El dorado es claro en ambos temas,
+     por eso este token NO se sobreescribe en dark: siempre es oscuro. */
+  --text-on-gold: #2d1b14;
 
   /* Neutrals — warm undertone */
   --bg: #fdf8f5;
@@ -270,7 +273,7 @@ a {
 
 .logo__img {
   height: 48px;
-  width: 48px;
+  width: auto;
 }
 
 .logo__name {
@@ -518,7 +521,8 @@ a {
   font-size: 0.92rem;
   letter-spacing: 0.02em;
   box-shadow: 0 4px 20px var(--primary-glow);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
   border: none;
   position: relative;
   overflow: hidden;
@@ -536,6 +540,9 @@ a {
 .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 32px var(--primary-glow);
+  /* Al revelarse el fondo dorado (::before), el texto blanco quedaba
+     ilegible. Lo pasamos a un tono oscuro que contrasta sobre el dorado. */
+  color: var(--text-on-gold);
 }
 
 /* Feedback de presión: al hacer clic el botón se "hunde" (menos elevación +
@@ -971,6 +978,9 @@ a {
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--primary), var(--gold));
   color: #fff;
+  /* El gradiente termina en dorado claro; una sombra sutil evita que el
+     texto blanco pierda legibilidad sobre esa esquina. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
@@ -1374,7 +1384,7 @@ input:checked+.slider .icon-moon {
 
   .logo__img {
     height: 38px;
-    width: 38px;
+    width: auto;
   }
 
   .logo__name {
@@ -3245,6 +3255,94 @@ input:checked+.slider .icon-moon {
   padding-bottom: 6rem;
 }
 
+/* ── Barra de filtros del catálogo ── */
+/* Superficie que agrupa el buscador y los selects, coherente con los tokens
+   del sistema. Todo usa variables, así que se adapta solo a tema claro/oscuro. */
+.catalog-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding: 0.85rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Buscador con ícono de lupa a la izquierda */
+.catalog-filters__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 240px;
+  min-width: 200px;
+}
+
+.catalog-filters__search-icon {
+  position: absolute;
+  left: 0.95rem;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.catalog-filters__input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: 0.7rem 1.1rem 0.7rem 2.7rem; /* padding-left deja sitio a la lupa */
+  outline: none;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+.catalog-filters__input::placeholder {
+  color: var(--text-muted);
+}
+
+.catalog-filters__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* Oculta la "x" nativa del input[type=search] en WebKit para un look limpio */
+.catalog-filters__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Selects con chevron dorado propio (quitamos la flecha nativa) */
+.catalog-filters__select {
+  flex: 0 1 190px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  background-color: var(--bg-elevated);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: 0.7rem 2.5rem 0.7rem 1.1rem; /* padding-right deja sitio al chevron */
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 14px;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+.catalog-filters__select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
 /* ── Curso destacado — card horizontal grande ── */
 .catalog-featured {
   display: grid;
@@ -3526,6 +3624,137 @@ input:checked+.slider .icon-moon {
     gap: 1.5rem;
   }
 }
+/* ============================================================================
+   PdfUploader — drop-zone estilizada para subir PDFs (plantillas de certificado)
+   Mismo lenguaje visual que ThumbnailUploader, sin recorte.
+   ============================================================================ */
+
+.pdf-uploader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.pdf-uploader__label {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pdf-uploader__drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 2rem 1.5rem;
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
+  text-align: center;
+  outline: none;
+}
+
+.pdf-uploader__drop-zone:hover,
+.pdf-uploader__drop-zone:focus {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.04);
+}
+
+.pdf-uploader__drop-zone--dragging {
+  border-color: var(--primary);
+  background: rgba(232, 67, 147, 0.08);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+
+.pdf-uploader__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pdf-uploader__text {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.pdf-uploader__link {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.pdf-uploader__hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* Card del PDF ya seleccionado */
+.pdf-uploader__file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+
+.pdf-uploader__file-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.pdf-uploader__file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  flex: 1;
+  min-width: 0; /* habilita el text-overflow del nombre largo */
+}
+
+.pdf-uploader__file-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pdf-uploader__file-size {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.pdf-uploader__remove {
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.8rem;
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.pdf-uploader__remove:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.pdf-uploader__error {
+  font-size: 0.85rem;
+  color: var(--error, #e53e3e);
+  margin: 0;
+  line-height: 1.5;
+}
+
 /* ============================================================================
    ThumbnailUploader — Componente drag-and-drop para miniatura de curso
    ============================================================================ */
@@ -4350,6 +4579,10 @@ input:checked+.slider .icon-moon {
 .home-contact {
   padding: 3rem 0;
   text-align: center;
+  /* El header es sticky (~77px). Sin este offset, al saltar a #contacto la
+     sección queda tapada por el header. scroll-margin-top frena el scroll
+     antes del borde superior para dejar la sección despejada. */
+  scroll-margin-top: 6rem;
 }
 
 .home-contact__inner {
@@ -5755,4 +5988,109 @@ input:checked+.slider .icon-moon {
     opacity: 0;
     transform: translateY(-1rem);
   }
+}
+
+/* ============================================================================
+   USER PICKER (typeahead)
+   Buscador con dropdown de resultados + chips removibles. Se usa para vincular
+   alumnos registrados en "Generar Certificados" sin listar a toda la base.
+   ============================================================================ */
+.user-picker {
+  position: relative;
+}
+
+/* Dropdown de coincidencias, flotando sobre el contenido siguiente */
+.user-picker__results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.user-picker__result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.user-picker__result:hover,
+.user-picker__result:focus-visible {
+  background: var(--surface);
+  outline: none;
+}
+
+.user-picker__result-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-picker__result-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.user-picker__hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Chips de alumnos ya vinculados */
+.user-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.user-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+.user-picker__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.user-picker__chip-remove:hover {
+  background: var(--primary);
+  color: #fff;
 }

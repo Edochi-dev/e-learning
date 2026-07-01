@@ -18,6 +18,7 @@ import { QuizOption } from '../courses/entities/quiz-option.entity';
 import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from '../enrollments/entities/quiz-attempt-answer.entity';
 import { AssignmentSubmission } from '../corrections/entities/assignment-submission.entity';
+import { NameChangeRequest } from '../name-change-requests/entities/name-change-request.entity';
 
 import { MIGRATIONS } from './migrations-registry';
 
@@ -48,6 +49,7 @@ export const AppDataSource = new DataSource({
     QuizAttempt,
     QuizAttemptAnswer,
     AssignmentSubmission,
+    NameChangeRequest,
   ],
   migrations: MIGRATIONS,
 });

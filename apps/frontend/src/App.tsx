@@ -23,6 +23,7 @@ import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CorrectionsAdminPage } from './pages/admin/CorrectionsAdminPage';
+import { NameChangeRequestsAdminPage } from './pages/admin/NameChangeRequestsAdminPage';
 import { ReviewCorrectionPage } from './pages/admin/ReviewCorrectionPage';
 import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
@@ -41,6 +42,7 @@ import { MyCoursesPage } from './pages/MyCoursesPage';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
+import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -70,13 +72,14 @@ function AppContent() {
   const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
   const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
   const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
+  const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL), []);
 
   return (
     <>
       <header className="header">
         <div className="container nav">
           <Link to="/" className="logo">
-            <img src="/images/Logo dorado.PNG" alt="" className="logo__img" />
+            <img src="/images/logo.png" alt="" className="logo__img" />
             <span className="logo__name"><em>Mari's Nails Academy</em></span>
           </Link>
           <nav className="nav-links">
@@ -116,14 +119,15 @@ function AppContent() {
 
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} />} />
+            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} nameChangeGateway={nameChangeGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
             <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
           </Route>
 
           {/* Rutas de Administración — solo accesibles con rol ADMIN */}
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
-            <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} />} />
+            <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} nameChangeGateway={nameChangeGateway} />} />
+            <Route path="/admin/cambios-nombre" element={<NameChangeRequestsAdminPage gateway={nameChangeGateway} />} />
             <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} courseGateway={courseGateway} />} />
             <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />

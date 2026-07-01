@@ -36,20 +36,28 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     );
     const recipientCount = freeNames.length + pickedUsers.length;
 
-    // Lista de alumnos filtrada por el buscador.
-    const filteredUsers = useMemo(() => {
+    // Resultados del buscador (typeahead): solo con 2+ caracteres, excluye a
+    // los ya elegidos y limita a 8 para no volcar toda la base de alumnos.
+    const searchResults = useMemo(() => {
         const q = userSearch.trim().toLowerCase();
-        if (!q) return users;
-        return users.filter(
-            u => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q),
-        );
-    }, [users, userSearch]);
+        if (q.length < 2) return [];
+        return users
+            .filter(u => !pickedUserIds.has(u.id))
+            .filter(u => u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q))
+            .slice(0, 8);
+    }, [users, userSearch, pickedUserIds]);
 
-    const togglePick = (id: string) => {
+    // Añade un alumno a los vinculados y limpia el buscador.
+    const addPick = (id: string) => {
+        setPickedUserIds(prev => new Set(prev).add(id));
+        setUserSearch('');
+    };
+
+    // Quita un alumno de los vinculados (desde su chip).
+    const removePick = (id: string) => {
         setPickedUserIds(prev => {
             const next = new Set(prev);
-            if (next.has(id)) next.delete(id);
-            else next.add(id);
+            next.delete(id);
             return next;
         });
     };
@@ -163,43 +171,62 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                     </p>
                 </div>
 
-                {/* Vinculación híbrida: elegir alumnos registrados para que el
-                    certificado quede ligado a su cuenta. */}
+                {/* Vinculación híbrida: buscar alumnos registrados para que el
+                    certificado quede ligado a su cuenta. Solo buscador (typeahead):
+                    con muchos alumnos, listar a todos no tendría sentido. */}
                 <div style={{ marginBottom: '1.5rem' }}>
                     <label className="form-label">Vincular a alumnos registrados (opcional)</label>
-                    <input
-                        className="form-input"
-                        placeholder="Buscar alumno por nombre o email…"
-                        value={userSearch}
-                        onChange={e => setUserSearch(e.target.value)}
-                        style={{ marginBottom: '0.5rem' }}
-                    />
-                    <div style={{ maxHeight: '12rem', overflowY: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                        {filteredUsers.length === 0 && (
-                            <p style={{ padding: '0.75rem', margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    <div className="user-picker">
+                        <input
+                            className="form-input"
+                            placeholder="Buscar alumno por nombre o email…"
+                            value={userSearch}
+                            onChange={e => setUserSearch(e.target.value)}
+                            aria-label="Buscar alumno para vincular"
+                        />
+                        {searchResults.length > 0 && (
+                            <ul className="user-picker__results">
+                                {searchResults.map(u => (
+                                    <li key={u.id}>
+                                        <button
+                                            type="button"
+                                            className="user-picker__result"
+                                            onClick={() => addPick(u.id)}
+                                        >
+                                            <span className="user-picker__result-name">{u.fullName}</span>
+                                            <span className="user-picker__result-email">{u.email}</span>
+                                        </button>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        {userSearch.trim().length >= 2 && searchResults.length === 0 && (
+                            <p className="user-picker__hint">
                                 {users.length === 0 ? 'No hay alumnos registrados.' : 'Sin coincidencias.'}
                             </p>
                         )}
-                        {filteredUsers.map(u => (
-                            <label
-                                key={u.id}
-                                style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', padding: '0.5rem 0.75rem', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={pickedUserIds.has(u.id)}
-                                    onChange={() => togglePick(u.id)}
-                                    style={{ accentColor: 'var(--primary)' }}
-                                />
-                                <span style={{ fontWeight: 600 }}>{u.fullName}</span>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{u.email}</span>
-                            </label>
-                        ))}
                     </div>
                     {pickedUsers.length > 0 && (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                            {pickedUsers.length} alumno(s) vinculado(s)
-                        </p>
+                        <>
+                            <div className="user-picker__chips">
+                                {pickedUsers.map(u => (
+                                    <span key={u.id} className="user-picker__chip">
+                                        {u.fullName}
+                                        <button
+                                            type="button"
+                                            className="user-picker__chip-remove"
+                                            onClick={() => removePick(u.id)}
+                                            aria-label={`Quitar a ${u.fullName}`}
+                                        >
+                                            ×
+                                        </button>
+                                    </span>
+                                ))}
+                            </div>
+                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                                {pickedUsers.length} alumno(s) vinculado(s)
+                            </p>
+                        </>
                     )}
                 </div>
 

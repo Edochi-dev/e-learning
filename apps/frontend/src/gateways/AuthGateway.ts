@@ -4,8 +4,6 @@ export interface AuthGateway {
     login(credentials: LoginCredentials): Promise<AuthResponse>;
     register(payload: RegisterPayload): Promise<User>;
     changePassword(currentPassword: string, newPassword: string): Promise<void>;
-    /** Actualiza el perfil (por ahora el nombre) y devuelve el usuario actualizado. */
-    updateProfile(fullName: string): Promise<User>;
     /** Paso 1 del reset: pide el enlace por email. No revela si el correo existe. */
     forgotPassword(email: string): Promise<void>;
     /** Paso 2 del reset: aplica la nueva contraseña con el token del enlace. */
