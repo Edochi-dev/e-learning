@@ -55,7 +55,6 @@ export function FaqSection() {
         <section className="home-faq reveal">
             <div className="container">
                 <p className="section-eyebrow">Preguntas frecuentes</p>
-                <h2 className="home-faq__title">Antes de empezar, resolvamos tus dudas</h2>
 
                 <div className="home-faq__list">
                     {FAQS.map((item, i) => {
