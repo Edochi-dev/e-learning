@@ -1,4 +1,4 @@
-import type { Course, Lesson, CreateLessonPayload, QuizQuestion } from '@maris-nails/shared';
+import type { Course, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
 import type { CourseGateway } from './CourseGateway';
 
 export class HttpCourseGateway implements CourseGateway {
@@ -19,16 +19,15 @@ export class HttpCourseGateway implements CourseGateway {
         }
     }
 
-    // TODO: cuando se construya la UI de paginación, actualizar el contrato completo:
-    // CourseGateway.findAll(page, limit) → PaginatedResult<Course>
-    // y pasar total/page/limit al hook y las páginas.
-    async findAll(): Promise<Course[]> {
-        const response = await fetch(`${this.baseUrl}/courses`);
+    // Pide una página concreta al backend (?page&limit) y devuelve la respuesta
+    // paginada COMPLETA (data + total + page + limit), para que el hook pueda
+    // renderizar los controles de paginación.
+    async findAll(page = 1, limit = 12): Promise<PaginatedResult<Course>> {
+        const response = await fetch(`${this.baseUrl}/courses?page=${page}&limit=${limit}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch courses: ${response.statusText}`);
         }
-        const paginated = await response.json();
-        return paginated.data;
+        return response.json();
     }
 
     async findOne(id: string): Promise<Course> {

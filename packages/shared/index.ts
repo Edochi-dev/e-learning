@@ -357,3 +357,22 @@ export interface LastQuizAttemptResponse {
     result: QuizResult | null;
     cooldownRemainingMs: number;
 }
+
+/**
+ * PaginatedResult<T> — Envoltura estándar de las respuestas paginadas del API.
+ *
+ * Fuente ÚNICA de este contrato: lo usan tanto el backend (que lo re-exporta
+ * desde common/types) como el frontend. Así, si cambia la forma de la
+ * paginación, hay un solo lugar que tocar y ambos lados quedan sincronizados.
+ *
+ *   data  → los elementos de la página actual
+ *   total → total de elementos en TODAS las páginas (para calcular cuántas hay)
+ *   page  → número de página actual (1-based)
+ *   limit → tamaño de página (elementos por página)
+ */
+export interface PaginatedResult<T> {
+    data: T[];
+    total: number;
+    page: number;
+    limit: number;
+}

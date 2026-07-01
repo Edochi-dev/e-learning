@@ -1,4 +1,4 @@
-import type { Course, CreateCoursePayload, UpdateCoursePayload, Lesson, CreateLessonPayload, UpdateLessonPayload, QuizQuestion } from '@maris-nails/shared';
+import type { Course, CreateCoursePayload, UpdateCoursePayload, Lesson, CreateLessonPayload, UpdateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
 
 /**
  * CourseGateway (Frontend) — Contrato para las operaciones de cursos/lecciones
@@ -11,7 +11,9 @@ import type { Course, CreateCoursePayload, UpdateCoursePayload, Lesson, CreateLe
  */
 export interface CourseGateway {
     // Cursos
-    findAll(): Promise<Course[]>;
+    // Paginado: devuelve la página pedida junto con el total (para calcular
+    // cuántas páginas hay). page/limit son opcionales; por defecto la 1ª página.
+    findAll(page?: number, limit?: number): Promise<PaginatedResult<Course>>;
     findOne(id: string): Promise<Course>;
     create(course: CreateCoursePayload, thumbnail?: File): Promise<Course>;
     update(id: string, data: UpdateCoursePayload): Promise<Course>;

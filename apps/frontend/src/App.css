@@ -641,6 +641,39 @@ a {
   transform: translateY(-2px);
 }
 
+/* ─── Paginación del catálogo ────────────────────────────── */
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin-top: 3rem;
+}
+
+/* Los controles son <button> (no <a>): heredan la tipografía y muestran el
+   cursor correcto reutilizando el aspecto de .btn-secondary. */
+.catalog-pagination .btn-secondary {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.catalog-pagination .btn-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: var(--border);
+  color: var(--text-muted);
+  transform: none;
+}
+
+.catalog-pagination__status {
+  font-family: var(--font-body);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  min-width: 8rem;
+  text-align: center;
+}
+
 .card-action-btn {
   display: block;
   text-align: center;

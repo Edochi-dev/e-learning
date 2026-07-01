@@ -9,8 +9,14 @@ interface CatalogPageProps {
 }
 
 export const CatalogPage = ({ gateway }: CatalogPageProps) => {
-    const { courses, loading, error } = useCourses(gateway);
+    const { courses, loading, error, page, totalPages, setPage } = useCourses(gateway);
     const [featured, ...rest] = courses;
+
+    // Cambia de página y lleva el scroll arriba para ver la nueva tanda.
+    const goToPage = (next: number) => {
+        setPage(next);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
 
     return (
         <div className="catalog-page">
@@ -116,6 +122,32 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                     <div className="catalog-empty">
                         <p>Nuevos programas próximamente.<br />¡Mantente atenta a nuestras redes!</p>
                     </div>
+                )}
+
+                {/* ─── PAGINACIÓN ─────────────────────────────────── */}
+                {/* Solo cuando hay más de una página de resultados. */}
+                {!loading && !error && totalPages > 1 && (
+                    <nav className="catalog-pagination" aria-label="Paginación de programas">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => goToPage(page - 1)}
+                            disabled={page <= 1}
+                        >
+                            ← Anterior
+                        </button>
+                        <span className="catalog-pagination__status" aria-live="polite">
+                            Página {page} de {totalPages}
+                        </span>
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => goToPage(page + 1)}
+                            disabled={page >= totalPages}
+                        >
+                            Siguiente →
+                        </button>
+                    </nav>
                 )}
 
             </section>

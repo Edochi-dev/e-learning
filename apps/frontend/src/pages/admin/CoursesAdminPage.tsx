@@ -39,8 +39,10 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
     useEffect(() => {
         const loadCourses = async () => {
             try {
-                const data = await courseGateway.findAll();
-                setCourses(data);
+                // findAll ahora devuelve una respuesta paginada; esta vista de
+                // admin usa la primera página (comportamiento previo).
+                const result = await courseGateway.findAll();
+                setCourses(result.data);
             } catch (err) {
                 console.error('Error loading courses', err);
             } finally {

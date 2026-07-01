@@ -24,19 +24,38 @@ describe('HttpCourseGateway', () => {
     vi.restoreAllMocks();
   });
 
-  it('findAll llama a /courses y devuelve el array `data` de la respuesta paginada', async () => {
-    const courses = [{ id: '1', title: 'Manicure Básico' }];
+  it('findAll pide la página con ?page&limit y devuelve la respuesta paginada completa', async () => {
+    const paginated = {
+      data: [{ id: '1', title: 'Manicure Básico' }],
+      total: 30,
+      page: 2,
+      limit: 12,
+    };
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
-      json: () => Promise.resolve({ data: courses, total: 1, page: 1, limit: 10 }),
+      json: () => Promise.resolve(paginated),
     });
     vi.stubGlobal('fetch', fetchMock);
 
-    const result = await gateway.findAll();
+    const result = await gateway.findAll(2, 12);
 
-    expect(fetchMock).toHaveBeenCalledWith(`${baseUrl}/courses`);
-    // El backend responde paginado; el gateway debe entregar solo el array.
-    expect(result).toEqual(courses);
+    // Debe trasladar page/limit como query params al backend.
+    expect(fetchMock).toHaveBeenCalledWith(`${baseUrl}/courses?page=2&limit=12`);
+    // Y devolver el objeto paginado completo (data + total + page + limit),
+    // para que el hook pueda construir los controles de paginación.
+    expect(result).toEqual(paginated);
+  });
+
+  it('findAll usa la primera página (page=1, limit=12) por defecto', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ data: [], total: 0, page: 1, limit: 12 }),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    await gateway.findAll();
+
+    expect(fetchMock).toHaveBeenCalledWith(`${baseUrl}/courses?page=1&limit=12`);
   });
 
   it('findAll lanza un Error cuando la respuesta no es ok', async () => {

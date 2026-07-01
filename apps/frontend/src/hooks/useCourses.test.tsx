@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook, waitFor, act } from '@testing-library/react';
 import { useCourses } from './useCourses';
 import type { CourseGateway } from '../gateways/CourseGateway';
 
@@ -20,9 +20,12 @@ function fakeGateway(findAll: CourseGateway['findAll']): CourseGateway {
 }
 
 describe('useCourses', () => {
-  it('arranca en loading=true y termina con los cursos cargados', async () => {
+  it('arranca en loading=true y termina con los cursos + paginación', async () => {
     const courses = [{ id: '1', title: 'Manicure' }] as never;
-    const gateway = fakeGateway(vi.fn().mockResolvedValue(courses));
+    // El gateway devuelve la respuesta paginada; el hook desempaqueta `data`.
+    const gateway = fakeGateway(
+      vi.fn().mockResolvedValue({ data: courses, total: 30, page: 1, limit: 12 }),
+    );
 
     const { result } = renderHook(() => useCourses(gateway));
 
@@ -34,6 +37,8 @@ describe('useCourses', () => {
 
     expect(result.current.courses).toEqual(courses);
     expect(result.current.error).toBeNull();
+    // 30 cursos / 12 por página = 3 páginas (Math.ceil).
+    expect(result.current.totalPages).toBe(3);
   });
 
   it('captura el mensaje cuando el gateway falla', async () => {
@@ -45,5 +50,22 @@ describe('useCourses', () => {
 
     expect(result.current.error).toBe('API caída');
     expect(result.current.courses).toEqual([]);
+  });
+
+  it('vuelve a pedir la página cuando cambia setPage', async () => {
+    const findAll = vi
+      .fn()
+      .mockResolvedValue({ data: [], total: 30, page: 1, limit: 12 });
+    const gateway = fakeGateway(findAll);
+
+    const { result } = renderHook(() => useCourses(gateway));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    // Primera carga: página 1.
+    expect(findAll).toHaveBeenLastCalledWith(1, 12);
+
+    // Al cambiar de página, el hook debe re-pedir con el nuevo número.
+    act(() => result.current.setPage(2));
+    await waitFor(() => expect(findAll).toHaveBeenLastCalledWith(2, 12));
   });
 });

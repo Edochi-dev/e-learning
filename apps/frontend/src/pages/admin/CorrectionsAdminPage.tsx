@@ -251,7 +251,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
     // Cargar lista de cursos para el dropdown
     useEffect(() => {
         courseGateway.findAll()
-            .then(setCourses)
+            .then((result) => setCourses(result.data))
             .catch((err) => console.error('Error cargando cursos', err));
     }, [courseGateway]);
 
