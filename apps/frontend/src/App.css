@@ -17,6 +17,9 @@
   --gold-light: #E2C97E;
   --gold-dark: #9A7A28;
   --gold-glow: rgba(201, 168, 76, 0.3);
+  /* Texto legible sobre fondo dorado. El dorado es claro en ambos temas,
+     por eso este token NO se sobreescribe en dark: siempre es oscuro. */
+  --text-on-gold: #2d1b14;
 
   /* Neutrals — warm undertone */
   --bg: #fdf8f5;
@@ -518,7 +521,8 @@ a {
   font-size: 0.92rem;
   letter-spacing: 0.02em;
   box-shadow: 0 4px 20px var(--primary-glow);
-  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out);
   border: none;
   position: relative;
   overflow: hidden;
@@ -536,6 +540,9 @@ a {
 .btn-primary:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 32px var(--primary-glow);
+  /* Al revelarse el fondo dorado (::before), el texto blanco quedaba
+     ilegible. Lo pasamos a un tono oscuro que contrasta sobre el dorado. */
+  color: var(--text-on-gold);
 }
 
 /* Feedback de presión: al hacer clic el botón se "hunde" (menos elevación +
@@ -971,6 +978,9 @@ a {
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--primary), var(--gold));
   color: #fff;
+  /* El gradiente termina en dorado claro; una sombra sutil evita que el
+     texto blanco pierda legibilidad sobre esa esquina. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
   cursor: pointer;
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
