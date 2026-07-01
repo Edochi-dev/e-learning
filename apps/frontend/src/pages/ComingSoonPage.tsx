@@ -73,10 +73,9 @@ const styles: Record<string, React.CSSProperties> = {
         boxShadow: 'var(--shadow-gold)',
     },
     badge: {
-        width: '110px',
-        height: '110px',
-        objectFit: 'cover',
-        borderRadius: '50%',
+        width: '170px',
+        height: 'auto',
+        objectFit: 'contain',
         marginBottom: '1rem',
         display: 'block',
         marginLeft: 'auto',
