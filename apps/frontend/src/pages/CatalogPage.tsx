@@ -4,17 +4,11 @@ import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
 import { API_URL as BACKEND_URL } from '../config';
+import { COURSE_LEVEL_OPTIONS } from '../constants/courseLevels';
 
 interface CatalogPageProps {
     gateway: CourseGateway;
 }
-
-// Etiquetas visibles de cada nivel (el valor guardado es el de CourseLevel).
-const LEVEL_OPTIONS = [
-    { value: 'beginner', label: 'Principiante' },
-    { value: 'intermediate', label: 'Intermedio' },
-    { value: 'advanced', label: 'Avanzado' },
-];
 
 export const CatalogPage = ({ gateway }: CatalogPageProps) => {
     const {
@@ -88,7 +82,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                         aria-label="Filtrar por nivel"
                     >
                         <option value="">Todos los niveles</option>
-                        {LEVEL_OPTIONS.map((l) => (
+                        {COURSE_LEVEL_OPTIONS.map((l) => (
                             <option key={l.value} value={l.value}>{l.label}</option>
                         ))}
                     </select>

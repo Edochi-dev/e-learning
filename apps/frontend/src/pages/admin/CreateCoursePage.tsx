@@ -4,6 +4,7 @@ import type { CourseGateway } from '../../gateways/CourseGateway';
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import { useToast } from '../../components/Toast';
 import type { CreateCoursePayload } from '@maris-nails/shared';
+import { COURSE_LEVEL_OPTIONS } from '../../constants/courseLevels';
 
 interface CreateCoursePageProps {
     gateway: CourseGateway;
@@ -122,9 +123,9 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
                             onChange={handleChange}
                         >
                             <option value="">Sin especificar</option>
-                            <option value="beginner">Principiante</option>
-                            <option value="intermediate">Intermedio</option>
-                            <option value="advanced">Avanzado</option>
+                            {COURSE_LEVEL_OPTIONS.map((l) => (
+                                <option key={l.value} value={l.value}>{l.label}</option>
+                            ))}
                         </select>
                     </div>
 

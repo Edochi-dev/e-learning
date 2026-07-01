@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
+import { COURSE_LEVEL_OPTIONS } from '../../constants/courseLevels';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import {
     LessonType,
@@ -691,9 +692,9 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                         <label htmlFor="level">Nivel</label>
                         <select id="level" name="level" value={courseForm.level ?? ''} onChange={handleCourseChange}>
                             <option value="">Sin especificar</option>
-                            <option value="beginner">Principiante</option>
-                            <option value="intermediate">Intermedio</option>
-                            <option value="advanced">Avanzado</option>
+                            {COURSE_LEVEL_OPTIONS.map((l) => (
+                                <option key={l.value} value={l.value}>{l.label}</option>
+                            ))}
                         </select>
                     </div>
 
