@@ -1,17 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, type DependencyList } from 'react';
 
 /**
  * useScrollReveal — Revela con fade + slide-up los elementos con clase `.reveal`
  * a medida que entran en el viewport, usando IntersectionObserver.
  *
- * Cómo se usa: llamar una vez en la página y poner la clase `reveal` en las
- * secciones que deben animarse al bajar. El observer las marca `.reveal--visible`
- * cuando aparecen y deja de observarlas (la animación ocurre una sola vez).
+ * Cómo se usa: llamar en la página y poner la clase `reveal` en los elementos
+ * que deben animarse al bajar. El observer los marca `.reveal--visible` cuando
+ * aparecen y deja de observarlos (la animación ocurre una sola vez).
  *
- * Se observan los `.reveal` presentes al montar; por eso conviene ponerlo en
- * elementos SIEMPRE renderizados (secciones), no en listas que llegan por fetch.
+ * `deps`: por defecto observa lo presente al montar. Si el contenido llega por
+ * fetch (p. ej. las cards del catálogo), pasa una dependencia que cambie cuando
+ * el contenido esté renderizado (p. ej. `[loading]`) para re-observar entonces.
  */
-export function useScrollReveal(): void {
+export function useScrollReveal(deps: DependencyList = []): void {
     useEffect(() => {
         const els = Array.from(document.querySelectorAll<HTMLElement>('.reveal'));
         if (els.length === 0) return;
@@ -37,5 +38,7 @@ export function useScrollReveal(): void {
 
         els.forEach((el) => io.observe(el));
         return () => io.disconnect();
-    }, []);
+        // deps es intencional: la página decide cuándo re-observar (ej. [loading]).
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, deps);
 }
