@@ -73,3 +73,7 @@ jobs:
 
       - name: Build frontend
         run: npm run build -w apps/frontend
+
+      # Tests de frontend con Vitest (jsdom). No requieren base de datos.
+      - name: Test frontend
+        run: npm run test -w apps/frontend
