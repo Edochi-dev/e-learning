@@ -54,22 +54,6 @@ export class HttpAuthGateway implements AuthGateway {
         }
     }
 
-    async updateProfile(fullName: string): Promise<User> {
-        const response = await fetch(`${this.baseUrl}/users/me`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ fullName }),
-        });
-
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.message || 'Error al actualizar el perfil');
-        }
-
-        return response.json();
-    }
-
     async forgotPassword(email: string): Promise<void> {
         const res = await fetch(`${this.baseUrl}/users/forgot-password`, {
             method: 'POST',

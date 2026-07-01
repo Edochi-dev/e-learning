@@ -5,12 +5,14 @@ import { useToast } from '../components/Toast';
 import type { AuthGateway } from '../gateways/AuthGateway';
 import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
 import type { CertificateGateway, Certificate } from '../gateways/CertificateGateway';
-import { OrderStatus } from '@maris-nails/shared';
+import type { NameChangeGateway } from '../gateways/NameChangeGateway';
+import { OrderStatus, NameChangeRequestStatus, type NameChangeRequest } from '@maris-nails/shared';
 
 interface Props {
     gateway: AuthGateway;
     orderGateway: OrderGateway;
     certificateGateway: CertificateGateway;
+    nameChangeGateway: NameChangeGateway;
 }
 
 type Tab = 'cuenta' | 'certificados' | 'facturacion';
@@ -28,8 +30,8 @@ type Tab = 'cuenta' | 'certificados' | 'facturacion';
  * Recibe el AuthGateway como prop (patrón del frontend: pages reciben
  * gateways como props, nunca los importan directamente).
  */
-export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificateGateway }) => {
-    const { user, updateProfile } = useAuth();
+export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificateGateway, nameChangeGateway }) => {
+    const { user } = useAuth();
 
     // ── Tab activa ──────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<Tab>('cuenta');
@@ -41,10 +43,19 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
     const [changingPassword, setChangingPassword] = useState(false);
     const toast = useToast();
 
-    // ── Edición de nombre ───────────────────────────────────────────────
-    const [editingName, setEditingName] = useState(false);
-    const [nameValue, setNameValue] = useState('');
-    const [savingName, setSavingName] = useState(false);
+    // ── Solicitud de cambio de nombre ───────────────────────────────────
+    // El alumno NO cambia su nombre libremente: lo solicita y un admin lo
+    // aprueba (evita emitir certificados con varios nombres).
+    const [nameRequest, setNameRequest] = useState<NameChangeRequest | null>(null);
+    const [showNameForm, setShowNameForm] = useState(false);
+    const [requestedName, setRequestedName] = useState('');
+    const [submittingNameReq, setSubmittingNameReq] = useState(false);
+
+    useEffect(() => {
+        nameChangeGateway.getMyRequest()
+            .then(setNameRequest)
+            .catch(() => setNameRequest(null));
+    }, [nameChangeGateway]);
 
     // ── Historial de compras ────────────────────────────────────────────
     const [orders, setOrders] = useState<MyOrder[]>([]);
@@ -98,26 +109,32 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
         }
     };
 
-    const startEditName = () => {
-        setNameValue(user.fullName);
-        setEditingName(true);
-    };
+    // Cooldown de 30 días entre solicitudes (el backend también lo valida).
+    const COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+    const cooldownUntil = nameRequest
+        ? new Date(new Date(nameRequest.createdAt).getTime() + COOLDOWN_MS)
+        : null;
+    const inCooldown = cooldownUntil ? Date.now() < cooldownUntil.getTime() : false;
+    const hasPendingNameReq = nameRequest?.status === NameChangeRequestStatus.PENDING;
+    const canRequestName = !hasPendingNameReq && !inCooldown;
 
-    const handleSaveName = async () => {
-        const trimmed = nameValue.trim();
+    const handleRequestName = async () => {
+        const trimmed = requestedName.trim();
         if (!trimmed || trimmed === user.fullName) {
-            setEditingName(false);
+            toast.error('Escribe un nombre distinto al actual.');
             return;
         }
-        setSavingName(true);
+        setSubmittingNameReq(true);
         try {
-            await updateProfile(trimmed);
-            toast.success('Nombre actualizado.');
-            setEditingName(false);
+            const created = await nameChangeGateway.requestNameChange(trimmed);
+            setNameRequest(created);
+            setShowNameForm(false);
+            setRequestedName('');
+            toast.success('Solicitud enviada. Un administrador la revisará.');
         } catch (err) {
-            toast.error(err instanceof Error ? err.message : 'Error al actualizar el nombre');
+            toast.error(err instanceof Error ? err.message : 'No se pudo enviar la solicitud');
         } finally {
-            setSavingName(false);
+            setSubmittingNameReq(false);
         }
     };
 
@@ -197,36 +214,66 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
 
                             <div className="account-field">
                                 <label className="account-field__label">Nombre completo</label>
-                                {editingName ? (
-                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <p className="account-field__value" style={{ margin: 0 }}>{user.fullName}</p>
+
+                                {/* Estado de la última solicitud */}
+                                {hasPendingNameReq && (
+                                    <p className="account-field__hint" style={{ marginTop: '0.4rem' }}>
+                                        Solicitud pendiente: “{nameRequest?.requestedName}” — en revisión por un administrador.
+                                    </p>
+                                )}
+                                {nameRequest?.status === NameChangeRequestStatus.REJECTED && (
+                                    <p className="account-field__hint account-field__hint--error" style={{ marginTop: '0.4rem' }}>
+                                        Tu última solicitud (“{nameRequest.requestedName}”) fue rechazada
+                                        {nameRequest.feedback ? `: ${nameRequest.feedback}` : '.'}
+                                    </p>
+                                )}
+
+                                {/* Botón / formulario de solicitud */}
+                                {!showNameForm ? (
+                                    <button
+                                        type="button"
+                                        className="btn-secondary"
+                                        onClick={() => { setRequestedName(user.fullName); setShowNameForm(true); }}
+                                        disabled={!canRequestName}
+                                        style={{ marginTop: '0.6rem', padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
+                                    >
+                                        Solicitar cambio de nombre
+                                    </button>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', marginTop: '0.6rem' }}>
                                         <input
                                             type="text"
                                             className="form-input"
-                                            value={nameValue}
-                                            onChange={e => setNameValue(e.target.value)}
+                                            value={requestedName}
+                                            onChange={e => setRequestedName(e.target.value)}
                                             maxLength={100}
+                                            placeholder="Nombre deseado"
                                             style={{ flex: 1, minWidth: '12rem' }}
                                         />
-                                        <button type="button" className="btn-primary" onClick={handleSaveName} disabled={savingName}>
-                                            {savingName ? 'Guardando…' : 'Guardar'}
+                                        <button type="button" className="btn-primary" onClick={handleRequestName} disabled={submittingNameReq}>
+                                            {submittingNameReq ? 'Enviando…' : 'Enviar solicitud'}
                                         </button>
-                                        <button type="button" className="btn-secondary" onClick={() => setEditingName(false)} disabled={savingName}>
+                                        <button type="button" className="btn-secondary" onClick={() => { setShowNameForm(false); setRequestedName(''); }} disabled={submittingNameReq}>
                                             Cancelar
                                         </button>
                                     </div>
-                                ) : (
-                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                        <p className="account-field__value" style={{ margin: 0 }}>{user.fullName}</p>
-                                        <button
-                                            type="button"
-                                            className="btn-secondary"
-                                            onClick={startEditName}
-                                            style={{ padding: '0.35rem 0.9rem', fontSize: '0.8rem' }}
-                                        >
-                                            Editar
-                                        </button>
-                                    </div>
                                 )}
+
+                                {/* Cooldown: cuándo podrá volver a solicitar */}
+                                {!hasPendingNameReq && inCooldown && cooldownUntil && (
+                                    <p className="account-field__hint" style={{ marginTop: '0.4rem' }}>
+                                        Podrás solicitar otro cambio a partir del {cooldownUntil.toLocaleDateString('es', { day: '2-digit', month: 'long', year: 'numeric' })}.
+                                    </p>
+                                )}
+
+                                {/* Letra chica: por qué el cambio no es libre */}
+                                <p className="account-field__hint" style={{ marginTop: '0.5rem', fontSize: '0.72rem', lineHeight: 1.5 }}>
+                                    Por seguridad, tu nombre no se cambia libremente: aparece en tus certificados,
+                                    y permitirlo facilitaría emitir certificados con varios nombres. El cambio se hace
+                                    por solicitud y un administrador la revisa (máximo una cada 30 días). Al aprobarse,
+                                    tu nombre y tus iniciales se actualizan automáticamente.
+                                </p>
                             </div>
 
                             <div className="account-field">

@@ -41,6 +41,7 @@ import { MyCoursesPage } from './pages/MyCoursesPage';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
+import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -70,6 +71,7 @@ function AppContent() {
   const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
   const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
   const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
+  const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL), []);
 
   return (
     <>
@@ -116,7 +118,7 @@ function AppContent() {
 
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} />} />
+            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} nameChangeGateway={nameChangeGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
             <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
           </Route>

@@ -6,7 +6,6 @@ interface AuthContextType {
     user: User | null;
     login: (credentials: LoginCredentials) => Promise<User>;
     register: (payload: RegisterPayload) => Promise<void>;
-    updateProfile: (fullName: string) => Promise<void>;
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (token: string, newPassword: string) => Promise<void>;
     logout: () => void;
@@ -57,13 +56,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         await login({ email: payload.email, password: payload.password });
     };
 
-    // Actualiza el nombre y refresca el usuario en memoria, para que el cambio
-    // se refleje al instante en el avatar, el saludo y el menú sin recargar.
-    const updateProfile = async (fullName: string) => {
-        const updated = await gateway.updateProfile(fullName);
-        setUser(updated);
-    };
-
     // Reset de contraseña: no cambian el estado de sesión, solo delegan al gateway.
     const forgotPassword = (email: string) => gateway.forgotPassword(email);
     const resetPassword = (token: string, newPassword: string) =>
@@ -79,7 +71,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             user,
             login,
             register,
-            updateProfile,
             forgotPassword,
             resetPassword,
             logout,
