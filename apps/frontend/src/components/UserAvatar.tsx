@@ -1,8 +1,9 @@
 /**
  * UserAvatar — Círculo con las iniciales del usuario y un color dinámico.
  *
- * Si el usuario tiene foto (photoUrl), la mostramos. Si no, generamos
- * un avatar con sus iniciales sobre un color derivado de su nombre.
+ * No hay fotos de perfil en la plataforma (innecesarias): el avatar es SIEMPRE
+ * las iniciales del nombre sobre un color derivado del mismo. Al cambiar el
+ * nombre (vía solicitud aprobada), las iniciales se regeneran solas.
  *
  * ¿Por qué el color es "derivado del nombre" y no aleatorio?
  *   Porque si fuera aleatorio, cambiaría en cada render.
@@ -56,7 +57,6 @@ function getInitials(fullName: string): string {
 interface UserAvatarProps {
     name: string;
     size?: 'sm' | 'md' | 'lg';
-    photoUrl?: string | null;
 }
 
 const SIZES = {
@@ -65,24 +65,12 @@ const SIZES = {
     lg: { width: 96, height: 96, fontSize: '2rem' },
 };
 
-export const UserAvatar = ({ name, size = 'md', photoUrl }: UserAvatarProps) => {
+export const UserAvatar = ({ name, size = 'md' }: UserAvatarProps) => {
     const { width, height, fontSize } = SIZES[size];
     const color = getColorFromName(name);
     const initials = getInitials(name);
 
-    // Si tiene foto, la mostramos directamente
-    if (photoUrl) {
-        return (
-            <img
-                src={photoUrl}
-                alt={name}
-                className="user-avatar"
-                style={{ width, height, borderRadius: '50%', objectFit: 'cover' }}
-            />
-        );
-    }
-
-    // Sin foto: círculo de color con iniciales blancas
+    // Círculo de color con iniciales blancas.
     return (
         <div
             className="user-avatar"
