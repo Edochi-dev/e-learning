@@ -6133,3 +6133,96 @@ input:checked+.slider .icon-moon {
   opacity: 1;
   transform: none;
 }
+
+/* ============================================================================
+   FAQ (landing) — acordeón de preguntas frecuentes
+   ============================================================================ */
+.home-faq {
+  padding: 4rem 0;
+  scroll-margin-top: 6rem;
+}
+
+.home-faq__title {
+  text-align: center;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin: 0.5rem auto 0;
+  max-width: 640px;
+}
+
+.home-faq__list {
+  max-width: 760px;
+  margin: 2.5rem auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  overflow: hidden;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+.faq-item--open {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-sm);
+}
+
+.faq-item__q {
+  margin: 0;
+  font-size: inherit;
+}
+
+.faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.faq-item__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--gold-dark);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.faq-item--open .faq-item__icon {
+  transform: rotate(180deg);
+}
+
+/* Anima la altura sin medir en JS: grid-template-rows 0fr → 1fr con el
+   contenido en overflow: hidden. */
+.faq-item__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s var(--ease-out);
+}
+
+.faq-item--open .faq-item__panel {
+  grid-template-rows: 1fr;
+}
+
+.faq-item__answer {
+  overflow: hidden;
+}
+
+.faq-item__answer p {
+  margin: 0;
+  padding: 0 1.35rem 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}

@@ -6,6 +6,7 @@ import { useCourses } from '../hooks/useCourses';
 import { API_URL as BACKEND_URL } from '../config';
 import { smoothScrollToElement, getHeaderOffset } from '../lib/smoothScroll';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { FaqSection } from '../components/FaqSection';
 
 interface HomePageProps {
     gateway: CourseGateway;
@@ -285,6 +286,11 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                     )}
                 </div>
             </section>
+
+            <hr className="section-divider" />
+
+            {/* ─── PREGUNTAS FRECUENTES ────────────────────────── */}
+            <FaqSection />
 
             <hr className="section-divider" />
 
