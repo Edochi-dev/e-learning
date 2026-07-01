@@ -3,6 +3,7 @@ import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useEnrollments } from '../hooks/useEnrollments';
 
 import { API_URL as BACKEND_URL } from '../config';
+import { SkeletonCourseCard } from '../components/Skeleton';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
@@ -28,9 +29,10 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
     if (loading) {
         return (
             <div className="container my-courses-page">
-                <div className="my-courses-page__loading">
-                    <div className="spinner" />
-                    <p>Cargando tus cursos...</p>
+                <div className="enrollment-grid">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                        <SkeletonCourseCard key={i} />
+                    ))}
                 </div>
             </div>
         );
