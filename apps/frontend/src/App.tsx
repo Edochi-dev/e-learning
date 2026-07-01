@@ -45,6 +45,7 @@ import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
 import { smoothScrollToElement, getHeaderOffset } from './lib/smoothScroll';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
 import { ToastProvider } from './components/Toast';
@@ -101,6 +102,8 @@ function AppContent() {
           </nav>
         </div>
       </header>
+
+      <ScrollToTop />
 
       <main>
         <Routes>
