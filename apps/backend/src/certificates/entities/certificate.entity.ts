@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { CertificateTemplate } from './certificate-template.entity';
 import { TemplateSnapshot } from '../value-objects';
+import { User } from '../../users/entities/user.entity';
 
 /**
  * Certificate — un certificado emitido a un alumno.
@@ -67,6 +68,24 @@ export class Certificate {
 
   @Column()
   filePath: string;
+
+  /**
+   * Vínculo OPCIONAL al alumno dueño del certificado.
+   *
+   * Nullable porque:
+   *   - Un certificado puede emitirse a alguien SIN cuenta (solo por nombre).
+   *   - Los certificados emitidos antes de esta funcionalidad no tienen dueño.
+   *
+   * onDelete SET NULL: si se borra el usuario, el certificado se conserva como
+   * registro histórico (solo se desvincula). Lo consultamos por userId para
+   * "mis certificados" (GET /certificates/me).
+   */
+  @Column({ type: 'uuid', nullable: true })
+  userId: string | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'userId' })
+  user: User | null;
 
   @CreateDateColumn()
   issuedAt: Date;

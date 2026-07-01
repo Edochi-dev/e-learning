@@ -66,8 +66,8 @@ export class GenerateCertificateBatchUseCase {
     );
     const results: GeneratedCertificateSummary[] = [];
 
-    for (const name of dto.names) {
-      const trimmedName = name.trim();
+    for (const recipient of dto.recipients) {
+      const trimmedName = recipient.name.trim();
       if (!trimmedName) continue;
 
       // 1. Calcular el número correlativo de este certificado
@@ -154,6 +154,8 @@ export class GenerateCertificateBatchUseCase {
           paperFormat: template.paperFormat,
         },
         filePath,
+        // Vínculo opcional al alumno (modo híbrido): null si es un nombre libre.
+        userId: recipient.userId ?? null,
       } as Partial<Certificate>);
 
       results.push({

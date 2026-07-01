@@ -14,4 +14,7 @@ export interface AuthGateway {
      * Si no hay sesión, devuelve null (no lanza error).
      */
     getMe(): Promise<User | null>;
+
+    /** Lista todos los usuarios (solo ADMIN). Se usa para elegir alumnos al emitir certificados. */
+    getAllUsers(): Promise<User[]>;
 }

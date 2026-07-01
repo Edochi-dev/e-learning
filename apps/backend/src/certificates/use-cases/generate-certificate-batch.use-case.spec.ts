@@ -121,7 +121,7 @@ describe('GenerateCertificateBatchUseCase', () => {
     templateGateway.findOne.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ templateId: 'tpl-inexistente', names: ['Ana'] }),
+      useCase.execute({ templateId: 'tpl-inexistente', recipients: [{ name: 'Ana' }] }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -135,7 +135,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(fileStorageGateway.readFileByUrl).toHaveBeenCalledWith(
       '/static/certificates/templates/tpl-1.pdf',
@@ -152,7 +152,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(fileStorageGateway.saveBuffer).toHaveBeenCalledWith(
       Buffer.from('pdf'),
@@ -167,7 +167,7 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     const result = await useCase.execute({
       templateId: 'tpl-1',
-      names: ['   ', '\t', ''],
+      recipients: [{ name: '   ' }, { name: '\t' }, { name: '' }],
     });
 
     expect(result).toEqual([]);
@@ -188,7 +188,7 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     const result = await useCase.execute({
       templateId: 'tpl-1',
-      names: ['   ', 'Ana García', '', '  '],
+      recipients: [{ name: '   ' }, { name: 'Ana García' }, { name: '' }, { name: '  ' }],
     });
 
     expect(result).toHaveLength(1);
@@ -207,7 +207,7 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     const result = await useCase.execute({
       templateId: 'tpl-1',
-      names: ['Luis'],
+      recipients: [{ name: 'Luis' }],
     });
 
     expect(result[0].certificateNumber).toBe('MR-00043');
@@ -223,7 +223,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'https://maris-nails.com/certificados/cert-uuid-123',
@@ -245,7 +245,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'http://localhost:5173/certificados/cert-uuid-123',
@@ -273,7 +273,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       expect.any(String),
@@ -292,7 +292,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
 
     expect(certGateway.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -320,7 +320,7 @@ describe('GenerateCertificateBatchUseCase', () => {
 
     const result = await useCase.execute({
       templateId: 'tpl-1',
-      names: ['Ana', 'Luis', 'María'],
+      recipients: [{ name: 'Ana' }, { name: 'Luis' }, { name: 'María' }],
     });
 
     expect(result).toHaveLength(3);
@@ -353,11 +353,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       } as Certificate)
       .mockRejectedValueOnce(dbError);
 
-    const r1 = await useCase.execute({ templateId: 'tpl-1', names: ['Ana'] });
+    const r1 = await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
     expect(r1[0].certificateNumber).toBe('MR-00006');
 
     await expect(
-      useCase.execute({ templateId: 'tpl-1', names: ['Luis'] }),
+      useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Luis' }] }),
     ).rejects.toThrow('duplicate key');
   });
 });

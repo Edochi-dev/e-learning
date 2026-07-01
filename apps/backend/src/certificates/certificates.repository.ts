@@ -41,6 +41,18 @@ export class CertificatesRepository implements CertificateGateway {
     return this.repo.findOne({ where: { certificateNumber } });
   }
 
+  /**
+   * Certificados de un alumno (los que tienen su userId), más recientes primero.
+   * NO cargamos la relación `user` a propósito: no la necesitamos y evita
+   * serializar datos del usuario en la respuesta.
+   */
+  async findByUser(userId: string): Promise<Certificate[]> {
+    return this.repo.find({
+      where: { userId },
+      order: { issuedAt: 'DESC' },
+    });
+  }
+
   async countByAbbreviation(abbreviation: string): Promise<number> {
     // Cuenta todos los certificados cuyo número empieza con la abreviatura dada.
     // Ej: "MR-" → cuenta MR-00001, MR-00002, etc.

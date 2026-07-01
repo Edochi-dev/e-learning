@@ -121,6 +121,16 @@ export interface EditTemplatePayload {
     paperFormat?: string;
 }
 
+/**
+ * CertificateRecipient — Un destinatario al generar un lote.
+ * Modo híbrido: `name` siempre; `userId` solo si se eligió un alumno registrado
+ * (para que el certificado quede ligado a su cuenta).
+ */
+export interface CertificateRecipient {
+    name: string;
+    userId?: string;
+}
+
 export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
@@ -140,13 +150,16 @@ export interface CertificateGateway {
     updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate>;
     listTemplates(): Promise<CertificateTemplate[]>;
     getTemplate(id: string): Promise<CertificateTemplate>;
-    generateBatch(templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]>;
+    generateBatch(templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]>;
     listCertificates(): Promise<Certificate[]>;
     searchCertificates(query: string): Promise<Certificate[]>;
     downloadBatch(ids: string[]): Promise<Blob>;
 
     deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void>;
     deleteCertificate(id: string): Promise<void>;
+
+    // Alumno autenticado: sus propios certificados (los ligados a su cuenta).
+    getMyCertificates(): Promise<Certificate[]>;
 
     // Público
     getCertificate(id: string): Promise<Certificate>;

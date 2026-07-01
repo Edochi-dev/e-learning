@@ -84,4 +84,12 @@ export class HttpAuthGateway implements AuthGateway {
         if (!res.ok) return null;
         return res.json();
     }
+
+    async getAllUsers(): Promise<User[]> {
+        const res = await fetch(`${this.baseUrl}/users`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error('Error al cargar usuarios');
+        return res.json();
+    }
 }

@@ -16,6 +16,7 @@ import {
   FileTypeValidator,
   HttpCode,
   ParseUUIDPipe,
+  Req,
 } from '@nestjs/common';
 import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -41,6 +42,7 @@ import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate
 import type { CertAction } from './use-cases/delete-certificate-template.use-case';
 import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
+import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
@@ -58,6 +60,7 @@ export class CertificatesController {
     private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
     private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
     private readonly lookupCertificateUseCase: LookupCertificateUseCase,
+    private readonly getMyCertificatesUseCase: GetMyCertificatesUseCase,
   ) {}
 
   // ==========================================
@@ -211,6 +214,18 @@ export class CertificatesController {
   @Roles(UserRole.ADMIN)
   deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
     return this.deleteCertificateUseCase.execute(id);
+  }
+
+  // ==========================================
+  // Certificados del alumno autenticado
+  // ==========================================
+
+  // Debe declararse ANTES de 'certificates/:id' para que 'me' no se interprete
+  // como un id. Devuelve solo los certificados ligados a este usuario.
+  @Get('certificates/me')
+  @UseGuards(AuthGuard('jwt'))
+  getMyCertificates(@Req() req: { user: { id: string } }) {
+    return this.getMyCertificatesUseCase.execute(req.user.id);
   }
 
   // ==========================================

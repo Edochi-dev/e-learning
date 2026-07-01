@@ -112,7 +112,7 @@ function AppContent() {
 
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} />} />
+            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
             <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
           </Route>
@@ -129,7 +129,7 @@ function AppContent() {
             <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/:id/editar" element={<EditCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/:id/diseno" element={<EditTemplateDesignPage gateway={certificateGateway} />} />
-            <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} />} />
+            <Route path="/admin/certificados/generar" element={<GenerateCertificatesPage gateway={certificateGateway} authGateway={authGateway} />} />
             <Route path="/admin/certificados/buscar" element={<SearchCertificatesPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/ver/:id" element={<CertificateDetailAdminPage gateway={certificateGateway} />} />
           </Route>

@@ -26,6 +26,7 @@ import { DownloadCertificateBatchUseCase } from './use-cases/download-certificat
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
+import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 
 /**
  * CertificatesModule
@@ -58,6 +59,7 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
     DeleteCertificateTemplateUseCase,
     DeleteCertificateUseCase,
     LookupCertificateUseCase,
+    GetMyCertificatesUseCase,
 
     // Wiring: abstracción → implementación concreta
     {

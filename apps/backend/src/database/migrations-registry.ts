@@ -25,6 +25,7 @@ import { ConsolidateTemplateStyles1774600000000 } from './migrations/17746000000
 import { AddCertificateTemplateSnapshot1774700000000 } from './migrations/1774700000000-AddCertificateTemplateSnapshot';
 import { AddAssignmentLessons1775754021697 } from './migrations/1775754021697-AddAssignmentLessons';
 import { AddAssignmentSubmissions1775761357710 } from './migrations/1775761357710-AddAssignmentSubmissions';
+import { AddCertificateUserId1782800000000 } from './migrations/1782800000000-AddCertificateUserId';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -71,4 +72,5 @@ export const MIGRATIONS = [
   AddCertificateTemplateSnapshot1774700000000,
   AddAssignmentLessons1775754021697,
   AddAssignmentSubmissions1775761357710,
+  AddCertificateUserId1782800000000,
 ];

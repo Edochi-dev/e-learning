@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary } from '../gateways/CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, CertificateRecipient } from '../gateways/CertificateGateway';
 
 /**
  * useCertificates — Hook para las páginas de admin de certificados
@@ -61,8 +61,8 @@ export const useCertificates = (gateway: CertificateGateway) => {
         return template;
     };
 
-    const generateBatch = async (templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]> => {
-        return gateway.generateBatch(templateId, names);
+    const generateBatch = async (templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]> => {
+        return gateway.generateBatch(templateId, recipients);
     };
 
     const downloadBatch = async (ids: string[]): Promise<void> => {

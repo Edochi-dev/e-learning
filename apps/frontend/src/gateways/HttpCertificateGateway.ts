@@ -1,4 +1,4 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient } from './CertificateGateway';
 
 export class HttpCertificateGateway implements CertificateGateway {
     private readonly baseUrl: string;
@@ -76,14 +76,22 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async generateBatch(templateId: string, names: string[]): Promise<GeneratedCertificateSummary[]> {
+    async generateBatch(templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/batch`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ templateId, names }),
+            body: JSON.stringify({ templateId, recipients }),
         });
         if (!res.ok) throw new Error(`Error al generar certificados: ${res.statusText}`);
+        return res.json();
+    }
+
+    async getMyCertificates(): Promise<Certificate[]> {
+        const res = await fetch(`${this.baseUrl}/certificates/me`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`Error al cargar tus certificados: ${res.statusText}`);
         return res.json();
     }
 
