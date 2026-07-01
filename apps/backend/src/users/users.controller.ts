@@ -19,6 +19,8 @@ import { LoginUserDto } from './dto/login-user.dto';
 import { LoginUserUseCase } from './use-cases/login-user.use-case';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { UpdateProfileUseCase } from './use-cases/update-profile.use-case';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from './entities/user.entity';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -41,6 +43,7 @@ export class UsersController {
     private readonly loginUserUseCase: LoginUserUseCase,
     private readonly findAllUsersUseCase: FindAllUsersUseCase,
     private readonly changePasswordUseCase: ChangePasswordUseCase,
+    private readonly updateProfileUseCase: UpdateProfileUseCase,
   ) {}
 
   // Máximo 5 registros por minuto por IP para frenar registro masivo
@@ -85,6 +88,16 @@ export class UsersController {
     @Body() dto: ChangePasswordDto,
   ): Promise<void> {
     await this.changePasswordUseCase.execute(req.user.id, dto);
+  }
+
+  // Actualiza el perfil (por ahora, el nombre) del usuario autenticado.
+  @Patch('me')
+  @UseGuards(AuthGuard('jwt'))
+  async updateProfile(
+    @Req() req: any,
+    @Body() dto: UpdateProfileDto,
+  ): Promise<User> {
+    return this.updateProfileUseCase.execute(req.user.id, dto.fullName);
   }
 
   @Get()

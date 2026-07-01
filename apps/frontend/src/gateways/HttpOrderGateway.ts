@@ -1,5 +1,5 @@
 import type { Order } from '@maris-nails/shared';
-import type { OrderGateway } from './OrderGateway';
+import type { OrderGateway, MyOrder } from './OrderGateway';
 
 /**
  * HttpOrderGateway — Implementación concreta que habla con el backend via fetch().
@@ -33,7 +33,7 @@ export class HttpOrderGateway implements OrderGateway {
         return response.json();
     }
 
-    async getMyOrders(): Promise<Order[]> {
+    async getMyOrders(): Promise<MyOrder[]> {
         const response = await fetch(`${this.baseUrl}/orders/me`, {
             credentials: 'include',
         });

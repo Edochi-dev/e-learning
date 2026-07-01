@@ -11,6 +11,7 @@ import { RegisterUserUseCase } from './use-cases/register-user.use-case';
 import { LoginUserUseCase } from './use-cases/login-user.use-case';
 import { FindAllUsersUseCase } from './use-cases/find-all-users.use-case';
 import { ChangePasswordUseCase } from './use-cases/change-password.use-case';
+import { UpdateProfileUseCase } from './use-cases/update-profile.use-case';
 import { TokenGateway } from './gateways/token.gateway';
 import { JwtTokenService } from './jwt-token.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -41,6 +42,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     LoginUserUseCase,
     FindAllUsersUseCase,
     ChangePasswordUseCase,
+    UpdateProfileUseCase,
   ],
   exports: [UserGateway],
 })

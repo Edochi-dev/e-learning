@@ -30,4 +30,10 @@ export class UsersService implements UserGateway {
   async updatePassword(id: string, hashedPassword: string): Promise<void> {
     await this.userRepository.update(id, { password: hashedPassword });
   }
+
+  async updateProfile(id: string, fullName: string): Promise<User> {
+    await this.userRepository.update(id, { fullName });
+    // Devolvemos el usuario ya actualizado (existe: es el usuario autenticado).
+    return this.userRepository.findOneByOrFail({ id });
+  }
 }

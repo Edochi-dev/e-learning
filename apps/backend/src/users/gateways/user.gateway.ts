@@ -6,4 +6,5 @@ export abstract class UserGateway {
   abstract findOne(id: string): Promise<User | null>;
   abstract findByEmail(email: string): Promise<User | null>;
   abstract updatePassword(id: string, hashedPassword: string): Promise<void>;
+  abstract updateProfile(id: string, fullName: string): Promise<User>;
 }

@@ -112,7 +112,7 @@ function AppContent() {
 
           {/* Rutas protegidas — cualquier usuario autenticado */}
           <Route element={<ProtectedRoute />}>
-            <Route path="/cuenta" element={<AccountPage gateway={authGateway} />} />
+            <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} />} />
             <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
             <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
           </Route>

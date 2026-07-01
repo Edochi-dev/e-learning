@@ -6,6 +6,7 @@ interface AuthContextType {
     user: User | null;
     login: (credentials: LoginCredentials) => Promise<User>;
     register: (payload: RegisterPayload) => Promise<void>;
+    updateProfile: (fullName: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -54,6 +55,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         await login({ email: payload.email, password: payload.password });
     };
 
+    // Actualiza el nombre y refresca el usuario en memoria, para que el cambio
+    // se refleje al instante en el avatar, el saludo y el menú sin recargar.
+    const updateProfile = async (fullName: string) => {
+        const updated = await gateway.updateProfile(fullName);
+        setUser(updated);
+    };
+
     const logout = async () => {
         await gateway.logout();
         setUser(null);
@@ -64,6 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             user,
             login,
             register,
+            updateProfile,
             logout,
             isAuthenticated: !!user,
             isLoading,
