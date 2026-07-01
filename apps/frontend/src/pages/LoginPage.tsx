@@ -38,7 +38,7 @@ export const LoginPage = () => {
                         Iniciar Sesión
                     </h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        Área exclusiva de administración
+                        Entra para acceder a tus cursos
                     </p>
                 </div>
 
@@ -98,6 +98,19 @@ export const LoginPage = () => {
                 <p style={{
                     textAlign: 'center',
                     marginTop: '1.5rem',
+                    marginBottom: 0,
+                    fontSize: '0.9rem',
+                    color: 'var(--text-muted)',
+                }}>
+                    ¿No tienes cuenta?{' '}
+                    <Link to="/registro" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                        Regístrate
+                    </Link>
+                </p>
+
+                <p style={{
+                    textAlign: 'center',
+                    marginTop: '0.75rem',
                     marginBottom: 0,
                     fontSize: '0.875rem',
                     color: 'var(--text-muted)',
