@@ -5858,3 +5858,108 @@ input:checked+.slider .icon-moon {
     transform: translateY(-1rem);
   }
 }
+
+/* ============================================================================
+   USER PICKER (typeahead)
+   Buscador con dropdown de resultados + chips removibles. Se usa para vincular
+   alumnos registrados en "Generar Certificados" sin listar a toda la base.
+   ============================================================================ */
+.user-picker {
+  position: relative;
+}
+
+/* Dropdown de coincidencias, flotando sobre el contenido siguiente */
+.user-picker__results {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  margin: 0;
+  padding: 0.3rem;
+  list-style: none;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  max-height: 14rem;
+  overflow-y: auto;
+}
+
+.user-picker__result {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.65rem;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.user-picker__result:hover,
+.user-picker__result:focus-visible {
+  background: var(--surface);
+  outline: none;
+}
+
+.user-picker__result-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-picker__result-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.user-picker__hint {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Chips de alumnos ya vinculados */
+.user-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.user-picker__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.4rem 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+}
+
+.user-picker__chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+
+.user-picker__chip-remove:hover {
+  background: var(--primary);
+  color: #fff;
+}
