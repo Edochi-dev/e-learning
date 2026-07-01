@@ -6142,16 +6142,9 @@ input:checked+.slider .icon-moon {
   scroll-margin-top: 6rem;
 }
 
-/* Encabezado del FAQ: eyebrow (centrado) + título h2 + subtítulo chico. */
+/* Encabezado del FAQ: eyebrow "Preguntas frecuentes" (centrado) + subtítulo chico. */
 .home-faq .section-eyebrow {
   text-align: center;
-}
-
-.home-faq__title {
-  text-align: center;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  margin: 0.5rem auto 0;
-  max-width: 640px;
 }
 
 .home-faq__subtitle {
