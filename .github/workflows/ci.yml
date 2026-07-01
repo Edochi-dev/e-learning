@@ -1,0 +1,53 @@
+# ============================================================
+#  CI — Integración continua
+# ------------------------------------------------------------
+#  Se ejecuta en cada push a `main` y en cada Pull Request.
+#  Garantiza que el código compila y que los tests unitarios
+#  del backend pasan antes de integrar cambios.
+#
+#  El paquete `@maris-nails/shared` se compila a dist/ (que NO
+#  está en git), por eso es el PRIMER paso del build: tanto el
+#  backend como el frontend lo consumen ya compilado.
+# ============================================================
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    name: Build & test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # `npm ci` instala TODOS los workspaces de forma reproducible
+      # a partir del package-lock.json de la raíz.
+      - name: Install dependencies
+        run: npm ci
+
+      # Debe ir antes que backend y frontend: ambos importan su dist/.
+      - name: Build shared package
+        run: npm run build -w packages/shared
+
+      - name: Build backend
+        run: npm run build -w apps/backend
+
+      # Tests unitarios: usan mocks de los gateways, NO requieren base
+      # de datos. (Los tests E2E con supertest se añadirán aparte.)
+      - name: Test backend (unit)
+        run: npm run test -w apps/backend
+
+      - name: Build frontend
+        run: npm run build -w apps/frontend
