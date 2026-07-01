@@ -55,6 +55,10 @@ export function FaqSection() {
         <section className="home-faq reveal">
             <div className="container">
                 <p className="section-eyebrow">Preguntas frecuentes</p>
+                <p className="home-faq__subtitle">
+                    ¿Tienes dudas sobre algún curso o problemas para comenzar tu formación?
+                    Estamos aquí para orientarte.
+                </p>
 
                 <div className="home-faq__list">
                     {FAQS.map((item, i) => {

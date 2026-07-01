@@ -6142,9 +6142,18 @@ input:checked+.slider .icon-moon {
   scroll-margin-top: 6rem;
 }
 
-/* Sin título extra: el eyebrow "Preguntas frecuentes" hace de encabezado, centrado. */
+/* El eyebrow "Preguntas frecuentes" hace de encabezado (centrado) + subtítulo chico. */
 .home-faq .section-eyebrow {
   text-align: center;
+}
+
+.home-faq__subtitle {
+  text-align: center;
+  max-width: 560px;
+  margin: -0.25rem auto 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .home-faq__list {
