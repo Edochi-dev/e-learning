@@ -5,14 +5,14 @@ import { useToast } from '../components/Toast';
 import type { AuthGateway } from '../gateways/AuthGateway';
 import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
 import type { CertificateGateway, Certificate } from '../gateways/CertificateGateway';
-import type { NameChangeGateway } from '../gateways/NameChangeGateway';
+import type { StudentNameChangeGateway } from '../gateways/NameChangeGateway';
 import { OrderStatus, NameChangeRequestStatus, type NameChangeRequest } from '@maris-nails/shared';
 
 interface Props {
     gateway: AuthGateway;
     orderGateway: OrderGateway;
     certificateGateway: CertificateGateway;
-    nameChangeGateway: NameChangeGateway;
+    nameChangeGateway: StudentNameChangeGateway;
 }
 
 type Tab = 'cuenta' | 'certificados' | 'facturacion';

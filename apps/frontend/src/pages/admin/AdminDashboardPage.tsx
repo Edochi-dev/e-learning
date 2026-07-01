@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { CorrectionGateway } from '../../gateways/CorrectionGateway';
-import type { NameChangeGateway } from '../../gateways/NameChangeGateway';
+import type { AdminNameChangeGateway } from '../../gateways/NameChangeGateway';
 
 /**
  * AdminDashboardPage — Hub principal del panel de administración.
@@ -19,7 +19,7 @@ import type { NameChangeGateway } from '../../gateways/NameChangeGateway';
 
 interface Props {
     correctionGateway: CorrectionGateway;
-    nameChangeGateway: NameChangeGateway;
+    nameChangeGateway: AdminNameChangeGateway;
 }
 
 export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameChangeGateway }) => {

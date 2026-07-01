@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import type { NameChangeGateway } from '../../gateways/NameChangeGateway';
+import type { AdminNameChangeGateway } from '../../gateways/NameChangeGateway';
 import type { NameChangeRequest } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
 
 interface Props {
-    gateway: NameChangeGateway;
+    gateway: AdminNameChangeGateway;
 }
 
 /**

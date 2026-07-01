@@ -1,13 +1,20 @@
 import type { NameChangeRequest } from '@maris-nails/shared';
-import type { NameChangeGateway } from './NameChangeGateway';
+import type {
+    StudentNameChangeGateway,
+    AdminNameChangeGateway,
+} from './NameChangeGateway';
 
 /**
- * HttpNameChangeGateway — Implementación HTTP del NameChangeGateway.
+ * HttpNameChangeGateway — Implementación HTTP de ambos contratos.
  *
- * Habla con los endpoints de /name-change-requests del backend. La cookie
- * HttpOnly viaja sola con credentials: 'include'.
+ * Cumple StudentNameChangeGateway y AdminNameChangeGateway: una sola clase para
+ * el recurso /name-change-requests. Cada página recibe solo la interfaz que usa
+ * (ISP), pero la instancia concreta es única. La cookie HttpOnly viaja sola con
+ * credentials: 'include'.
  */
-export class HttpNameChangeGateway implements NameChangeGateway {
+export class HttpNameChangeGateway
+    implements StudentNameChangeGateway, AdminNameChangeGateway
+{
     private readonly baseUrl: string;
 
     constructor(baseUrl: string) {
