@@ -241,7 +241,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: all 0.4s var(--ease-out);
+  transition: background var(--dur-slow) var(--ease-out), border-bottom-color var(--dur-slow) var(--ease-out);
 }
 
 [data-theme='dark'] .header {
@@ -936,7 +936,8 @@ a {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
-  transition: all 0.3s var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
 }
 
 .cd-timeline__content:hover {
@@ -1079,7 +1080,8 @@ a {
   background: linear-gradient(135deg, var(--primary), var(--gold));
   color: #fff;
   cursor: pointer;
-  transition: all 0.3s var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
   box-shadow: 0 4px 15px rgba(232, 67, 147, 0.3);
 }
 
@@ -1255,7 +1257,7 @@ select {
   padding: 0.8rem 1rem;
   width: 100%;
   box-sizing: border-box;
-  transition: all 0.3s ease;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   outline: none;
 }
 
@@ -1299,7 +1301,8 @@ label {
   right: 0;
   bottom: 0;
   background: linear-gradient(135deg, var(--gold-light), #e6ddd4);
-  transition: all 0.4s var(--ease-out);
+  transition: background var(--dur-slow) var(--ease-out), border-color var(--dur-slow) var(--ease-out),
+    filter var(--dur-slow) var(--ease-out);
   border-radius: 34px;
   border: 2px solid transparent;
   display: flex;
@@ -1317,7 +1320,8 @@ label {
   left: 4px;
   bottom: 2px;
   background: white;
-  transition: all 0.4s var(--ease-bounce);
+  transition: transform var(--dur-slow) var(--ease-bounce), background var(--dur-slow) var(--ease-bounce),
+    box-shadow var(--dur-slow) var(--ease-bounce);
   border-radius: 50%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   z-index: 2;
@@ -1562,7 +1566,8 @@ input:checked+.slider .icon-moon {
   padding: 2rem;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: all 0.4s var(--ease-out);
+  transition: box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out),
+    border-color var(--dur-slow) var(--ease-out);
   position: relative;
   overflow: hidden;
 }
@@ -1656,7 +1661,8 @@ input:checked+.slider .icon-moon {
   color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
-  transition: all 0.3s var(--ease-out);
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
 .admin-course-link:hover {
@@ -1694,7 +1700,8 @@ input:checked+.slider .icon-moon {
   color: #1a1a1a;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out), opacity var(--dur-base) var(--ease-out);
   white-space: nowrap;
 }
 
@@ -1850,7 +1857,9 @@ input:checked+.slider .icon-moon {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem 1.5rem;
-  transition: all 0.3s var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
 }
 
 .admin-lesson-item:hover {
@@ -2170,7 +2179,7 @@ input:checked+.slider .icon-moon {
   font-weight: 500;
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
-  transition: all 0.3s ease;
+  transition: color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
 
 .back-link:hover {
@@ -2232,7 +2241,7 @@ input:checked+.slider .icon-moon {
   cursor: pointer;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  transition: all 0.2s ease;
+  transition: color var(--dur-base) var(--ease-out), border-bottom-color var(--dur-base) var(--ease-out);
 }
 
 .admin-tab:hover {
@@ -2391,7 +2400,8 @@ input:checked+.slider .icon-moon {
   font-family: var(--font-body);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
 }
 
 .history-page-btn:hover:not(:disabled) {
@@ -2581,7 +2591,7 @@ input:checked+.slider .icon-moon {
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: opacity var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 
 .review-btn:disabled {
@@ -3158,7 +3168,8 @@ input:checked+.slider .icon-moon {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
   overflow: hidden;
-  transition: all 0.5s var(--ease-bounce);
+  transition: transform var(--dur-slow) var(--ease-bounce), box-shadow var(--dur-slow) var(--ease-bounce),
+    border-color var(--dur-slow) var(--ease-bounce);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -3302,7 +3313,7 @@ input:checked+.slider .icon-moon {
   font-weight: 600;
   font-size: 0.95rem;
   text-decoration: none;
-  transition: all 0.35s var(--ease-out);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   border: none;
   cursor: pointer;
   letter-spacing: 0.01em;
@@ -3476,7 +3487,8 @@ input:checked+.slider .icon-moon {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: all 0.4s var(--ease-out);
+  transition: box-shadow var(--dur-slow) var(--ease-out), border-color var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
   position: relative;
 }
 
@@ -4777,7 +4789,7 @@ input:checked+.slider .icon-moon {
   color: var(--text-secondary);
   font-size: 0.85rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
   /* El botón ocupa todo el ancho disponible de su columna grid, con
      ellipsis si el título de la lección es muy largo. Sin max-width
      fijo: el layout grid ya restringe la columna. */
@@ -4960,7 +4972,7 @@ input:checked+.slider .icon-moon {
   background: transparent;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s;
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
   color: var(--text-secondary);
   width: 100%;
 }
@@ -4995,7 +5007,7 @@ input:checked+.slider .icon-moon {
   flex-shrink: 0;
   background: var(--border);
   color: var(--text-secondary);
-  transition: all 0.2s;
+  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
 }
 
 .course-learn__lesson-item--active .course-learn__lesson-number {
@@ -5217,7 +5229,8 @@ input:checked+.slider .icon-moon {
   font-weight: 600;
   font-family: var(--font-body);
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   text-align: center;
 }
 
@@ -5295,7 +5308,7 @@ input:checked+.slider .icon-moon {
   font-size: 0.78rem;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: all 0.2s ease;
+  transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
 }
 
 .quiz-builder__remove-btn:hover {
@@ -5406,7 +5419,7 @@ input:checked+.slider .icon-moon {
   font-size: 0.8rem;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
   margin-top: 0.25rem;
 }
 
@@ -5425,7 +5438,7 @@ input:checked+.slider .icon-moon {
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: all 0.25s ease;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
   width: 100%;
 }
 
@@ -5594,7 +5607,8 @@ input:checked+.slider .icon-moon {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out);
   background: var(--bg);
 }
 
