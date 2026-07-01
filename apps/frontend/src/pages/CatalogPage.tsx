@@ -5,6 +5,7 @@ import { useCourses } from '../hooks/useCourses';
 
 import { API_URL as BACKEND_URL } from '../config';
 import { COURSE_LEVEL_OPTIONS } from '../constants/courseLevels';
+import { SkeletonCourseCard } from '../components/Skeleton';
 
 interface CatalogPageProps {
     gateway: CourseGateway;
@@ -89,7 +90,11 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                 </div>
 
                 {loading && (
-                    <p className="catalog-loading">Cargando programas...</p>
+                    <div className="catalog-grid">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                            <SkeletonCourseCard key={i} />
+                        ))}
+                    </div>
                 )}
 
                 {!loading && error && (

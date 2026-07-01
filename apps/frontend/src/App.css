@@ -42,6 +42,18 @@
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
 
+  /* Spacing scale (base 0.25rem). Usar estos tokens en lugar de valores
+     sueltos para mantener un ritmo vertical/horizontal consistente. */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-8: 3rem;
+  --space-10: 4rem;
+  --space-12: 6rem;
+
   /* Typography */
   --font-heading: 'Kaushan Script', cursive;
   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
@@ -63,6 +75,39 @@
   */
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
+}
+
+/* === ACCESIBILIDAD: movimiento reducido ===
+   Respeta a quienes activan "reducir movimiento" en su sistema (mareos,
+   vestibular, etc.). Acorta animaciones/transiciones a casi-instantáneo en
+   lugar de eliminarlas, para no romper lógica que dependa de transitionend. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === SKELETON LOADERS === */
+.skeleton {
+  display: block;
+  background: linear-gradient(
+    90deg,
+    var(--surface) 25%,
+    var(--bg-elevated) 37%,
+    var(--surface) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
 }
 
 /* === DARK MODE === */
@@ -327,7 +372,7 @@ a {
   );
 }
 
-/* La imagen real — cuando Mariana entregue la foto */
+/* La imagen real — cuando Maria entregue la foto */
 .hero__photo-img {
   width: 100%;
   height: 100%;
