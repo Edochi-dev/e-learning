@@ -79,11 +79,6 @@ export const HomePage = ({ gateway }: HomePageProps) => {
 
                     {/* Columna izquierda — texto */}
                     <div className="hero__content">
-                        <div className="hero__eyebrow">
-                            <span className="hero__eyebrow-dot" />
-                            <span>Nail Art Academy · Est. 2024</span>
-                        </div>
-
                         <h1 className="hero__heading">
                             Transforma<br />
                             Tu <em>Técnica.</em>

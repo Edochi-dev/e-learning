@@ -410,31 +410,6 @@ a {
   text-transform: uppercase;
 }
 
-/* ── Eyebrow pill ── */
-.hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: rgba(232, 67, 147, 0.08);
-  border: 1px solid rgba(232, 67, 147, 0.2);
-  border-radius: 100px;
-  padding: 0.35rem 1rem 0.35rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--primary);
-  margin-bottom: 2rem;
-}
-
-.hero__eyebrow-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-  flex-shrink: 0;
-}
-
 /* ── Heading ── */
 .hero__heading {
   font-size: clamp(3.2rem, 7vw, 6.5rem);
