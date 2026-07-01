@@ -77,21 +77,6 @@
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
 }
 
-/* === ACCESIBILIDAD: movimiento reducido ===
-   Respeta a quienes activan "reducir movimiento" en su sistema (mareos,
-   vestibular, etc.). Acorta animaciones/transiciones a casi-instantáneo en
-   lugar de eliminarlas, para no romper lógica que dependa de transitionend. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
 /* === SKELETON LOADERS === */
 .skeleton {
   display: block;
