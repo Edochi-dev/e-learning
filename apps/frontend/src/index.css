@@ -7,6 +7,13 @@
   padding: 0;
 }
 
+html {
+  /* Desplazamiento suave para saltos por ancla (#contacto, etc.).
+     El JS ya usa scrollIntoView({ behavior: 'smooth' }); esto lo respalda
+     para cualquier navegación por ancla nativa. */
+  scroll-behavior: smooth;
+}
+
 body {
   width: 100%;
   min-height: 100vh;

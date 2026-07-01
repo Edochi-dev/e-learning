@@ -4350,6 +4350,10 @@ input:checked+.slider .icon-moon {
 .home-contact {
   padding: 3rem 0;
   text-align: center;
+  /* El header es sticky (~77px). Sin este offset, al saltar a #contacto la
+     sección queda tapada por el header. scroll-margin-top frena el scroll
+     antes del borde superior para dejar la sección despejada. */
+  scroll-margin-top: 6rem;
 }
 
 .home-contact__inner {
