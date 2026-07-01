@@ -11,7 +11,7 @@ interface HomePageProps {
 
 const PREVIEW_COUNT = 3;
 
-// Fotos de galería — reemplaza `src` con rutas reales cuando Mariana las entregue.
+// Fotos de galería — reemplaza `src` con rutas reales cuando Maria las entregue.
 // Por ahora cada item tiene un gradiente de placeholder y una etiqueta descriptiva.
 const GALLERY_ROW_1 = [
     { id: 1,  label: 'Certificación masiva · Santiago 2024',   gradient: 'linear-gradient(135deg,#3D0A1C,#9E1048)' },
@@ -100,8 +100,8 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                     </div>
 
                     {/* Columna derecha — foto
-                        Cuando Mariana entregue la foto, reemplaza el div placeholder por:
-                        <img src="/ruta-foto.jpg" alt="Trabajo de Mari Sandoval" className="hero__photo-img" />
+                        Cuando Maria entregue la foto, reemplaza el div placeholder por:
+                        <img src="/ruta-foto.jpg" alt="Trabajo de Maria Sandoval" className="hero__photo-img" />
                     */}
                     <div className="hero__photo">
                         <div className="hero__photo-placeholder">
@@ -159,12 +159,12 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                 <div className="container">
                     <div className="home-about__inner">
                         <div className="home-about__image-wrap">
-                            <img src="/images/About-me.jpg" alt="Mari Sandoval" className="home-about__avatar" />
+                            <img src="/images/About-me.jpg" alt="Maria Sandoval" className="home-about__avatar" />
                         </div>
                         <div className="home-about__content">
                             <p className="section-eyebrow">Sobre la educadora</p>
                             <h2>
-                                Mari <span className="home-about__name">Sandoval</span>
+                                Maria <span className="home-about__name">Sandoval</span>
                             </h2>
                             <p className="home-about__role">Nail Artist & Educadora Certificada</p>
                             <p className="home-about__bio">
@@ -294,10 +294,10 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 rel="noreferrer"
                                 className="contact-card contact-card--whatsapp"
                             >
-                                <img src="/images/whatsapp.png" alt="Mari Sandoval" className="contact-card__photo" />
+                                <img src="/images/whatsapp.png" alt="Maria Sandoval" className="contact-card__photo" />
                                 <div className="contact-card__body">
                                     <span className="contact-card__platform contact-card__platform--whatsapp">WhatsApp</span>
-                                    <span className="contact-card__name">Mari Sandoval</span>
+                                    <span className="contact-card__name">Maria Sandoval</span>
                                     <span className="contact-card__value">+56 9 4662 2112</span>
                                 </div>
                                 <span className="contact-card__cta">Enviar mensaje →</span>
@@ -308,10 +308,10 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                 rel="noreferrer"
                                 className="contact-card contact-card--instagram"
                             >
-                                <img src="/images/instagram.jpg" alt="Mari Sandoval" className="contact-card__photo" />
+                                <img src="/images/instagram.jpg" alt="Maria Sandoval" className="contact-card__photo" />
                                 <div className="contact-card__body">
                                     <span className="contact-card__platform contact-card__platform--instagram">Instagram</span>
-                                    <span className="contact-card__name">Mari Sandoval</span>
+                                    <span className="contact-card__name">Maria Sandoval</span>
                                     <span className="contact-card__value">@maris_nails_oficial</span>
                                 </div>
                                 <span className="contact-card__cta">Ver perfil →</span>
