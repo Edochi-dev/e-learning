@@ -12,11 +12,11 @@
   --primary-dark: #c0392b;
   --primary-glow: rgba(232, 67, 147, 0.35);
 
-  /* Champagne Gold Palette */
-  --gold: #C9A84C;
-  --gold-light: #E2C97E;
-  --gold-dark: #9A7A28;
-  --gold-glow: rgba(201, 168, 76, 0.3);
+  /* Champagne Gold Palette — anclada al dorado del logo (más ámbar, menos amarillo) */
+  --gold: #CD9E55;
+  --gold-light: #E7C687;
+  --gold-dark: #9C7734;
+  --gold-glow: rgba(205, 158, 85, 0.3);
   /* Texto legible sobre fondo dorado. El dorado es claro en ambos temas,
      por eso este token NO se sobreescribe en dark: siempre es oscuro. */
   --text-on-gold: #2d1b14;
@@ -112,10 +112,10 @@
   --primary-dark: #e84393;
   --primary-glow: rgba(253, 121, 168, 0.25);
 
-  --gold: #D4B05A;
-  --gold-light: #E8CC84;
-  --gold-dark: #A07D2A;
-  --gold-glow: rgba(212, 176, 90, 0.2);
+  --gold: #D8AC63;
+  --gold-light: #ECD094;
+  --gold-dark: #A57F3A;
+  --gold-glow: rgba(216, 172, 99, 0.2);
 
   --bg: #0d0a09;
   --bg-elevated: #1c1614;
@@ -3309,7 +3309,7 @@ input:checked+.slider .icon-moon {
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CD9E55' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 14px;
