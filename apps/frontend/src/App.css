@@ -1425,10 +1425,13 @@ input:checked+.slider .icon-moon {
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--primary-light), var(--gold));
   border-radius: var(--radius-full);
+  /* Los gradientes no se interpolan en una transición de 'background', así que
+     el oscurecido al hover se anima con 'filter', que sí es transicionable. */
+  transition: filter var(--dur-base) var(--ease-out);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--primary), var(--gold-dark));
+  filter: brightness(0.92) saturate(1.15);
 }
 
 /* === SELECTION COLOR === */
