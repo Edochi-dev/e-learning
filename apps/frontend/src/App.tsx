@@ -43,6 +43,7 @@ import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
+import { smoothScrollToElement, getHeaderOffset } from './lib/smoothScroll';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
@@ -57,7 +58,7 @@ function AppContent() {
   function handleContactoClick(e: React.MouseEvent) {
     e.preventDefault();
     if (location.pathname === '/') {
-      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
+      smoothScrollToElement('contacto', { offset: getHeaderOffset() });
     } else {
       navigate('/', { state: { scrollTo: 'contacto' } });
     }

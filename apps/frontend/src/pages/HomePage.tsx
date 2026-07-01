@@ -4,6 +4,8 @@ import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
 import { API_URL as BACKEND_URL } from '../config';
+import { smoothScrollToElement, getHeaderOffset } from '../lib/smoothScroll';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface HomePageProps {
     gateway: CourseGateway;
@@ -60,11 +62,14 @@ export const HomePage = ({ gateway }: HomePageProps) => {
     useEffect(() => {
         if (location.state?.scrollTo === 'contacto') {
             const timer = setTimeout(() => {
-                document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
+                smoothScrollToElement('contacto', { offset: getHeaderOffset() });
             }, 100);
             return () => clearTimeout(timer);
         }
     }, []);
+
+    // Anima la aparición de las secciones al ir bajando (fade + slide-up).
+    useScrollReveal();
 
     return (
         <>
@@ -114,11 +119,11 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             </section>
 
             {/* ─── GALERÍA MARQUEE ─────────────────────────────── */}
-            <section className="gallery-section">
+            <section className="gallery-section reveal">
                 <div className="container">
                     <p className="section-eyebrow">Certificaciones &amp; Talleres</p>
                     <p className="gallery-section__sub">
-                        Más de 500 alumnas certificadas en clases presenciales y online.
+                        Más de 3000 alumnas certificadas en clases presenciales y online.
                     </p>
                 </div>
 
@@ -155,7 +160,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             <hr className="section-divider" />
 
             {/* ─── SOBRE LA EDUCADORA ───────────────────────────── */}
-            <section id="sobre-mi" className="home-about">
+            <section id="sobre-mi" className="home-about reveal">
                 <div className="container">
                     <div className="home-about__inner">
                         <div className="home-about__image-wrap">
@@ -166,29 +171,38 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                             <h2>
                                 Maria <span className="home-about__name">Sandoval</span>
                             </h2>
-                            <p className="home-about__role">Nail Artist & Educadora Certificada</p>
-                            <p className="home-about__bio">
-                                Con más de 12 años perfeccionando el arte de las uñas, he formado a cientos
-                                de profesionales en México y Latinoamérica. Mi metodología combina técnica
-                                impecable con creatividad auténtica — porque una nail artist completa domina
-                                tanto el pincel como el negocio.
+                            <p className="home-about__role">
+                                Fundadora de Mari's Nails Academy y formadora de manicuristas e
+                                instructoras en Latinoamérica.
                             </p>
                             <p className="home-about__bio">
-                                Certificada en México, España y EE.UU. Jueza en competencias nacionales de
-                                nail art. Mi misión: que cada alumna salga con seguridad, estilo propio y
-                                una carrera sostenible.
+                                Mi historia comenzó enseñando desde lo más sencillo, con la convicción de
+                                que una mujer con conocimiento, dirección y fe en sí misma puede transformar
+                                su vida. Hoy, después de años formando profesionales, sigo creyendo que las
+                                uñas no son solo técnica: son una herramienta de crecimiento, independencia
+                                y propósito.
+                            </p>
+                            <p className="home-about__bio">
+                                Mi metodología une técnica avanzada, pedagogía, corrección real, liderazgo y
+                                visión de negocio, porque una nail artist completa no solo aprende a hacer
+                                uñas hermosas: aprende a pensar como profesional, a enseñar con seguridad y a
+                                construir una carrera sostenible.
+                            </p>
+                            <p className="home-about__bio">
+                                Mi misión es acompañar a cada alumna a descubrir su valor, perfeccionar su
+                                talento y convertirse en una profesional con criterio, identidad y autoridad.
                             </p>
                             <div className="home-stats">
                                 <div className="stat-item">
-                                    <span className="stat-value">500+</span>
+                                    <span className="stat-value">3000+</span>
                                     <span className="stat-label">Alumnas</span>
                                 </div>
                                 <div className="stat-item">
-                                    <span className="stat-value">12</span>
-                                    <span className="stat-label">Años de exp.</span>
+                                    <span className="stat-value">10+</span>
+                                    <span className="stat-label">Años en educación</span>
                                 </div>
                                 <div className="stat-item">
-                                    <span className="stat-value">3</span>
+                                    <span className="stat-value">5+</span>
                                     <span className="stat-label">Certif. internac.</span>
                                 </div>
                             </div>
@@ -200,7 +214,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             <hr className="section-divider" />
 
             {/* ─── PREVIEW DE CURSOS ───────────────────────────── */}
-            <section className="home-preview">
+            <section className="home-preview reveal">
                 <div className="container">
                     <div className="home-preview__header">
                         <p className="section-eyebrow">Aprende lo que el mercado exige</p>
@@ -279,7 +293,7 @@ export const HomePage = ({ gateway }: HomePageProps) => {
             <hr className="section-divider" />
 
             {/* ─── CONTACTO ────────────────────────────────────── */}
-            <section id="contacto" className="home-contact">
+            <section id="contacto" className="home-contact reveal">
                 <div className="container">
                     <div className="home-contact__inner">
                         <p className="section-eyebrow">Ponte en contacto</p>

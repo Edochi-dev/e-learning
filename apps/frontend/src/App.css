@@ -6141,3 +6141,21 @@ input:checked+.slider .icon-moon {
   background: var(--primary);
   color: #fff;
 }
+
+/* ============================================================================
+   SCROLL REVEAL
+   Fade + slide-up al entrar en viewport (ver hook useScrollReveal).
+   Estado inicial oculto; .reveal--visible lo muestra. Solo opacity/transform,
+   así que no provoca reflow ni layout shift.
+   ============================================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  will-change: opacity, transform;
+}
+
+.reveal--visible {
+  opacity: 1;
+  transform: none;
+}
