@@ -85,8 +85,9 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                         </h1>
 
                         <p className="hero__desc">
-                            Formación premium en nail art para quienes toman su oficio en serio.
-                            Técnica, estilo y negocio en un solo lugar.
+                            Formaciones premium para nail artists que buscan la excelencia.
+                            Domina la técnica, define tu estilo y convierte tu talento en una
+                            carrera rentable.
                         </p>
 
                         <div className="hero-actions">
