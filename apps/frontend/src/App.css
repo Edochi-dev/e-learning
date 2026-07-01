@@ -6142,9 +6142,16 @@ input:checked+.slider .icon-moon {
   scroll-margin-top: 6rem;
 }
 
-/* El eyebrow "Preguntas frecuentes" hace de encabezado (centrado) + subtítulo chico. */
+/* Encabezado del FAQ: eyebrow (centrado) + título h2 + subtítulo chico. */
 .home-faq .section-eyebrow {
   text-align: center;
+}
+
+.home-faq__title {
+  text-align: center;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  margin: 0.5rem auto 0;
+  max-width: 640px;
 }
 
 .home-faq__subtitle {
@@ -6157,7 +6164,7 @@ input:checked+.slider .icon-moon {
 }
 
 .home-faq__list {
-  max-width: 940px;
+  max-width: 1060px;
   margin: 2.5rem auto 0;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -6195,9 +6202,12 @@ input:checked+.slider .icon-moon {
   cursor: pointer;
   text-align: left;
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-primary);
+  /* En 2 columnas las preguntas van en UNA sola línea (cuadros concordantes).
+     En móvil (1 columna) se permite envolver — ver media query. */
+  white-space: nowrap;
 }
 
 .faq-item__icon {
@@ -6235,10 +6245,15 @@ input:checked+.slider .icon-moon {
   line-height: 1.75;
 }
 
-/* FAQ: una sola columna en pantallas chicas */
-@media (max-width: 700px) {
+/* FAQ: una sola columna cuando no caben dos preguntas en una línea */
+@media (max-width: 960px) {
   .home-faq__list {
     grid-template-columns: 1fr;
-    max-width: 560px;
+    max-width: 600px;
+  }
+
+  /* En una columna las preguntas largas SÍ pueden envolver (sin overflow). */
+  .faq-item__trigger {
+    white-space: normal;
   }
 }

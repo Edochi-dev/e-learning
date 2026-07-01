@@ -41,10 +41,6 @@ const FAQS: { q: string; a: string }[] = [
         q: '¿Cómo me inscribo? ¿Es complicado?',
         a: `Creas tu cuenta gratis con tu nombre y tu correo, nada más. Desde ahí eliges tu formación y empiezas. Si te trabas en algún paso, escríbenos y te guiamos.`,
     },
-    {
-        q: 'Se me olvida la contraseña o me pierdo, ¿pierdo todo?',
-        a: `Nunca. Si olvidas tu contraseña, con un correo creas una nueva y tus cursos y certificados siguen intactos, esperándote. Y si te sientes perdida, siempre puedes escribirnos por WhatsApp o Instagram.`,
-    },
 ];
 
 export function FaqSection() {
@@ -55,6 +51,7 @@ export function FaqSection() {
         <section className="home-faq reveal">
             <div className="container">
                 <p className="section-eyebrow">Preguntas frecuentes</p>
+                <h2 className="home-faq__title">Antes de empezar resolvamos tus dudas</h2>
                 <p className="home-faq__subtitle">
                     ¿Tienes dudas sobre algún curso o problemas para comenzar tu formación?
                     Estamos aquí para orientarte.
