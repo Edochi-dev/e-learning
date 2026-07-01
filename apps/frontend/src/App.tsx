@@ -76,7 +76,7 @@ function AppContent() {
       <header className="header">
         <div className="container nav">
           <Link to="/" className="logo">
-            <img src="/images/Logo dorado.PNG" alt="" className="logo__img" />
+            <img src="/images/logo.png" alt="" className="logo__img" />
             <span className="logo__name"><em>Mari's Nails Academy</em></span>
           </Link>
           <nav className="nav-links">

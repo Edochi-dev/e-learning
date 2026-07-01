@@ -270,7 +270,7 @@ a {
 
 .logo__img {
   height: 48px;
-  width: 48px;
+  width: auto;
 }
 
 .logo__name {
@@ -1374,7 +1374,7 @@ input:checked+.slider .icon-moon {
 
   .logo__img {
     height: 38px;
-    width: 38px;
+    width: auto;
   }
 
   .logo__name {
