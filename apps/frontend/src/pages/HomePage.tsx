@@ -61,9 +61,10 @@ export const HomePage = ({ gateway }: HomePageProps) => {
     // Si venimos de otra página con la intención de ir a #contacto,
     // esperamos a que el DOM esté listo y hacemos scroll suave.
     useEffect(() => {
-        if (location.state?.scrollTo === 'contacto') {
+        const target = location.state?.scrollTo;
+        if (target) {
             const timer = setTimeout(() => {
-                smoothScrollToElement('contacto', { offset: getHeaderOffset() });
+                smoothScrollToElement(target, { offset: getHeaderOffset() });
             }, 100);
             return () => clearTimeout(timer);
         }

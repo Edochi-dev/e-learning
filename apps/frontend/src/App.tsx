@@ -56,12 +56,15 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  function handleContactoClick(e: React.MouseEvent) {
+  // Enlace del header a una sección de la landing (Contacto, Preguntas, etc.).
+  // Si ya estamos en la home, hace scroll suave; si no, navega a la home y deja
+  // en el state qué sección abrir (la home lo lee y hace el scroll al montar).
+  function handleSectionLink(e: React.MouseEvent, sectionId: string) {
     e.preventDefault();
     if (location.pathname === '/') {
-      smoothScrollToElement('contacto', { offset: getHeaderOffset() });
+      smoothScrollToElement(sectionId, { offset: getHeaderOffset() });
     } else {
-      navigate('/', { state: { scrollTo: 'contacto' } });
+      navigate('/', { state: { scrollTo: sectionId } });
     }
   }
   // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
@@ -88,7 +91,8 @@ function AppContent() {
             {user?.role === UserRole.ADMIN && (
               <>
                 <Link to="/cursos">Cursos</Link>
-                <a href="#contacto" onClick={handleContactoClick}>Contacto</a>
+                <a href="#preguntas" onClick={(e) => handleSectionLink(e, 'preguntas')}>Preguntas frecuentes</a>
+                <a href="#contacto" onClick={(e) => handleSectionLink(e, 'contacto')}>Contacto</a>
               </>
             )}
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
