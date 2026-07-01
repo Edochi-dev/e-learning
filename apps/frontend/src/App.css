@@ -505,6 +505,9 @@ a {
   border: none;
   position: relative;
   overflow: hidden;
+  /* z-index: 0 crea un contexto de apilamiento para que el overlay dorado
+     (::before, z-index: -1) quede DETRÁS del texto y no lo tape. */
+  z-index: 0;
 }
 
 .btn-primary::before {
@@ -514,6 +517,8 @@ a {
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
+  /* Detrás del contenido: se pinta sobre el fondo rosa pero bajo las letras. */
+  z-index: -1;
 }
 
 .btn-primary:hover {
@@ -534,12 +539,6 @@ a {
 
 .btn-primary:hover::before {
   opacity: 1;
-}
-
-.btn-primary span,
-.btn-primary:not(:empty) {
-  position: relative;
-  z-index: 1;
 }
 
 .btn-secondary {
