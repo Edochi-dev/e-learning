@@ -10,6 +10,7 @@ import {
   ValidateNested,
   ValidateIf,
   IsUUID,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LessonType } from '@maris-nails/shared';
@@ -70,6 +71,19 @@ export class CreateLessonDto {
   @ValidateIf((o: CreateLessonDto) => o.type === 'class')
   @IsBoolean()
   isLive?: boolean;
+
+  // Fecha/hora de la clase en vivo — OBLIGATORIA solo cuando isLive es true.
+  // Si no es en vivo, el campo se ignora (ValidateIf lo salta).
+  @ValidateIf((o: CreateLessonDto) => o.type === 'class' && o.isLive === true)
+  @IsDateString(
+    {},
+    { message: 'La clase en vivo requiere fecha/hora de inicio.' },
+  )
+  liveStartsAt?: string;
+
+  @ValidateIf((o: CreateLessonDto) => o.type === 'class' && o.isLive === true)
+  @IsDateString({}, { message: 'La clase en vivo requiere fecha/hora de fin.' })
+  liveEndsAt?: string;
 
   // ─── Campos exclusivos de type='exam' ──────────────────────────────
 

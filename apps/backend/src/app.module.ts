@@ -14,6 +14,7 @@ import { CertificatesModule } from './certificates/certificates.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CorrectionsModule } from './corrections/corrections.module';
 import { NameChangeRequestsModule } from './name-change-requests/name-change-requests.module';
+import { ScheduleModule } from './schedule/schedule.module';
 import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
@@ -81,6 +82,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     NotificationsModule,
     CorrectionsModule,
     NameChangeRequestsModule,
+    ScheduleModule,
   ],
 })
 export class AppModule implements NestModule {

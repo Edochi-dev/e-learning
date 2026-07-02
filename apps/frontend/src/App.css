@@ -6250,3 +6250,175 @@ input:checked+.slider .icon-moon {
     white-space: normal;
   }
 }
+
+/* ============================================================================
+   AGENDA (panel admin) — FullCalendar tematizado + modal
+   ============================================================================ */
+.agenda-calendar {
+  /* Variables de FullCalendar v6 mapeadas a la paleta de marca */
+  --fc-button-bg-color: var(--primary);
+  --fc-button-border-color: var(--primary);
+  --fc-button-hover-bg-color: var(--primary-light);
+  --fc-button-hover-border-color: var(--primary-light);
+  --fc-button-active-bg-color: var(--primary-light);
+  --fc-button-active-border-color: var(--primary-light);
+  --fc-today-bg-color: rgba(232, 67, 147, 0.07);
+  --fc-border-color: var(--border);
+  --fc-page-bg-color: transparent;
+  --fc-neutral-bg-color: var(--surface);
+  --fc-now-indicator-color: var(--primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+}
+
+.agenda-calendar .fc .fc-toolbar-title {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+}
+
+.agenda-calendar .fc .fc-col-header-cell-cushion,
+.agenda-calendar .fc .fc-daygrid-day-number,
+.agenda-calendar .fc .fc-timegrid-slot-label-cushion,
+.agenda-calendar .fc .fc-list-day-text {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+/* Colores de eventos por origen */
+.fc .agenda-ev--personal {
+  background-color: var(--gold);
+  border-color: var(--gold-dark);
+}
+
+.fc .agenda-ev--personal .fc-event-main {
+  color: var(--text-on-gold);
+}
+
+.fc .agenda-ev--live {
+  background-color: var(--primary);
+  border-color: var(--primary);
+}
+
+.fc .agenda-ev--live .fc-event-main {
+  color: #fff;
+}
+
+/* ── Modal de crear/editar ── */
+.agenda-modal__overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.agenda-modal {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.agenda-modal__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.3rem;
+}
+
+.agenda-modal__hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.agenda-modal__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.agenda-modal__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 0.5rem 0;
+}
+
+.agenda-modal__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.agenda-modal__delete {
+  color: #c0392b;
+  border-color: rgba(192, 57, 43, 0.4);
+}
+
+/* Inputs del modal (incluye datetime-local, que el selector global no cubre) */
+.agenda-modal input[type="text"],
+.agenda-modal input[type="datetime-local"],
+.agenda-modal textarea {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.8rem;
+  outline: none;
+  margin-bottom: 0.25rem;
+}
+
+.agenda-modal input:focus,
+.agenda-modal textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+@media (max-width: 640px) {
+  .agenda-modal__row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fecha/hora de clase en vivo en el editor de lecciones */
+.live-schedule-row label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.live-schedule-row input[type="datetime-local"] {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--surface);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.8rem;
+  outline: none;
+}
+
+.live-schedule-row input[type="datetime-local"]:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}

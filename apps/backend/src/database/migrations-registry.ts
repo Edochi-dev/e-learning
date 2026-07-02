@@ -29,6 +29,8 @@ import { AddCertificateUserId1782800000000 } from './migrations/1782800000000-Ad
 import { AddPasswordResetTokens1782900000000 } from './migrations/1782900000000-AddPasswordResetTokens';
 import { AddCourseTaxonomy1783000000000 } from './migrations/1783000000000-AddCourseTaxonomy';
 import { AddNameChangeRequests1783100000000 } from './migrations/1783100000000-AddNameChangeRequests';
+import { AddScheduleEvents1783200000000 } from './migrations/1783200000000-AddScheduleEvents';
+import { AddLiveLessonSchedule1783300000000 } from './migrations/1783300000000-AddLiveLessonSchedule';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -79,4 +81,6 @@ export const MIGRATIONS = [
   AddPasswordResetTokens1782900000000,
   AddCourseTaxonomy1783000000000,
   AddNameChangeRequests1783100000000,
+  AddScheduleEvents1783200000000,
+  AddLiveLessonSchedule1783300000000,
 ];

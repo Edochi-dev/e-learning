@@ -36,6 +36,8 @@ interface ClassLessonData {
   videoUrl?: string;
   duration?: string;
   isLive?: boolean;
+  liveStartsAt?: string; // ISO — horario de la clase en vivo (obligatorio si isLive)
+  liveEndsAt?: string;
 }
 
 interface ExamLessonData {

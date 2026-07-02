@@ -36,6 +36,8 @@ export interface VideoLessonData {
     videoUrl: string;
     duration?: string;       // Ej: "10:00", "1h 30m". Nullable porque las lecciones en vivo no tienen duración.
     isLive: boolean;
+    liveStartsAt?: string;   // ISO 8601 — obligatorio cuando isLive (fecha/hora de la clase en vivo)
+    liveEndsAt?: string;     // ISO 8601 — obligatorio cuando isLive
 }
 
 export interface ExamLessonData {
@@ -139,6 +141,33 @@ export interface NameChangeRequest {
     reviewedAt?: string;    // ISO 8601 — cuándo el admin revisó
 }
 
+/**
+ * ScheduleEvent — Evento de la agenda del panel admin.
+ *
+ * La educadora lleva su horario aquí: eventos con nombre libre y horas. Los
+ * eventos POR HORA no se solapan entre sí; los de "todo el día"/multidía son
+ * telón de fondo y no bloquean. `sourceType` distingue eventos personales de
+ * los espejos de clases en vivo programadas (esos se editan desde su curso).
+ */
+export const CalendarSourceType = {
+    PERSONAL: 'personal',
+    LIVE_LESSON: 'live_lesson',
+} as const;
+
+export type CalendarSourceType = typeof CalendarSourceType[keyof typeof CalendarSourceType];
+
+export interface ScheduleEvent {
+    id: string;
+    title: string;
+    startAt: string;    // ISO 8601
+    endAt: string;      // ISO 8601
+    allDay: boolean;
+    notes?: string;
+    sourceType: CalendarSourceType;
+    sourceId?: string;  // id de la lección en vivo cuando sourceType = live_lesson
+    createdAt: string;
+}
+
 export interface LoginCredentials {
     email: string;
     password: string;
@@ -171,6 +200,8 @@ export interface CreateClassLessonPayload {
     videoUrl: string;
     duration?: string;
     isLive?: boolean;
+    liveStartsAt?: string;   // ISO — obligatorio cuando isLive
+    liveEndsAt?: string;
 }
 
 export interface CreateExamLessonPayload {
@@ -228,6 +259,8 @@ export interface UpdateClassLessonPayload {
     videoUrl?: string;
     duration?: string;
     isLive?: boolean;
+    liveStartsAt?: string;   // ISO — obligatorio cuando isLive
+    liveEndsAt?: string;
 }
 
 export interface UpdateExamLessonPayload {

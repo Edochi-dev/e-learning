@@ -24,6 +24,7 @@ import { useTheme } from './hooks/useTheme';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { CorrectionsAdminPage } from './pages/admin/CorrectionsAdminPage';
 import { NameChangeRequestsAdminPage } from './pages/admin/NameChangeRequestsAdminPage';
+import { SchedulePage } from './pages/admin/SchedulePage';
 import { ReviewCorrectionPage } from './pages/admin/ReviewCorrectionPage';
 import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
@@ -43,6 +44,7 @@ import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
+import { HttpScheduleGateway } from './gateways/HttpScheduleGateway';
 import { smoothScrollToElement, getHeaderOffset } from './lib/smoothScroll';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -78,6 +80,7 @@ function AppContent() {
   const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
   const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
   const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL), []);
+  const scheduleGateway = useMemo(() => new HttpScheduleGateway(API_URL), []);
 
   return (
     <>
@@ -136,6 +139,7 @@ function AppContent() {
           <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
             <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} nameChangeGateway={nameChangeGateway} />} />
             <Route path="/admin/cambios-nombre" element={<NameChangeRequestsAdminPage gateway={nameChangeGateway} />} />
+            <Route path="/admin/agenda" element={<SchedulePage gateway={scheduleGateway} />} />
             <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} courseGateway={courseGateway} />} />
             <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
             <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />

@@ -1,10 +1,4 @@
-import {
-  Entity,
-  PrimaryColumn,
-  Column,
-  OneToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { Lesson } from './lessons.entity';
 
 /**
@@ -35,6 +29,14 @@ export class VideoLesson {
 
   @Column({ default: false })
   isLive: boolean;
+
+  // Programación de la clase en vivo (obligatoria cuando isLive; null si no).
+  // Es la fuente de verdad del horario; su espejo vive en schedule_events.
+  @Column({ type: 'timestamp', nullable: true })
+  liveStartsAt: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  liveEndsAt: Date | null;
 
   @OneToOne(() => Lesson, (lesson) => lesson.videoData, {
     onDelete: 'CASCADE',

@@ -117,6 +117,16 @@ function SortableLessonItem({
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
                                 <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
                             </div>
+                            {editLessonForm.isLive && (
+                                <div className="form-row live-schedule-row">
+                                    <label>Inicio (en vivo)
+                                        <input type="datetime-local" name="liveStartsAt" value={editLessonForm.liveStartsAt ?? ''} onChange={onEditChange} required />
+                                    </label>
+                                    <label>Fin (en vivo)
+                                        <input type="datetime-local" name="liveEndsAt" value={editLessonForm.liveEndsAt ?? ''} onChange={onEditChange} required />
+                                    </label>
+                                </div>
+                            )}
                             <div className="form-row">
                                 {!editLessonForm.isLive && (
                                     <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
@@ -241,6 +251,8 @@ const emptyClassLesson = (): CreateClassLessonPayload => ({
     videoUrl: '',
     duration: '',
     isLive: false,
+    liveStartsAt: '',
+    liveEndsAt: '',
 });
 
 const emptyExamLesson = (): CreateExamLessonPayload => ({
@@ -270,6 +282,9 @@ const toUpdateClassForm = (lesson: Lesson): UpdateClassLessonPayload => ({
     videoUrl: lesson.videoData?.videoUrl ?? '',
     duration: lesson.videoData?.duration ?? '',
     isLive: lesson.videoData?.isLive ?? false,
+    // ISO -> "YYYY-MM-DDTHH:MM" para el input datetime-local.
+    liveStartsAt: lesson.videoData?.liveStartsAt?.slice(0, 16) ?? '',
+    liveEndsAt: lesson.videoData?.liveEndsAt?.slice(0, 16) ?? '',
 });
 
 const toUpdateExamForm = (lesson: Lesson): UpdateExamLessonPayload => ({
@@ -929,6 +944,18 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                             <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
                                         </div>
                                     </div>
+                                    {lessonForm.isLive && (
+                                        <div className="form-row live-schedule-row" style={{ marginBottom: '1.25rem' }}>
+                                            <div>
+                                                <label htmlFor="lesson-liveStartsAt">Inicio (en vivo)</label>
+                                                <input type="datetime-local" id="lesson-liveStartsAt" name="liveStartsAt" value={lessonForm.liveStartsAt ?? ''} onChange={handleLessonChange} required />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="lesson-liveEndsAt">Fin (en vivo)</label>
+                                                <input type="datetime-local" id="lesson-liveEndsAt" name="liveEndsAt" value={lessonForm.liveEndsAt ?? ''} onChange={handleLessonChange} required />
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="form-row" style={{ marginBottom: '1.25rem' }}>
                                         {!lessonForm.isLive && (
                                             <div>
