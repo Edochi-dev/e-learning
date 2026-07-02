@@ -6254,14 +6254,67 @@ input:checked+.slider .icon-moon {
 /* ============================================================================
    AGENDA (panel admin) — FullCalendar tematizado + modal
    ============================================================================ */
+/* La agenda necesita más ancho que el resto de páginas admin para que la
+   rejilla semanal respire. */
+.agenda-page {
+  max-width: 1180px;
+}
+
+/* Header: título a la izquierda, botón de recordatorios a la derecha; colapsa
+   a columna en pantallas angostas. */
+.agenda-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.agenda-header__text {
+  min-width: 0;
+}
+
+.agenda-header__push {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Leyenda de colores de eventos */
+.agenda-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.25rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.agenda-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.agenda-legend__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.agenda-legend__dot--personal {
+  background: var(--gold);
+}
+
+.agenda-legend__dot--live {
+  background: var(--primary);
+}
+
 .agenda-calendar {
-  /* Variables de FullCalendar v6 mapeadas a la paleta de marca */
-  --fc-button-bg-color: var(--primary);
-  --fc-button-border-color: var(--primary);
-  --fc-button-hover-bg-color: var(--primary-light);
-  --fc-button-hover-border-color: var(--primary-light);
-  --fc-button-active-bg-color: var(--primary-light);
-  --fc-button-active-border-color: var(--primary-light);
+  /* Solo mapeamos las variables NO relacionadas a botones; los botones los
+     estilizamos a mano abajo para que hablen el mismo lenguaje que .btn-* de la
+     app (píldora, borde 1.5px, hover rosa). */
   --fc-today-bg-color: rgba(232, 67, 147, 0.07);
   --fc-border-color: var(--border);
   --fc-page-bg-color: transparent;
@@ -6269,11 +6322,89 @@ input:checked+.slider .icon-moon {
   --fc-now-indicator-color: var(--primary);
   color: var(--text-primary);
   font-family: var(--font-body);
+  padding: 1.25rem;
+  overflow: hidden; /* evita que la rejilla se salga del borde redondeado */
+}
+
+/* Toolbar: permitir que sus grupos bajen de fila en vez de desbordar y crear un
+   scroll horizontal. */
+.agenda-calendar .fc .fc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.agenda-calendar .fc .fc-toolbar.fc-header-toolbar {
+  margin-bottom: 1rem;
+}
+
+.agenda-calendar .fc .fc-toolbar.fc-footer-toolbar {
+  margin-top: 1rem;
 }
 
 .agenda-calendar .fc .fc-toolbar-title {
   font-family: var(--font-heading);
   font-size: 1.3rem;
+}
+
+/* ── Botones del calendario: mismo lenguaje que .btn-secondary/.btn-primary ── */
+.agenda-calendar .fc .fc-button {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1;
+  padding: 0.5rem 1.05rem;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border-strong);
+  box-shadow: none;
+  text-transform: none;
+  transition: color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out),
+    background var(--dur-base) var(--ease-out);
+}
+
+.agenda-calendar .fc .fc-button:hover:not(:disabled) {
+  background: rgba(232, 67, 147, 0.04);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.agenda-calendar .fc .fc-button:focus,
+.agenda-calendar .fc .fc-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.agenda-calendar .fc .fc-button:disabled {
+  opacity: 0.45;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+/* Presión momentánea en navegación (prev/next/today): tinte sutil, no relleno. */
+.agenda-calendar .fc .fc-button-primary:not(:disabled):active {
+  background: rgba(232, 67, 147, 0.08);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* Vista activa (Mes o Día): relleno rosa como .btn-primary. */
+.agenda-calendar .fc .fc-button-primary:not(:disabled).fc-button-active {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+  border-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 16px var(--primary-glow);
+}
+
+/* El grupo de vistas: píldoras separadas en vez de botones fusionados. */
+.agenda-calendar .fc .fc-button-group {
+  gap: 0.4rem;
+}
+
+.agenda-calendar .fc .fc-button-group > .fc-button {
+  border-radius: var(--radius-full);
+  margin: 0;
 }
 
 .agenda-calendar .fc .fc-col-header-cell-cushion,
@@ -6301,6 +6432,27 @@ input:checked+.slider .icon-moon {
 
 .fc .agenda-ev--live .fc-event-main {
   color: #fff;
+}
+
+/* Responsive: en teléfono la tarjeta va casi a sangre y todo se compacta. */
+@media (max-width: 768px) {
+  .agenda-calendar {
+    padding: 0.85rem 0.6rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .agenda-calendar .fc .fc-toolbar-title {
+    font-size: 1.05rem;
+  }
+
+  .agenda-calendar .fc .fc-button {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+  }
+
+  .agenda-header__push {
+    width: 100%;
+  }
 }
 
 /* ── Modal de crear/editar ── */
@@ -6348,6 +6500,12 @@ input:checked+.slider .icon-moon {
   gap: 0.75rem;
 }
 
+/* Sin esto, los hijos de un grid tienen min-width:auto y no encogen por debajo
+   del ancho intrínseco del datetime-local → desbordan la tarjeta. */
+.agenda-modal__row > div {
+  min-width: 0;
+}
+
 .agenda-modal__check {
   display: flex;
   align-items: center;
@@ -6360,6 +6518,7 @@ input:checked+.slider .icon-moon {
 .agenda-modal__actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 1rem;
 }
@@ -6374,6 +6533,9 @@ input:checked+.slider .icon-moon {
 .agenda-modal input[type="datetime-local"],
 .agenda-modal textarea {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   font-family: var(--font-body);
   font-size: 0.95rem;
   background: var(--surface);

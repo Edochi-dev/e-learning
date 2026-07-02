@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import FullCalendar from '@fullcalendar/react';
 import type {
@@ -11,7 +11,7 @@ import type {
 import esLocale from '@fullcalendar/core/locales/es';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
 import type { ScheduleEvent } from '@maris-nails/shared';
 import type { ScheduleGateway } from '../../gateways/ScheduleGateway';
 import { useToast } from '../../components/Toast';
@@ -89,6 +89,11 @@ const CLOSED: ModalState = {
     readOnly: false,
 };
 
+// Punto de quiebre para teléfono. En móvil el toolbar se reparte en dos filas
+// (navegación arriba, cambio de vista abajo) para que no desborde y genere scroll
+// horizontal. El default es la vista de mes en ambos tamaños.
+const MOBILE_QUERY = '(max-width: 768px)';
+
 /**
  * SchedulePage — Agenda/calendario del panel admin.
  *
@@ -101,7 +106,18 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
     const [modal, setModal] = useState<ModalState>(CLOSED);
     const [saving, setSaving] = useState(false);
     const [enablingPush, setEnablingPush] = useState(false);
+    const [isMobile, setIsMobile] = useState<boolean>(() => window.matchMedia(MOBILE_QUERY).matches);
     const toast = useToast();
+
+    // Escuchamos el cambio de tamaño con matchMedia (más barato que un listener de
+    // resize: solo dispara al cruzar el umbral, no en cada píxel). Solo sirve para
+    // reacomodar el toolbar; la vista activa la decide el usuario.
+    useEffect(() => {
+        const mq = window.matchMedia(MOBILE_QUERY);
+        const onChange = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+        mq.addEventListener('change', onChange);
+        return () => mq.removeEventListener('change', onChange);
+    }, []);
 
     // Activa las notificaciones push en ESTE dispositivo: pide permiso, se
     // suscribe con la clave VAPID del backend y guarda la suscripción.
@@ -181,6 +197,27 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
             readOnly: false,
         });
         arg.view.calendar.unselect();
+    };
+
+    // Tocar un día/hueco (tap) → crear. En pantallas táctiles el "select" por
+    // arrastre exige mantener presionado; el dateClick sí dispara con un toque
+    // simple, así que es lo que hace funcionar la creación en el teléfono.
+    const handleDateClick = (arg: DateClickArg) => {
+        const startMs = arg.date.getTime();
+        // Duración por defecto: 1 día si es un evento de "todo el día" (vista mes),
+        // 1 hora si es un hueco con horario (vista día).
+        const durationMs = arg.allDay ? 24 * 60 * 60 * 1000 : 60 * 60 * 1000;
+        setModal({
+            open: true,
+            mode: 'create',
+            title: '',
+            start: toLocalInput(arg.date),
+            end: toLocalInput(new Date(startMs + durationMs)),
+            allDay: arg.allDay,
+            notes: '',
+            reminderMinutesBefore: null,
+            readOnly: false,
+        });
     };
 
     // Click en un evento → editar (o ver, si es clase en vivo).
@@ -265,31 +302,57 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
     };
 
     return (
-        <div className="admin-page">
+        <div className="admin-page agenda-page">
             <Link to="/admin" className="back-link">← Volver al Panel</Link>
-            <div className="admin-header">
-                <h1>Agenda</h1>
-                <p>Organiza tus clases, correcciones y eventos. Toca un hueco para crear.</p>
+            <div className="admin-header agenda-header">
+                <div className="agenda-header__text">
+                    <h1>Agenda</h1>
+                    <p>Organiza tus clases, correcciones y eventos. Toca un hueco para crear.</p>
+                </div>
                 <button
                     type="button"
-                    className="btn-secondary"
+                    className="btn-secondary agenda-header__push"
                     onClick={enablePushReminders}
                     disabled={enablingPush}
-                    style={{ marginTop: '0.5rem' }}
                 >
                     🔔 {enablingPush ? 'Activando…' : 'Activar recordatorios'}
                 </button>
+            </div>
+
+            <div className="agenda-legend" aria-hidden="true">
+                <span className="agenda-legend__item">
+                    <span className="agenda-legend__dot agenda-legend__dot--personal" />
+                    Evento personal
+                </span>
+                <span className="agenda-legend__item">
+                    <span className="agenda-legend__dot agenda-legend__dot--live" />
+                    Clase en vivo
+                </span>
             </div>
 
             <div className="admin-card agenda-calendar">
                 <FullCalendar
                     ref={calendarRef}
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    initialView="timeGridWeek"
-                    headerToolbar={{
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                    initialView="dayGridMonth"
+                    headerToolbar={
+                        isMobile
+                            ? { left: 'prev,next', center: 'title', right: 'today' }
+                            : {
+                                  left: 'prev,next today',
+                                  center: 'title',
+                                  right: 'dayGridMonth,timeGridDay',
+                              }
+                    }
+                    footerToolbar={
+                        isMobile
+                            ? { left: '', center: 'dayGridMonth,timeGridDay', right: '' }
+                            : false
+                    }
+                    buttonText={{
+                        today: 'Hoy',
+                        month: 'Mes',
+                        day: 'Día',
                     }}
                     locale={esLocale}
                     firstDay={1}
@@ -297,12 +360,16 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
                     allDaySlot
                     slotMinTime="06:00:00"
                     slotMaxTime="23:00:00"
-                    height="auto"
+                    scrollTime="08:00:00"
+                    expandRows
+                    stickyHeaderDates
+                    height={isMobile ? 'auto' : '72vh'}
                     selectable
                     selectMirror
                     editable
                     events={eventSource}
                     select={handleSelect}
+                    dateClick={handleDateClick}
                     eventClick={handleEventClick}
                     eventDrop={handleTimeChange}
                     eventResize={handleTimeChange}
