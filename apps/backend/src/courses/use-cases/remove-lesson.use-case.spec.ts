@@ -2,6 +2,7 @@ import { Test } from '@nestjs/testing';
 import { RemoveLessonUseCase } from './remove-lesson.use-case';
 import { LessonGateway } from '../gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { RemoveLiveClassEventUseCase } from '../../schedule/use-cases/remove-live-class-event.use-case';
 import { Lesson } from '../entities/lessons.entity';
 
 /**
@@ -38,6 +39,10 @@ describe('RemoveLessonUseCase', () => {
           useValue: {
             deleteByUrl: jest.fn(),
           },
+        },
+        {
+          provide: RemoveLiveClassEventUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();

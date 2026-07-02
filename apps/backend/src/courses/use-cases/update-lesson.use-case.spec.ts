@@ -3,6 +3,8 @@ import { Test } from '@nestjs/testing';
 import { UpdateLessonUseCase } from './update-lesson.use-case';
 import { LessonGateway } from '../gateways/lesson.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
+import { UpsertLiveClassEventUseCase } from '../../schedule/use-cases/upsert-live-class-event.use-case';
+import { RemoveLiveClassEventUseCase } from '../../schedule/use-cases/remove-live-class-event.use-case';
 import { Lesson } from '../entities/lessons.entity';
 import { UpdateLessonDto } from '../dto/update-lesson.dto';
 
@@ -42,6 +44,14 @@ describe('UpdateLessonUseCase', () => {
           useValue: {
             deleteIfOrphan: jest.fn(),
           },
+        },
+        {
+          provide: UpsertLiveClassEventUseCase,
+          useValue: { execute: jest.fn() },
+        },
+        {
+          provide: RemoveLiveClassEventUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
