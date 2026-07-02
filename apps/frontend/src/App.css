@@ -12,11 +12,11 @@
   --primary-dark: #c0392b;
   --primary-glow: rgba(232, 67, 147, 0.35);
 
-  /* Champagne Gold Palette */
-  --gold: #C9A84C;
-  --gold-light: #E2C97E;
-  --gold-dark: #9A7A28;
-  --gold-glow: rgba(201, 168, 76, 0.3);
+  /* Champagne Gold Palette — anclada al dorado del logo (más ámbar, menos amarillo) */
+  --gold: #CD9E55;
+  --gold-light: #E7C687;
+  --gold-dark: #9C7734;
+  --gold-glow: rgba(205, 158, 85, 0.3);
   /* Texto legible sobre fondo dorado. El dorado es claro en ambos temas,
      por eso este token NO se sobreescribe en dark: siempre es oscuro. */
   --text-on-gold: #2d1b14;
@@ -112,10 +112,10 @@
   --primary-dark: #e84393;
   --primary-glow: rgba(253, 121, 168, 0.25);
 
-  --gold: #D4B05A;
-  --gold-light: #E8CC84;
-  --gold-dark: #A07D2A;
-  --gold-glow: rgba(212, 176, 90, 0.2);
+  --gold: #D8AC63;
+  --gold-light: #ECD094;
+  --gold-dark: #A57F3A;
+  --gold-glow: rgba(216, 172, 99, 0.2);
 
   --bg: #0d0a09;
   --bg-elevated: #1c1614;
@@ -135,9 +135,11 @@
 /* El gradiente fijo en dark mode — más intenso porque el fondo oscuro lo absorbe */
 [data-theme='dark'] body {
   background-image:
-    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(253, 121, 168, 0.18) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(253, 121, 168, 0.14) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 0%   100%,  rgba(212, 165, 116, 0.14) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(253, 121, 168, 0.06) 0%, transparent 50%);
+    radial-gradient(ellipse 55% 45% at 0%   0%,    rgba(212, 165, 116, 0.11) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 100%,  rgba(253, 121, 168, 0.085) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(253, 121, 168, 0.05) 0%, transparent 50%);
   background-attachment: fixed;
 }
 
@@ -197,9 +199,11 @@ body {
   /* background-attachment: fixed mantiene el gradiente quieto
      mientras el contenido scrollea encima — efecto parallax sutil */
   background-image:
-    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(232, 67, 147, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 55% at 100% 0%,   rgba(232, 67, 147, 0.28) 0%, transparent 60%),
     radial-gradient(ellipse 60% 50% at 0%   100%,  rgba(212, 165, 116, 0.28) 0%, transparent 55%),
-    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(232, 67, 147, 0.10) 0%, transparent 50%);
+    radial-gradient(ellipse 55% 45% at 0%   0%,    rgba(212, 165, 116, 0.22) 0%, transparent 55%),
+    radial-gradient(ellipse 55% 45% at 100% 100%,  rgba(232, 67, 147, 0.17) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 35% at 50%  55%,   rgba(232, 67, 147, 0.08) 0%, transparent 50%);
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -406,31 +410,6 @@ a {
   text-transform: uppercase;
 }
 
-/* ── Eyebrow pill ── */
-.hero__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.6rem;
-  background: rgba(232, 67, 147, 0.08);
-  border: 1px solid rgba(232, 67, 147, 0.2);
-  border-radius: 100px;
-  padding: 0.35rem 1rem 0.35rem 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: var(--primary);
-  margin-bottom: 2rem;
-}
-
-.hero__eyebrow-dot {
-  display: inline-block;
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--primary);
-  flex-shrink: 0;
-}
-
 /* ── Heading ── */
 .hero__heading {
   font-size: clamp(3.2rem, 7vw, 6.5rem);
@@ -526,6 +505,9 @@ a {
   border: none;
   position: relative;
   overflow: hidden;
+  /* z-index: 0 crea un contexto de apilamiento para que el overlay dorado
+     (::before, z-index: -1) quede DETRÁS del texto y no lo tape. */
+  z-index: 0;
 }
 
 .btn-primary::before {
@@ -535,6 +517,8 @@ a {
   background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
   opacity: 0;
   transition: opacity 0.4s ease;
+  /* Detrás del contenido: se pinta sobre el fondo rosa pero bajo las letras. */
+  z-index: -1;
 }
 
 .btn-primary:hover {
@@ -555,12 +539,6 @@ a {
 
 .btn-primary:hover::before {
   opacity: 1;
-}
-
-.btn-primary span,
-.btn-primary:not(:empty) {
-  position: relative;
-  z-index: 1;
 }
 
 .btn-secondary {
@@ -977,10 +955,10 @@ a {
   border: none;
   border-radius: var(--radius-lg);
   background: linear-gradient(135deg, var(--primary), var(--gold));
-  color: #fff;
-  /* El gradiente termina en dorado claro; una sombra sutil evita que el
-     texto blanco pierda legibilidad sobre esa esquina. */
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
+  /* Texto OSCURO en todos los estados: el degradado termina en dorado claro y
+     el blanco desaparecía en reposo/focus/disabled (no solo en hover). El tono
+     oscuro es legible sobre el rosa y sobre el dorado, en claro y oscuro. */
+  color: var(--text-on-gold);
   cursor: pointer;
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
@@ -3331,7 +3309,7 @@ input:checked+.slider .icon-moon {
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23C9A84C' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CD9E55' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 14px;
@@ -5999,6 +5977,49 @@ input:checked+.slider .icon-moon {
   position: relative;
 }
 
+/* Buscador con ícono de lupa (mismo look pill que la barra del catálogo) */
+.user-picker__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.user-picker__search-icon {
+  position: absolute;
+  left: 0.95rem;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.user-picker__input {
+  width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  padding: 0.7rem 1.1rem 0.7rem 2.7rem; /* padding-left deja sitio a la lupa */
+  outline: none;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+.user-picker__input::placeholder {
+  color: var(--text-muted);
+}
+
+.user-picker__input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+.user-picker__input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* Dropdown de coincidencias, flotando sobre el contenido siguiente */
 .user-picker__results {
   position: absolute;
@@ -6093,4 +6114,139 @@ input:checked+.slider .icon-moon {
 .user-picker__chip-remove:hover {
   background: var(--primary);
   color: #fff;
+}
+
+/* ============================================================================
+   SCROLL REVEAL
+   Fade + slide-up al entrar en viewport (ver hook useScrollReveal).
+   Estado inicial oculto; .reveal--visible lo muestra. Solo opacity/transform,
+   así que no provoca reflow ni layout shift.
+   ============================================================================ */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  will-change: opacity, transform;
+}
+
+.reveal--visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ============================================================================
+   FAQ (landing) — acordeón de preguntas frecuentes
+   ============================================================================ */
+.home-faq {
+  padding: 4rem 0;
+  scroll-margin-top: 6rem;
+}
+
+/* Encabezado del FAQ: eyebrow "Preguntas frecuentes" (centrado) + subtítulo chico. */
+.home-faq .section-eyebrow {
+  text-align: center;
+}
+
+.home-faq__subtitle {
+  text-align: center;
+  max-width: 560px;
+  margin: -0.25rem auto 0;
+  color: var(--text-secondary);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.home-faq__list {
+  max-width: 1060px;
+  margin: 2.5rem auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  align-items: start; /* cada tarjeta crece sola al abrir, sin estirar a su par */
+  gap: 0.85rem 1rem;
+}
+
+.faq-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  overflow: hidden;
+  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+}
+
+.faq-item--open {
+  border-color: var(--gold);
+  box-shadow: var(--shadow-sm);
+}
+
+.faq-item__q {
+  margin: 0;
+  font-size: inherit;
+}
+
+.faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 1.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  /* En 2 columnas las preguntas van en UNA sola línea (cuadros concordantes).
+     En móvil (1 columna) se permite envolver — ver media query. */
+  white-space: nowrap;
+}
+
+.faq-item__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--gold-dark);
+  transition: transform var(--dur-base) var(--ease-out);
+}
+
+.faq-item--open .faq-item__icon {
+  transform: rotate(180deg);
+}
+
+/* Anima la altura sin medir en JS: grid-template-rows 0fr → 1fr con el
+   contenido en overflow: hidden. */
+.faq-item__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.35s var(--ease-out);
+}
+
+.faq-item--open .faq-item__panel {
+  grid-template-rows: 1fr;
+}
+
+.faq-item__answer {
+  overflow: hidden;
+}
+
+.faq-item__answer p {
+  margin: 0;
+  padding: 0 1.35rem 1.25rem;
+  color: var(--text-secondary);
+  line-height: 1.75;
+}
+
+/* FAQ: una sola columna cuando no caben dos preguntas en una línea */
+@media (max-width: 960px) {
+  .home-faq__list {
+    grid-template-columns: 1fr;
+    max-width: 600px;
+  }
+
+  /* En una columna las preguntas largas SÍ pueden envolver (sin overflow). */
+  .faq-item__trigger {
+    white-space: normal;
+  }
 }

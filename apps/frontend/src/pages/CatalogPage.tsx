@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 import { API_URL as BACKEND_URL } from '../config';
 import { COURSE_LEVEL_OPTIONS } from '../constants/courseLevels';
@@ -25,6 +26,11 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
         const t = setTimeout(() => setSearch(searchInput), 400);
         return () => clearTimeout(t);
     }, [searchInput, setSearch]);
+
+    // Revela las cards al bajar. Depende de `loading`: cuando termina la carga y
+    // las cards ya están en el DOM, el observer las engancha (evita que aparezcan
+    // de golpe y disimula el pop-in de las imágenes).
+    useScrollReveal([loading]);
 
     // Cambia de página y lleva el scroll arriba para ver la nueva tanda.
     const goToPage = (next: number) => {
@@ -115,7 +121,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                     <>
                         {/* Curso destacado — card horizontal grande */}
                         {featured && (
-                            <article className="catalog-featured">
+                            <article className="catalog-featured reveal">
                                 <div className="catalog-featured__content">
                                     <p className="catalog-featured__tag">Programa destacado</p>
                                     <span className="catalog-featured__badge">
@@ -148,7 +154,7 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                         {rest.length > 0 && (
                             <div className="catalog-grid">
                                 {rest.map((course) => (
-                                    <article key={course.id} className="catalog-card">
+                                    <article key={course.id} className="catalog-card reveal">
                                         <div className="catalog-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
                                                 ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />

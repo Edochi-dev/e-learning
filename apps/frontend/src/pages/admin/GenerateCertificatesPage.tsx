@@ -177,13 +177,29 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 <div style={{ marginBottom: '1.5rem' }}>
                     <label className="form-label">Vincular a alumnos registrados (opcional)</label>
                     <div className="user-picker">
-                        <input
-                            className="form-input"
-                            placeholder="Buscar alumno por nombre o email…"
-                            value={userSearch}
-                            onChange={e => setUserSearch(e.target.value)}
-                            aria-label="Buscar alumno para vincular"
-                        />
+                        <div className="user-picker__search">
+                            <svg
+                                className="user-picker__search-icon"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                aria-hidden="true"
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                            <input
+                                type="search"
+                                className="user-picker__input"
+                                placeholder="Buscar alumno por nombre o email…"
+                                value={userSearch}
+                                onChange={e => setUserSearch(e.target.value)}
+                                aria-label="Buscar alumno para vincular"
+                            />
+                        </div>
                         {searchResults.length > 0 && (
                             <ul className="user-picker__results">
                                 {searchResults.map(u => (

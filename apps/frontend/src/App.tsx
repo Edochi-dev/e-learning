@@ -43,7 +43,9 @@ import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
+import { smoothScrollToElement, getHeaderOffset } from './lib/smoothScroll';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
 import { ToastProvider } from './components/Toast';
@@ -54,12 +56,15 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  function handleContactoClick(e: React.MouseEvent) {
+  // Enlace del header a una sección de la landing (Contacto, Preguntas, etc.).
+  // Si ya estamos en la home, hace scroll suave; si no, navega a la home y deja
+  // en el state qué sección abrir (la home lo lee y hace el scroll al montar).
+  function handleSectionLink(e: React.MouseEvent, sectionId: string) {
     e.preventDefault();
     if (location.pathname === '/') {
-      document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' });
+      smoothScrollToElement(sectionId, { offset: getHeaderOffset() });
     } else {
-      navigate('/', { state: { scrollTo: 'contacto' } });
+      navigate('/', { state: { scrollTo: sectionId } });
     }
   }
   // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
@@ -86,7 +91,8 @@ function AppContent() {
             {user?.role === UserRole.ADMIN && (
               <>
                 <Link to="/cursos">Cursos</Link>
-                <a href="#contacto" onClick={handleContactoClick}>Contacto</a>
+                <a href="#preguntas" onClick={(e) => handleSectionLink(e, 'preguntas')}>Preguntas frecuentes</a>
+                <a href="#contacto" onClick={(e) => handleSectionLink(e, 'contacto')}>Contacto</a>
               </>
             )}
             <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
@@ -100,6 +106,8 @@ function AppContent() {
           </nav>
         </div>
       </header>
+
+      <ScrollToTop />
 
       <main>
         <Routes>
