@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { ScheduleModule as NestScheduleModule } from '@nestjs/schedule';
 import * as Joi from 'joi';
 
 import { CoursesModule } from './courses/courses.module';
@@ -15,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { CorrectionsModule } from './corrections/corrections.module';
 import { NameChangeRequestsModule } from './name-change-requests/name-change-requests.module';
 import { ScheduleModule } from './schedule/schedule.module';
+import { PushModule } from './push/push.module';
 import { OrdersModule } from './orders/orders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
@@ -48,6 +50,11 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
         SMTP_USER: Joi.string().optional(),
         SMTP_PASS: Joi.string().optional(),
         SMTP_FROM: Joi.string().optional(),
+        // Web-push (notificaciones de la agenda) — opcionales. Sin ellas, el
+        // push queda desactivado (PushService.isConfigured() = false).
+        VAPID_PUBLIC_KEY: Joi.string().optional(),
+        VAPID_PRIVATE_KEY: Joi.string().optional(),
+        VAPID_SUBJECT: Joi.string().optional(),
       }).with('SMTP_HOST', [
         'SMTP_PORT',
         'SMTP_USER',
@@ -64,6 +71,9 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
 
     // 3. Rate limiting global (aplicado selectivamente en controladores)
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
+
+    // Programador de tareas (cron de recordatorios de la agenda).
+    NestScheduleModule.forRoot(),
 
     // 4. Archivos estáticos (miniaturas, imágenes, etc.)
     // NOTA: Los videos ya NO se sirven aquí, se sirven por /videos/stream con token firmado
@@ -83,6 +93,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     CorrectionsModule,
     NameChangeRequestsModule,
     ScheduleModule,
+    PushModule,
   ],
 })
 export class AppModule implements NestModule {

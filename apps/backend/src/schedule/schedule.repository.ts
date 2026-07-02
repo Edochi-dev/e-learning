@@ -52,6 +52,22 @@ export class ScheduleRepository implements ScheduleEventGateway {
     await this.repo.delete(id);
   }
 
+  async findDueReminders(now: Date): Promise<ScheduleEvent[]> {
+    // Vence cuando: falta recordatorio por enviar, tiene anticipación fijada,
+    // el evento aún no empezó, y ya entramos en la ventana de aviso
+    // (startAt - reminderMinutesBefore <= ahora).
+    return this.repo
+      .createQueryBuilder('e')
+      .where('e.reminderSentAt IS NULL')
+      .andWhere('e.reminderMinutesBefore IS NOT NULL')
+      .andWhere('e.startAt > :now', { now })
+      .andWhere(
+        `e.startAt <= CAST(:now AS timestamp) + (e.reminderMinutesBefore * interval '1 minute')`,
+        { now },
+      )
+      .getMany();
+  }
+
   async findBySource(sourceId: string): Promise<ScheduleEvent | null> {
     return this.repo.findOne({ where: { sourceId } });
   }
