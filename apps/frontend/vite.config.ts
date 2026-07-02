@@ -38,6 +38,8 @@ export default defineConfig({
       workbox: {
         // Permite precachear el worker de pdfjs y el bundle (ambos > 2 MB default).
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // El SW importa nuestros handlers de push/notificationclick (web-push).
+        importScripts: ['/push-listener.js'],
       },
     }),
   ],

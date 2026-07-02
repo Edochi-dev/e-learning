@@ -163,6 +163,7 @@ export interface ScheduleEvent {
     endAt: string;      // ISO 8601
     allDay: boolean;
     notes?: string;
+    reminderMinutesBefore?: number | null; // minutos de anticipación del aviso (null = sin recordatorio)
     sourceType: CalendarSourceType;
     sourceId?: string;  // id de la lección en vivo cuando sourceType = live_lesson
     createdAt: string;
