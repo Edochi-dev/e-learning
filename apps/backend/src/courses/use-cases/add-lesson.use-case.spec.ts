@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import { AddLessonUseCase } from './add-lesson.use-case';
 import { CourseGateway } from '../gateways/course.gateway';
 import { LessonGateway } from '../gateways/lesson.gateway';
+import { UpsertLiveClassEventUseCase } from '../../schedule/use-cases/upsert-live-class-event.use-case';
 import { Course } from '../entities/course.entity';
 import { Lesson } from '../entities/lessons.entity';
 
@@ -39,7 +40,11 @@ describe('AddLessonUseCase', () => {
         },
         {
           provide: LessonGateway,
-          useValue: { addLesson: jest.fn() },
+          useValue: { addLesson: jest.fn(), removeLesson: jest.fn() },
+        },
+        {
+          provide: UpsertLiveClassEventUseCase,
+          useValue: { execute: jest.fn() },
         },
       ],
     }).compile();
