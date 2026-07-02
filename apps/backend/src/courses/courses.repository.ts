@@ -180,6 +180,14 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
           videoUrl: lessonData.videoUrl,
           duration: lessonData.duration,
           isLive: lessonData.isLive ?? false,
+          liveStartsAt:
+            lessonData.isLive && lessonData.liveStartsAt
+              ? new Date(lessonData.liveStartsAt)
+              : null,
+          liveEndsAt:
+            lessonData.isLive && lessonData.liveEndsAt
+              ? new Date(lessonData.liveEndsAt)
+              : null,
         });
         break;
       case 'exam':
@@ -252,6 +260,19 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
           if (data.duration !== undefined)
             lesson.videoData.duration = data.duration;
           if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;
+          if (data.liveStartsAt !== undefined)
+            lesson.videoData.liveStartsAt = data.liveStartsAt
+              ? new Date(data.liveStartsAt)
+              : null;
+          if (data.liveEndsAt !== undefined)
+            lesson.videoData.liveEndsAt = data.liveEndsAt
+              ? new Date(data.liveEndsAt)
+              : null;
+          // Al dejar de ser en vivo, se limpia el horario.
+          if (data.isLive === false) {
+            lesson.videoData.liveStartsAt = null;
+            lesson.videoData.liveEndsAt = null;
+          }
         }
         break;
       case 'exam':

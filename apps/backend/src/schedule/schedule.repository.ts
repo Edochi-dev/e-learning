@@ -52,6 +52,14 @@ export class ScheduleRepository implements ScheduleEventGateway {
     await this.repo.delete(id);
   }
 
+  async findBySource(sourceId: string): Promise<ScheduleEvent | null> {
+    return this.repo.findOne({ where: { sourceId } });
+  }
+
+  async deleteBySource(sourceId: string): Promise<void> {
+    await this.repo.delete({ sourceId });
+  }
+
   /** Eventos que cruzan el rango visible: empiezan antes del fin y terminan después del inicio. */
   async findInRange(from: Date, to: Date): Promise<ScheduleEvent[]> {
     return this.repo

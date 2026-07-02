@@ -36,6 +36,8 @@ export interface VideoLessonData {
     videoUrl: string;
     duration?: string;       // Ej: "10:00", "1h 30m". Nullable porque las lecciones en vivo no tienen duración.
     isLive: boolean;
+    liveStartsAt?: string;   // ISO 8601 — obligatorio cuando isLive (fecha/hora de la clase en vivo)
+    liveEndsAt?: string;     // ISO 8601 — obligatorio cuando isLive
 }
 
 export interface ExamLessonData {

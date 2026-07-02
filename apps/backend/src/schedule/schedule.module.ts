@@ -8,6 +8,8 @@ import { CreateScheduleEventUseCase } from './use-cases/create-schedule-event.us
 import { UpdateScheduleEventUseCase } from './use-cases/update-schedule-event.use-case';
 import { DeleteScheduleEventUseCase } from './use-cases/delete-schedule-event.use-case';
 import { ListScheduleUseCase } from './use-cases/list-schedule.use-case';
+import { UpsertLiveClassEventUseCase } from './use-cases/upsert-live-class-event.use-case';
+import { RemoveLiveClassEventUseCase } from './use-cases/remove-live-class-event.use-case';
 
 /**
  * ScheduleModule — Agenda/calendario del panel admin.
@@ -25,7 +27,14 @@ import { ListScheduleUseCase } from './use-cases/list-schedule.use-case';
     UpdateScheduleEventUseCase,
     DeleteScheduleEventUseCase,
     ListScheduleUseCase,
+    UpsertLiveClassEventUseCase,
+    RemoveLiveClassEventUseCase,
   ],
-  exports: [ScheduleEventGateway],
+  // Exportamos los use-cases del espejo para que el módulo de cursos los use.
+  exports: [
+    ScheduleEventGateway,
+    UpsertLiveClassEventUseCase,
+    RemoveLiveClassEventUseCase,
+  ],
 })
 export class ScheduleModule {}

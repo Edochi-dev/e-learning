@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { LessonGateway } from '../gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { RemoveLiveClassEventUseCase } from '../../schedule/use-cases/remove-live-class-event.use-case';
 
 /**
  * RemoveLessonUseCase — Elimina una lección y limpia su video si queda huérfano.
@@ -27,6 +28,7 @@ export class RemoveLessonUseCase {
   constructor(
     private readonly lessonGateway: LessonGateway,
     private readonly fileStorageGateway: FileStorageGateway,
+    private readonly removeLiveClassEvent: RemoveLiveClassEventUseCase,
   ) {}
 
   async execute(lessonId: string): Promise<void> {
@@ -36,6 +38,10 @@ export class RemoveLessonUseCase {
 
     // Paso 2: borrar la lección — si falla aquí, el archivo sigue intacto ✅
     await this.lessonGateway.removeLesson(lessonId);
+
+    // Quitar el espejo de la agenda si existía (schedule_events.sourceId no
+    // tiene FK, así que el CASCADE de la DB no lo cubre). Idempotente.
+    await this.removeLiveClassEvent.execute(lessonId);
 
     // Paso 3 y 4: limpieza de archivo (best-effort, el usuario ya no lo verá)
     if (videoUrl) {

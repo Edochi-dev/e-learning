@@ -3,6 +3,8 @@ import { Lesson } from '../entities/lessons.entity';
 import { LessonGateway, LessonData } from '../gateways/lesson.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { UpdateLessonDto } from '../dto/update-lesson.dto';
+import { UpsertLiveClassEventUseCase } from '../../schedule/use-cases/upsert-live-class-event.use-case';
+import { RemoveLiveClassEventUseCase } from '../../schedule/use-cases/remove-live-class-event.use-case';
 
 /**
  * UpdateLessonUseCase — Caso de uso para actualizar una lección.
@@ -27,6 +29,8 @@ export class UpdateLessonUseCase {
   constructor(
     private readonly lessonGateway: LessonGateway,
     private readonly orphanFileCleaner: OrphanFileCleaner,
+    private readonly upsertLiveClassEvent: UpsertLiveClassEventUseCase,
+    private readonly removeLiveClassEvent: RemoveLiveClassEventUseCase,
   ) {}
 
   async execute(lessonId: string, dto: UpdateLessonDto): Promise<Lesson> {
@@ -66,6 +70,31 @@ export class UpdateLessonUseCase {
     } as LessonData;
 
     // 4. Actualizar la lección
-    return this.lessonGateway.updateLesson(lessonId, data);
+    const updated = await this.lessonGateway.updateLesson(lessonId, data);
+
+    // 5. Sincronizar el espejo de la agenda (solo lecciones tipo 'class').
+    //    Estado final = lo que trae el dto, o si no, lo que ya tenía la lección.
+    if (currentLesson.type === 'class') {
+      const finalLive = dto.isLive ?? currentLesson.videoData?.isLive ?? false;
+      const startSource =
+        dto.liveStartsAt ?? currentLesson.videoData?.liveStartsAt;
+      const endSource = dto.liveEndsAt ?? currentLesson.videoData?.liveEndsAt;
+      const finalStart = startSource ? new Date(startSource) : undefined;
+      const finalEnd = endSource ? new Date(endSource) : undefined;
+
+      if (finalLive && finalStart && finalEnd) {
+        await this.upsertLiveClassEvent.execute(
+          lessonId,
+          updated.title,
+          finalStart,
+          finalEnd,
+        );
+      } else {
+        // Dejó de ser en vivo (o sin horario) → quitar el espejo si existía.
+        await this.removeLiveClassEvent.execute(lessonId);
+      }
+    }
+
+    return updated;
   }
 }

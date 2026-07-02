@@ -26,6 +26,7 @@ import { AssignmentLesson } from './entities/assignment-lesson.entity';
 import { QuizQuestion } from './entities/quiz-question.entity';
 import { QuizOption } from './entities/quiz-option.entity';
 import { StorageModule } from '../storage/storage.module';
+import { ScheduleModule } from '../schedule/schedule.module';
 
 /**
  * CoursesModule — El "pegamento" del módulo de cursos
@@ -51,6 +52,7 @@ import { StorageModule } from '../storage/storage.module';
       QuizOption,
     ]),
     StorageModule, // Importamos para que FileStorageGateway esté disponible
+    ScheduleModule, // Exporta los use-cases del espejo de clases en vivo
   ],
   controllers: [CoursesController],
   providers: [
