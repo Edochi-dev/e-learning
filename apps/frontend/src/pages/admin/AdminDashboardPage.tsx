@@ -97,6 +97,16 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                         Revisar Solicitudes
                     </Link>
                 </div>
+
+                {/* Agenda */}
+                <div className="admin-card">
+                    <div className="admin-card-icon">📅</div>
+                    <h3>Agenda</h3>
+                    <p>Organiza tus clases, correcciones y eventos en un calendario, sin que se solapen.</p>
+                    <Link to="/admin/agenda" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                        Abrir Agenda
+                    </Link>
+                </div>
             </div>
         </div>
     );
