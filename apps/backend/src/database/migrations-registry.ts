@@ -31,6 +31,7 @@ import { AddCourseTaxonomy1783000000000 } from './migrations/1783000000000-AddCo
 import { AddNameChangeRequests1783100000000 } from './migrations/1783100000000-AddNameChangeRequests';
 import { AddScheduleEvents1783200000000 } from './migrations/1783200000000-AddScheduleEvents';
 import { AddLiveLessonSchedule1783300000000 } from './migrations/1783300000000-AddLiveLessonSchedule';
+import { AddPushSubscriptions1783400000000 } from './migrations/1783400000000-AddPushSubscriptions';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -83,4 +84,5 @@ export const MIGRATIONS = [
   AddNameChangeRequests1783100000000,
   AddScheduleEvents1783200000000,
   AddLiveLessonSchedule1783300000000,
+  AddPushSubscriptions1783400000000,
 ];

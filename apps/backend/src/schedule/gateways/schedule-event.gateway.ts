@@ -19,6 +19,7 @@ export interface UpdateScheduleEventData {
   allDay?: boolean;
   notes?: string | null;
   reminderMinutesBefore?: number | null;
+  reminderSentAt?: Date | null;
 }
 
 /**
@@ -39,6 +40,13 @@ export abstract class ScheduleEventGateway {
 
   /** Eventos que caen dentro (o cruzan) el rango visible del calendario. */
   abstract findInRange(from: Date, to: Date): Promise<ScheduleEvent[]>;
+
+  /**
+   * Eventos con recordatorio vencido y aún no enviado: tienen
+   * reminderMinutesBefore, no se han notificado, y su inicio cae dentro de la
+   * ventana [ahora, ahora + reminderMinutesBefore].
+   */
+  abstract findDueReminders(now: Date): Promise<ScheduleEvent[]>;
 
   /** Espejo de una clase en vivo por su origen (sourceId = lessonId). */
   abstract findBySource(sourceId: string): Promise<ScheduleEvent | null>;

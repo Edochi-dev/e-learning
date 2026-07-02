@@ -15,9 +15,23 @@ import interactionPlugin from '@fullcalendar/interaction';
 import type { ScheduleEvent } from '@maris-nails/shared';
 import type { ScheduleGateway } from '../../gateways/ScheduleGateway';
 import { useToast } from '../../components/Toast';
+import { API_URL } from '../../config';
 
 interface Props {
     gateway: ScheduleGateway;
+}
+
+// Convierte la clave VAPID (base64url) al Uint8Array que espera pushManager.subscribe.
+// Se construye sobre un ArrayBuffer explícito para que el tipo sea el que exige
+// applicationServerKey (Uint8Array<ArrayBuffer>, no ArrayBufferLike).
+function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const buffer = new ArrayBuffer(raw.length);
+    const output = new Uint8Array(buffer);
+    for (let i = 0; i < raw.length; i++) output[i] = raw.charCodeAt(i);
+    return output;
 }
 
 // Date -> "YYYY-MM-DDTHH:MM" (hora local, para el input datetime-local).
@@ -42,7 +56,11 @@ function toFcEvent(e: ScheduleEvent): EventInput {
         allDay: e.allDay,
         editable: !isLive, // las clases en vivo se editan desde su curso
         classNames: [isLive ? 'agenda-ev--live' : 'agenda-ev--personal'],
-        extendedProps: { notes: e.notes ?? '', sourceType: e.sourceType },
+        extendedProps: {
+            notes: e.notes ?? '',
+            sourceType: e.sourceType,
+            reminderMinutesBefore: e.reminderMinutesBefore ?? null,
+        },
     };
 }
 
@@ -55,6 +73,7 @@ interface ModalState {
     end: string;
     allDay: boolean;
     notes: string;
+    reminderMinutesBefore: number | null;
     readOnly: boolean; // true para clases en vivo (solo lectura en la agenda)
 }
 
@@ -66,6 +85,7 @@ const CLOSED: ModalState = {
     end: '',
     allDay: false,
     notes: '',
+    reminderMinutesBefore: null,
     readOnly: false,
 };
 
@@ -80,7 +100,52 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
     const calendarRef = useRef<FullCalendar | null>(null);
     const [modal, setModal] = useState<ModalState>(CLOSED);
     const [saving, setSaving] = useState(false);
+    const [enablingPush, setEnablingPush] = useState(false);
     const toast = useToast();
+
+    // Activa las notificaciones push en ESTE dispositivo: pide permiso, se
+    // suscribe con la clave VAPID del backend y guarda la suscripción.
+    const enablePushReminders = async () => {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+            toast.error('Tu navegador no soporta notificaciones.');
+            return;
+        }
+        setEnablingPush(true);
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                toast.error('Permiso de notificaciones denegado.');
+                return;
+            }
+            const reg = await navigator.serviceWorker.ready;
+            const keyRes = await fetch(`${API_URL}/push/public-key`, {
+                credentials: 'include',
+            });
+            const { publicKey } = await keyRes.json();
+            if (!publicKey) {
+                toast.error('El servidor aún no tiene las notificaciones configuradas.');
+                return;
+            }
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(publicKey),
+            });
+            const json = sub.toJSON();
+            await fetch(`${API_URL}/push/subscribe`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+            });
+            toast.success('Recordatorios activados en este dispositivo.');
+        } catch (err) {
+            toast.error(
+                err instanceof Error ? err.message : 'No se pudieron activar los recordatorios',
+            );
+        } finally {
+            setEnablingPush(false);
+        }
+    };
 
     // Fuente de eventos: FullCalendar la llama con el rango visible y en cada
     // navegación. refetchEvents() la vuelve a disparar tras crear/editar/borrar.
@@ -112,6 +177,7 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
             end: toLocalInput(arg.end),
             allDay: arg.allDay,
             notes: '',
+            reminderMinutesBefore: null,
             readOnly: false,
         });
         arg.view.calendar.unselect();
@@ -130,6 +196,8 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
             end: e.end ? toLocalInput(e.end) : '',
             allDay: e.allDay,
             notes: (e.extendedProps.notes as string) ?? '',
+            reminderMinutesBefore:
+                (e.extendedProps.reminderMinutesBefore as number | null) ?? null,
             readOnly: isLive,
         });
     };
@@ -163,6 +231,7 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
                 endAt: toWallIso(modal.end),
                 allDay: modal.allDay,
                 notes: modal.notes.trim() || undefined,
+                reminderMinutesBefore: modal.reminderMinutesBefore,
             };
             if (modal.mode === 'create') {
                 await gateway.create(payload);
@@ -201,6 +270,15 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
             <div className="admin-header">
                 <h1>Agenda</h1>
                 <p>Organiza tus clases, correcciones y eventos. Toca un hueco para crear.</p>
+                <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={enablePushReminders}
+                    disabled={enablingPush}
+                    style={{ marginTop: '0.5rem' }}
+                >
+                    🔔 {enablingPush ? 'Activando…' : 'Activar recordatorios'}
+                </button>
             </div>
 
             <div className="admin-card agenda-calendar">
@@ -301,6 +379,26 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
                             disabled={modal.readOnly}
                             onChange={(e) => setModal((m) => ({ ...m, notes: e.target.value }))}
                         />
+
+                        <label className="account-field__label">Recordarme</label>
+                        <select
+                            className="form-input"
+                            value={modal.reminderMinutesBefore ?? ''}
+                            disabled={modal.readOnly}
+                            onChange={(e) =>
+                                setModal((m) => ({
+                                    ...m,
+                                    reminderMinutesBefore:
+                                        e.target.value === '' ? null : Number(e.target.value),
+                                }))
+                            }
+                        >
+                            <option value="">Sin recordatorio</option>
+                            <option value="15">15 minutos antes</option>
+                            <option value="30">30 minutos antes</option>
+                            <option value="60">1 hora antes</option>
+                            <option value="1440">1 día antes</option>
+                        </select>
 
                         <div className="agenda-modal__actions">
                             {modal.mode === 'edit' && !modal.readOnly && (

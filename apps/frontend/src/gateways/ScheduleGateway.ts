@@ -7,6 +7,7 @@ export interface ScheduleEventInput {
     endAt: string;
     allDay?: boolean;
     notes?: string;
+    reminderMinutesBefore?: number | null;
 }
 
 /**
