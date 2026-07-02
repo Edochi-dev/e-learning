@@ -200,6 +200,8 @@ export interface CreateClassLessonPayload {
     videoUrl: string;
     duration?: string;
     isLive?: boolean;
+    liveStartsAt?: string;   // ISO — obligatorio cuando isLive
+    liveEndsAt?: string;
 }
 
 export interface CreateExamLessonPayload {
@@ -257,6 +259,8 @@ export interface UpdateClassLessonPayload {
     videoUrl?: string;
     duration?: string;
     isLive?: boolean;
+    liveStartsAt?: string;   // ISO — obligatorio cuando isLive
+    liveEndsAt?: string;
 }
 
 export interface UpdateExamLessonPayload {
