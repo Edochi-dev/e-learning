@@ -1,97 +1,209 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code (claude.ai/code) when working in this repository.
+
+> **Principle behind this document:** it holds the **rules** and the **reasons** — the
+> things that don't expire. Inventories that change with every feature (route lists,
+> gateway bindings, module lists) are **not copied here**; instead it documents *how to
+> discover them*, because a command always tells the truth while a table only told it on
+> the day it was written.
+> For a functional overview of the product and its modules, see [`README.md`](./README.md).
+
+---
 
 ## Commands
 
 All commands run from the **monorepo root** unless noted.
+npm workspaces: `apps/*` and `packages/*`.
 
 ```bash
-# Install all workspace dependencies
+# Install dependencies for every workspace
 npm install
 
-# Start infrastructure
-docker-compose up -d        # PostgreSQL 16 on port 5432
+# Development infrastructure
+docker compose up -d db     # PostgreSQL 16 only (port 5432) — the usual local setup
+docker compose up -d        # also starts the backend container (port 3002:3000)
 ```
 
-**Backend** (run from `apps/backend/`):
+**Backend** (from `apps/backend/`):
+
 ```bash
-npm run start:dev           # Dev server with watch (port 3000)
-npm run build               # Compile TypeScript → dist/
-npm run lint                # ESLint with autofix — DO NOT RUN (see warning below)
-npm run test                # Jest (all spec files)
-npm run test -- --testPathPatterns=courses  # Run a single test file by pattern (note: --testPathPatterns, plural)
+npm run start:dev           # watch mode (port 3000)
+npm run build               # compiles to dist/ — the `prebuild` hook builds packages/shared first
+npm run test                # Jest, unit tests
+npm run test -- --testPathPatterns=courses   # single file by pattern (note: --testPathPatterns, plural)
+npm run test:e2e            # Jest with test/jest-e2e.json — needs the test DB running (see below)
+npm run lint                # ⚠️ DO NOT RUN — see "Lint hygiene"
 
-# TypeORM Migrations (requires DB running and apps/backend/.env present)
-npm run migration:generate  # Diff entities vs DB → new migration file in src/database/migrations/
-npm run migration:run       # Apply pending migrations
-npm run migration:revert    # Rollback last migration
+# TypeORM migrations (require the DB running and apps/backend/.env)
+npm run migration:generate  # diff entities vs DB → new file in src/database/migrations/
+npm run migration:run       # apply pending migrations
+npm run migration:revert    # roll back the last one
 ```
 
-**Frontend** (run from `apps/frontend/`):
+**Frontend** (from `apps/frontend/`):
+
 ```bash
-npm run dev                 # Vite dev server (port 5173)
-npm run build               # Production build
-npm run lint                # ESLint
+npm run dev                 # Vite (port 5173)
+npm run build               # tsc -b && vite build
+npm run test                # Vitest (run)
+npm run lint                # ⚠️ DO NOT RUN — see "Lint hygiene"
 ```
 
-Both servers must be running simultaneously for full functionality. The frontend calls the backend at `http://localhost:3000` (hardcoded in `App.tsx`).
+The full application needs **both servers running simultaneously**.
 
-## ⚠️ Lint hygiene (CRÍTICO)
+### E2E tests
 
-**Nunca ejecutar `npm run lint` (ni en `apps/backend/` ni en `apps/frontend/`).** Ambos scripts corren ESLint con `--fix` sobre **todo el workspace** (`{src,apps,libs,test}/**/*.ts` en backend, `.` en frontend), no solo sobre los archivos modificados en la sesión actual. Eso reescribe en disco decenas de archivos no relacionados con la tarea (cambios cosméticos: comillas, comas finales, orden de imports, etc.) y contamina el `git status` con ruido fuera del scope del commit.
+The E2E suite runs against an **isolated, ephemeral database** (its own container, port
+5433, data in tmpfs → wiped on shutdown). It never touches the development database.
 
-**Regla:** validar lint solo con `npx eslint <ruta/al/archivo>` (sin `--fix`) y solo sobre los archivos que la sesión actual tocó. Si hay errores de lint preexistentes en otros archivos del repo, **no son responsabilidad de la tarea actual** — proponerlos como un commit aparte y consciente, nunca arrastrarlos como efecto colateral.
-
-Si por error se ejecutó `npm run lint` y aparecen archivos modificados fuera del scope, revertirlos inmediatamente con `git checkout HEAD -- <archivos no relacionados>` antes de stagear nada.
-
-## Instructions
-
-Debes seguir las siguientes instrucciones:
-
-- Sé un profesor para un desarrollador junior.
-- Explica siempre tu código en español y asegúrate de explicarlo de una manera que un desarrollador junior pueda entender (bien pedagógico).
-- Sigue siempre la Clean Architecture **pura**, sin atajos.
-- **No existe el over-engineering en este proyecto.** Toda solución debe ser la arquitectónicamente correcta, escalable y mantenible — aunque requiera más archivos o más código. Priorizar rapidez de implementación sobre diseño correcto está prohibido. Ejemplos concretos:
-  - Preferir **herencia padre-hijo** (Table Inheritance / entidades separadas por subtipo) sobre Single Table con campos nullable y condicionales por tipo.
-  - Preferir **polimorfismo** sobre cadenas de `if/else` o `switch` que preguntan por el tipo.
-  - Preferir **segregación de interfaces** (ISP) sobre interfaces/gateways que crecen indefinidamente.
-  - Si un patrón de diseño aplica (Strategy, Factory, etc.), usarlo — no reinventar la rueda con condicionales.
-- Explica a profundidad la logica, proceso y estructura. Para que tu junior pueda retener conceptos.
-- Siempre recuerdale hacer commit a tu junior developer, dandole el commit en inglés y bien estructurado. Ejemplo: refactor(certificates): segregate search and list methods in Gateway.
-  - Split CertificateGateway into explicit 'list' and 'search' methods.
-  - Apply Interface Segregation Principle (ISP) to improve contract clarity.
-  - Update CertificatesController to delegate to specific Use Cases based on intent.
-  - Decouple filtering semantics from basic collection listing.
-- Un commit debe reflejar **exactamente** lo que cambió en esa sesión de trabajo, ni más ni menos. Repetir el scope de un commit anterior en uno nuevo es mentirle al historial de git.
-
-## Examen
-
-Cuando el alumno diga "examen", debes hacer un examen oral sobre los temas trabajados en la sesión.
-
-Reglas del examen:
-- El alumno apunta a ser un desarrollador **fullstack AI-augmented**: el código específico lo puede generar la IA, pero él debe entender la estructura, la lógica y el funcionamiento.
-- Por eso las preguntas deben ser sobre **conceptos, arquitectura y razonamiento**, no sobre sintaxis ni APIs específicas.
-- Ejemplos del tipo de pregunta correcto: "¿Por qué X vive en esta capa y no en otra?", "¿Qué pasaría si elimináramos Y?", "¿Cuál es la diferencia entre A y B y cuándo usarías cada uno?", "¿Qué problema resuelve este patrón?"
-- Ejemplos del tipo de pregunta incorrecto: "¿Cómo se escribe el decorador X?", "¿Cuál es el nombre del método Y?"
-- Haz las preguntas de una en una. Espera la respuesta antes de pasar a la siguiente.
-- Al final da un feedback honesto: qué entendió bien, qué tiene que repasar.
-
-## Monorepo Structure
-
-```
-apps/backend/    NestJS 11 REST API
-apps/frontend/   React 19 + Vite SPA
-packages/shared/ TypeScript interfaces & enums shared across both apps
+```bash
+docker compose -f docker-compose.test.yml up -d
+npm run test:e2e -w apps/backend
+docker compose -f docker-compose.test.yml down    # everything is discarded
 ```
 
-**Shared package (`@maris-nails/shared`)**: exports all domain interfaces (`Course`, `Lesson`, `User`) and `UserRole` enum. Path alias resolves via `tsconfig.json` `paths` in each app. Changes here affect both apps.
+Configuration lives in `apps/backend/.env.test`. The isolation is enforced in code by a
+safety guard (see "Migrations and TypeORM configuration").
 
-**Dependency placement rule**: NestJS/database packages shared across the monorepo (`@nestjs/typeorm`, `typeorm`, `pg`, `bcrypt`, `@nestjs/throttler`, etc.) live in **root `package.json`**. App-specific packages go in each app's own `package.json`. Frontend-only packages go in `apps/frontend/package.json`.
+### CI
 
-## Backend Architecture
+`.github/workflows/ci.yml` runs, in this order:
 
-Strict Clean Architecture. **Dependency direction is always inward** — controllers depend on use cases, use cases depend on abstract gateways, repositories implement gateways.
+1. `npm ci`
+2. build `packages/shared`
+3. build `apps/backend`
+4. backend unit tests
+5. backend **E2E tests**
+6. build `apps/frontend`
+7. frontend tests
+
+Reproduce that sequence locally before opening a PR. If CI fails at a step, the failure
+belongs to that step — don't assume flakiness by default.
+
+---
+
+## ⚠️ Lint hygiene (CRITICAL)
+
+**Never run `npm run lint`** (in either `apps/backend/` or `apps/frontend/`). Both scripts
+invoke ESLint with `--fix` across the **entire workspace** (`{src,apps,libs,test}/**/*.ts`
+in the backend, `.` in the frontend), not just the files touched in the current session.
+That rewrites dozens of unrelated files on disk (cosmetic churn: quotes, trailing commas,
+import order) and pollutes `git status` with noise outside the commit's scope.
+
+**Rule:** validate lint only with `npx eslint <path/to/file>` (no `--fix`), and only on the
+files the current session actually changed. Pre-existing lint errors elsewhere in the repo
+are **not the current task's responsibility** — propose them as a separate, deliberate
+commit; never drag them in as a side effect.
+
+If `npm run lint` was run by mistake and files outside the scope show up as modified,
+revert them immediately with `git checkout HEAD -- <unrelated files>` before staging
+anything.
+
+---
+
+## Working instructions
+
+- Act as a teacher for a junior developer.
+- **Always explain code in Spanish**, in a way a junior developer can follow. This document
+  is written in English, but the conversation with the developer is in Spanish.
+- Explain the logic, the process and the structure in depth, so the junior retains concepts
+  rather than snippets.
+- Always follow **pure** Clean Architecture — no shortcuts.
+- **The metric is architectural correctness, not file count.** Never dismiss a correct
+  design as "over-engineering", and never trade correct design for implementation speed.
+  Equally, don't add layers that solve no real problem. Concretely:
+  - Prefer **parent–child inheritance** (table inheritance / separate entities per subtype)
+    over a single table with nullable columns and per-type conditionals.
+  - Prefer **polymorphism** over `if/else` chains or `switch` statements that ask for a type.
+  - Prefer **interface segregation** (ISP) over gateways that grow without bound.
+  - If a design pattern applies (Strategy, Factory, …), use it — don't reinvent it with
+    conditionals.
+
+### Commits
+
+Always remind the developer to commit, and hand them a well-structured message **in
+English**:
+
+```
+refactor(certificates): segregate search and list methods in Gateway
+
+- Split CertificateGateway into explicit 'list' and 'search' methods.
+- Apply Interface Segregation Principle (ISP) to improve contract clarity.
+- Update CertificatesController to delegate to specific Use Cases based on intent.
+- Decouple filtering semantics from basic collection listing.
+```
+
+A commit must reflect **exactly** what changed in that working session — no more, no less.
+Repeating a previous commit's scope in a new one lies to the git history. Do not add
+trailers or signatures (`Co-Authored-By`, etc.) to commit messages.
+
+---
+
+## Oral exam
+
+When the developer says **"examen"**, run an oral exam on the topics covered in the session.
+
+Rules:
+
+- The developer is training to be an **AI-augmented fullstack developer**: AI can generate
+  the specific code, but he must understand the structure, the logic and how it works.
+- Therefore questions must target **concepts, architecture and reasoning** — not syntax or
+  specific APIs.
+- Good questions: "Why does X live in this layer and not another?", "What would break if we
+  removed Y?", "What's the difference between A and B, and when would you use each?",
+  "What problem does this pattern solve?"
+- Bad questions: "How do you write the X decorator?", "What's the name of method Y?"
+- Ask **one question at a time**. Wait for the answer before moving on.
+- Finish with honest feedback: what he understood well, and what he needs to review.
+- Conduct the exam in Spanish.
+
+---
+
+## Monorepo structure
+
+```
+apps/backend/     NestJS 11 REST API
+apps/frontend/    React 19 + Vite SPA
+packages/shared/  Shared domain interfaces and enums (@maris-nails/shared)
+```
+
+### The shared package (`@maris-nails/shared`)
+
+Its source is a single file at the **package root**: `packages/shared/index.ts` (there is no
+`src/` folder). It is consumed in two different ways, and the distinction matters:
+
+- **At type-check time**, both apps resolve it through a path alias pointing straight at the
+  **source** (`../../packages/shared/index.ts`) — via `paths` in the `tsconfig` files, plus
+  an `alias` in `vite.config.ts` for the frontend.
+- **At runtime**, the backend resolves `@maris-nails/shared` through node_modules → the
+  package's `package.json` → `main: dist/index.js`. In other words, **the backend needs the
+  package compiled**.
+
+That's why `apps/backend/package.json` declares a `prebuild` hook running
+`npm run build -w @maris-nails/shared` before every backend build. If you change `shared`
+and the backend behaves like it's running stale code (or can't resolve the module), that
+build is what's missing.
+
+**Important convention:** `UserRole`, `LessonType`, `CourseLevel`, `OrderStatus` and friends
+are **not TypeScript `enum`s** — they are `as const` objects plus a derived union type. This
+is required by `erasableSyntaxOnly` in the frontend, which forbids TS syntax that emits
+runtime code. For the same reason, **do not use the `constructor(private readonly x)`
+shorthand in the frontend**: declare the field explicitly and assign it in the constructor.
+(In the backend the shorthand is fine — it's idiomatic NestJS.)
+
+### Dependency placement
+
+NestJS/database packages shared across the monorepo (`@nestjs/typeorm`, `typeorm`, `pg`,
+`bcrypt`, `@nestjs/throttler`, …) belong in the **root `package.json`**. App-specific
+packages go in that app's own `package.json`.
+
+---
+
+## Backend architecture
+
+Strict Clean Architecture. **Dependencies always point inward** — controllers depend on use
+cases, use cases depend on abstract gateways, repositories implement those gateways.
 
 ```
 HTTP Request → Controller → UseCase → Gateway (abstract) ← Repository (concrete, TypeORM)
@@ -99,104 +211,225 @@ HTTP Request → Controller → UseCase → Gateway (abstract) ← Repository (c
 
 ### Gateways are abstract classes, not interfaces
 
-This is intentional — NestJS DI requires a runtime token, which interfaces don't provide. Each module wires the abstraction to its implementation:
+This is deliberate: NestJS dependency injection needs a **token that exists at runtime**, and
+TypeScript interfaces vanish at compile time. Each module binds the abstraction to its
+implementation:
 
 ```typescript
-// In courses.module.ts
+// in courses.module.ts
 { provide: CourseGateway, useClass: CoursesRepository }
 ```
 
-Current gateway bindings:
-| Abstract | Concrete | Module |
-|---|---|---|
-| `CourseGateway` | `CoursesRepository` | `CoursesModule` |
-| `UserGateway` | `UsersService` | `UsersModule` |
-| `TokenGateway` | `JwtTokenService` | `UsersModule` |
-| `FileStorageGateway` | `LocalFileStorageGateway` | `StorageModule` |
-| `VideoStreamGateway` | `LocalVideoStreamGateway` | `VideosModule` |
+To switch to S3, for example, implement an `S3FileStorageGateway` and change the binding in
+`StorageModule` — the use cases stay untouched.
 
-To swap to S3, implement a new `S3FileStorageGateway` and change the binding in `StorageModule` — use cases are untouched.
+**Frontend gateways, by contrast, are interfaces** (`.ts`), because there is no DI container
+there that needs runtime tokens.
+
+### Discovering the current state
+
+There is deliberately no binding table here — there are dozens, and they change with every
+feature.
+
+```bash
+# Every abstraction → implementation binding
+grep -rn "provide: .*Gateway" apps/backend/src --include=*.module.ts
+
+# Every abstract gateway that exists
+find apps/backend/src -name "*.gateway.ts"
+
+# Registered business modules
+ls apps/backend/src
+```
+
+The module-by-module breakdown of responsibilities lives in the [`README.md`](./README.md).
 
 ### Adding a new feature
 
-1. `src/feature/gateways/feature.gateway.ts` — abstract class with method contracts
-2. `src/feature/use-cases/do-something.use-case.ts` — `@Injectable()`, depends on the gateway
-3. `src/feature/feature.repository.ts` — implements the gateway using TypeORM
-4. `src/feature/feature.module.ts` — imports TypeORM entities, wires `{ provide, useClass }`, lists use cases as providers
+Inside `src/<feature>/`:
 
-### TypeORM Migrations
+1. `entities/` — TypeORM entities.
+2. `gateways/<feature>.gateway.ts` — abstract class holding the contract. Segregate by
+   responsibility: two small gateways beat one that does everything.
+3. `dto/` — input DTOs with validation (`class-validator`).
+4. `use-cases/<do-something>.use-case.ts` — `@Injectable()`, depends on the abstract
+   gateway. One use case, one intent.
+5. `<feature>.repository.ts` — implements the gateway with TypeORM.
+6. `adapters/` — gateway implementations that talk to external services (SMTP, PDF, ZIP,
+   QR…), where applicable.
+7. `<feature>.controller.ts` — delegates to use cases; no business logic.
+8. `<feature>.module.ts` — imports the entities, declares the `{ provide, useClass }`
+   bindings, and lists the use cases as providers.
 
-`synchronize` is **`false`**. Schema changes require migrations:
+Then: a migration for any new entities (see below), and tests.
+
+### Migrations and TypeORM configuration
+
+`synchronize` is **always `false`**, in every environment. Versioned migrations are the
+single source of truth for the schema.
+
+Three files carry distinct roles — don't conflate them:
+
+| File | Role |
+|---|---|
+| `src/database/typeorm.config.ts` | `buildTypeOrmOptions()`: **runtime** config consumed by `app.module.ts`. Branches between dev/prod and test. |
+| `src/database/data-source.ts` | **CLI only** — used by the `migration:*` scripts. Loads `.env` via `dotenv/config`. |
+| `src/database/migrations-registry.ts` | **Explicit** migration registry (`MIGRATIONS`). |
+
+Flow for a schema change:
 
 ```bash
-# After modifying an entity in src/*/entities/:
+# 1. Modify the entity in src/<feature>/entities/
 cd apps/backend && npm run migration:generate
-# Review generated file in src/database/migrations/
+# 2. Review the generated file in src/database/migrations/
+# 3. IMPORTANT: import it and add it to the MIGRATIONS array in migrations-registry.ts.
+#    If you skip that, neither the CLI nor the E2E suite will see it.
 npm run migration:run
 ```
 
-`migrationsRun: true` in `app.module.ts` auto-runs pending migrations on startup. `src/database/data-source.ts` is **CLI-only** (used by migration scripts, loads `.env` via `dotenv/config`). Runtime DB config lives entirely in `app.module.ts`.
+Per-environment behaviour (in `buildTypeOrmOptions()`):
 
-### Auth & Rate Limiting
+- **dev / prod** (`NODE_ENV !== 'test'`): `migrationsRun: true` — pending migrations are
+  applied at startup from the compiled `.js` glob in `dist/`.
+- **test** (`NODE_ENV === 'test'`): the schema is provisioned by `test/global-setup-e2e.ts`,
+  which runs **the same migrations as production**, so the test schema is identical to the
+  real one rather than an approximation.
+
+**Safety guard:** in test mode, `buildTypeOrmOptions()` **throws and aborts** unless the
+connection points at a local host (`localhost`/`127.0.0.1`) with `test` or `e2e` in the
+database name. The tests issue `DROP SCHEMA`, which is destructive; this makes it
+structurally impossible for them to hit the development or production database. **Do not
+weaken this check.**
+
+### Auth and rate limiting
 
 - JWT via `@nestjs/passport`. Protect routes with `@UseGuards(AuthGuard('jwt'))`.
-- Role enforcement: `@UseGuards(AuthGuard('jwt'), RolesGuard)` + `@Roles(UserRole.ADMIN)`.
-- Rate limiting is **not global** — applied only to `UsersController` auth endpoints:
-  - `POST /users` (register): 5 req/min
-  - `POST /users/login`: 10 req/min
-  - Implemented via `@UseGuards(ThrottlerGuard)` + `@Throttle()` per method.
+- Roles: `@UseGuards(AuthGuard('jwt'), RolesGuard)` + `@Roles(UserRole.ADMIN)`.
+- Rate limiting: `ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }])` is registered in
+  `app.module.ts`, but there is **no `APP_GUARD`** — registering it does not apply it. It is
+  enabled **per controller** with `@UseGuards(ThrottlerGuard)` + `@Throttle()`.
+  To find where it's applied:
+  `grep -rln "@Throttle" apps/backend/src --include=*.controller.ts`
 
-### Video Streaming
+### Video streaming
 
-`<video src>` tags cannot set `Authorization` headers, so streaming uses a two-step signed URL flow:
+`<video src>` tags cannot send `Authorization` headers. Streaming therefore uses a
+**two-step signed-URL flow**:
 
-1. Frontend calls `GET /videos/:lessonId/signed-url` with JWT → gets a short-lived signed URL
-2. Frontend sets that URL as `<video src>` → browser hits `GET /videos/stream?path=...&token=...`
-3. `BlockVideoStaticMiddleware` blocks direct access to `/static/videos/*`
+1. The frontend calls `GET /videos/:lessonId/signed-url` with the JWT → receives a
+   short-lived signed URL (`VIDEO_TOKEN_EXPIRY_HOURS`, default 2).
+2. It sets that URL as `<video src>` → the browser hits
+   `GET /videos/stream?path=...&token=...`.
+3. `BlockVideoStaticMiddleware` blocks direct access to `/static/videos/*`.
 
-Video files live in `apps/backend/public/videos/`. Orphan cleanup: before deleting a video file, `isVideoUrlReferenced()` checks whether any other lesson still uses that URL.
+Files live in `apps/backend/public/videos/`. Orphan cleanup: before deleting a file,
+`isVideoUrlReferenced()` verifies no other lesson still points at that URL.
 
-## Frontend Architecture
+**Do not "fix" this by adding an `Authorization` header** — that is precisely the thing that
+cannot be done.
+
+---
+
+## Frontend architecture
 
 ```
-App.tsx (creates gateway instances) → Page (receives gateway as prop) → Hook → Gateway interface → HTTP Gateway
+App.tsx (creates gateway instances) → Page (receives the gateway as a prop) → Hook → Gateway interface → HTTP Gateway
 ```
 
-- **Gateways** (`src/gateways/`) separate the HTTP implementation from business logic. Pages never call `fetch` directly.
+- **Gateways** (`src/gateways/`) separate the HTTP implementation from business logic. Pages
+  never call `fetch` directly.
 - **Hooks** (`src/hooks/`) own loading/error state and call gateway methods.
-- **Pages** receive gateway instances as **props**, not from a global singleton — keeps them independently testable.
-- Gateway instances are created **once** in `App.tsx` with `useMemo` and passed down as props.
+- **Pages** receive gateway instances as **props**, not from a global singleton — which keeps
+  them independently testable.
+- Instances are created **once** in `App.tsx` with `useMemo` and passed down.
 
-### Routing
+### Backend URL
 
-| Path | Page | Guard |
-|---|---|---|
-| `/` | `HomePage` | Public |
-| `/catalogo` | `CatalogPage` | Public |
-| `/login` | `LoginPage` | Public |
-| `/courses/:id` | `CourseDetailsPage` | Public |
-| `/courses/:courseId/lessons/:lessonId` | `LessonPage` | JWT required |
-| `/admin` | `AdminDashboardPage` | ADMIN role |
-| `/admin/courses/new` | `CreateCoursePage` | ADMIN role |
-| `/admin/courses/:id/edit` | `EditCoursePage` | ADMIN role |
-| `/admin/courses/:id/lessons` | `ManageLessonsPage` | ADMIN role |
+**It is not hardcoded.** It lives in `apps/frontend/src/config.ts`:
 
-### Design System
-
-All tokens are CSS custom properties in `App.css`. Primary palette: **Rose Pink** (`--primary: #e84393`) + **Champagne Gold** (`--gold: #d4a574`). Dark mode via `[data-theme='dark']` on `<html>`, persisted in localStorage. Fonts: `--font-heading` = Playfair Display, `--font-body` = DM Sans (loaded via Google Fonts in `index.html`).
-
-When adding new UI sections, append styles to `App.css` and use existing tokens — avoid hardcoded colors.
-
-## Environment Variables
-
-Backend reads from `apps/backend/.env`:
-
+```typescript
+export const API_URL = import.meta.env.VITE_API_URL as string;
 ```
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=
-DB_PASSWORD=
-DB_NAME=
-JWT_SECRET=
-PORT=3000
-```
+
+This requires `VITE_API_URL` in `apps/frontend/.env` (template in `.env.example`). If
+requests fail against an `undefined/...` URL, that variable is missing.
+
+### ComingSoonGuard (important)
+
+The site is in "coming soon" mode. `ComingSoonGuard` wraps the **public** routes (home,
+catalog, course details, lesson) and applies this rule:
+
+- User with the **ADMIN** role → sees the real page.
+- Everyone else (including anonymous visitors) → sees `ComingSoonPage`.
+
+The catch-all `*` route also renders `ComingSoonPage`.
+
+**Practical consequence:** if you test something without an admin session and land on the
+"coming soon" screen, **that is not a bug** — it's the guard. Authenticate as ADMIN before
+concluding anything is broken.
+
+### Routes
+
+Every route is declared in one place: `apps/frontend/src/App.tsx`. Read them from there;
+they are not duplicated here. They are grouped by access level: public, wrapped in
+`ComingSoonGuard`, JWT-protected, and ADMIN-only. User-facing URLs are **in Spanish**
+(`/cursos`, `/registro`, `/cuenta`, `/mis-cursos`, `/admin/certificados`…) — keep that
+convention when adding new ones.
+
+### Design system
+
+All tokens are CSS custom properties in `App.css`. Primary palette: **Rose Pink**
+(`--primary: #e84393`) + **gold** (`--gold: #CD9E55`). Dark mode via `[data-theme='dark']`
+on `<html>`, persisted in localStorage — every token is redefined there. Fonts:
+`--font-heading` = Kaushan Script, `--font-body` = DM Sans (loaded from Google Fonts in
+`index.html`).
+
+When adding UI sections, extend `App.css` using the existing tokens — **never hardcoded
+colors**, since those would break dark mode.
+
+Motion and animation on this site are **intentional**: do not add a global
+`prefers-reduced-motion` rule that disables them unless explicitly asked.
+
+---
+
+## Environment variables
+
+**Source of truth: `apps/backend/.env.example`** (a commented template) together with the
+**Joi** schema in `app.module.ts`, which validates at startup. If a required variable is
+missing or malformed, NestJS **refuses to boot** (fail-fast). The list is not duplicated
+here.
+
+Worth knowing:
+
+- `JWT_SECRET` requires at least 32 characters.
+- **SMTP is optional and all-or-nothing:** if you set `SMTP_HOST`, Joi also requires
+  `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` and `SMTP_FROM`. If you don't set it, the
+  notifications module falls back to `ConsoleNotificationGateway` (it logs the email
+  instead of sending it).
+- **`VAPID_*`** (web push) and **`VIDEO_TOKEN_EXPIRY_HOURS`** are used in code and present in
+  the Joi schema as optional, but are **not yet in `.env.example`**. If you touch those
+  features, document them there.
+- The `POSTGRES_*` variables in the same `.env` are what the Docker image reads to create the
+  user and database on first boot; they must match the `DB_*` values.
+- Frontend: `apps/frontend/.env` with `VITE_API_URL`.
+
+---
+
+## Deployment
+
+`deploy.sh` runs **on the server** (`/home/cerberus/e-learning`) and performs, in order:
+
+1. **Backup** of PostgreSQL via `pg_dump` from the `mn_postgres` container. Aborts the deploy
+   if the dump comes out empty. Keeps the 10 most recent.
+2. `git pull origin main`
+3. `npm install && npm run build` in `apps/frontend`
+4. `npm install && npm run build` in `apps/backend` (the `prebuild` hook rebuilds `shared`)
+5. `pm2 restart marisnails-api`
+
+Pending migrations are applied automatically when the backend boots
+(`migrationsRun: true`).
+
+> **Known inconsistency:** `docker-compose.yml` defines a `backend` service (port
+> `3002:3000`), while `deploy.sh` restarts the backend through **PM2**. Two possible
+> production execution paths coexist. Before changing anything about deployment, verify on
+> the server which one is actually live — do not assume.
