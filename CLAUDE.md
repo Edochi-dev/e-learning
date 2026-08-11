@@ -422,9 +422,16 @@ Worth knowing:
 1. **Backup** of PostgreSQL via `pg_dump` from the `mn_postgres` container. Aborts the deploy
    if the dump comes out empty. Keeps the 10 most recent.
 2. `git pull origin main`
-3. `npm install && npm run build` in `apps/frontend`
-4. `npm install && npm run build` in `apps/backend` (the `prebuild` hook rebuilds `shared`)
-5. `pm2 restart marisnails-api`
+3. `npm ci` **once, from the monorepo root.** Never `cd apps/backend && npm install` (or
+   frontend) — a stray local `node_modules` there once caused npm to treat that folder as
+   a standalone project, silently missing root-declared dependencies
+   (`@nestjs/schedule` is a real example: installing from inside `apps/backend/` audited
+   969 packages instead of the monorepo's actual 1284). `npm ci` from the root, matching
+   `ci.yml`, always reinstalls clean from the lockfile — this class of bug becomes
+   structurally impossible.
+4. `npm run build -w apps/frontend`
+5. `npm run build -w apps/backend` (the `prebuild` hook rebuilds `shared` first)
+6. `pm2 restart marisnails-api`
 
 Pending migrations are applied automatically when the backend boots
 (`migrationsRun: true`).

@@ -72,29 +72,47 @@ git pull origin main
 echo ""
 
 # ============================================================
-#  PASO 3: Build del frontend
+#  PASO 3: Instalar dependencias (una sola vez, desde la raíz)
+# ============================================================
+#  IMPORTANTE: instalar SIEMPRE desde la raíz del monorepo, nunca con
+#  "cd apps/backend && npm install" (ni frontend). Con npm workspaces, un
+#  node_modules local suelto dentro de una app puede hacer que npm la trate
+#  como proyecto aislado y no vea las dependencias declaradas en la raíz
+#  (nos pasó con @nestjs/schedule: instalar desde apps/backend/ auditó 969
+#  paquetes en vez de los 1284 reales del monorepo completo).
+#
+#  npm ci (no npm install): borra node_modules y reinstala limpio a partir
+#  del lockfile, exactamente como lo hace ci.yml. Es más lento pero elimina
+#  por completo la posibilidad de arrastrar un node_modules desincronizado.
+echo "============================================"
+echo "  INSTALL: Installing dependencies (root, npm ci)..."
+echo "============================================"
+cd "$PROJECT_DIR"
+npm ci
+echo ""
+
+# ============================================================
+#  PASO 4: Build del frontend
 # ============================================================
 echo "============================================"
 echo "  FRONTEND: Building..."
 echo "============================================"
-cd "$PROJECT_DIR/apps/frontend"
-npm install
-npm run build
+npm run build -w apps/frontend
 echo ""
 
 # ============================================================
-#  PASO 4: Build del backend
+#  PASO 5: Build del backend
 # ============================================================
+#  El hook "prebuild" del backend compila packages/shared automáticamente
+#  antes de este build — no hace falta un paso aparte para eso.
 echo "============================================"
 echo "  BACKEND: Building..."
 echo "============================================"
-cd "$PROJECT_DIR/apps/backend"
-npm install
-npm run build
+npm run build -w apps/backend
 echo ""
 
 # ============================================================
-#  PASO 5: Reiniciar el backend
+#  PASO 6: Reiniciar el backend
 # ============================================================
 echo "============================================"
 echo "  PM2: Restarting marisnails-api..."

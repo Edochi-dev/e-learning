@@ -225,10 +225,14 @@ npm run test               # Vitest
 1. `pg_dump` backup of the database (aborts the deploy if the dump is empty; keeps the 10
    most recent under `backups/`)
 2. `git pull origin main`
-3. Install and build the frontend
-4. Install and build the backend, which rebuilds `packages/shared` as part of its `prebuild`
-   hook
-5. Restart the API process with PM2
+3. `npm ci` **once, from the monorepo root** — never per-app. A stray local `node_modules`
+   inside `apps/backend/` or `apps/frontend/` once made npm treat that folder as a
+   standalone project and silently miss root-declared dependencies; `npm ci` from the root
+   makes that structurally impossible by always reinstalling clean from the lockfile.
+4. Build the frontend (`npm run build -w apps/frontend`)
+5. Build the backend (`npm run build -w apps/backend`), which rebuilds `packages/shared`
+   first via its `prebuild` hook
+6. Restart the API process with PM2
 
 Pending migrations are applied automatically when the backend boots.
 
