@@ -11,21 +11,39 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  # ── Backend NestJS ──
-  # Expone el puerto 3002 al host para que el nginx del sistema
-  # (que sirve múltiples sitios) le haga proxy reverso.
-  backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
-    container_name: mn_backend
-    restart: always
-    ports:
-      - "3002:3000"
-    env_file:
-      - apps/backend/.env
-    depends_on:
-      - db
+  # ── Backend NestJS (DESACTIVADO — no es el camino de deploy real) ──
+  #
+  # INCIDENTE (2026-08-11): este servicio publicaba el 3002, que es justo el
+  # puerto al que apunta el nginx del sistema en producción. Por eso, sin que
+  # nadie lo decidiera, terminó siendo el backend que de verdad servía
+  # marisnails.academy — mientras deploy.sh actualizaba PM2 (marisnails-api),
+  # un proceso al que nginx nunca le mandaba tráfico. deploy.sh nunca ejecuta
+  # nada de Docker, así que este contenedor quedó congelado ~5 meses sin
+  # recibir el código nuevo (sin el módulo de agenda ni el de web-push).
+  # Además no tenía volumen: los archivos subidos por usuarios reales
+  # (certificados, videos, correcciones) mientras este contenedor estaba
+  # activo vivían SOLO en su capa de escritura, sin respaldo en el host.
+  #
+  # Producción ahora corre PM2 (marisnails-api) en el puerto 3002 directo en
+  # el host — sin contenedor de por medio — igual que el resto de proyectos
+  # de ese servidor compartido. Ver CLAUDE.md, sección "Deployment".
+  #
+  # Si en algún momento se decide volver a un backend containerizado,
+  # descomentar este servicio y ANTES revisar que tenga un volumen para
+  # apps/backend/public/ (o se repite la pérdida de datos evitada por poco).
+  #
+  # backend:
+  #   build:
+  #     context: .
+  #     dockerfile: apps/backend/Dockerfile
+  #   container_name: mn_backend
+  #   restart: always
+  #   ports:
+  #     - "3002:3000"
+  #   env_file:
+  #     - apps/backend/.env
+  #   depends_on:
+  #     - db
 
 volumes:
   postgres_data:

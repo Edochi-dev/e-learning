@@ -429,7 +429,31 @@ Worth knowing:
 Pending migrations are applied automatically when the backend boots
 (`migrationsRun: true`).
 
-> **Known inconsistency:** `docker-compose.yml` defines a `backend` service (port
-> `3002:3000`), while `deploy.sh` restarts the backend through **PM2**. Two possible
-> production execution paths coexist. Before changing anything about deployment, verify on
-> the server which one is actually live — do not assume.
+**Reverse proxy.** The `nginx.conf` in this repository is the **local/containerized**
+configuration (it proxies to the `backend` Docker service name). Production sits behind a
+**system-level nginx on a shared server that also hosts unrelated projects**
+(`campayo`, `dopa`, `dopa-next`, `ikigai`), and that configuration is **not versioned
+here**. Do not assume the repo's `nginx.conf` reflects production routing.
+
+**The production API runs under PM2**, as the process `marisnails-api`, on **port 3002**
+(not 3000 — port 3000 on that shared server belongs to a different project, `ikigai`).
+`PORT=3002` is set in the server's `apps/backend/.env`, overriding the `3000` default used
+for local development. `deploy.sh` deliberately never runs `docker compose up` or rebuilds
+a container image: rebuilding and restarting the PM2 process **is** the deploy.
+
+`docker-compose.yml` also defines a `backend` service (port `3002:3000`). **It is not the
+deployment path and must stay stopped.** History matters here: this container was the one
+actually receiving production traffic for roughly five months, unrelated to and never
+touched by `deploy.sh`, while system nginx's `proxy_pass` pointed at its port. Real user
+uploads (certificates, videos, corrections) written by that container had no volume mount
+and lived only in its writable layer. The incident was resolved by rescuing those files
+with `docker cp`, merging them into the host's `apps/backend/public/`, stopping the
+container, and disabling its `restart: always` policy
+(`docker update --restart=no mn_backend`) so it cannot silently reappear after a host
+reboot and reclaim the port. It was kept (stopped, not removed) only as a rollback option.
+
+**Takeaway for future changes here:** before trusting any claim about "what serves
+production," verify the actual system nginx `proxy_pass` target
+(`grep -r proxy_pass /etc/nginx/` on the server) and cross-check it against what's
+actually listening on that port (`sudo lsof -i :<port>`). Do not assume the deploy script
+describes the live path — on this server, for five months, it didn't.

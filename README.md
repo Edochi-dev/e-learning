@@ -232,10 +232,15 @@ npm run test               # Vitest
 
 Pending migrations are applied automatically when the backend boots.
 
-The repository also ships a containerized configuration — `docker-compose.yml` (services
-`db` and `backend`, plus `apps/backend/Dockerfile`) and `nginx.conf` (reverse proxy for
-`/api/`, plus static frontend serving and cache headers). SSL certificates live in `ssl/`
-and are git-ignored, as are `backups/` and every real `.env`.
+In production the application sits behind a **system-level nginx on a shared server** that
+also hosts unrelated projects, whose configuration lives outside this repository. The API
+runs as a **PM2 process** on a port dedicated to this project on that server (not a
+container) — the `nginx.conf`, `docker-compose.yml` and `apps/backend/Dockerfile` included
+here support a separate, self-contained containerized deployment path, used locally rather
+than in production.
+
+SSL certificates live in `ssl/` and are git-ignored, as are `backups/` and every real
+`.env`.
 
 ---
 
