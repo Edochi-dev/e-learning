@@ -12,6 +12,8 @@ import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
 import { GetSignedUrlUseCase } from './use-cases/get-signed-url.use-case';
 import { StreamVideoUseCase } from './use-cases/stream-video.use-case';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
+import { EnrollmentCheck } from '../common/decorators/enrollment-check.decorator';
 
 /**
  * VideosController — Endpoints de streaming de video
@@ -35,11 +37,25 @@ export class VideosController {
   /**
    * GET /videos/:lessonId/signed-url
    *
-   * Requiere JWT. Retorna una URL firmada temporal.
-   * El frontend usa esta URL como src del <video>.
+   * Retorna una URL firmada temporal. El frontend la usa como src del <video>.
+   *
+   * DOS guards, y los dos hacen falta:
+   *   AuthGuard('jwt')  → ¿quién eres?      (autenticación)
+   *   EnrollmentGuard   → ¿compraste esto?  (autorización)
+   *
+   * El orden importa: EnrollmentGuard lee req.user, que lo pone AuthGuard.
+   *
+   * Sin EnrollmentGuard bastaba con tener una cuenta cualquiera para pedir la
+   * URL firmada de CUALQUIER lección: como GET /courses/:id es público y
+   * devuelve las lecciones con su id, alguien podía registrarse gratis, sacar
+   * los lessonId del catálogo y llevarse los cursos completos sin pagarlos.
+   *
+   * El guard resuelve el courseId a partir del lessonId (la lección sabe a qué
+   * curso pertenece), así que el endpoint no necesita cambiar su firma.
    */
   @Get(':lessonId/signed-url')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), EnrollmentGuard)
+  @EnrollmentCheck({ lessonIdFrom: 'params', lessonIdField: 'lessonId' })
   async getSignedUrl(@Param('lessonId', ParseUUIDPipe) lessonId: string) {
     return this.getSignedUrlUseCase.execute(lessonId);
   }

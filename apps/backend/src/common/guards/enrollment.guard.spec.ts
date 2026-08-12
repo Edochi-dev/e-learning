@@ -6,6 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
+import { UserRole } from '@maris-nails/shared';
 import { EnrollmentGuard } from './enrollment.guard';
 import { ENROLLMENT_CHECK_KEY } from '../decorators/enrollment-check.decorator';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
@@ -68,6 +69,49 @@ describe('EnrollmentGuard', () => {
     const result = await guard.canActivate(ctx);
 
     expect(result).toBe(true);
+  });
+
+  // ── ADMIN pasa sin matrícula ─────────────────────────────────────
+
+  it('deja pasar al ADMIN aunque no esté matriculada', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      lessonIdFrom: 'params',
+      lessonIdField: 'lessonId',
+    });
+    // Sin matrícula: si el guard consultara, rechazaría.
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
+
+    const ctx = mockContext({
+      user: { id: 'admin-1', role: UserRole.ADMIN },
+      body: {},
+      params: { lessonId: 'l-1' },
+      query: {},
+    });
+
+    const result = await guard.canActivate(ctx);
+
+    expect(result).toBe(true);
+    // Sale antes de tocar la DB: ni resuelve la lección ni busca matrícula.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(lessonGateway.findLesson).not.toHaveBeenCalled();
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(enrollmentGateway.findByUserAndCourse).not.toHaveBeenCalled();
+  });
+
+  it('NO deja pasar a una alumna sin matrícula (el bypass es solo de ADMIN)', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      courseIdFrom: 'body',
+    });
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
+
+    const ctx = mockContext({
+      user: { id: 'u-1', role: UserRole.STUDENT },
+      body: { courseId: 'c-1' },
+      params: {},
+      query: {},
+    });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
   });
 
   // ── Sin usuario autenticado ──────────────────────────────────────

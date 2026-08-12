@@ -12,6 +12,7 @@ import {
   EnrollmentCheckOptions,
 } from '../decorators/enrollment-check.decorator';
 import { Request } from 'express';
+import { UserRole } from '@maris-nails/shared';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
@@ -72,6 +73,17 @@ export class EnrollmentGuard implements CanActivate {
 
     if (!userId) {
       throw new ForbiddenException('Usuario no autenticado');
+    }
+
+    // 1.b El ADMIN administra la plataforma: no tiene por qué matricularse en
+    // sus propios cursos para poder revisarlos. Sin esta excepción, la
+    // profesora perdería la vista previa de sus propias lecciones (que hoy
+    // pasa por el mismo endpoint que usa la alumna).
+    //
+    // Salimos ANTES de resolver el courseId a propósito: si el admin puede
+    // pasar igual, consultar la lección en la DB sería trabajo desperdiciado.
+    if (request.user.role === UserRole.ADMIN) {
+      return true;
     }
 
     // 2. Resolver el courseId según la estrategia configurada
