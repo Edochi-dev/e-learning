@@ -8,7 +8,6 @@ import { QuizAttemptRepository } from './repositories/quiz-attempt.repository';
 import { Enrollment } from './entities/enrollment.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from './entities/quiz-attempt-answer.entity';
-import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
 import { GetMyEnrollmentsUseCase } from './use-cases/get-my-enrollments.use-case';
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
@@ -53,7 +52,6 @@ import { ProgressModule } from '../progress/progress.module';
     // --- Guards ---
     EnrollmentOwnershipGuard,
     // --- Use Cases ---
-    EnrollInCourseUseCase,
     GetMyEnrollmentsUseCase,
     MarkLessonCompleteUseCase,
     UnenrollUseCase,

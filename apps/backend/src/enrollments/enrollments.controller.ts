@@ -14,7 +14,6 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { EnrollInCourseUseCase } from './use-cases/enroll-in-course.use-case';
 import {
   GetMyEnrollmentsUseCase,
   EnrollmentWithProgress,
@@ -24,11 +23,9 @@ import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
 import { GetCourseProgressUseCase, CourseProgress } from './use-cases/get-course-progress.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
-import { EnrollInCourseDto } from './dto/enroll-in-course.dto';
 import { MarkLessonCompleteDto } from './dto/mark-lesson-complete.dto';
 import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
-import { Enrollment } from './entities/enrollment.entity';
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use-case';
 
@@ -42,16 +39,16 @@ import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use
  * No hace falta repetirlo en cada método.
  *
  * Rutas:
- *   POST   /enrollments/me             → Matricularse en un curso
  *   GET    /enrollments/me             → Ver mis cursos con progreso
  *   POST   /enrollments/me/progress    → Marcar lección como completada
  *   DELETE /enrollments/:enrollmentId  → Darse de baja (con OwnershipGuard)
+ *
+ * Ninguna ruta CREA matrículas: ver la nota dentro de la clase.
  */
 @Controller('enrollments')
 @UseGuards(AuthGuard('jwt'))
 export class EnrollmentsController {
   constructor(
-    private readonly enrollInCourseUseCase: EnrollInCourseUseCase,
     private readonly getMyEnrollmentsUseCase: GetMyEnrollmentsUseCase,
     private readonly markLessonCompleteUseCase: MarkLessonCompleteUseCase,
     private readonly unenrollUseCase: UnenrollUseCase,
@@ -61,13 +58,9 @@ export class EnrollmentsController {
     private readonly getLastQuizAttemptUseCase: GetLastQuizAttemptUseCase,
   ) {}
 
-  @Post('me')
-  async enroll(
-    @Req() req: any,
-    @Body() dto: EnrollInCourseDto,
-  ): Promise<Enrollment> {
-    return this.enrollInCourseUseCase.execute(req.user.id, dto.courseId);
-  }
+  // No hay endpoint de auto-matrícula: sería acceso gratis a cualquier curso.
+  // Solo otorgan acceso una orden con pago CONFIRMADO o una invitación de la
+  // admin. Si hiciera falta matricular a mano, va bajo /admin con @Roles(ADMIN).
 
   @Get('me')
   async getMyEnrollments(@Req() req: any): Promise<EnrollmentWithProgress[]> {

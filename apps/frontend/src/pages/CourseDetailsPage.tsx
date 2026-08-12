@@ -37,14 +37,21 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
     const [purchasing, setPurchasing] = useState(false);
     const [purchaseError, setPurchaseError] = useState<string | null>(null);
     const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+    // Orden registrada pero sin confirmar: no es éxito ni error, es un tercer estado.
+    const [purchasePending, setPurchasePending] = useState(false);
 
     /**
      * handlePurchase — Flujo de compra directa.
      *
-     * 1. Si no está logueado → lo mandamos al login (con returnTo para que vuelva)
-     * 2. Si está logueado → llamamos al backend (POST /orders/me)
-     * 3. Si el pago fue exitoso → mostramos mensaje y redirigimos a "mis cursos"
-     * 4. Si falló → mostramos el error
+     * 1. Si no está logueada → al login (con returnTo para que vuelva)
+     * 2. Si está logueada → POST /orders/me
+     * 3. Según el estado de la orden, tres desenlaces distintos
+     *
+     * Los tres estados son reales y hay que distinguirlos. Mientras no exista
+     * pasarela de pago, el backend devuelve siempre PENDING: registra la
+     * intención de compra sin cobrar y SIN dar acceso. Tratar ese caso como
+     * error ("el pago no se pudo procesar") sería mentirle a la usuaria: su
+     * solicitud sí quedó registrada, solo falta que la confirmen a mano.
      */
     const handlePurchase = async () => {
         if (!user) {
@@ -54,6 +61,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
 
         setPurchasing(true);
         setPurchaseError(null);
+        setPurchasePending(false);
 
         try {
             const order = await orderGateway.createOrder(id!);
@@ -62,6 +70,8 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                 setPurchaseSuccess(true);
                 // Redirigir a "mis cursos" después de 2 segundos para que vea el mensaje
                 setTimeout(() => navigate('/mis-cursos'), 2000);
+            } else if (order.status === OrderStatus.PENDING) {
+                setPurchasePending(true);
             } else {
                 setPurchaseError('El pago no se pudo procesar. Intenta de nuevo.');
             }
@@ -201,10 +211,11 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                         <button
                             className="btn-primary cd-purchase-card__cta"
                             onClick={handlePurchase}
-                            disabled={purchasing || purchaseSuccess}
+                            disabled={purchasing || purchaseSuccess || purchasePending}
                         >
                             {purchasing ? 'Procesando...' :
                              purchaseSuccess ? 'Compra exitosa' :
+                             purchasePending ? 'Solicitud enviada' :
                              'Inscribirme Ahora'}
                         </button>
 
@@ -214,6 +225,12 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                         {purchaseSuccess && (
                             <p className="cd-purchase-card__success">
                                 Ahora tienes acceso al curso. Redirigiendo...
+                            </p>
+                        )}
+                        {purchasePending && (
+                            <p className="cd-purchase-card__pending">
+                                Registramos tu solicitud. Te contactaremos para coordinar
+                                el pago y activar tu acceso.
                             </p>
                         )}
 

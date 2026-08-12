@@ -20,26 +20,11 @@ import { Enrollment } from '../src/enrollments/entities/enrollment.entity';
 /**
  * Tests E2E de autorización de acceso a videos.
  *
- * POR QUÉ EXISTE ESTE ARCHIVO
- * ---------------------------
- * Durante una auditoría se encontró que `GET /videos/:lessonId/signed-url`
- * estaba protegido SOLO con AuthGuard('jwt'), sin verificar matrícula. Como
- * `GET /courses/:id` es público y devuelve las lecciones con su id, la cadena
- * de ataque era:
+ * El control vive en un guard del borde HTTP, así que un unit test del use case
+ * no lo alcanza: hay que golpear la ruta real.
  *
- *   1. Registrarse gratis (el registro es público).
- *   2. Leer los lessonId del catálogo, sin autenticarse siquiera.
- *   3. Pedir la URL firmada de cualquier lección con el JWT propio.
- *   4. Descargarse los cursos completos sin haberlos pagado.
- *
- * Estos tests son la red que impide que esa regresión vuelva a entrar. Un test
- * unitario del use case NO sirve acá: el control vive en un guard del borde
- * HTTP, así que hay que golpear la ruta real por HTTP.
- *
- * Sembramos los datos (curso, lección, matrícula) directamente por el
- * DataSource en vez de usar el API de admin: lo que se está probando es la
- * autorización del video, no la creación de cursos. Menos ruido, menos
- * acoplamiento a DTOs ajenos al test.
+ * Los datos (curso, lección, matrícula) se siembran por DataSource en vez de
+ * por el API de admin, para no acoplar el test a DTOs que no está probando.
  */
 
 function configureApp(app: INestApplication): void {

@@ -2,7 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { CreateOrderUseCase } from './create-order.use-case';
 import { OrderGateway } from '../gateways/order.gateway';
-import { PaymentGateway } from '../gateways/payment.gateway';
+import { PaymentGateway, PaymentOutcome } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
@@ -174,7 +174,9 @@ describe('CreateOrderUseCase', () => {
       ...fakeOrder,
       amount: 99.99,
     } as Order);
-    paymentGateway.processPayment.mockResolvedValue({ success: true });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
     enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
     enrollmentGateway.enroll.mockResolvedValue({} as any);
 
@@ -198,7 +200,9 @@ describe('CreateOrderUseCase', () => {
     courseGateway.findOne.mockResolvedValue(courseConPrecio as any);
     orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
     orderGateway.create.mockResolvedValue({ ...fakeOrder, amount: 75 } as Order);
-    paymentGateway.processPayment.mockResolvedValue({ success: true });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
     enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
     enrollmentGateway.enroll.mockResolvedValue({} as any);
 
@@ -230,7 +234,9 @@ describe('CreateOrderUseCase', () => {
     courseGateway.findOne.mockResolvedValue(fakeCourse as any);
     orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
-    paymentGateway.processPayment.mockResolvedValue({ success: true });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
     enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
     enrollmentGateway.enroll.mockResolvedValue({} as any);
 
@@ -264,7 +270,7 @@ describe('CreateOrderUseCase', () => {
     orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
     paymentGateway.processPayment.mockResolvedValue({
-      success: false,
+      outcome: PaymentOutcome.FAILED,
       reason: 'Fondos insuficientes',
     });
 
@@ -279,6 +285,32 @@ describe('CreateOrderUseCase', () => {
 
     // NUNCA debe intentar matricular al usuario
     expect(enrollmentGateway.findByUserAndCourse).not.toHaveBeenCalled();
+    expect(enrollmentGateway.enroll).not.toHaveBeenCalled();
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // 5.b PAGO PENDIENTE: registra la orden pero NO da acceso
+  // ──────────────────────────────────────────────────────────
+
+  /** Sin dinero confirmado no hay acceso: PENDING solo registra la intención. */
+  it('cuando el pago queda pendiente: la orden sigue pending y el usuario NO se matricula', async () => {
+    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
+    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+    orderGateway.create.mockResolvedValue({ ...fakeOrder });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.PENDING,
+      reason: 'Pago pendiente de confirmación manual',
+    });
+
+    const result = await useCase.execute(userId, courseId);
+
+    // La orden nace PENDING y se queda ahí: no hay nada que actualizar.
+    expect(result.status).toBe(OrderStatus.PENDING);
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(orderGateway.updateStatus).not.toHaveBeenCalled();
+
+    // Lo esencial: JAMÁS se otorga acceso con un pago sin confirmar.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(enrollmentGateway.enroll).not.toHaveBeenCalled();
   });
 
@@ -299,7 +331,9 @@ describe('CreateOrderUseCase', () => {
     courseGateway.findOne.mockResolvedValue(fakeCourse as any);
     orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
-    paymentGateway.processPayment.mockResolvedValue({ success: true });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
 
     // Simula que el usuario YA tiene una matrícula (ej: admin la creó manualmente)
     enrollmentGateway.findByUserAndCourse.mockResolvedValue({

@@ -34,8 +34,8 @@ export interface EnrollmentGateway {
     /** Devuelve los cursos del usuario con su progreso calculado */
     getMyEnrollments(): Promise<EnrollmentWithProgress[]>;
 
-    /** Inscribe al usuario en un curso */
-    enroll(courseId: string): Promise<void>;
+    // No hay método para matricularse: el backend no expone auto-matrícula.
+    // El acceso se obtiene con una compra confirmada o con una invitación.
 
     /** Elimina la matrícula (baja del curso) */
     unenroll(enrollmentId: string): Promise<void>;

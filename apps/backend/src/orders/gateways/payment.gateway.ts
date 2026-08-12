@@ -1,13 +1,31 @@
 /**
+ * PaymentOutcome — Desenlace de un intento de pago.
+ *
+ * Tres estados y no un booleano, porque una transferencia o un pago en
+ * efectivo quedan PENDIENTES hasta que alguien los confirma.
+ *
+ *   COMPLETED → dinero confirmado. Solo este desenlace otorga acceso.
+ *   PENDING   → intento registrado, sin confirmar.
+ *   FAILED    → rechazado.
+ */
+export const PaymentOutcome = {
+  COMPLETED: 'completed',
+  PENDING: 'pending',
+  FAILED: 'failed',
+} as const;
+
+export type PaymentOutcome =
+  (typeof PaymentOutcome)[keyof typeof PaymentOutcome];
+
+/**
  * PaymentResult — Lo que devuelve cualquier procesador de pagos.
  *
- * Es intencionalmente simple: éxito o fracaso + un motivo.
- * Cuando se integre Stripe/MercadoPago, se pueden agregar campos como
- * transactionId, receiptUrl, etc. sin romper los Use Cases existentes.
+ * Cuando se integre Stripe/MercadoPago se pueden agregar campos como
+ * transactionId o receiptUrl sin romper los Use Cases existentes.
  */
 export interface PaymentResult {
-  success: boolean;
-  /** Razón del fallo (solo cuando success=false). */
+  outcome: PaymentOutcome;
+  /** Motivo, cuando el desenlace no es COMPLETED. */
   reason?: string;
 }
 
@@ -20,8 +38,8 @@ export interface PaymentResult {
  *   Porque HOY no hay medios de pago (el cliente está en trámites legales).
  *   Pero el flujo de compra necesita funcionar desde ya.
  *
- *   La implementación actual (ManualApprovalPaymentGateway) aprueba todo
- *   automáticamente — simula un pago exitoso sin tocar ningún procesador real.
+ *   La implementación actual (ManualApprovalPaymentGateway) deja toda compra
+ *   en PENDING: registra la intención sin cobrar y sin otorgar acceso.
  *
  *   Cuando el cliente tenga sus trámites listos, se crea una nueva clase:
  *     - StripePaymentGateway

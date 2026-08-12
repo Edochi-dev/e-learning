@@ -994,6 +994,16 @@ a {
   border-radius: var(--radius);
 }
 
+.cd-purchase-card__pending {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.04);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius-sm);
+}
+
 .cd-purchase-card__features {
   list-style: none;
   margin: 1.5rem 0 0;

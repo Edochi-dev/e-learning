@@ -37,21 +37,11 @@ export class VideosController {
   /**
    * GET /videos/:lessonId/signed-url
    *
-   * Retorna una URL firmada temporal. El frontend la usa como src del <video>.
+   * Retorna una URL firmada temporal para el <video src>.
    *
-   * DOS guards, y los dos hacen falta:
-   *   AuthGuard('jwt')  → ¿quién eres?      (autenticación)
-   *   EnrollmentGuard   → ¿compraste esto?  (autorización)
-   *
-   * El orden importa: EnrollmentGuard lee req.user, que lo pone AuthGuard.
-   *
-   * Sin EnrollmentGuard bastaba con tener una cuenta cualquiera para pedir la
-   * URL firmada de CUALQUIER lección: como GET /courses/:id es público y
-   * devuelve las lecciones con su id, alguien podía registrarse gratis, sacar
-   * los lessonId del catálogo y llevarse los cursos completos sin pagarlos.
-   *
-   * El guard resuelve el courseId a partir del lessonId (la lección sabe a qué
-   * curso pertenece), así que el endpoint no necesita cambiar su firma.
+   * EnrollmentGuard es obligatorio: sin él, cualquier cuenta autenticada podría
+   * pedir la URL de cualquier lección (los lessonId salen del endpoint público
+   * GET /courses/:id). Debe ir DESPUÉS de AuthGuard, que es quien pone req.user.
    */
   @Get(':lessonId/signed-url')
   @UseGuards(AuthGuard('jwt'), EnrollmentGuard)

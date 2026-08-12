@@ -4,7 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { OrderGateway } from '../gateways/order.gateway';
-import { PaymentGateway } from '../gateways/payment.gateway';
+import { PaymentGateway, PaymentOutcome } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
@@ -17,26 +17,21 @@ import { OrderStatus } from '@maris-nails/shared';
  *   1. Validaciones de negocio (¿existe el curso?, ¿ya lo compró?)
  *   2. Creación de la orden (status: pending)
  *   3. Procesamiento del pago (vía PaymentGateway abstracto)
- *   4. Actualización de la orden (completed o failed)
- *   5. Matrícula automática si el pago fue exitoso
+ *   4. Actualización de la orden según el desenlace
+ *   5. Matrícula SOLO si el pago quedó COMPLETED
  *
  * ¿Por qué depende de 4 gateways?
  *
- *   - OrderGateway     → para persistir/actualizar la orden
- *   - PaymentGateway   → para procesar el pago (hoy auto-aprueba, mañana Stripe)
+ *   - OrderGateway      → para persistir/actualizar la orden
+ *   - PaymentGateway    → para procesar el pago (hoy PENDING, mañana Stripe)
  *   - CourseGateway     → para verificar que el curso existe y obtener el precio
- *   - EnrollmentGateway → para crear la matrícula automáticamente tras el pago
+ *   - EnrollmentGateway → para crear la matrícula cuando el pago se confirma
  *
  * Todos son abstractos. El Use Case no sabe si estás en PostgreSQL, MongoDB,
  * o si el pago va por Stripe o MercadoPago. Solo conoce los contratos.
  *
- * ¿Por qué el enrollment se crea aquí y no en otro lugar?
- *
- *   Porque la regla de negocio es: "pago exitoso → acceso inmediato".
- *   Si lo hicieras en el Controller, estarías poniendo lógica de negocio
- *   en la capa de transporte (violación de Clean Architecture).
- *   Si lo hicieras en un evento asíncrono, el usuario podría tener que
- *   esperar para ver su curso — mala experiencia.
+ * REGLA DE SEGURIDAD: solo COMPLETED otorga acceso. PENDING y FAILED no
+ * matriculan. Cubierto por tests.
  */
 @Injectable()
 export class CreateOrderUseCase {
@@ -76,22 +71,29 @@ export class CreateOrderUseCase {
       course.price,
     );
 
-    // 5. Actualizar la orden según el resultado del pago
-    if (paymentResult.success) {
-      await this.orderGateway.updateStatus(order.id, OrderStatus.COMPLETED);
-      order.status = OrderStatus.COMPLETED;
+    // 5. Actualizar la orden y, solo si el dinero está confirmado, matricular.
+    switch (paymentResult.outcome) {
+      case PaymentOutcome.COMPLETED: {
+        await this.orderGateway.updateStatus(order.id, OrderStatus.COMPLETED);
+        order.status = OrderStatus.COMPLETED;
 
-      // 6. Matricular automáticamente al usuario en el curso.
-      //    Si ya estaba matriculado (ej: admin le dio acceso antes), no falla
-      //    porque findByUserAndCourse lo detecta silenciosamente.
-      const existingEnrollment =
-        await this.enrollmentGateway.findByUserAndCourse(userId, courseId);
-      if (!existingEnrollment) {
-        await this.enrollmentGateway.enroll(userId, courseId);
+        // Puede ya estar matriculada si la admin le dio acceso por invitación.
+        const existingEnrollment =
+          await this.enrollmentGateway.findByUserAndCourse(userId, courseId);
+        if (!existingEnrollment) {
+          await this.enrollmentGateway.enroll(userId, courseId);
+        }
+        break;
       }
-    } else {
-      await this.orderGateway.updateStatus(order.id, OrderStatus.FAILED);
-      order.status = OrderStatus.FAILED;
+
+      case PaymentOutcome.PENDING:
+        // La orden ya nació PENDING: no hay nada que actualizar ni que otorgar.
+        break;
+
+      case PaymentOutcome.FAILED:
+        await this.orderGateway.updateStatus(order.id, OrderStatus.FAILED);
+        order.status = OrderStatus.FAILED;
+        break;
     }
 
     return order;

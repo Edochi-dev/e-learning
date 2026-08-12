@@ -108,7 +108,33 @@ anything.
 - **Always explain code in Spanish**, in a way a junior developer can follow. This document
   is written in English, but the conversation with the developer is in Spanish.
 - Explain the logic, the process and the structure in depth, so the junior retains concepts
-  rather than snippets.
+  rather than snippets — **in the chat, not in the source files** (see below).
+
+### Code comments
+
+**Teaching explanations belong in the chat. They must never be written into the code.**
+This repository is public and read by potential employers; a codebase narrating language
+and framework basics reads like a tutorial, not like production software.
+
+A comment earns its place only if it tells a maintainer something the code cannot:
+
+- A non-obvious constraint (`this guard must run after AuthGuard, which populates req.user`).
+- A security invariant, phrased as a warning (`do not switch this to COMPLETED to unblock
+  the flow — it would grant free access`).
+- A gotcha that looks like a bug but is deliberate.
+- A decision whose alternative looks more obvious than it is.
+
+Do **not** write:
+
+- Restatements of what the code plainly says.
+- Explanations of language or framework features (what `@ManyToOne` does, why
+  `@PrimaryColumn` and not `@PrimaryGeneratedColumn`, how DI works).
+- Narrative history of a bug and its fix — that belongs in the commit message and the
+  GitHub issue, which are the tools built for it.
+- Section banners and decorative ASCII separators inside a function body.
+
+Keep them short. If a comment needs more than about five lines, the explanation probably
+belongs in the chat, in the commit message, or in an issue.
 - Always follow **pure** Clean Architecture — no shortcuts.
 - **The metric is architectural correctness, not file count.** Never dismiss a correct
   design as "over-engineering", and never trade correct design for implementation speed.

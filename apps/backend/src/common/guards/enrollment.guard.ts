@@ -75,13 +75,8 @@ export class EnrollmentGuard implements CanActivate {
       throw new ForbiddenException('Usuario no autenticado');
     }
 
-    // 1.b El ADMIN administra la plataforma: no tiene por qué matricularse en
-    // sus propios cursos para poder revisarlos. Sin esta excepción, la
-    // profesora perdería la vista previa de sus propias lecciones (que hoy
-    // pasa por el mismo endpoint que usa la alumna).
-    //
-    // Salimos ANTES de resolver el courseId a propósito: si el admin puede
-    // pasar igual, consultar la lección en la DB sería trabajo desperdiciado.
+    // El ADMIN no se matricula en sus propios cursos, pero necesita revisarlos.
+    // Salimos antes de resolver el courseId para ahorrar la consulta.
     if (request.user.role === UserRole.ADMIN) {
       return true;
     }
