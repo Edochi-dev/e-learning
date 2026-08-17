@@ -8,7 +8,6 @@ import { Test } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
 import { ApiErrorCode, UserRole } from '@maris-nails/shared';
 import { EnrollmentGuard } from './enrollment.guard';
-import { ENROLLMENT_CHECK_KEY } from '../decorators/enrollment-check.decorator';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { Enrollment } from '../../enrollments/entities/enrollment.entity';
