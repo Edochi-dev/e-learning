@@ -1,0 +1,23 @@
+# Normaliza los finales de línea en el repositorio.
+#
+# El repo nació con archivos en CRLF y otros en LF, sin regla. Cualquier
+# herramienta que reescriba un archivo completo (un script, un formateador, un
+# editor con otra configuración) cambia TODAS sus líneas y produce un diff
+# ilegible que además arruina el `git blame`.
+#
+# `text=auto` guarda todo con LF en el repositorio y deja que git haga la
+# conversión en el checkout de cada quien. Los archivos ya versionados en CRLF
+# se normalizan la próxima vez que se toquen.
+* text=auto
+
+# Binarios: nunca convertir, los corrompería.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.ttf binary
+*.woff binary
+*.woff2 binary
