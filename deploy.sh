@@ -92,16 +92,7 @@ npm ci
 echo ""
 
 # ============================================================
-#  PASO 4: Build del frontend
-# ============================================================
-echo "============================================"
-echo "  FRONTEND: Building..."
-echo "============================================"
-npm run build -w apps/frontend
-echo ""
-
-# ============================================================
-#  PASO 5: Build del backend
+#  PASO 4: Build del backend
 # ============================================================
 #  El hook "prebuild" del backend compila packages/shared automáticamente
 #  antes de este build — no hace falta un paso aparte para eso.
@@ -112,12 +103,31 @@ npm run build -w apps/backend
 echo ""
 
 # ============================================================
-#  PASO 6: Reiniciar el backend
+#  PASO 5: Reiniciar el backend
 # ============================================================
+#  EL ORDEN IMPORTA: backend ANTES que frontend.
+#
+#  Cada parte se activa en un momento distinto: el frontend en cuanto su
+#  build escribe dist/, el backend solo al reiniciar PM2. Si el frontend
+#  fuera primero, entre ambos pasos el navegador cargaria la version NUEVA
+#  hablando con la API VIEJA, que todavia no conoce sus campos nuevos.
+#
+#  Al reves es seguro: la API nueva devuelve campos de mas, y un frontend
+#  viejo simplemente los ignora. Regla general: el servidor se amplia
+#  primero, el cliente se actualiza despues.
 echo "============================================"
 echo "  PM2: Restarting marisnails-api..."
 echo "============================================"
 pm2 restart marisnails-api
+echo ""
+
+# ============================================================
+#  PASO 6: Build del frontend
+# ============================================================
+echo "============================================"
+echo "  FRONTEND: Building..."
+echo "============================================"
+npm run build -w apps/frontend
 echo ""
 
 # ============================================================

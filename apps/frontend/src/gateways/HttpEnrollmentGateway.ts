@@ -26,7 +26,23 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
             throw new Error('No se pudieron cargar tus cursos');
         }
 
-        return response.json();
+        const data = await response.json() as EnrollmentWithProgress[];
+
+        /*
+         * Un backend anterior al acceso temporal no envía isActive. Durante un
+         * despliegue conviven ambas versiones unos minutos, y el service worker
+         * de la PWA puede alargar esa convivencia. Tratar el campo ausente como
+         * "vencido" bloquearía a TODAS las alumnas a la vez.
+         *
+         * Asumir acceso no abre un agujero: quien autoriza de verdad es el
+         * backend, que responde 403 si la matrícula no está vigente.
+         */
+        return data.map((enrollment) => ({
+            ...enrollment,
+            isActive: enrollment.isActive !== false,
+            expiresAt: enrollment.expiresAt ?? null,
+            daysRemaining: enrollment.daysRemaining ?? null,
+        }));
     }
 
     async unenroll(enrollmentId: string): Promise<void> {
