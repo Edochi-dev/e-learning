@@ -71,12 +71,15 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     const error = courseError || enrollmentError;
 
     /**
-     * isEnrolled — ¿El usuario compró este curso?
+     * Dos preguntas distintas, y el usuario ve un mensaje distinto en cada caso:
+     * nunca compró el curso (comprar) o su acceso venció (renovar).
      *
-     * Si no ha terminado de cargar, asumimos false (se mostrará el spinner).
-     * Una vez cargado, buscamos si el courseId actual está en su lista de matrículas.
+     * Esto es UX, NO seguridad: el control real lo hace EnrollmentGuard en el
+     * backend, que rechaza igual aunque alguien manipule esta comprobación.
      */
-    const isEnrolled = enrollments.some(e => e.course.id === courseId);
+    const enrollment = enrollments.find(e => e.course.id === courseId);
+    const isEnrolled = Boolean(enrollment);
+    const hasActiveAccess = enrollment?.isActive ?? false;
 
     /**
      * currentLessonId — controla qué lección se muestra.
@@ -247,8 +250,6 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
         );
     }
 
-    // GUARD: si el usuario no está matriculado, no puede ver las lecciones.
-    // Lo redirigimos a la página de detalle del curso (donde puede comprarlo).
     if (!isEnrolled) {
         return (
             <div className="container course-learn">
@@ -256,6 +257,26 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     <h2>No tienes acceso a este curso</h2>
                     <p>Necesitas comprar el curso para acceder a sus lecciones.</p>
                     <Link to={`/courses/${courseId}`} className="btn-primary">Ver curso</Link>
+                </div>
+            </div>
+        );
+    }
+
+    if (!hasActiveAccess) {
+        return (
+            <div className="container course-learn">
+                <div className="course-learn__error">
+                    <h2>Tu acceso a este curso venció</h2>
+                    <p>
+                        Tu progreso y tus certificados se conservan. Al renovar, retomas
+                        el curso justo donde lo dejaste.
+                    </p>
+                    <Link to={`/courses/${courseId}`} className="btn-primary">
+                        Renovar acceso
+                    </Link>
+                    <Link to="/mis-cursos" className="btn-secondary">
+                        Volver a mis cursos
+                    </Link>
                 </div>
             </div>
         );

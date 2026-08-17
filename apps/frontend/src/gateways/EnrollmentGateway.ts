@@ -17,6 +17,17 @@ export interface EnrollmentWithProgress {
     };
     completedLessons: number;
     progressPercent: number;
+
+    /** null = acceso permanente (todas las matrículas anteriores al acceso temporal). */
+    expiresAt: string | null;
+
+    /**
+     * Los calcula el SERVIDOR, no el navegador: derivarlos aquí con el reloj
+     * local mostraría días restantes a quien el backend ya está rechazando.
+     */
+    isActive: boolean;
+    /** null si es permanente, 0 si ya venció. */
+    daysRemaining: number | null;
 }
 
 import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';

@@ -9,6 +9,15 @@ interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
 }
 
+/** A partir de aquí el aviso pasa a ser urgente en vez de informativo. */
+const URGENT_THRESHOLD_DAYS = 7;
+
+const accessLabel = (daysRemaining: number | null): string => {
+    if (daysRemaining === null) return '';
+    if (daysRemaining === 1) return 'Te queda 1 día';
+    return `Te quedan ${daysRemaining} días`;
+};
+
 /**
  * MyCoursesPage — Lista de cursos en los que está matriculado el usuario.
  *
@@ -48,15 +57,25 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
         );
     }
 
+    // "Activos" debe significar activos: contar también los vencidos haría que
+    // el encabezado contradijera las tarjetas de abajo.
+    const activeCount = enrollments.filter((e) => e.isActive).length;
+    const expiredCount = enrollments.length - activeCount;
+
+    const subtitle = () => {
+        if (enrollments.length === 0) return 'Aún no estás inscrita en ningún curso';
+
+        const active = `${activeCount} curso${activeCount === 1 ? '' : 's'} activo${activeCount === 1 ? '' : 's'}`;
+        if (expiredCount === 0) return active;
+
+        return `${active} · ${expiredCount} vencido${expiredCount === 1 ? '' : 's'}`;
+    };
+
     return (
         <div className="container my-courses-page">
             <div className="my-courses-page__header">
                 <h1>Mis Cursos</h1>
-                <p className="my-courses-page__subtitle">
-                    {enrollments.length > 0
-                        ? `${enrollments.length} curso${enrollments.length > 1 ? 's' : ''} activo${enrollments.length > 1 ? 's' : ''}`
-                        : 'Aún no estás inscrita en ningún curso'}
-                </p>
+                <p className="my-courses-page__subtitle">{subtitle()}</p>
             </div>
 
             {enrollments.length === 0 ? (
@@ -71,7 +90,10 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
             ) : (
                 <div className="enrollment-grid">
                     {enrollments.map((enrollment) => (
-                        <article key={enrollment.enrollmentId} className="enrollment-card">
+                        <article
+                            key={enrollment.enrollmentId}
+                            className={`enrollment-card${enrollment.isActive ? '' : ' enrollment-card--expired'}`}
+                        >
                             {/* Miniatura del curso */}
                             <div className="enrollment-card__visual">
                                 {enrollment.course.thumbnailUrl ? (
@@ -83,6 +105,20 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                 ) : (
                                     <span className="enrollment-card__fallback">💅</span>
                                 )}
+
+                                {/* Solo los cursos con vencimiento muestran estado. */}
+                                {!enrollment.isActive && (
+                                    <span className="enrollment-card__access enrollment-card__access--expired">
+                                        Acceso vencido
+                                    </span>
+                                )}
+                                {enrollment.isActive &&
+                                    enrollment.daysRemaining !== null &&
+                                    enrollment.daysRemaining <= URGENT_THRESHOLD_DAYS && (
+                                        <span className="enrollment-card__access enrollment-card__access--urgent">
+                                            {accessLabel(enrollment.daysRemaining)}
+                                        </span>
+                                    )}
                             </div>
 
                             {/* Info del curso */}
@@ -116,17 +152,35 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                     </div>
                                 </div>
 
+                                {/* Aviso de vencimiento: explica y ofrece salida. */}
+                                {!enrollment.isActive && (
+                                    <p className="enrollment-card__notice">
+                                        Tu acceso a este curso terminó. Tu progreso y tus
+                                        certificados se conservan: al renovar, sigues donde
+                                        lo dejaste.
+                                    </p>
+                                )}
+
                                 {/* CTA */}
-                                <Link
-                                    to={`/courses/${enrollment.course.id}/learn`}
-                                    className="enrollment-card__cta"
-                                >
-                                    {enrollment.progressPercent === 100
-                                        ? 'Repasar curso'
-                                        : enrollment.progressPercent > 0
-                                            ? 'Continuar →'
-                                            : 'Empezar →'}
-                                </Link>
+                                {enrollment.isActive ? (
+                                    <Link
+                                        to={`/courses/${enrollment.course.id}/learn`}
+                                        className="enrollment-card__cta"
+                                    >
+                                        {enrollment.progressPercent === 100
+                                            ? 'Repasar curso'
+                                            : enrollment.progressPercent > 0
+                                                ? 'Continuar →'
+                                                : 'Empezar →'}
+                                    </Link>
+                                ) : (
+                                    <Link
+                                        to={`/courses/${enrollment.course.id}`}
+                                        className="enrollment-card__cta enrollment-card__cta--renew"
+                                    >
+                                        Renovar acceso
+                                    </Link>
+                                )}
                             </div>
                         </article>
                     ))}

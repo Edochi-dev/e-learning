@@ -53,6 +53,14 @@ describe('GetMyEnrollmentsUseCase', () => {
     lessonProgressGateway = module.get(LessonProgressGateway);
   });
 
+  /**
+   * Los fixtures tienen que ser instancias reales: el use case llama a
+   * enrollment.isActive() y enrollment.daysRemaining(), que un objeto literal
+   * no tiene.
+   */
+  const toEnrollments = (rows: Record<string, unknown>[]): Enrollment[] =>
+    rows.map((row) => Object.assign(new Enrollment(), row));
+
   // ──────────────────────────────────────────────────────────
   // 1. HAPPY PATH: progreso parcial
   // ──────────────────────────────────────────────────────────
@@ -62,7 +70,7 @@ describe('GetMyEnrollmentsUseCase', () => {
    * Progreso esperado: Math.round((2 / 4) * 100) = 50%
    */
   it('calcula el progressPercent correctamente con progreso parcial', async () => {
-    const enrollments = [
+    const enrollments = toEnrollments([
       {
         id: 'enrollment-1',
         courseId: 'course-A',
@@ -75,7 +83,7 @@ describe('GetMyEnrollmentsUseCase', () => {
           lessons: [{ id: 'l1' }, { id: 'l2' }, { id: 'l3' }, { id: 'l4' }],
         },
       },
-    ] as unknown as Enrollment[];
+    ]);
 
     enrollmentGateway.findByUserWithCourses.mockResolvedValue(enrollments);
     lessonProgressGateway.getCompletedLessonIdsByCourse.mockResolvedValue({
@@ -101,7 +109,7 @@ describe('GetMyEnrollmentsUseCase', () => {
    * El Use Case devuelve 0% en este caso.
    */
   it('retorna 0% si el curso no tiene lecciones (evita NaN)', async () => {
-    const enrollments = [
+    const enrollments = toEnrollments([
       {
         id: 'enrollment-2',
         courseId: 'course-B',
@@ -114,7 +122,7 @@ describe('GetMyEnrollmentsUseCase', () => {
           lessons: [], // Sin lecciones
         },
       },
-    ] as unknown as Enrollment[];
+    ]);
 
     enrollmentGateway.findByUserWithCourses.mockResolvedValue(enrollments);
     lessonProgressGateway.getCompletedLessonIdsByCourse.mockResolvedValue({});
@@ -144,7 +152,7 @@ describe('GetMyEnrollmentsUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('mapea thumbnailUrl a null cuando el curso no tiene miniatura', async () => {
-    const enrollments = [
+    const enrollments = toEnrollments([
       {
         id: 'e-1',
         courseId: 'c-1',
@@ -157,7 +165,7 @@ describe('GetMyEnrollmentsUseCase', () => {
           lessons: [{ id: 'l1' }],
         },
       },
-    ] as unknown as Enrollment[];
+    ]);
 
     enrollmentGateway.findByUserWithCourses.mockResolvedValue(enrollments);
     lessonProgressGateway.getCompletedLessonIdsByCourse.mockResolvedValue({});
@@ -165,5 +173,63 @@ describe('GetMyEnrollmentsUseCase', () => {
     const result = await useCase.execute(userId);
 
     expect(result[0].course.thumbnailUrl).toBeNull();
+  });
+
+  // ──────────────────────────────────────────────────────────
+  // 5. Estado del acceso temporal
+  // ──────────────────────────────────────────────────────────
+
+  /**
+   * La lista sigue mostrando los cursos vencidos: vencer no es darse de baja.
+   * La alumna conserva progreso y certificado, y necesita verlos para renovar.
+   */
+  it('marca el estado de acceso de cada matrícula', async () => {
+    const course = {
+      id: 'c-1',
+      title: 'Test',
+      description: 'Desc',
+      thumbnailUrl: null,
+      lessons: [{ id: 'l1' }],
+    };
+
+    const enrollments = toEnrollments([
+      {
+        id: 'permanente',
+        courseId: 'c-1',
+        enrolledAt: new Date(),
+        expiresAt: null,
+        course,
+      },
+      {
+        id: 'vigente',
+        courseId: 'c-2',
+        enrolledAt: new Date(),
+        expiresAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+        course: { ...course, id: 'c-2' },
+      },
+      {
+        id: 'vencida',
+        courseId: 'c-3',
+        enrolledAt: new Date(),
+        expiresAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        course: { ...course, id: 'c-3' },
+      },
+    ]);
+
+    enrollmentGateway.findByUserWithCourses.mockResolvedValue(enrollments);
+    lessonProgressGateway.getCompletedLessonIdsByCourse.mockResolvedValue({});
+
+    const result = await useCase.execute(userId);
+
+    expect(result).toHaveLength(3);
+
+    expect(result[0].isActive).toBe(true);
+    expect(result[0].daysRemaining).toBeNull();
+
+    expect(result[1].isActive).toBe(true);
+    expect(result[1].daysRemaining).toBe(3);
+
+    expect(result[2].isActive).toBe(false);
+    expect(result[2].daysRemaining).toBe(0);
   });
 });

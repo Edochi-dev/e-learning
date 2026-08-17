@@ -57,6 +57,8 @@ describe('Acceso temporal a cursos (e2e)', () => {
   let activeLessonId: string;
   let expiredEnrollmentId: string;
 
+  let studentAgent: request.Agent;
+
   /** Siembra un curso con una lección de video y devuelve ambos ids. */
   async function seedCourseWithVideo(
     title: string,
@@ -131,17 +133,24 @@ describe('Acceso temporal a cursos (e2e)', () => {
         expiresAt: null,
       }),
     );
+
+    studentAgent = await loginAs(student);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  async function loginAsStudent() {
+  /**
+   * Las sesiones se abren UNA vez en beforeAll y se reutilizan. Loguear en cada
+   * test dispara el rate limiting real de /users/login (429) en cuanto el
+   * archivo crece: el límite es de producción, no del test.
+   */
+  async function loginAs(creds: { email: string; password: string }) {
     const agent = request.agent(app.getHttpServer());
     await agent
       .post('/users/login')
-      .send({ email: student.email, password: student.password })
+      .send({ email: creds.email, password: creds.password })
       .expect(200);
     return agent;
   }
@@ -151,7 +160,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   // ──────────────────────────────────────────────────────────────
 
   it('RECHAZA el video de un curso vencido, con el código ENROLLMENT_EXPIRED', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     const res = await agent
       .get(`/videos/${expiredLessonId}/signed-url`)
@@ -164,7 +173,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   });
 
   it('RECHAZA leer el progreso de un curso vencido', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     await agent
       .get(`/enrollments/me/courses/${expiredCourseId}/progress`)
@@ -172,7 +181,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   });
 
   it('RECHAZA marcar una lección de un curso vencido', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     await agent
       .post('/enrollments/me/progress')
@@ -181,7 +190,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   });
 
   it('RECHAZA guardar progreso de video de un curso vencido', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     await agent
       .patch('/enrollments/me/watch-progress')
@@ -194,7 +203,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   });
 
   it('RECHAZA leer el quiz de un curso vencido', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     await agent
       .get(`/courses/${expiredCourseId}/lessons/${expiredLessonId}/quiz`)
@@ -206,7 +215,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   // ──────────────────────────────────────────────────────────────
 
   it('PERMITE el curso con matrícula permanente (expiresAt null)', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     // Retrocompatibilidad: así están TODAS las matrículas anteriores a esta
     // migración. Si esto se rompiera, el despliegue dejaría fuera a las alumnas
@@ -215,16 +224,30 @@ describe('Acceso temporal a cursos (e2e)', () => {
   });
 
   it('sigue listando el curso vencido en /enrollments/me', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     const res = await agent.get('/enrollments/me').expect(200);
-    const body = res.body as { course: { id: string } }[];
+    const body = res.body as {
+      course: { id: string };
+      isActive: boolean;
+      daysRemaining: number | null;
+    }[];
 
     // Vencer NO es darse de baja: la alumna conserva su progreso y su
     // certificado, y necesita ver el curso para poder renovarlo.
     expect(body.map((e) => e.course.id)).toEqual(
       expect.arrayContaining([expiredCourseId, activeCourseId]),
     );
+
+    // El estado viaja resuelto por el servidor: el navegador no recalcula
+    // vencimientos con su propio reloj.
+    const expired = body.find((e) => e.course.id === expiredCourseId)!;
+    expect(expired.isActive).toBe(false);
+    expect(expired.daysRemaining).toBe(0);
+
+    const permanent = body.find((e) => e.course.id === activeCourseId)!;
+    expect(permanent.isActive).toBe(true);
+    expect(permanent.daysRemaining).toBeNull();
   });
 
   // ──────────────────────────────────────────────────────────────
@@ -232,7 +255,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   // ──────────────────────────────────────────────────────────────
 
   it('RECHAZA una lección de un curso ajeno aunque el courseId declarado sea válido', async () => {
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
 
     // courseId de un curso con acceso vigente + lessonId de otro curso: el guard
     // debe resolver el curso desde la LECCIÓN, no creerle al cliente.
@@ -253,7 +276,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
         expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
       });
 
-    const agent = await loginAsStudent();
+    const agent = studentAgent;
     await agent.get(`/videos/${expiredLessonId}/signed-url`).expect(200);
   });
 });

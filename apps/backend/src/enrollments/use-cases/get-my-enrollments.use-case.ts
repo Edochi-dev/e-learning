@@ -20,6 +20,11 @@ export interface EnrollmentWithProgress {
   };
   completedLessons: number;
   progressPercent: number;
+  /** null = acceso permanente. */
+  expiresAt: Date | null;
+  isActive: boolean;
+  /** null si es permanente, 0 si ya venció. */
+  daysRemaining: number | null;
 }
 
 /**
@@ -52,6 +57,10 @@ export class GetMyEnrollmentsUseCase {
     const completedByCourse =
       await this.lessonProgressGateway.getCompletedLessonIdsByCourse(userId);
 
+    // Un solo instante para toda la lista: si cada fila llamara a new Date(),
+    // dos cursos que vencen a la misma hora podrían reportar estados distintos.
+    const now = new Date();
+
     // Cálculo en memoria: rápido, sin más queries
     return enrollments.map((enrollment) => {
       const completedIds = completedByCourse[enrollment.courseId] ?? [];
@@ -74,6 +83,9 @@ export class GetMyEnrollmentsUseCase {
         },
         completedLessons,
         progressPercent,
+        expiresAt: enrollment.expiresAt,
+        isActive: enrollment.isActive(now),
+        daysRemaining: enrollment.daysRemaining(now),
       };
     });
   }

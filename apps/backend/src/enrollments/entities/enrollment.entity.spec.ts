@@ -31,3 +31,33 @@ describe('Enrollment.isActive', () => {
     expect(buildEnrollment(new Date(now)).isActive(now)).toBe(false);
   });
 });
+
+describe('Enrollment.daysRemaining', () => {
+  const now = new Date('2026-08-17T12:00:00.000Z');
+
+  const buildEnrollment = (expiresAt: Date | null): Enrollment => {
+    const enrollment = new Enrollment();
+    enrollment.expiresAt = expiresAt;
+    return enrollment;
+  };
+
+  it('devuelve null cuando el acceso es permanente', () => {
+    expect(buildEnrollment(null).daysRemaining(now)).toBeNull();
+  });
+
+  it('devuelve 0 cuando ya venció', () => {
+    const yesterday = new Date('2026-08-16T12:00:00.000Z');
+    expect(buildEnrollment(yesterday).daysRemaining(now)).toBe(0);
+  });
+
+  it('cuenta los días completos que faltan', () => {
+    const inThreeDays = new Date('2026-08-20T12:00:00.000Z');
+    expect(buildEnrollment(inThreeDays).daysRemaining(now)).toBe(3);
+  });
+
+  it('redondea hacia arriba: un resto de horas cuenta como un día', () => {
+    // Quedan 2 h. Mostrar "0 días" a quien todavía tiene acceso sería mentir.
+    const inTwoHours = new Date('2026-08-17T14:00:00.000Z');
+    expect(buildEnrollment(inTwoHours).daysRemaining(now)).toBe(1);
+  });
+});

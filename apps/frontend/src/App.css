@@ -4250,6 +4250,66 @@ input:checked+.slider .icon-moon {
   transform: translateX(2px);
 }
 
+/* ── Estado del acceso temporal ── */
+
+/* El visual ancla el badge; sin position no tendría contra qué posicionarse. */
+.enrollment-card__visual {
+  position: relative;
+}
+
+.enrollment-card__access {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  backdrop-filter: blur(4px);
+}
+
+.enrollment-card__access--urgent {
+  background: rgba(255, 193, 7, 0.9);
+  color: #92400e;
+  border: 1px solid rgba(255, 193, 7, 0.5);
+}
+
+.enrollment-card__access--expired {
+  background: rgba(239, 68, 68, 0.9);
+  color: #ffffff;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+/* Atenuar la miniatura, no la tarjeta entera: el texto debe seguir legible. */
+.enrollment-card--expired .course-thumbnail,
+.enrollment-card--expired .enrollment-card__fallback {
+  filter: grayscale(0.85);
+  opacity: 0.65;
+}
+
+.enrollment-card__notice {
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid rgba(239, 68, 68, 0.6);
+  background: rgba(239, 68, 68, 0.08);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.enrollment-card__cta--renew {
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: var(--text-on-gold);
+}
+
+[data-theme='dark'] .enrollment-card__notice {
+  background: rgba(239, 68, 68, 0.14);
+  color: var(--text-secondary);
+}
+
 /* ==========================================================================
    ACCOUNT PAGE — Perfil del usuario con banner dinámico
    ========================================================================== */

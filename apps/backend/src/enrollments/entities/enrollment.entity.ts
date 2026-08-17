@@ -61,6 +61,22 @@ export class Enrollment {
     return this.expiresAt.getTime() > now.getTime();
   }
 
+  /**
+   * Días que le quedan de acceso; null si es permanente, 0 si ya venció.
+   *
+   * Se calcula en el servidor y viaja resuelto al frontend: derivarlo allí con
+   * el reloj del navegador mostraría días restantes a alguien a quien el
+   * backend ya está rechazando.
+   */
+  daysRemaining(now: Date = new Date()): number | null {
+    if (!this.expiresAt) return null;
+
+    const remainingMs = this.expiresAt.getTime() - now.getTime();
+    if (remainingMs <= 0) return 0;
+
+    return Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+  }
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({
     name: 'userId',
