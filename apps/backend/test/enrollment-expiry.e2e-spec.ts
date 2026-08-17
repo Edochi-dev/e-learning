@@ -9,7 +9,7 @@ import { DataSource } from 'typeorm';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
-import { ApiErrorCode } from '@maris-nails/shared';
+import { ApiErrorCode, UserRole } from '@maris-nails/shared';
 import { AppModule } from '../src/app.module';
 import { User } from '../src/users/entities/user.entity';
 import { Course } from '../src/courses/entities/course.entity';
@@ -50,6 +50,11 @@ describe('Acceso temporal a cursos (e2e)', () => {
     email: 'alumna.expiry@test.local',
     password: 'passw0rd123',
   };
+  const admin = {
+    fullName: 'Admin Vencimiento',
+    email: 'admin.expiry@test.local',
+    password: 'passw0rd123',
+  };
 
   let expiredCourseId: string;
   let expiredLessonId: string;
@@ -58,6 +63,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
   let expiredEnrollmentId: string;
 
   let studentAgent: request.Agent;
+  let adminAgent: request.Agent;
 
   /** Siembra un curso con una lección de video y devuelve ambos ids. */
   async function seedCourseWithVideo(
@@ -107,7 +113,14 @@ describe('Acceso temporal a cursos (e2e)', () => {
     activeCourseId = active.courseId;
     activeLessonId = active.lessonId;
 
-    await request(app.getHttpServer()).post('/users').send(student).expect(201);
+    for (const u of [student, admin]) {
+      await request(app.getHttpServer()).post('/users').send(u).expect(201);
+    }
+
+    // El registro siempre crea STUDENT: promovemos al admin por DB.
+    await dataSource
+      .getRepository(User)
+      .update({ email: admin.email }, { role: UserRole.ADMIN });
 
     const user = await dataSource
       .getRepository(User)
@@ -135,6 +148,7 @@ describe('Acceso temporal a cursos (e2e)', () => {
     );
 
     studentAgent = await loginAs(student);
+    adminAgent = await loginAs(admin);
   });
 
   afterAll(async () => {
@@ -263,6 +277,60 @@ describe('Acceso temporal a cursos (e2e)', () => {
       .post('/enrollments/me/progress')
       .send({ lessonId: expiredLessonId, courseId: activeCourseId })
       .expect(403);
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // Panel de la profesora
+  // ──────────────────────────────────────────────────────────────
+
+  it('la alumna NO puede listar las matriculadas de un curso', async () => {
+    const agent = studentAgent;
+
+    await agent.get(`/enrollments/course/${expiredCourseId}`).expect(403);
+  });
+
+  /**
+   * Lo que de verdad importa de este endpoint: si una alumna pudiera llamarlo,
+   * se regalaría acceso indefinido a sí misma.
+   */
+  it('la alumna NO puede extenderse el acceso a sí misma', async () => {
+    const agent = studentAgent;
+
+    await agent
+      .patch(`/enrollments/${expiredEnrollmentId}/expiry`)
+      .send({ expiresAt: null })
+      .expect(403);
+  });
+
+  it('la admin lista las alumnas con su estado de acceso', async () => {
+    const agent = adminAgent;
+
+    const res = await agent
+      .get(`/enrollments/course/${expiredCourseId}`)
+      .expect(200);
+
+    const body = res.body as {
+      enrollmentId: string;
+      student: { email: string };
+      isActive: boolean;
+    }[];
+
+    const row = body.find((r) => r.enrollmentId === expiredEnrollmentId)!;
+    expect(row.student.email).toBe(student.email);
+    expect(row.isActive).toBe(false);
+  });
+
+  it('la admin devuelve el acceso extendiendo el vencimiento', async () => {
+    const agent = adminAgent;
+    const newExpiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+    await agent
+      .patch(`/enrollments/${expiredEnrollmentId}/expiry`)
+      .send({ expiresAt: newExpiry.toISOString() })
+      .expect(200);
+
+    // Y la alumna recupera el contenido de inmediato.
+    await studentAgent.get(`/videos/${expiredLessonId}/signed-url`).expect(200);
   });
 
   // ──────────────────────────────────────────────────────────────

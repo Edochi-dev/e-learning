@@ -30,6 +30,15 @@ import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use-case';
+import {
+  ListCourseStudentsUseCase,
+  CourseStudent,
+} from './use-cases/list-course-students.use-case';
+import { SetEnrollmentExpiryUseCase } from './use-cases/set-enrollment-expiry.use-case';
+import { SetEnrollmentExpiryDto } from './dto/set-enrollment-expiry.dto';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '@maris-nails/shared';
 
 /**
  * EnrollmentsController — Endpoints HTTP del sistema de matrículas.
@@ -58,6 +67,8 @@ export class EnrollmentsController {
     private readonly getCourseProgressUseCase: GetCourseProgressUseCase,
     private readonly submitQuizUseCase: SubmitQuizUseCase,
     private readonly getLastQuizAttemptUseCase: GetLastQuizAttemptUseCase,
+    private readonly listCourseStudentsUseCase: ListCourseStudentsUseCase,
+    private readonly setEnrollmentExpiryUseCase: SetEnrollmentExpiryUseCase,
   ) {}
 
   // No hay endpoint de auto-matrícula: sería acceso gratis a cualquier curso.
@@ -180,5 +191,43 @@ export class EnrollmentsController {
     @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
   ): Promise<void> {
     return this.unenrollUseCase.execute(enrollmentId);
+  }
+
+  // ── Rutas de administración ───────────────────────────────────────────
+  // Protegidas por rol, no por el patrón /me: aquí la admin opera sobre la
+  // matrícula de OTRA persona, así que el id sí viaja en la URL.
+
+  /**
+   * GET /enrollments/course/:courseId — Alumnas del curso y estado de su acceso.
+   */
+  @Get('course/:courseId')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async listCourseStudents(
+    @Param('courseId', ParseUUIDPipe) courseId: string,
+  ): Promise<CourseStudent[]> {
+    return this.listCourseStudentsUseCase.execute(courseId);
+  }
+
+  /**
+   * PATCH /enrollments/:enrollmentId/expiry — Extender, recortar o volver
+   * permanente el acceso de una alumna. `expiresAt: null` = permanente.
+   */
+  @Patch(':enrollmentId/expiry')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async setExpiry(
+    @Param('enrollmentId', ParseUUIDPipe) enrollmentId: string,
+    @Body() dto: SetEnrollmentExpiryDto,
+  ): Promise<{ enrollmentId: string; expiresAt: Date | null }> {
+    const enrollment = await this.setEnrollmentExpiryUseCase.execute(
+      enrollmentId,
+      dto.expiresAt ? new Date(dto.expiresAt) : null,
+    );
+
+    return {
+      enrollmentId: enrollment.id,
+      expiresAt: enrollment.expiresAt,
+    };
   }
 }

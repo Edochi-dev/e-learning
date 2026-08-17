@@ -30,6 +30,20 @@ export interface EnrollmentWithProgress {
     daysRemaining: number | null;
 }
 
+/** Vista admin de una alumna matriculada y el estado de su acceso. */
+export interface CourseStudent {
+    enrollmentId: string;
+    enrolledAt: string;
+    student: {
+        id: string;
+        fullName: string;
+        email: string;
+    };
+    expiresAt: string | null;
+    isActive: boolean;
+    daysRemaining: number | null;
+}
+
 import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
 
 /**
@@ -75,4 +89,15 @@ export interface EnrollmentGateway {
      * cooldown).
      */
     getLastQuizAttempt(lessonId: string, courseId: string): Promise<LastQuizAttemptResponse>;
+
+    // ── Administración (solo ADMIN) ──
+
+    /** Alumnas matriculadas en un curso, con el estado de su acceso. */
+    listCourseStudents(courseId: string): Promise<CourseStudent[]>;
+
+    /**
+     * Fija hasta cuándo dura el acceso de una alumna.
+     * `null` = acceso permanente (no es "no cambiar").
+     */
+    setEnrollmentExpiry(enrollmentId: string, expiresAt: string | null): Promise<void>;
 }

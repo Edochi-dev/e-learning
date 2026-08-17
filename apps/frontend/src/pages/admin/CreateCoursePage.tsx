@@ -28,6 +28,17 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
+
+        // Vaciar el campo significa "acceso permanente", no "0 días". El
+        // Number('') genérico daría 0, que el backend rechaza por inválido.
+        if (name === 'accessDurationDays') {
+            setFormData(prev => ({
+                ...prev,
+                accessDurationDays: value === '' ? null : Number(value),
+            }));
+            return;
+        }
+
         setFormData(prev => ({
             ...prev,
             [name]: type === 'number' ? Number(value) :
@@ -127,6 +138,24 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
                                 <option key={l.value} value={l.value}>{l.label}</option>
                             ))}
                         </select>
+                    </div>
+
+                    <div className="form-group">
+                        <label htmlFor="accessDurationDays">Duración del acceso (días)</label>
+                        <input
+                            type="number"
+                            id="accessDurationDays"
+                            name="accessDurationDays"
+                            min={1}
+                            value={formData.accessDurationDays ?? ''}
+                            onChange={handleChange}
+                            placeholder="Vacío = acceso de por vida"
+                        />
+                        <small className="form-hint">
+                            Cuánto dura el acceso desde que la alumna compra el curso.
+                            Déjalo vacío para acceso permanente. Cambiarlo después no
+                            afecta a las alumnas que ya compraron.
+                        </small>
                     </div>
 
                     <div className="form-group">

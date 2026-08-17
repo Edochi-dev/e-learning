@@ -1,5 +1,5 @@
 import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
-import type { EnrollmentGateway, EnrollmentWithProgress } from './EnrollmentGateway';
+import type { EnrollmentGateway, EnrollmentWithProgress, CourseStudent } from './EnrollmentGateway';
 
 /**
  * HttpEnrollmentGateway — Implementación concreta que habla con el backend via fetch().
@@ -108,5 +108,31 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
             throw new Error('Error al obtener el último intento');
         }
         return response.json();
+    }
+
+    // ── Administración ──
+
+    async listCourseStudents(courseId: string): Promise<CourseStudent[]> {
+        const response = await fetch(`${this.baseUrl}/enrollments/course/${courseId}`, {
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudieron cargar las alumnas del curso');
+        }
+        return response.json();
+    }
+
+    async setEnrollmentExpiry(enrollmentId: string, expiresAt: string | null): Promise<void> {
+        const response = await fetch(`${this.baseUrl}/enrollments/${enrollmentId}/expiry`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ expiresAt }),
+        });
+
+        if (!response.ok) {
+            throw new Error('No se pudo actualizar el acceso');
+        }
     }
 }

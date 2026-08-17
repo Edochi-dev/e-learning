@@ -57,6 +57,14 @@ export class EnrollmentsRepository implements EnrollmentGateway {
     });
   }
 
+  async findByCourseWithUsers(courseId: string): Promise<Enrollment[]> {
+    return this.enrollmentRepository.find({
+      where: { courseId },
+      relations: ['user'],
+      order: { enrolledAt: 'DESC' },
+    });
+  }
+
   async delete(id: string): Promise<void> {
     await this.enrollmentRepository.delete(id);
   }

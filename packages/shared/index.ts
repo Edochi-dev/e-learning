@@ -87,6 +87,7 @@ export interface Course {
     // Taxonomía para descubrimiento (opcionales: los cursos viejos no la tienen).
     category?: string;      // Categoría libre, ej: "Uñas Acrílicas", "Nail Art"
     level?: CourseLevel;    // Nivel: principiante / intermedio / avanzado
+    accessDurationDays?: number | null; // null = acceso permanente
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
     lessons: Lesson[];
 }
@@ -186,6 +187,10 @@ export interface CreateCoursePayload {
     level?: CourseLevel;
     thumbnailUrl?: string;
     features?: string[];
+    // Días de acceso que otorgará cada matrícula. null / omitido = permanente.
+    // Cambiarlo después NO afecta a las matrículas ya emitidas: cada una
+    // congela su propia fecha de vencimiento.
+    accessDurationDays?: number | null;
 }
 
 // ─── Create Lesson Payloads (Discriminated Union) ────────────────────
@@ -246,6 +251,7 @@ export interface UpdateCoursePayload {
     level?: CourseLevel | null;
     thumbnailUrl?: string;
     features?: string[];
+    accessDurationDays?: number | null;
 }
 
 // ─── Update Lesson Payloads (Discriminated Union) ────────────────────

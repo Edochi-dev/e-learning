@@ -47,6 +47,12 @@ export abstract class EnrollmentGateway {
    */
   abstract findByUserWithCourses(userId: string): Promise<Enrollment[]>;
 
+  /**
+   * Matrículas de un curso con el alumno cargado. Uso administrativo: la
+   * profesora necesita ver a quién le vence el acceso y cuándo.
+   */
+  abstract findByCourseWithUsers(courseId: string): Promise<Enrollment[]>;
+
   /** Elimina una matrícula (dar de baja de un curso). */
   abstract delete(id: string): Promise<void>;
 }

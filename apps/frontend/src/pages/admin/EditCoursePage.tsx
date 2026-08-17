@@ -403,6 +403,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 price: data.price,
                 category: data.category ?? '',
                 level: data.level,
+                accessDurationDays: data.accessDurationDays ?? null,
                 features: data.features ?? [],
             });
         } catch (err: unknown) {
@@ -420,6 +421,16 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     const handleCourseChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
+
+        // Vaciar el campo significa "acceso permanente", no "0 días".
+        if (name === 'accessDurationDays') {
+            setCourseForm(prev => ({
+                ...prev,
+                accessDurationDays: value === '' ? null : Number(value),
+            }));
+            return;
+        }
+
         setCourseForm(prev => ({
             ...prev,
             [name]: type === 'number' ? Number(value) :
@@ -500,6 +511,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 ...courseForm,
                 category: courseForm.category?.trim() ? courseForm.category.trim() : null,
                 level: courseForm.level ? courseForm.level : null,
+                accessDurationDays: courseForm.accessDurationDays ?? null,
             };
             await courseGateway.update(courseId, payload);
             toast.success('¡Curso actualizado correctamente!');
@@ -702,6 +714,22 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     <div className="form-group">
                         <label htmlFor="category">Categoría</label>
                         <input type="text" id="category" name="category" value={courseForm.category ?? ''} onChange={handleCourseChange} placeholder="Ej: Uñas Acrílicas, Nail Art" />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="accessDurationDays">Duración del acceso (días)</label>
+                        <input
+                            type="number"
+                            id="accessDurationDays"
+                            name="accessDurationDays"
+                            min="1"
+                            value={courseForm.accessDurationDays ?? ''}
+                            onChange={handleCourseChange}
+                            placeholder="Vacío = acceso de por vida"
+                        />
+                        <small className="form-hint">
+                            Solo aplica a las matrículas NUEVAS. Las alumnas que ya
+                            compraron conservan el vencimiento que se les asignó.
+                        </small>
                     </div>
                     <div className="form-group">
                         <label htmlFor="level">Nivel</label>

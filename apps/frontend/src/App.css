@@ -4250,6 +4250,138 @@ input:checked+.slider .icon-moon {
   transform: translateX(2px);
 }
 
+/* ==========================================================================
+   ALUMNAS DEL CURSO (admin) — control del acceso temporal
+   ========================================================================== */
+
+.students-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: var(--space-5);
+}
+
+.student-row {
+  display: grid;
+  /* minmax(0,...) evita que un email largo desborde la fila. */
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
+  gap: var(--space-4);
+  align-items: center;
+  padding: 0.9rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.student-row--expired {
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.student-row__identity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.student-row__email {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.student-row__access {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  align-items: flex-start;
+}
+
+.student-row__badge {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.student-row__badge--active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #065f46;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+
+.student-row__badge--expired {
+  background: rgba(239, 68, 68, 0.12);
+  color: #991b1b;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+[data-theme='dark'] .student-row__badge--active {
+  background: rgba(34, 197, 94, 0.22);
+  color: #bbf7d0;
+}
+
+[data-theme='dark'] .student-row__badge--expired {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fecaca;
+}
+
+.student-row__dates {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.student-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+}
+
+.btn-sm {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+  min-height: auto;
+}
+
+.admin-course-students {
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+
+.admin-course-students:hover {
+  background: var(--surface);
+}
+
+@media (max-width: 720px) {
+  .student-row {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .student-row__actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Texto de ayuda bajo un campo de formulario admin. */
+.form-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 /* ── Estado del acceso temporal ── */
 
 /* El visual ancla el badge; sin position no tendría contra qué posicionarse. */
