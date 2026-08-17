@@ -61,6 +61,12 @@ jobs:
       - name: Build backend
         run: npm run build -w apps/backend
 
+      # `nest build` usa tsconfig.build.json, que excluye **/*spec.ts, y ts-jest
+      # no comprueba tipos. Sin este paso, un error de tipos dentro de un test
+      # no rompe el CI y se descubre semanas después.
+      - name: Typecheck backend (incluye tests)
+        run: npm run typecheck -w apps/backend
+
       # Tests unitarios: usan mocks de los gateways, NO requieren base de datos.
       - name: Test backend (unit)
         run: npm run test -w apps/backend

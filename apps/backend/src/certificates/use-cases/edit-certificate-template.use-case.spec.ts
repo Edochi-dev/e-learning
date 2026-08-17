@@ -58,7 +58,13 @@ describe('EditCertificateTemplateUseCase', () => {
       fontFamily: 'PlayfairDisplay-Regular',
       align: 'center',
     },
-    qrStyle: { positionX: 50, positionY: 60, size: 90 },
+    qrStyle: {
+      positionX: 50,
+      positionY: 60,
+      size: 90,
+      foregroundColor: '#000000',
+      backgroundColor: '#ffffff',
+    },
     dateStyle: {
       show: true,
       positionX: 100,
