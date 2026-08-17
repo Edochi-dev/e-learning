@@ -32,6 +32,7 @@ import { AddNameChangeRequests1783100000000 } from './migrations/1783100000000-A
 import { AddScheduleEvents1783200000000 } from './migrations/1783200000000-AddScheduleEvents';
 import { AddLiveLessonSchedule1783300000000 } from './migrations/1783300000000-AddLiveLessonSchedule';
 import { AddPushSubscriptions1783400000000 } from './migrations/1783400000000-AddPushSubscriptions';
+import { AddCourseAccessDuration1783500000000 } from './migrations/1783500000000-AddCourseAccessDuration';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -85,4 +86,5 @@ export const MIGRATIONS = [
   AddScheduleEvents1783200000000,
   AddLiveLessonSchedule1783300000000,
   AddPushSubscriptions1783400000000,
+  AddCourseAccessDuration1783500000000,
 ];

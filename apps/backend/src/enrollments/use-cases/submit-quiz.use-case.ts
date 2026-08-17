@@ -1,12 +1,10 @@
 import {
   Injectable,
-  ForbiddenException,
   NotFoundException,
   BadRequestException,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
@@ -37,7 +35,6 @@ const COOLDOWN_MS = 30 * 60 * 1000;
 @Injectable()
 export class SubmitQuizUseCase {
   constructor(
-    private readonly enrollmentGateway: EnrollmentGateway,
     private readonly lessonProgressGateway: LessonProgressGateway,
     private readonly quizAttemptGateway: QuizAttemptGateway,
     private readonly courseGateway: CourseGateway,
@@ -52,14 +49,6 @@ export class SubmitQuizUseCase {
   ): Promise<QuizResult> {
     // ── Paso 1: Ownership check ──────────────────────────────────────
     // Mismo patrón que MarkLessonCompleteUseCase: verificar matrícula.
-    const enrollment = await this.enrollmentGateway.findByUserAndCourse(
-      userId,
-      courseId,
-    );
-    if (!enrollment) {
-      throw new ForbiddenException('No estás matriculado en este curso');
-    }
-
     // ── Paso 2: Cargar la lección con preguntas ──────────────────────
     const lesson = await this.lessonGateway.findLessonWithQuestions(lessonId);
     if (!lesson) {

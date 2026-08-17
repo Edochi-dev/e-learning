@@ -1,10 +1,8 @@
 import {
   Injectable,
-  ForbiddenException,
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
@@ -38,7 +36,6 @@ const COOLDOWN_MS = 30 * 60 * 1000;
 @Injectable()
 export class GetLastQuizAttemptUseCase {
   constructor(
-    private readonly enrollmentGateway: EnrollmentGateway,
     private readonly quizAttemptGateway: QuizAttemptGateway,
     private readonly courseGateway: CourseGateway,
     private readonly lessonGateway: LessonGateway,
@@ -50,14 +47,6 @@ export class GetLastQuizAttemptUseCase {
     courseId: string,
   ): Promise<LastQuizAttemptResponse> {
     // ── Ownership check ─────────────────────────────────────────────
-    const enrollment = await this.enrollmentGateway.findByUserAndCourse(
-      userId,
-      courseId,
-    );
-    if (!enrollment) {
-      throw new ForbiddenException('No estás matriculado en este curso');
-    }
-
     // ── Cargar la lección con preguntas (para enriquecer los details) ──
     const lesson = await this.lessonGateway.findLessonWithQuestions(lessonId);
     if (!lesson) {

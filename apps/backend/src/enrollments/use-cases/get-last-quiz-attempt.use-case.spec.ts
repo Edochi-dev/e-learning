@@ -1,11 +1,6 @@
 import { Test } from '@nestjs/testing';
-import {
-  ForbiddenException,
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { GetLastQuizAttemptUseCase } from './get-last-quiz-attempt.use-case';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
@@ -29,7 +24,6 @@ import { LessonGateway } from '../../courses/gateways/lesson.gateway';
  */
 describe('GetLastQuizAttemptUseCase', () => {
   let useCase: GetLastQuizAttemptUseCase;
-  let enrollmentGateway: jest.Mocked<EnrollmentGateway>;
   let quizAttemptGateway: jest.Mocked<QuizAttemptGateway>;
   let courseGateway: jest.Mocked<CourseGateway>;
   let lessonGateway: jest.Mocked<LessonGateway>;
@@ -59,10 +53,6 @@ describe('GetLastQuizAttemptUseCase', () => {
       providers: [
         GetLastQuizAttemptUseCase,
         {
-          provide: EnrollmentGateway,
-          useValue: { findByUserAndCourse: jest.fn() },
-        },
-        {
           provide: QuizAttemptGateway,
           useValue: { getLastQuizAttempt: jest.fn() },
         },
@@ -78,7 +68,6 @@ describe('GetLastQuizAttemptUseCase', () => {
     }).compile();
 
     useCase = module.get(GetLastQuizAttemptUseCase);
-    enrollmentGateway = module.get(EnrollmentGateway);
     quizAttemptGateway = module.get(QuizAttemptGateway);
     courseGateway = module.get(CourseGateway);
     lessonGateway = module.get(LessonGateway);
@@ -92,20 +81,7 @@ describe('GetLastQuizAttemptUseCase', () => {
   // 1. Guardas de acceso
   // ──────────────────────────────────────────────────────────
 
-  it('lanza ForbiddenException si el alumno no está matriculado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null as any);
-
-    await expect(
-      useCase.execute(USER_ID, LESSON_ID, COURSE_ID),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-
-    // Corta temprano: ni siquiera consulta la lección.
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(lessonGateway.findLessonWithQuestions).not.toHaveBeenCalled();
-  });
-
   it('lanza NotFoundException si la lección no existe', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(null as any);
 
     await expect(
@@ -114,7 +90,6 @@ describe('GetLastQuizAttemptUseCase', () => {
   });
 
   it('lanza BadRequestException si la lección no es un examen', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue({
       ...examLesson,
       type: 'video',
@@ -130,7 +105,6 @@ describe('GetLastQuizAttemptUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('devuelve result:null y cooldown 0 cuando no hay intentos previos', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson as any);
     quizAttemptGateway.getLastQuizAttempt.mockResolvedValue(null as any);
 
@@ -146,7 +120,6 @@ describe('GetLastQuizAttemptUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('reconstruye un intento aprobado sin cooldown', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson as any);
     quizAttemptGateway.getLastQuizAttempt.mockResolvedValue({
       passed: true,
@@ -179,7 +152,6 @@ describe('GetLastQuizAttemptUseCase', () => {
     // submittedAt hace 10 min → quedan 20 min de cooldown.
     const elapsed = 10 * 60 * 1000;
 
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson as any);
     quizAttemptGateway.getLastQuizAttempt.mockResolvedValue({
       passed: false,
@@ -211,7 +183,6 @@ describe('GetLastQuizAttemptUseCase', () => {
 
   it('deja el cooldown en 0 si el intento reprobado ya venció el cooldown', async () => {
     // submittedAt hace 45 min → el cooldown de 30 min ya pasó.
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as any);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson as any);
     quizAttemptGateway.getLastQuizAttempt.mockResolvedValue({
       passed: false,

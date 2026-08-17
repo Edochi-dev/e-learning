@@ -1,7 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import {
+  EnrollmentGateway,
+  NewEnrollment,
+} from '../gateways/enrollment.gateway';
 import { Enrollment } from '../entities/enrollment.entity';
 
 /**
@@ -20,9 +23,13 @@ export class EnrollmentsRepository implements EnrollmentGateway {
     private readonly enrollmentRepository: Repository<Enrollment>,
   ) {}
 
-  async enroll(userId: string, courseId: string): Promise<Enrollment> {
-    const enrollment = this.enrollmentRepository.create({ userId, courseId });
+  async enroll(data: NewEnrollment): Promise<Enrollment> {
+    const enrollment = this.enrollmentRepository.create(data);
     return this.enrollmentRepository.save(enrollment);
+  }
+
+  async updateExpiry(id: string, expiresAt: Date | null): Promise<void> {
+    await this.enrollmentRepository.update(id, { expiresAt });
   }
 
   async findById(id: string): Promise<Enrollment | null> {

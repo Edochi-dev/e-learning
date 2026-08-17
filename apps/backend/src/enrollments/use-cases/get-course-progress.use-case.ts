@@ -1,5 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
+import { Injectable } from '@nestjs/common';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
 
@@ -22,20 +21,11 @@ export interface CourseProgress {
 @Injectable()
 export class GetCourseProgressUseCase {
   constructor(
-    private readonly enrollmentGateway: EnrollmentGateway,
     private readonly lessonProgressGateway: LessonProgressGateway,
     private readonly watchProgressGateway: WatchProgressGateway,
   ) {}
 
   async execute(userId: string, courseId: string): Promise<CourseProgress> {
-    const enrollment = await this.enrollmentGateway.findByUserAndCourse(
-      userId,
-      courseId,
-    );
-    if (!enrollment) {
-      throw new NotFoundException('No tienes matrícula activa en este curso');
-    }
-
     const [completedLessonIds, watchProgress] = await Promise.all([
       this.lessonProgressGateway.getCompletedLessonIds(userId, courseId),
       this.watchProgressGateway.getWatchProgressByCourse(userId, courseId),

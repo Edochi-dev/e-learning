@@ -1,6 +1,17 @@
 import { Enrollment } from '../entities/enrollment.entity';
 
 /**
+ * Datos con los que nace una matrícula. `expiresAt` se recibe ya resuelto (vía
+ * Course.accessExpiresAt) en vez de derivarse aquí: el vencimiento queda
+ * congelado en la fila y no vuelve a depender de la duración del curso.
+ */
+export interface NewEnrollment {
+  userId: string;
+  courseId: string;
+  expiresAt: Date | null;
+}
+
+/**
  * EnrollmentGateway -- Contrato abstracto para la capa de datos de Matrículas.
  *
  * Responsabilidad UNICA: gestionar la relación usuario-curso (matrícula).
@@ -16,7 +27,10 @@ import { Enrollment } from '../entities/enrollment.entity';
  */
 export abstract class EnrollmentGateway {
   /** Crea una nueva matrícula para un usuario en un curso. */
-  abstract enroll(userId: string, courseId: string): Promise<Enrollment>;
+  abstract enroll(data: NewEnrollment): Promise<Enrollment>;
+
+  /** Reemplaza el vencimiento de una matrícula (extender o renovar acceso). */
+  abstract updateExpiry(id: string, expiresAt: Date | null): Promise<void>;
 
   /** Busca una matrícula por su ID. Usado por el OwnershipGuard. */
   abstract findById(id: string): Promise<Enrollment | null>;

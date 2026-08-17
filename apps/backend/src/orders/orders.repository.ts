@@ -44,17 +44,4 @@ export class OrdersRepository implements OrderGateway {
       order: { createdAt: 'DESC' },
     });
   }
-
-  /**
-   * Busca una orden completada para un usuario y curso específicos.
-   * Si existe, significa que el usuario ya pagó por ese curso.
-   */
-  async findCompletedByUserAndCourse(
-    userId: string,
-    courseId: string,
-  ): Promise<Order | null> {
-    return this.orderRepository.findOne({
-      where: { userId, courseId, status: OrderStatus.COMPLETED },
-    });
-  }
 }

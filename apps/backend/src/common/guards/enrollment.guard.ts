@@ -12,7 +12,7 @@ import {
   EnrollmentCheckOptions,
 } from '../decorators/enrollment-check.decorator';
 import { Request } from 'express';
-import { UserRole } from '@maris-nails/shared';
+import { ApiErrorCode, UserRole } from '@maris-nails/shared';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
@@ -22,31 +22,15 @@ interface AuthenticatedRequest extends Request {
 }
 
 /**
- * EnrollmentGuard — Verifica que el usuario esté matriculado en el curso.
+ * EnrollmentGuard — Único punto que decide si alguien puede acceder al
+ * contenido de un curso. Verifica dos cosas: que exista matrícula y que siga
+ * vigente (Enrollment.isActive()).
  *
- * Funciona igual que RolesGuard: lee metadata del decorador @EnrollmentCheck()
- * para saber DÓNDE buscar el courseId o lessonId en el request.
+ * No dupliques esta comprobación dentro de un use case: si la regla vive en
+ * varios sitios, tarde o temprano uno se queda atrás.
  *
- * Flujo:
- *   1. Lee la metadata del decorador (@EnrollmentCheck({ ... }))
- *   2. Extrae el courseId del request (directo o resuelto desde lessonId)
- *   3. Obtiene el userId del JWT (req.user.id)
- *   4. Consulta EnrollmentGateway.findByUserAndCourse()
- *   5. Si no hay enrollment → ForbiddenException (403)
- *
- * ¿Por qué un Guard y no un check dentro del Use Case?
- *   - Autorización ("¿PUEDES acceder?") es responsabilidad del Guard
- *   - Lógica de negocio ("¿QUÉ hacemos?") es responsabilidad del Use Case
- *   - Un Guard es reutilizable: lo aplicas con un decorador en cualquier endpoint
- *   - El Use Case queda más limpio y enfocado en su única responsabilidad
- *
- * ¿Por qué necesita inyectar gateways?
- *   Porque necesita hacer queries a la DB (verificar enrollment, resolver
- *   lessonId→courseId). NestJS permite inyección de dependencias en guards
- *   siempre que estén registrados como providers en el módulo.
- *
- * IMPORTANTE: este guard DEBE ir DESPUÉS de AuthGuard('jwt') en la cadena
- * de guards, porque necesita req.user (que lo pone el JWT strategy).
+ * IMPORTANTE: debe ir DESPUÉS de AuthGuard('jwt') en la cadena, porque necesita
+ * el req.user que puebla la estrategia JWT.
  */
 @Injectable()
 export class EnrollmentGuard implements CanActivate {
@@ -57,13 +41,12 @@ export class EnrollmentGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    // 1. Leer la metadata que puso @EnrollmentCheck()
     const options = this.reflector.getAllAndOverride<EnrollmentCheckOptions>(
       ENROLLMENT_CHECK_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    // Si no hay decorator, el guard deja pasar (igual que RolesGuard sin @Roles)
+    // Sin decorador no hay nada que exigir (igual que RolesGuard sin @Roles).
     if (!options) {
       return true;
     }
@@ -81,17 +64,27 @@ export class EnrollmentGuard implements CanActivate {
       return true;
     }
 
-    // 2. Resolver el courseId según la estrategia configurada
     const courseId = await this.resolveCourseId(request, options);
 
-    // 3. Verificar enrollment
     const enrollment = await this.enrollmentGateway.findByUserAndCourse(
       userId,
       courseId,
     );
 
     if (!enrollment) {
-      throw new ForbiddenException('No estás matriculada en este curso');
+      throw new ForbiddenException({
+        message: 'No estás matriculada en este curso',
+        code: ApiErrorCode.NOT_ENROLLED,
+      });
+    }
+
+    // Vencida ≠ inexistente: el frontend ofrece renovar en un caso y comprar en
+    // el otro, así que el motivo viaja en un código estable, no en el mensaje.
+    if (!enrollment.isActive()) {
+      throw new ForbiddenException({
+        message: 'Tu acceso a este curso ha vencido',
+        code: ApiErrorCode.ENROLLMENT_EXPIRED,
+      });
     }
 
     return true;
@@ -108,7 +101,6 @@ export class EnrollmentGuard implements CanActivate {
     request: AuthenticatedRequest,
     options: EnrollmentCheckOptions,
   ): Promise<string> {
-    // Camino A: courseId directo
     if (options.courseIdFrom) {
       const source = this.getSource(request, options.courseIdFrom);
       const courseId = source?.courseId;
@@ -121,7 +113,6 @@ export class EnrollmentGuard implements CanActivate {
       return courseId;
     }
 
-    // Camino B: resolver desde lessonId
     if (options.lessonIdFrom) {
       const field = options.lessonIdField ?? 'lessonId';
       const source = this.getSource(request, options.lessonIdFrom);

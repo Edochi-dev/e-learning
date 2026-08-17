@@ -461,3 +461,21 @@ export interface PaginatedResult<T> {
     page: number;
     limit: number;
 }
+
+/**
+ * ApiErrorCode — Códigos estables que el backend adjunta a ciertos errores para
+ * que el frontend pueda reaccionar de forma distinta a cada uno.
+ *
+ * Existen porque el mensaje de error es texto para humanos: cambiarlo o
+ * traducirlo NO debe romper la interfaz. El frontend ramifica por el código,
+ * nunca comparando el mensaje.
+ *
+ *   ENROLLMENT_EXPIRED → tuvo acceso y se le venció (ofrecer renovar)
+ *   NOT_ENROLLED       → nunca tuvo acceso a este curso (ofrecer comprar)
+ */
+export const ApiErrorCode = {
+    ENROLLMENT_EXPIRED: 'ENROLLMENT_EXPIRED',
+    NOT_ENROLLED: 'NOT_ENROLLED',
+} as const;
+
+export type ApiErrorCode = typeof ApiErrorCode[keyof typeof ApiErrorCode];

@@ -23,6 +23,8 @@ import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
 import { GetCourseProgressUseCase, CourseProgress } from './use-cases/get-course-progress.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
+import { EnrollmentCheck } from '../common/decorators/enrollment-check.decorator';
 import { MarkLessonCompleteDto } from './dto/mark-lesson-complete.dto';
 import { SaveWatchProgressDto } from './dto/save-watch-progress.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
@@ -68,16 +70,14 @@ export class EnrollmentsController {
   }
 
   @Post('me/progress')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'body' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async markLessonComplete(
     @Req() req: any,
     @Body() dto: MarkLessonCompleteDto,
   ): Promise<void> {
-    return this.markLessonCompleteUseCase.execute(
-      req.user.id,
-      dto.lessonId,
-      dto.courseId,
-    );
+    return this.markLessonCompleteUseCase.execute(req.user.id, dto.lessonId);
   }
 
   /**
@@ -86,6 +86,8 @@ export class EnrollmentsController {
    * por lección. El frontend lo usa al montar la página de estudio.
    */
   @Get('me/courses/:courseId/progress')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'params' })
   async getCourseProgress(
     @Req() req: any,
     @Param('courseId', ParseUUIDPipe) courseId: string,
@@ -99,6 +101,8 @@ export class EnrollmentsController {
    * el progreso sube 5 puntos (throttle para no saturar la API).
    */
   @Patch('me/watch-progress')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'body' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async saveWatchProgress(
     @Req() req: any,
@@ -107,7 +111,6 @@ export class EnrollmentsController {
     return this.saveWatchProgressUseCase.execute(
       req.user.id,
       dto.lessonId,
-      dto.courseId,
       dto.percent,
     );
   }
@@ -121,6 +124,8 @@ export class EnrollmentsController {
    * Puede devolver 429 (Too Many Requests) si el cooldown de 30 min no ha pasado.
    */
   @Post('me/quiz')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'body' })
   async submitQuiz(@Req() req: any, @Body() dto: SubmitQuizDto) {
     return this.submitQuizUseCase.execute(
       req.user.id,
@@ -144,6 +149,8 @@ export class EnrollmentsController {
    * el ownership check y para enriquecer hints "Repasa: [lección]".
    */
   @Get('me/quiz/:lessonId/last-attempt')
+  @UseGuards(EnrollmentGuard)
+  @EnrollmentCheck({ courseIdFrom: 'query' })
   async getLastQuizAttempt(
     @Req() req: any,
     @Param('lessonId', ParseUUIDPipe) lessonId: string,

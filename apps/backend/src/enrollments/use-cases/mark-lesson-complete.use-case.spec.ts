@@ -1,14 +1,8 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { MarkLessonCompleteUseCase } from './mark-lesson-complete.use-case';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
-import { Enrollment } from '../entities/enrollment.entity';
 import { Lesson } from '../../courses/entities/lessons.entity';
 
 /**
@@ -33,13 +27,11 @@ import { Lesson } from '../../courses/entities/lessons.entity';
  */
 describe('MarkLessonCompleteUseCase', () => {
   let useCase: MarkLessonCompleteUseCase;
-  let enrollmentGateway: jest.Mocked<EnrollmentGateway>;
   let lessonProgressGateway: jest.Mocked<LessonProgressGateway>;
   let lessonGateway: jest.Mocked<LessonGateway>;
 
   const userId = 'user-uuid-123';
   const lessonId = 'lesson-uuid-456';
-  const courseId = 'course-uuid-789';
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -47,10 +39,6 @@ describe('MarkLessonCompleteUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         MarkLessonCompleteUseCase,
-        {
-          provide: EnrollmentGateway,
-          useValue: { findByUserAndCourse: jest.fn() },
-        },
         {
           provide: LessonProgressGateway,
           useValue: { markLessonComplete: jest.fn() },
@@ -63,7 +51,6 @@ describe('MarkLessonCompleteUseCase', () => {
     }).compile();
 
     useCase = module.get(MarkLessonCompleteUseCase);
-    enrollmentGateway = module.get(EnrollmentGateway);
     lessonProgressGateway = module.get(LessonProgressGateway);
     lessonGateway = module.get(LessonGateway);
   });
@@ -72,31 +59,14 @@ describe('MarkLessonCompleteUseCase', () => {
   // 1. OWNERSHIP CHECK: ¿Está matriculado?
   // ──────────────────────────────────────────────────────────
 
-  it('lanza ForbiddenException si el usuario no está matriculado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
-
-    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
-      ForbiddenException,
-    );
-
-    // Ni siquiera busca la lección — fail fast
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(lessonGateway.findLesson).not.toHaveBeenCalled();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(lessonProgressGateway.markLessonComplete).not.toHaveBeenCalled();
-  });
-
   // ──────────────────────────────────────────────────────────
   // 2. EXISTENCIA: ¿La lección existe?
   // ──────────────────────────────────────────────────────────
 
   it('lanza NotFoundException si la lección no existe', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
     lessonGateway.findLesson.mockResolvedValue(null);
 
-    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
+    await expect(useCase.execute(userId, lessonId)).rejects.toThrow(
       NotFoundException,
     );
 
@@ -109,15 +79,12 @@ describe('MarkLessonCompleteUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('marca la lección como completada cuando las validaciones pasan', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'class',
     } as unknown as Lesson);
 
-    await useCase.execute(userId, lessonId, courseId);
+    await useCase.execute(userId, lessonId);
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(lessonProgressGateway.markLessonComplete).toHaveBeenCalledWith(
@@ -131,15 +98,12 @@ describe('MarkLessonCompleteUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('lanza BadRequestException si la lección es de tipo correction', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
       type: 'correction',
     } as unknown as Lesson);
 
-    await expect(useCase.execute(userId, lessonId, courseId)).rejects.toThrow(
+    await expect(useCase.execute(userId, lessonId)).rejects.toThrow(
       BadRequestException,
     );
 

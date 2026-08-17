@@ -1,5 +1,4 @@
 import {
-  ForbiddenException,
   NotFoundException,
   BadRequestException,
   HttpException,
@@ -7,12 +6,10 @@ import {
 } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { SubmitQuizUseCase } from './submit-quiz.use-case';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { QuizAttemptGateway } from '../gateways/quiz-attempt.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
-import { Enrollment } from '../entities/enrollment.entity';
 import { Lesson } from '../../courses/entities/lessons.entity';
 
 /**
@@ -31,7 +28,6 @@ import { Lesson } from '../../courses/entities/lessons.entity';
  */
 describe('SubmitQuizUseCase', () => {
   let useCase: SubmitQuizUseCase;
-  let enrollmentGateway: jest.Mocked<EnrollmentGateway>;
   let lessonProgressGateway: jest.Mocked<LessonProgressGateway>;
   let quizAttemptGateway: jest.Mocked<QuizAttemptGateway>;
   let courseGateway: jest.Mocked<CourseGateway>;
@@ -88,10 +84,6 @@ describe('SubmitQuizUseCase', () => {
       providers: [
         SubmitQuizUseCase,
         {
-          provide: EnrollmentGateway,
-          useValue: { findByUserAndCourse: jest.fn() },
-        },
-        {
           provide: LessonProgressGateway,
           useValue: { markLessonComplete: jest.fn() },
         },
@@ -114,7 +106,6 @@ describe('SubmitQuizUseCase', () => {
     }).compile();
 
     useCase = module.get(SubmitQuizUseCase);
-    enrollmentGateway = module.get(EnrollmentGateway);
     lessonProgressGateway = module.get(LessonProgressGateway);
     quizAttemptGateway = module.get(QuizAttemptGateway);
     courseGateway = module.get(CourseGateway);
@@ -126,9 +117,6 @@ describe('SubmitQuizUseCase', () => {
    * Cada test solo necesita cambiar lo que le importa.
    */
   function setupValidFlow() {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson);
     quizAttemptGateway.getLastQuizAttempt.mockResolvedValue(null); // sin cooldown
     quizAttemptGateway.saveQuizAttempt.mockResolvedValue({} as any);
@@ -144,22 +132,11 @@ describe('SubmitQuizUseCase', () => {
   // 1. OWNERSHIP CHECK
   // ──────────────────────────────────────────────────────────
 
-  it('lanza ForbiddenException si el usuario no está matriculado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
-
-    await expect(
-      useCase.execute(userId, lessonId, courseId, correctAnswers),
-    ).rejects.toThrow(ForbiddenException);
-  });
-
   // ──────────────────────────────────────────────────────────
   // 2. EXISTENCIA DE LA LECCIÓN
   // ──────────────────────────────────────────────────────────
 
   it('lanza NotFoundException si la lección no existe', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'e-1',
-    } as Enrollment);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(null);
 
     await expect(
@@ -172,9 +149,6 @@ describe('SubmitQuizUseCase', () => {
   // ──────────────────────────────────────────────────────────
 
   it('lanza BadRequestException si la lección no es un examen', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'e-1',
-    } as Enrollment);
     lessonGateway.findLessonWithQuestions.mockResolvedValue({
       id: lessonId,
       type: 'class', // ← no es examen
@@ -202,9 +176,6 @@ describe('SubmitQuizUseCase', () => {
     const now = 1700000000000; // timestamp fijo
     jest.spyOn(Date, 'now').mockReturnValue(now);
 
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'e-1',
-    } as Enrollment);
     lessonGateway.findLessonWithQuestions.mockResolvedValue(examLesson);
 
     // Último intento hace 10 minutos (600,000 ms)

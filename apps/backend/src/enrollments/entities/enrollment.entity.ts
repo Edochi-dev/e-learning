@@ -45,6 +45,22 @@ export class Enrollment {
   @CreateDateColumn()
   enrolledAt: Date;
 
+  // Momento en que caduca el acceso. null = permanente (todas las matrículas
+  // anteriores a esta columna). Se congela al matricular a partir de
+  // Course.accessDurationDays: cambiar la duración del curso después NO
+  // recorta ni alarga un acceso ya vendido.
+  @Column({ type: 'timestamptz', nullable: true })
+  expiresAt: Date | null;
+
+  /**
+   * Única definición de "acceso vigente" del dominio. EnrollmentGuard la hace
+   * cumplir en todos los endpoints de contenido; no dupliques esta regla.
+   */
+  isActive(now: Date = new Date()): boolean {
+    if (!this.expiresAt) return true;
+    return this.expiresAt.getTime() > now.getTime();
+  }
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({
     name: 'userId',

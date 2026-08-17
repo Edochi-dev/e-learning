@@ -29,13 +29,4 @@ export abstract class OrderGateway {
    * Incluye la relación con Course para mostrar el título en el historial.
    */
   abstract findByUser(userId: string): Promise<Order[]>;
-
-  /**
-   * Busca una orden completada de un usuario para un curso específico.
-   * Útil para verificar si el usuario ya compró ese curso antes de crear otra orden.
-   */
-  abstract findCompletedByUserAndCourse(
-    userId: string,
-    courseId: string,
-  ): Promise<Order | null>;
 }

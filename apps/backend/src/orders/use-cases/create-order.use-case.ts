@@ -8,13 +8,15 @@ import { PaymentGateway, PaymentOutcome } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { Enrollment } from '../../enrollments/entities/enrollment.entity';
 import { OrderStatus } from '@maris-nails/shared';
 
 /**
  * CreateOrderUseCase — Orquesta el flujo completo de compra directa.
  *
  * Este es el Use Case más importante del módulo. Coordina:
- *   1. Validaciones de negocio (¿existe el curso?, ¿ya lo compró?)
+ *   1. Validaciones de negocio (¿existe el curso?, ¿ya tiene acceso vigente?)
  *   2. Creación de la orden (status: pending)
  *   3. Procesamiento del pago (vía PaymentGateway abstracto)
  *   4. Actualización de la orden según el desenlace
@@ -49,11 +51,15 @@ export class CreateOrderUseCase {
       throw new NotFoundException('Curso no encontrado');
     }
 
-    // 2. ¿Ya lo compró antes? (orden completada = ya tiene acceso)
-    const existingOrder =
-      await this.orderGateway.findCompletedByUserAndCourse(userId, courseId);
-    if (existingOrder) {
-      throw new ConflictException('Ya compraste este curso');
+    // 2. ¿Ya tiene acceso? La fuente de verdad es la matrícula, NO el historial
+    //    de órdenes: con acceso temporal, quien ya compró y se le venció debe
+    //    poder renovar. Bloquear por "orden completada" lo dejaría sin salida.
+    const existingEnrollment = await this.enrollmentGateway.findByUserAndCourse(
+      userId,
+      courseId,
+    );
+    if (existingEnrollment?.isActive()) {
+      throw new ConflictException('Ya tienes acceso a este curso');
     }
 
     // 3. Crear la orden en estado PENDING con el precio congelado
@@ -77,12 +83,7 @@ export class CreateOrderUseCase {
         await this.orderGateway.updateStatus(order.id, OrderStatus.COMPLETED);
         order.status = OrderStatus.COMPLETED;
 
-        // Puede ya estar matriculada si la admin le dio acceso por invitación.
-        const existingEnrollment =
-          await this.enrollmentGateway.findByUserAndCourse(userId, courseId);
-        if (!existingEnrollment) {
-          await this.enrollmentGateway.enroll(userId, courseId);
-        }
+        await this.grantAccess(userId, course, existingEnrollment);
         break;
       }
 
@@ -97,5 +98,32 @@ export class CreateOrderUseCase {
     }
 
     return order;
+  }
+
+  /**
+   * Otorga el acceso comprado. El vencimiento se calcula SIEMPRE en el momento
+   * del pago: si la alumna renueva una matrícula vencida, el nuevo periodo
+   * arranca hoy, no desde la compra original.
+   */
+  private async grantAccess(
+    userId: string,
+    course: Course,
+    existingEnrollment: Enrollment | null,
+  ): Promise<void> {
+    const expiresAt = course.accessExpiresAt();
+
+    if (existingEnrollment) {
+      await this.enrollmentGateway.updateExpiry(
+        existingEnrollment.id,
+        expiresAt,
+      );
+      return;
+    }
+
+    await this.enrollmentGateway.enroll({
+      userId,
+      courseId: course.id,
+      expiresAt,
+    });
   }
 }

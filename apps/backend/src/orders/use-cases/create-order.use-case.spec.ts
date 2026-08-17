@@ -6,6 +6,8 @@ import { PaymentGateway, PaymentOutcome } from '../gateways/payment.gateway';
 import { CourseGateway } from '../../courses/gateways/course.gateway';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { Order } from '../entities/order.entity';
+import { Course } from '../../courses/entities/course.entity';
+import { Enrollment } from '../../enrollments/entities/enrollment.entity';
 import { OrderStatus } from '@maris-nails/shared';
 
 /**
@@ -42,11 +44,26 @@ describe('CreateOrderUseCase', () => {
   const userId = 'user-uuid-123';
   const courseId = 'course-uuid-456';
 
-  const fakeCourse = {
-    id: courseId,
-    title: 'Manicure Básico',
-    price: 50,
-  };
+  // Instancias reales (no literales): el Use Case llama a métodos de dominio
+  // como course.accessExpiresAt() y enrollment.isActive().
+  const buildCourse = (overrides: Partial<Course> = {}): Course =>
+    Object.assign(new Course(), {
+      id: courseId,
+      title: 'Manicure Básico',
+      price: 50,
+      accessDurationDays: null,
+      ...overrides,
+    });
+
+  const buildEnrollment = (expiresAt: Date | null): Enrollment =>
+    Object.assign(new Enrollment(), {
+      id: 'enrollment-existente',
+      userId,
+      courseId,
+      expiresAt,
+    });
+
+  const fakeCourse = buildCourse();
 
   const fakeOrder = {
     id: 'order-uuid-789',
@@ -76,7 +93,6 @@ describe('CreateOrderUseCase', () => {
           provide: OrderGateway,
           useValue: {
             create: jest.fn(),
-            findCompletedByUserAndCourse: jest.fn(),
             updateStatus: jest.fn(),
           },
         },
@@ -97,6 +113,7 @@ describe('CreateOrderUseCase', () => {
           useValue: {
             findByUserAndCourse: jest.fn(),
             enroll: jest.fn(),
+            updateExpiry: jest.fn(),
           },
         },
       ],
@@ -133,25 +150,50 @@ describe('CreateOrderUseCase', () => {
   });
 
   // ──────────────────────────────────────────────────────────
-  // 2. VALIDACIÓN: ¿El usuario ya compró este curso?
+  // 2. VALIDACIÓN: ¿El usuario ya tiene acceso vigente?
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Si ya existe una orden COMPLETED para este usuario+curso, no tiene sentido
-   * permitir otra compra. El Use Case lanza ConflictException.
-   *
-   * Nota: órdenes FAILED sí permiten reintentar (por eso la query busca solo completed).
+   * Pagar dos veces por un acceso que ya se tiene es un error de negocio.
+   * La verificación mira la MATRÍCULA, no el historial de órdenes.
    */
-  it('lanza ConflictException si el usuario ya tiene una orden completada para ese curso', async () => {
-    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(fakeOrder);
+  it('lanza ConflictException si el usuario ya tiene acceso vigente', async () => {
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(
+      buildEnrollment(null),
+    );
 
     await expect(useCase.execute(userId, courseId)).rejects.toThrow(
       ConflictException,
     );
 
-    // No debe crear una nueva orden si ya compró el curso.
     expect(orderGateway.create).not.toHaveBeenCalled();
+  });
+
+  /**
+   * El reverso, y la razón por la que la comprobación dejó de mirar las órdenes:
+   * con acceso temporal, quien ya compró y se le venció DEBE poder renovar.
+   * Bloquearlo lo dejaría sin forma de recuperar el curso por su cuenta.
+   */
+  it('permite volver a comprar si la matrícula previa está vencida', async () => {
+    const expired = buildEnrollment(new Date(Date.now() - 60_000));
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(expired);
+    orderGateway.create.mockResolvedValue({ ...fakeOrder });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
+
+    const result = await useCase.execute(userId, courseId);
+
+    expect(result.status).toBe(OrderStatus.COMPLETED);
+    // Renueva la matrícula existente en vez de crear una segunda (violaría el
+    // UNIQUE de userId+courseId).
+    expect(enrollmentGateway.updateExpiry).toHaveBeenCalledWith(
+      expired.id,
+      null,
+    );
+    expect(enrollmentGateway.enroll).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
@@ -167,9 +209,7 @@ describe('CreateOrderUseCase', () => {
    * como amount, no un valor hardcodeado ni un parámetro externo.
    */
   it('crea la orden con el precio congelado del curso (price freezing)', async () => {
-    const courseConPrecio = { ...fakeCourse, price: 99.99 };
-    courseGateway.findOne.mockResolvedValue(courseConPrecio as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+    courseGateway.findOne.mockResolvedValue(buildCourse({ price: 99.99 }));
     orderGateway.create.mockResolvedValue({
       ...fakeOrder,
       amount: 99.99,
@@ -196,10 +236,11 @@ describe('CreateOrderUseCase', () => {
    * recibe el precio del curso. No queremos cobrar un monto diferente al registrado.
    */
   it('el monto enviado al PaymentGateway coincide con course.price', async () => {
-    const courseConPrecio = { ...fakeCourse, price: 75 };
-    courseGateway.findOne.mockResolvedValue(courseConPrecio as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
-    orderGateway.create.mockResolvedValue({ ...fakeOrder, amount: 75 } as Order);
+    courseGateway.findOne.mockResolvedValue(buildCourse({ price: 75 }));
+    orderGateway.create.mockResolvedValue({
+      ...fakeOrder,
+      amount: 75,
+    } as Order);
     paymentGateway.processPayment.mockResolvedValue({
       outcome: PaymentOutcome.COMPLETED,
     });
@@ -231,8 +272,7 @@ describe('CreateOrderUseCase', () => {
    * Este test verifica TODO el camino feliz de punta a punta.
    */
   it('cuando el pago es exitoso: orden pasa a completed y el usuario se matricula', async () => {
-    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
     paymentGateway.processPayment.mockResolvedValue({
       outcome: PaymentOutcome.COMPLETED,
@@ -250,7 +290,11 @@ describe('CreateOrderUseCase', () => {
     );
 
     // El usuario debe quedar matriculado automáticamente
-    expect(enrollmentGateway.enroll).toHaveBeenCalledWith(userId, courseId);
+    expect(enrollmentGateway.enroll).toHaveBeenCalledWith({
+      userId,
+      courseId,
+      expiresAt: null,
+    });
   });
 
   // ──────────────────────────────────────────────────────────
@@ -266,8 +310,7 @@ describe('CreateOrderUseCase', () => {
    * estaríamos regalando el curso. Un bug aquí = pérdida de dinero.
    */
   it('cuando el pago falla: orden pasa a failed y el usuario NO se matricula', async () => {
-    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
     paymentGateway.processPayment.mockResolvedValue({
       outcome: PaymentOutcome.FAILED,
@@ -283,9 +326,9 @@ describe('CreateOrderUseCase', () => {
       OrderStatus.FAILED,
     );
 
-    // NUNCA debe intentar matricular al usuario
-    expect(enrollmentGateway.findByUserAndCourse).not.toHaveBeenCalled();
+    // NUNCA debe otorgar acceso: ni matrícula nueva ni renovación de una vencida.
     expect(enrollmentGateway.enroll).not.toHaveBeenCalled();
+    expect(enrollmentGateway.updateExpiry).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
@@ -294,8 +337,7 @@ describe('CreateOrderUseCase', () => {
 
   /** Sin dinero confirmado no hay acceso: PENDING solo registra la intención. */
   it('cuando el pago queda pendiente: la orden sigue pending y el usuario NO se matricula', async () => {
-    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
     paymentGateway.processPayment.mockResolvedValue({
       outcome: PaymentOutcome.PENDING,
@@ -315,37 +357,61 @@ describe('CreateOrderUseCase', () => {
   });
 
   // ──────────────────────────────────────────────────────────
-  // 6. MATRÍCULA PREEXISTENTE: no duplica el enrollment
+  // 6. ACCESO TEMPORAL: el vencimiento se congela en la matrícula
   // ──────────────────────────────────────────────────────────
 
   /**
-   * Caso borde: un admin le dio acceso gratuito al usuario (Enrollment sin Order).
-   * Luego el usuario decide comprar el curso oficialmente.
-   *
-   * El pago es exitoso, pero como ya tiene enrollment, el Use Case
-   * NO debe llamar a enroll() de nuevo. Esto evita:
-   *   - Errores de constraint UNIQUE en la base de datos
-   *   - Que se resetee la fecha de matrícula original
+   * La matrícula guarda una FECHA, no una duración. Si mañana la profesora
+   * cambia el curso de 30 a 7 días, esta alumna conserva sus 30 días — el mismo
+   * principio por el que la orden congela el precio.
    */
-  it('si el usuario ya tiene matrícula previa, no intenta matricularlo de nuevo', async () => {
-    courseGateway.findOne.mockResolvedValue(fakeCourse as any);
-    orderGateway.findCompletedByUserAndCourse.mockResolvedValue(null);
+  it('congela el vencimiento calculado desde accessDurationDays', async () => {
+    courseGateway.findOne.mockResolvedValue(
+      buildCourse({ accessDurationDays: 30 }),
+    );
     orderGateway.create.mockResolvedValue({ ...fakeOrder });
     paymentGateway.processPayment.mockResolvedValue({
       outcome: PaymentOutcome.COMPLETED,
     });
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
 
-    // Simula que el usuario YA tiene una matrícula (ej: admin la creó manualmente)
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-existente',
-    } as any);
+    // Reloj fijo: el vencimiento se cuenta en días de CALENDARIO, así que un
+    // cambio de horario de verano en medio haría fallar una comparación en
+    // milisegundos absolutos. Congelar el tiempo mantiene el test determinista.
+    const purchasedAt = new Date('2026-03-01T10:00:00.000Z');
+    jest.useFakeTimers().setSystemTime(purchasedAt);
 
-    const result = await useCase.execute(userId, courseId);
+    try {
+      await useCase.execute(userId, courseId);
+    } finally {
+      jest.useRealTimers();
+    }
 
-    // La orden se completa normalmente...
-    expect(result.status).toBe(OrderStatus.COMPLETED);
+    const expected = new Date(purchasedAt);
+    expected.setDate(expected.getDate() + 30);
 
-    // ...pero enroll() NUNCA se llama porque ya existía la matrícula.
-    expect(enrollmentGateway.enroll).not.toHaveBeenCalled();
+    expect(enrollmentGateway.enroll).toHaveBeenCalledWith({
+      userId,
+      courseId,
+      expiresAt: expected,
+    });
+  });
+
+  /** Un curso sin duración configurada sigue otorgando acceso permanente. */
+  it('deja expiresAt en null cuando el curso no tiene duración configurada', async () => {
+    courseGateway.findOne.mockResolvedValue(fakeCourse);
+    orderGateway.create.mockResolvedValue({ ...fakeOrder });
+    paymentGateway.processPayment.mockResolvedValue({
+      outcome: PaymentOutcome.COMPLETED,
+    });
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
+
+    await useCase.execute(userId, courseId);
+
+    expect(enrollmentGateway.enroll).toHaveBeenCalledWith({
+      userId,
+      courseId,
+      expiresAt: null,
+    });
   });
 });

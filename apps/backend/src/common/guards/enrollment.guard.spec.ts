@@ -6,7 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import { ExecutionContext } from '@nestjs/common';
-import { UserRole } from '@maris-nails/shared';
+import { ApiErrorCode, UserRole } from '@maris-nails/shared';
 import { EnrollmentGuard } from './enrollment.guard';
 import { ENROLLMENT_CHECK_KEY } from '../decorators/enrollment-check.decorator';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
@@ -48,6 +48,14 @@ describe('EnrollmentGuard', () => {
     enrollmentGateway = module.get(EnrollmentGateway);
     lessonGateway = module.get(LessonGateway);
   });
+
+  /**
+   * El guard llama a enrollment.isActive(), así que los mocks deben ser
+   * instancias reales de la entidad y no objetos literales.
+   */
+  function enrollment(expiresAt: Date | null = null): Enrollment {
+    return Object.assign(new Enrollment(), { id: 'e-1', expiresAt });
+  }
 
   /** Helper: crea un ExecutionContext mock con el request dado. */
   function mockContext(request: Record<string, unknown>): ExecutionContext {
@@ -132,7 +140,7 @@ describe('EnrollmentGuard', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
       courseIdFrom: 'body',
     });
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(enrollment());
 
     const ctx = mockContext({
       user: { id: 'u-1' },
@@ -157,7 +165,7 @@ describe('EnrollmentGuard', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
       courseIdFrom: 'query',
     });
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(enrollment());
 
     const ctx = mockContext({
       user: { id: 'u-1' },
@@ -182,7 +190,7 @@ describe('EnrollmentGuard', () => {
     jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
       courseIdFrom: 'params',
     });
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(enrollment());
 
     const ctx = mockContext({
       user: { id: 'u-1' },
@@ -241,7 +249,7 @@ describe('EnrollmentGuard', () => {
       id: 'l-1',
       courseId: 'c-1',
     } as unknown as Lesson);
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({} as Enrollment);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(enrollment());
 
     const ctx = mockContext({
       user: { id: 'u-1' },
@@ -260,6 +268,68 @@ describe('EnrollmentGuard', () => {
       'u-1',
       'c-1',
     );
+  });
+
+  // ── Vencimiento del acceso ─────────────────────────────────────
+
+  it('rechaza una matrícula vencida con el código ENROLLMENT_EXPIRED', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      courseIdFrom: 'body',
+    });
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(
+      enrollment(yesterday),
+    );
+
+    const ctx = mockContext({
+      user: { id: 'u-1' },
+      body: { courseId: 'c-1' },
+      params: {},
+      query: {},
+    });
+
+    // El código distingue "se venció" de "nunca la tuvo": el frontend ofrece
+    // renovar en un caso y comprar en el otro.
+    await expect(guard.canActivate(ctx)).rejects.toMatchObject({
+      response: { code: ApiErrorCode.ENROLLMENT_EXPIRED },
+    });
+  });
+
+  it('deja pasar una matrícula cuyo vencimiento aún no llegó', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      courseIdFrom: 'body',
+    });
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(
+      enrollment(tomorrow),
+    );
+
+    const ctx = mockContext({
+      user: { id: 'u-1' },
+      body: { courseId: 'c-1' },
+      params: {},
+      query: {},
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
+  it('marca NOT_ENROLLED cuando no existe matrícula', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      courseIdFrom: 'body',
+    });
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
+
+    const ctx = mockContext({
+      user: { id: 'u-1' },
+      body: { courseId: 'c-1' },
+      params: {},
+      query: {},
+    });
+
+    await expect(guard.canActivate(ctx)).rejects.toMatchObject({
+      response: { code: ApiErrorCode.NOT_ENROLLED },
+    });
   });
 
   it('lanza NotFoundException si la lección no existe', async () => {

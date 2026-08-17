@@ -26,6 +26,13 @@ export class Course {
   @Column({ type: 'varchar', nullable: true })
   level: CourseLevel | null;
 
+  // Días de acceso que otorga una matrícula nueva. null = acceso permanente
+  // (valor de los cursos existentes, que se vendieron sin vencimiento).
+  // Cambiarlo NO afecta a las matrículas ya emitidas: cada una congela su
+  // propio expiresAt, igual que Order congela el precio.
+  @Column({ type: 'int', nullable: true })
+  accessDurationDays: number | null;
+
   // nullable: true porque los cursos viejos no tienen miniatura.
   // Sin esto, la migración fallaría al intentar agregar una columna NOT NULL
   // en una tabla que ya tiene filas.
@@ -39,4 +46,18 @@ export class Course {
 
   @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
   lessons: Lesson[];
+
+  /**
+   * Fecha en que caduca una matrícula emitida en `from`, o null si el acceso es
+   * permanente. Vive en el curso porque es el dueño de la duración: todo camino
+   * que matricule (compra hoy, invitación mañana) debe derivar el vencimiento de
+   * aquí en vez de recalcularlo.
+   */
+  accessExpiresAt(from: Date = new Date()): Date | null {
+    if (!this.accessDurationDays) return null;
+
+    const expiry = new Date(from);
+    expiry.setDate(expiry.getDate() + this.accessDurationDays);
+    return expiry;
+  }
 }

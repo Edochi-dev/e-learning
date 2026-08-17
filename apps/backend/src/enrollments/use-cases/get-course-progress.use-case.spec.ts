@@ -1,10 +1,7 @@
-import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { GetCourseProgressUseCase } from './get-course-progress.use-case';
-import { EnrollmentGateway } from '../gateways/enrollment.gateway';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
 import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
-import { Enrollment } from '../entities/enrollment.entity';
 
 /**
  * Tests para GetCourseProgressUseCase — progreso detallado en un curso específico.
@@ -22,7 +19,6 @@ import { Enrollment } from '../entities/enrollment.entity';
  */
 describe('GetCourseProgressUseCase', () => {
   let useCase: GetCourseProgressUseCase;
-  let enrollmentGateway: jest.Mocked<EnrollmentGateway>;
   let lessonProgressGateway: jest.Mocked<LessonProgressGateway>;
   let watchProgressGateway: jest.Mocked<WatchProgressGateway>;
 
@@ -35,12 +31,6 @@ describe('GetCourseProgressUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         GetCourseProgressUseCase,
-        {
-          provide: EnrollmentGateway,
-          useValue: {
-            findByUserAndCourse: jest.fn(),
-          },
-        },
         {
           provide: LessonProgressGateway,
           useValue: {
@@ -57,28 +47,11 @@ describe('GetCourseProgressUseCase', () => {
     }).compile();
 
     useCase = module.get(GetCourseProgressUseCase);
-    enrollmentGateway = module.get(EnrollmentGateway);
     lessonProgressGateway = module.get(LessonProgressGateway);
     watchProgressGateway = module.get(WatchProgressGateway);
   });
 
-  it('lanza NotFoundException si el usuario no está matriculado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue(null);
-
-    await expect(useCase.execute(userId, courseId)).rejects.toThrow(
-      NotFoundException,
-    );
-
-    // No debe consultar progreso si no hay matrícula
-    expect(lessonProgressGateway.getCompletedLessonIds).not.toHaveBeenCalled();
-    expect(watchProgressGateway.getWatchProgressByCourse).not.toHaveBeenCalled();
-  });
-
   it('retorna completedLessonIds y watchProgress cuando está matriculado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
-
     lessonProgressGateway.getCompletedLessonIds.mockResolvedValue([
       'lesson-1',
       'lesson-3',
@@ -101,10 +74,6 @@ describe('GetCourseProgressUseCase', () => {
   });
 
   it('retorna datos vacíos si tiene matrícula pero no ha empezado', async () => {
-    enrollmentGateway.findByUserAndCourse.mockResolvedValue({
-      id: 'enrollment-1',
-    } as Enrollment);
-
     lessonProgressGateway.getCompletedLessonIds.mockResolvedValue([]);
     watchProgressGateway.getWatchProgressByCourse.mockResolvedValue({});
 

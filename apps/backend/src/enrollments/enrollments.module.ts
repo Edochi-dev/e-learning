@@ -16,6 +16,7 @@ import { GetCourseProgressUseCase } from './use-cases/get-course-progress.use-ca
 import { SubmitQuizUseCase } from './use-cases/submit-quiz.use-case';
 import { GetLastQuizAttemptUseCase } from './use-cases/get-last-quiz-attempt.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { CoursesModule } from '../courses/courses.module';
 import { ProgressModule } from '../progress/progress.module';
 
@@ -51,6 +52,7 @@ import { ProgressModule } from '../progress/progress.module';
     { provide: QuizAttemptGateway, useClass: QuizAttemptRepository },
     // --- Guards ---
     EnrollmentOwnershipGuard,
+    EnrollmentGuard,
     // --- Use Cases ---
     GetMyEnrollmentsUseCase,
     MarkLessonCompleteUseCase,
