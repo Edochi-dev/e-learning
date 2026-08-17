@@ -11,10 +11,17 @@ build/
 # Logs de errores
 *.log
 
-# Archivos generados en runtime (certificados PDF, plantillas subidas, fotos de correcciones)
+# Subidas y archivos generados en runtime.
+#
+# NADA de lo que escriben la app o la profesora debe versionarse: son datos de
+# producción, no código. Ojo: añadir una ruta aquí NO deja de trackear lo que ya
+# estaba commiteado — hay que hacer `git rm --cached` además. Comprobar con
+# `git ls-files apps/backend/public/` que no queda nada dentro.
 apps/backend/public/certificates/generated/
 apps/backend/public/certificates/templates/
 apps/backend/public/corrections/
+apps/backend/public/videos/
+apps/backend/public/thumbnails/
 
 # Certificados SSL (NUNCA subir a git)
 ssl/*.pem
