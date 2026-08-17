@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { SubmitCorrectionUseCase } from './submit-correction.use-case';
 import { CorrectionGateway } from '../gateways/correction.gateway';
@@ -89,9 +93,30 @@ describe('SubmitCorrectionUseCase', () => {
     ).rejects.toThrow(NotFoundException);
   });
 
+  /**
+   * El guard verifica la matrícula contra el courseId del query, pero el
+   * lessonId llega en el body multipart, que Multer aún no parseó cuando el
+   * guard corre. Esta comprobación es la única defensa de ese hueco.
+   */
+  it('rechaza una lección que pertenece a otro curso', async () => {
+    lessonGateway.findLesson.mockResolvedValue({
+      id: lessonId,
+      courseId: 'curso-no-comprado',
+      type: 'correction',
+      title: 'Nail Art Básico',
+    } as unknown as Lesson);
+
+    await expect(
+      useCase.execute(userId, lessonId, courseId, mockFile),
+    ).rejects.toThrow(ForbiddenException);
+
+    expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
+  });
+
   it('lanza BadRequestException si la lección no es tipo correction', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'class',
     } as unknown as Lesson);
 
@@ -103,6 +128,7 @@ describe('SubmitCorrectionUseCase', () => {
   it('crea una submission nueva cuando no existe entrega previa', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'correction',
       title: 'Nail Art Básico',
     } as unknown as Lesson);
@@ -131,6 +157,7 @@ describe('SubmitCorrectionUseCase', () => {
   it('actualiza la submission existente en un re-envío y borra la foto vieja', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'correction',
       title: 'Nail Art Básico',
     } as unknown as Lesson);
@@ -160,6 +187,7 @@ describe('SubmitCorrectionUseCase', () => {
   it('convierte HEIC a JPEG antes de guardar', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'correction',
       title: 'Test',
     } as unknown as Lesson);
@@ -188,6 +216,7 @@ describe('SubmitCorrectionUseCase', () => {
   it('reintenta la conversión HEIC y tiene éxito en el segundo intento', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'correction',
       title: 'Test',
     } as unknown as Lesson);
@@ -215,6 +244,7 @@ describe('SubmitCorrectionUseCase', () => {
   it('lanza BadRequestException con link a convertidor si los 3 intentos fallan', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
+      courseId,
       type: 'correction',
       title: 'Test',
     } as unknown as Lesson);

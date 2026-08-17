@@ -45,6 +45,8 @@ import { GetQuizQuestionsUseCase } from './use-cases/get-quiz-questions.use-case
 import { UploadReferenceImageUseCase } from './use-cases/upload-reference-image.use-case';
 import { ReorderLessonsDto } from './dto/reorder-lessons.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
+import { EnrollmentCheck } from '../common/decorators/enrollment-check.decorator';
 import { Roles } from '../common/decorators/roles.decorator';
 
 /**
@@ -253,13 +255,15 @@ export class CoursesController {
    * GET /courses/:courseId/lessons/:lessonId/quiz
    *
    * Devuelve las preguntas del quiz SIN las respuestas correctas (isCorrect omitido).
-   * Requiere JWT porque solo alumnos autenticados pueden ver el quiz.
+   *
+   * EnrollmentGuard es obligatorio: estar autenticada no basta, porque los
+   * lessonId son visibles en el GET público del curso y cualquier cuenta
+   * gratuita podría leer los exámenes de un curso que no compró.
    */
   @Get(':courseId/lessons/:lessonId/quiz')
-  @UseGuards(AuthGuard('jwt'))
-  async getQuizQuestions(
-    @Param('lessonId', ParseUUIDPipe) lessonId: string,
-  ) {
+  @UseGuards(AuthGuard('jwt'), EnrollmentGuard)
+  @EnrollmentCheck({ lessonIdFrom: 'params', courseIdFrom: 'params' })
+  async getQuizQuestions(@Param('lessonId', ParseUUIDPipe) lessonId: string) {
     return this.getQuizQuestionsUseCase.execute(lessonId);
   }
 

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { LessonType } from '@maris-nails/shared';
 import { CorrectionGateway } from '../gateways/correction.gateway';
@@ -53,6 +54,14 @@ export class SubmitCorrectionUseCase {
     }
     if (lesson.type !== LessonType.CORRECTION) {
       throw new BadRequestException('Esta lección no es de tipo corrección');
+    }
+
+    // El guard validó la matrícula contra el courseId del query, pero el
+    // lessonId llega en el body multipart, que Multer todavía no había parseado
+    // cuando el guard corrió. Sin esta comprobación se podría entregar en una
+    // lección de un curso no comprado declarando un courseId propio.
+    if (lesson.courseId !== courseId) {
+      throw new ForbiddenException('La lección no pertenece a ese curso');
     }
 
     // 2. Procesar imagen: convertir HEIC→JPEG si es necesario.

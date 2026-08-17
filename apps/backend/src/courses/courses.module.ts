@@ -26,6 +26,8 @@ import { AssignmentLesson } from './entities/assignment-lesson.entity';
 import { QuizQuestion } from './entities/quiz-question.entity';
 import { QuizOption } from './entities/quiz-option.entity';
 import { StorageModule } from '../storage/storage.module';
+import { EnrollmentAccessModule } from '../enrollments/enrollment-access.module';
+import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { ScheduleModule } from '../schedule/schedule.module';
 
 /**
@@ -53,9 +55,11 @@ import { ScheduleModule } from '../schedule/schedule.module';
     ]),
     StorageModule, // Importamos para que FileStorageGateway esté disponible
     ScheduleModule, // Exporta los use-cases del espejo de clases en vivo
+    EnrollmentAccessModule, // EnrollmentGuard del endpoint de quiz
   ],
   controllers: [CoursesController],
   providers: [
+    EnrollmentGuard,
     FindAllCoursesUseCase,
     GetCourseCategoriesUseCase,
     FindOneCourseUseCase,

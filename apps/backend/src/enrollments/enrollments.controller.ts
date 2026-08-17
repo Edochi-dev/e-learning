@@ -71,7 +71,7 @@ export class EnrollmentsController {
 
   @Post('me/progress')
   @UseGuards(EnrollmentGuard)
-  @EnrollmentCheck({ courseIdFrom: 'body' })
+  @EnrollmentCheck({ lessonIdFrom: 'body', courseIdFrom: 'body' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async markLessonComplete(
     @Req() req: any,
@@ -102,7 +102,7 @@ export class EnrollmentsController {
    */
   @Patch('me/watch-progress')
   @UseGuards(EnrollmentGuard)
-  @EnrollmentCheck({ courseIdFrom: 'body' })
+  @EnrollmentCheck({ lessonIdFrom: 'body', courseIdFrom: 'body' })
   @HttpCode(HttpStatus.NO_CONTENT)
   async saveWatchProgress(
     @Req() req: any,
@@ -125,7 +125,7 @@ export class EnrollmentsController {
    */
   @Post('me/quiz')
   @UseGuards(EnrollmentGuard)
-  @EnrollmentCheck({ courseIdFrom: 'body' })
+  @EnrollmentCheck({ lessonIdFrom: 'body', courseIdFrom: 'body' })
   async submitQuiz(@Req() req: any, @Body() dto: SubmitQuizDto) {
     return this.submitQuizUseCase.execute(
       req.user.id,
@@ -150,7 +150,7 @@ export class EnrollmentsController {
    */
   @Get('me/quiz/:lessonId/last-attempt')
   @UseGuards(EnrollmentGuard)
-  @EnrollmentCheck({ courseIdFrom: 'query' })
+  @EnrollmentCheck({ lessonIdFrom: 'params', courseIdFrom: 'query' })
   async getLastQuizAttempt(
     @Req() req: any,
     @Param('lessonId', ParseUUIDPipe) lessonId: string,

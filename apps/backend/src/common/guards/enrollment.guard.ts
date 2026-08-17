@@ -15,6 +15,7 @@ import { Request } from 'express';
 import { ApiErrorCode, UserRole } from '@maris-nails/shared';
 import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
+import { Lesson } from '../../courses/entities/lessons.entity';
 
 /** Tipado del request tras pasar por AuthGuard('jwt'). */
 interface AuthenticatedRequest extends Request {
@@ -91,16 +92,27 @@ export class EnrollmentGuard implements CanActivate {
   }
 
   /**
-   * Resuelve el courseId según la estrategia del decorador.
+   * Resuelve el curso contra el que se verifica la matrícula.
    *
-   * Dos caminos posibles:
-   *   A) courseIdFrom → lee courseId directamente del body o params
-   *   B) lessonIdFrom → lee lessonId, busca la lección, extrae courseId
+   * Cuando el request trae un lessonId, el curso AUTORITATIVO es el de la
+   * lección, nunca el que declara el cliente. De lo contrario bastaría con
+   * enviar el lessonId de un curso ajeno junto al courseId de uno propio para
+   * operar sobre contenido no comprado.
    */
   private async resolveCourseId(
     request: AuthenticatedRequest,
     options: EnrollmentCheckOptions,
   ): Promise<string> {
+    if (options.lessonIdFrom) {
+      const lesson = await this.resolveLesson(request, options);
+
+      if (options.courseIdFrom) {
+        this.assertLessonBelongsToDeclaredCourse(request, options, lesson);
+      }
+
+      return lesson.courseId;
+    }
+
     if (options.courseIdFrom) {
       const source = this.getSource(request, options.courseIdFrom);
       const courseId = source?.courseId;
@@ -113,28 +125,60 @@ export class EnrollmentGuard implements CanActivate {
       return courseId;
     }
 
-    if (options.lessonIdFrom) {
-      const field = options.lessonIdField ?? 'lessonId';
-      const source = this.getSource(request, options.lessonIdFrom);
-      const lessonId = source?.[field];
-
-      if (!lessonId) {
-        throw new BadRequestException(
-          `${field} no encontrado en ${options.lessonIdFrom}`,
-        );
-      }
-
-      const lesson = await this.lessonGateway.findLesson(lessonId);
-      if (!lesson) {
-        throw new NotFoundException('Lección no encontrada');
-      }
-
-      return lesson.courseId;
-    }
-
     throw new BadRequestException(
       'EnrollmentCheck mal configurado: falta courseIdFrom o lessonIdFrom',
     );
+  }
+
+  private async resolveLesson(
+    request: AuthenticatedRequest,
+    options: EnrollmentCheckOptions,
+  ): Promise<Lesson> {
+    const field = options.lessonIdField ?? 'lessonId';
+    const source = this.getSource(request, options.lessonIdFrom!);
+    const lessonId = source?.[field];
+
+    if (!lessonId) {
+      throw new BadRequestException(
+        `${field} no encontrado en ${options.lessonIdFrom}`,
+      );
+    }
+
+    const lesson = await this.lessonGateway.findLesson(lessonId);
+    if (!lesson) {
+      throw new NotFoundException('Lección no encontrada');
+    }
+
+    return lesson;
+  }
+
+  /**
+   * El use case recibe el courseId del cliente y lo usa para leer y escribir
+   * progreso. Si no coincidiera con el curso real de la lección, el guard
+   * habría autorizado un curso y el use case operaría sobre otro.
+   */
+  private assertLessonBelongsToDeclaredCourse(
+    request: AuthenticatedRequest,
+    options: EnrollmentCheckOptions,
+    lesson: Lesson,
+  ): void {
+    const declaredCourseId = this.getSource(
+      request,
+      options.courseIdFrom!,
+    )?.courseId;
+
+    if (!declaredCourseId) {
+      throw new BadRequestException(
+        `courseId no encontrado en ${options.courseIdFrom}`,
+      );
+    }
+
+    if (declaredCourseId !== lesson.courseId) {
+      throw new ForbiddenException({
+        message: 'La lección no pertenece a ese curso',
+        code: ApiErrorCode.NOT_ENROLLED,
+      });
+    }
   }
 
   /** Resuelve body, params o query como Record<string, string>. */

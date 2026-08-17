@@ -1,11 +1,9 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EnrollmentsController } from './enrollments.controller';
-import { EnrollmentGateway } from './gateways/enrollment.gateway';
+import { EnrollmentAccessModule } from './enrollment-access.module';
 import { QuizAttemptGateway } from './gateways/quiz-attempt.gateway';
-import { EnrollmentsRepository } from './repositories/enrollments.repository';
 import { QuizAttemptRepository } from './repositories/quiz-attempt.repository';
-import { Enrollment } from './entities/enrollment.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from './entities/quiz-attempt-answer.entity';
 import { GetMyEnrollmentsUseCase } from './use-cases/get-my-enrollments.use-case';
@@ -27,7 +25,7 @@ import { ProgressModule } from '../progress/progress.module';
  *
  *   | Abstracción              | Implementación             | Responsabilidad           |
  *   |--------------------------|----------------------------|---------------------------|
- *   | EnrollmentGateway        | EnrollmentsRepository      | Matrículas (CRUD)         |
+ *   | EnrollmentGateway        | (EnrollmentAccessModule)   | Matrículas (CRUD)         |
  *   | LessonProgressGateway    | LessonProgressRepository   | Completar lecciones       |
  *   | WatchProgressGateway     | WatchProgressRepository    | Progreso de video         |
  *   | QuizAttemptGateway       | QuizAttemptRepository      | Intentos de exámenes      |
@@ -41,14 +39,15 @@ import { ProgressModule } from '../progress/progress.module';
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Enrollment, QuizAttempt, QuizAttemptAnswer]),
+    TypeOrmModule.forFeature([QuizAttempt, QuizAttemptAnswer]),
+    EnrollmentAccessModule,
     CoursesModule,
     ProgressModule,
   ],
   controllers: [EnrollmentsController],
   providers: [
     // --- Bindings: abstracción → implementación concreta ---
-    { provide: EnrollmentGateway, useClass: EnrollmentsRepository },
+    //     (EnrollmentGateway lo aporta EnrollmentAccessModule)
     { provide: QuizAttemptGateway, useClass: QuizAttemptRepository },
     // --- Guards ---
     EnrollmentOwnershipGuard,
@@ -63,6 +62,6 @@ import { ProgressModule } from '../progress/progress.module';
     GetLastQuizAttemptUseCase,
   ],
   // OrdersModule necesita EnrollmentGateway para matricular tras pago exitoso.
-  exports: [EnrollmentGateway],
+  exports: [EnrollmentAccessModule],
 })
 export class EnrollmentsModule {}

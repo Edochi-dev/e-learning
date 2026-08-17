@@ -22,6 +22,9 @@ import { Enrollment } from '../src/enrollments/entities/enrollment.entity';
  *
  * La expiración se aplica en EnrollmentGuard, en el borde HTTP: un unit test del
  * use case no la alcanza. Aquí se golpean las rutas reales.
+ *
+ * Cubre además el cruce lección↔curso: sin él, bastaba con enviar el lessonId de
+ * un curso ajeno junto al courseId de uno propio.
  */
 
 function configureApp(app: INestApplication): void {
@@ -190,6 +193,14 @@ describe('Acceso temporal a cursos (e2e)', () => {
       .expect(403);
   });
 
+  it('RECHAZA leer el quiz de un curso vencido', async () => {
+    const agent = await loginAsStudent();
+
+    await agent
+      .get(`/courses/${expiredCourseId}/lessons/${expiredLessonId}/quiz`)
+      .expect(403);
+  });
+
   // ──────────────────────────────────────────────────────────────
   // No se rompe lo que debe seguir funcionando
   // ──────────────────────────────────────────────────────────────
@@ -214,6 +225,21 @@ describe('Acceso temporal a cursos (e2e)', () => {
     expect(body.map((e) => e.course.id)).toEqual(
       expect.arrayContaining([expiredCourseId, activeCourseId]),
     );
+  });
+
+  // ──────────────────────────────────────────────────────────────
+  // Cruce lección ↔ curso
+  // ──────────────────────────────────────────────────────────────
+
+  it('RECHAZA una lección de un curso ajeno aunque el courseId declarado sea válido', async () => {
+    const agent = await loginAsStudent();
+
+    // courseId de un curso con acceso vigente + lessonId de otro curso: el guard
+    // debe resolver el curso desde la LECCIÓN, no creerle al cliente.
+    await agent
+      .post('/enrollments/me/progress')
+      .send({ lessonId: expiredLessonId, courseId: activeCourseId })
+      .expect(403);
   });
 
   // ──────────────────────────────────────────────────────────────

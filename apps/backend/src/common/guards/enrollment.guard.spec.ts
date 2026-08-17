@@ -270,6 +270,57 @@ describe('EnrollmentGuard', () => {
     );
   });
 
+  // ── Cruce lección ↔ curso declarado ────────────────────────────
+
+  /**
+   * El agujero que cierra este caso: sin la comprobación, bastaba con enviar el
+   * lessonId de un curso ajeno junto al courseId de un curso propio para marcar
+   * progreso y responder quizzes de contenido no comprado.
+   */
+  it('rechaza si la lección no pertenece al curso declarado por el cliente', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      lessonIdFrom: 'body',
+      courseIdFrom: 'body',
+    });
+    lessonGateway.findLesson.mockResolvedValue({
+      id: 'l-de-curso-ajeno',
+      courseId: 'curso-no-comprado',
+    } as unknown as Lesson);
+
+    const ctx = mockContext({
+      user: { id: 'u-1' },
+      body: { lessonId: 'l-de-curso-ajeno', courseId: 'curso-propio' },
+      params: {},
+      query: {},
+    });
+
+    await expect(guard.canActivate(ctx)).rejects.toThrow(ForbiddenException);
+    // Ni siquiera llega a mirar la matrícula: el request es incoherente.
+    // eslint-disable-next-line @typescript-eslint/unbound-method
+    expect(enrollmentGateway.findByUserAndCourse).not.toHaveBeenCalled();
+  });
+
+  it('deja pasar cuando la lección sí pertenece al curso declarado', async () => {
+    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue({
+      lessonIdFrom: 'body',
+      courseIdFrom: 'body',
+    });
+    lessonGateway.findLesson.mockResolvedValue({
+      id: 'l-1',
+      courseId: 'c-1',
+    } as unknown as Lesson);
+    enrollmentGateway.findByUserAndCourse.mockResolvedValue(enrollment());
+
+    const ctx = mockContext({
+      user: { id: 'u-1' },
+      body: { lessonId: 'l-1', courseId: 'c-1' },
+      params: {},
+      query: {},
+    });
+
+    await expect(guard.canActivate(ctx)).resolves.toBe(true);
+  });
+
   // ── Vencimiento del acceso ─────────────────────────────────────
 
   it('rechaza una matrícula vencida con el código ENROLLMENT_EXPIRED', async () => {
