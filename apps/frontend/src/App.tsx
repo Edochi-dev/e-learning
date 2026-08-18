@@ -30,6 +30,8 @@ import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
 import { CreateCoursePage } from './pages/admin/CreateCoursePage';
 import { EditCoursePage } from './pages/admin/EditCoursePage';
 import { CourseStudentsPage } from './pages/admin/CourseStudentsPage';
+import { CourseInvitationsPage } from './pages/admin/CourseInvitationsPage';
+import { RedeemInvitationPage } from './pages/RedeemInvitationPage';
 import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
 import { CreateCertificateTemplatePage } from './pages/admin/CreateCertificateTemplatePage';
 import { EditCertificateTemplatePage } from './pages/admin/EditCertificateTemplatePage';
@@ -46,6 +48,7 @@ import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
 import { HttpScheduleGateway } from './gateways/HttpScheduleGateway';
+import { HttpInvitationGateway } from './gateways/HttpInvitationGateway';
 import { smoothScrollToElement, getHeaderOffset } from './lib/smoothScroll';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { ScrollToTop } from './components/ScrollToTop';
@@ -82,6 +85,7 @@ function AppContent() {
   const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
   const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL), []);
   const scheduleGateway = useMemo(() => new HttpScheduleGateway(API_URL), []);
+  const invitationGateway = useMemo(() => new HttpInvitationGateway(API_URL), []);
 
   return (
     <>
@@ -118,6 +122,9 @@ function AppContent() {
           {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/registro" element={<RegisterPage />} />
+          {/* Fuera del ComingSoonGuard a propósito: quien recibe una invitación
+              debe poder entrar aunque el sitio siga en modo próximamente. */}
+          <Route path="/invitacion/:token" element={<RedeemInvitationPage gateway={invitationGateway} authGateway={authGateway} />} />
           <Route path="/recuperar" element={<ForgotPasswordPage />} />
           <Route path="/restablecer" element={<ResetPasswordPage />} />
           <Route path="/certificados/buscar" element={<CertificateLookupPage gateway={certificateGateway} />} />
@@ -147,6 +154,7 @@ function AppContent() {
             <Route path="/admin/courses/new" element={<CreateCoursePage gateway={courseGateway} />} />
             <Route path="/admin/courses/:courseId/edit" element={<EditCoursePage gateway={courseGateway} />} />
             <Route path="/admin/cursos/:courseId/alumnas" element={<CourseStudentsPage gateway={enrollmentGateway} courseGateway={courseGateway} />} />
+            <Route path="/admin/cursos/:courseId/invitaciones" element={<CourseInvitationsPage gateway={invitationGateway} courseGateway={courseGateway} />} />
             <Route path="/admin/certificados" element={<CertificatesAdminPage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/nueva" element={<CreateCertificateTemplatePage gateway={certificateGateway} />} />
             <Route path="/admin/certificados/plantillas/:id/editar" element={<EditCertificateTemplatePage gateway={certificateGateway} />} />

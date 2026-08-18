@@ -149,6 +149,14 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
                                     Alumnas
                                 </Link>
 
+                                <Link
+                                    to={`/admin/cursos/${course.id}/invitaciones`}
+                                    className="admin-course-students"
+                                    aria-label={`Invitaciones de ${course.title}`}
+                                >
+                                    Invitaciones
+                                </Link>
+
                                 <button
                                     className={`admin-course-delete ${confirmingId === course.id ? 'admin-course-delete--confirm' : ''}`}
                                     onClick={() => handleDeleteClick(course.id)}

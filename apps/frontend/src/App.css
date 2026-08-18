@@ -4373,6 +4373,171 @@ input:checked+.slider .icon-moon {
   }
 }
 
+/* ==========================================================================
+   INVITACIONES — canje (alumna) y generación (admin)
+   ========================================================================== */
+
+.invitation-page {
+  display: flex;
+  justify-content: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.invitation-card {
+  width: 100%;
+  max-width: 520px;
+  padding: var(--space-6);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.invitation-card--error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.invitation-card__eyebrow {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.invitation-card__course {
+  margin: var(--space-2) 0 var(--space-4);
+  font-family: var(--font-heading);
+  color: var(--primary);
+}
+
+.invitation-card__thumb {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+
+.invitation-card__desc {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
+.invitation-card__access {
+  display: inline-block;
+  margin: var(--space-3) 0 var(--space-5);
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius-full);
+  background: rgba(205, 158, 85, 0.15);
+  border: 1px solid var(--border-strong);
+  color: var(--gold-dark);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.invitation-card__hint {
+  margin-top: var(--space-5);
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.invitation-form {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.invitation-form__error {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 3px solid rgba(239, 68, 68, 0.6);
+  color: #991b1b;
+  font-size: 0.85rem;
+}
+
+[data-theme='dark'] .invitation-form__error {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+}
+
+/* ── Panel admin ── */
+
+.invitation-generator {
+  margin-top: var(--space-5);
+}
+
+.invitation-fresh {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.invitation-fresh__warning {
+  padding: 0.7rem 0.9rem;
+  border-radius: var(--radius-sm);
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  color: #92400e;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .invitation-fresh__warning {
+  color: #fde68a;
+}
+
+.invitation-fresh__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.invitation-fresh__row:last-child {
+  border-bottom: none;
+}
+
+.invitation-fresh__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  flex: 1;
+}
+
+/* El enlace es largo: que rompa en vez de desbordar la tarjeta. */
+.invitation-fresh__url {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+.invitation-fresh__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.invitation-list__title {
+  margin-top: var(--space-8);
+  font-size: 1.1rem;
+}
+
 /* Texto de ayuda bajo un campo de formulario admin. */
 .form-hint {
   display: block;
