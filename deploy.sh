@@ -62,6 +62,24 @@ if [ "$BACKUP_COUNT" -gt 10 ]; then
 fi
 
 # ============================================================
+#  PASO 1b: Backup de los archivos subidos
+# ============================================================
+#  El pg_dump de arriba respalda la base de datos; esto respalda
+#  los archivos, que viven solo en disco. Va ANTES del pull por
+#  el mismo motivo que el dump: si algo del despliegue los toca,
+#  la copia ya está hecha.
+#
+#  OJO: esto protege el DESPLIEGUE, no el día a día. Entre un
+#  deploy y el siguiente pueden pasar semanas de certificados
+#  emitidos sin respaldar — por eso el mismo script debe estar
+#  además en cron a diario.
+echo "============================================"
+echo "  BACKUP: Respaldando archivos subidos..."
+echo "============================================"
+"$PROJECT_DIR/backup-files.sh"
+echo ""
+
+# ============================================================
 #  PASO 2: Pull de cambios
 # ============================================================
 cd "$PROJECT_DIR"
