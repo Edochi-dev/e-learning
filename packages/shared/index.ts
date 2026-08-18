@@ -485,3 +485,33 @@ export const ApiErrorCode = {
 } as const;
 
 export type ApiErrorCode = typeof ApiErrorCode[keyof typeof ApiErrorCode];
+
+/**
+ * InvitationStatus — En qué situación está un enlace de invitación.
+ *
+ * Los cuatro motivos por los que un enlace puede no servir se distinguen
+ * explícitamente porque la alumna necesita saber cuál le tocó: "ya lo usaste"
+ * y "caducó" piden acciones distintas, y un mensaje genérico la deja escribiendo
+ * por WhatsApp para preguntar.
+ */
+export const InvitationStatus = {
+    VALID: 'valid',
+    REDEEMED: 'redeemed',
+    REVOKED: 'revoked',
+    EXPIRED: 'expired',
+} as const;
+
+export type InvitationStatus = typeof InvitationStatus[keyof typeof InvitationStatus];
+
+/** Lo que el endpoint público devuelve al abrir un enlace de invitación. */
+export interface InvitationPreview {
+    status: InvitationStatus;
+    course: {
+        id: string;
+        title: string;
+        description: string;
+        thumbnailUrl: string | null;
+    };
+    /** Días de acceso que otorgará el canje. null = permanente. */
+    accessDurationDays: number | null;
+}

@@ -11,6 +11,7 @@ import { CoursesModule } from './courses/courses.module';
 import { UsersModule } from './users/users.module';
 import { VideosModule } from './videos/videos.module';
 import { EnrollmentsModule } from './enrollments/enrollments.module';
+import { InvitationsModule } from './invitations/invitations.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CorrectionsModule } from './corrections/corrections.module';
@@ -87,6 +88,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     UsersModule,
     VideosModule,
     EnrollmentsModule,
+    InvitationsModule,
     OrdersModule,
     CertificatesModule,
     NotificationsModule,

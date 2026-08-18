@@ -57,6 +57,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
     RequestPasswordResetUseCase,
     ResetPasswordUseCase,
   ],
-  exports: [UserGateway],
+  exports: [UserGateway, TokenGateway],
 })
 export class UsersModule {}
