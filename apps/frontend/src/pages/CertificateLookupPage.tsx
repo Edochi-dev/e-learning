@@ -14,11 +14,12 @@ interface Props {
  */
 export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
     const [number, setNumber] = useState('');
+    const [name, setName] = useState('');
     const { lookup, loading, error } = useCertificateLookup(gateway);
 
     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        lookup(number);
+        lookup(number, name);
     }
 
     return (
@@ -31,7 +32,7 @@ export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
                     Busca tu Certificado
                 </h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                    Ingresa el ID de tu certificado tal como aparece en el documento recibido.
+                    Ingresa el número y el nombre tal como aparecen en el documento.
                     Por ejemplo: <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>MR-00001</span>
                 </p>
             </div>
@@ -57,6 +58,23 @@ export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
                             style={{ width: '100%', fontFamily: 'monospace', fontSize: '1.1rem', textTransform: 'uppercase' }}
                             autoFocus
                         />
+                    </div>
+
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 600, fontSize: '0.9rem' }}>
+                            Nombre del titular
+                        </label>
+                        <input
+                            type="text"
+                            className="form-input"
+                            placeholder="Tal como aparece en el certificado"
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            style={{ width: '100%', fontSize: '1.05rem' }}
+                        />
+                        <p style={{ margin: '0.5rem 0 0', color: 'var(--text-muted)', fontSize: '0.82rem', lineHeight: 1.5 }}>
+                            No hace falta acertar con tildes ni mayúsculas.
+                        </p>
                     </div>
 
                     {error && (

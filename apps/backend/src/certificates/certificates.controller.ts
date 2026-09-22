@@ -42,6 +42,7 @@ import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate
 import type { CertAction } from './use-cases/delete-certificate-template.use-case';
 import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
+import { LookupCertificateDto } from './dto/lookup-certificate.dto';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 import { CertificateGateway } from './gateways/certificate.gateway';
 
@@ -235,8 +236,8 @@ export class CertificatesController {
   @Get('certificates/lookup')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { ttl: 60000, limit: 20 } })
-  lookupCertificate(@Query('number') number: string) {
-    return this.lookupCertificateUseCase.execute(number ?? '');
+  lookupCertificate(@Query() query: LookupCertificateDto) {
+    return this.lookupCertificateUseCase.execute(query.number, query.name);
   }
 
   @Get('certificates/:id')

@@ -154,9 +154,10 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async lookupByNumber(certificateNumber: string): Promise<{ id: string }> {
+    async lookupByNumber(certificateNumber: string, recipientName: string): Promise<{ id: string }> {
         const url = new URL(`${this.baseUrl}/certificates/lookup`);
         url.searchParams.set('number', certificateNumber);
+        url.searchParams.set('name', recipientName);
         const res = await fetch(url.toString());
         if (!res.ok) throw new Error('Certificado no encontrado');
         return res.json();
