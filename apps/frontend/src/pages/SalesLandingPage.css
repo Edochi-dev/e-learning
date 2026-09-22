@@ -17,8 +17,11 @@
    rosa, no un color nuevo. */
 
 .sl {
-    --brand-strong: #b0246f;
-    --brand-soft: rgba(232, 67, 147, 0.09);
+    /* Cálido a propósito: el magenta oscuro que había antes tenía tanto azul
+       que los resaltados se leían morados. Este es el tono más claro que
+       todavía llega a 4,5:1 sobre su fondo, el listón del texto de cuerpo. */
+    --brand-strong: #cf2e4e;
+    --brand-soft: rgba(244, 63, 94, 0.10);
 
     --alert: #f43f5e;
     --alert-soft: #fff1f3;
@@ -33,8 +36,8 @@
 }
 
 [data-theme='dark'] .sl {
-    --brand-strong: #fab1c9;
-    --brand-soft: rgba(253, 121, 168, 0.16);
+    --brand-strong: #fda4af;
+    --brand-soft: rgba(251, 113, 133, 0.16);
 
     --alert: #fb7185;
     --alert-soft: rgba(251, 113, 133, 0.18);
