@@ -1,0 +1,956 @@
+/* Página de ventas — usa los tokens de App.css, nunca colores literales:
+   cualquier valor fijo aquí rompería el modo oscuro.
+   Estas dos paletas son propias de la página y por eso se declaran en `.sl` en
+   vez de en :root: fuera de aquí no existen, y no deben existir. Se redefinen
+   enteras bajo [data-theme='dark'] igual que el resto del sistema.
+
+   REPARTO, y conviene respetarlo:
+     · --brand (rosa)  → el acento por defecto. Ticks, marcas, flechas, precios.
+     · --gold          → lo premium y lo que se recomienda.
+     · --alert (vino)  → SOLO aviso: el recuadro de cupos, la cinta de anuncio
+       y el degradado de los botones.
+
+   El aviso es un coral de la MISMA familia que el rosa (matiz ~350° frente a
+   ~330°), no un color ajeno. Por eso armoniza: un tercer matiz saturado —el
+   naranja que había antes— competía con el rosa y el dorado, y cuando los tres
+   gritan igual ninguno destaca. Si se cambia, que siga siendo un vecino del
+   rosa, no un color nuevo. */
+
+.sl {
+    /* Cálido a propósito: el magenta oscuro que había antes tenía tanto azul
+       que los resaltados se leían morados. Este es el tono más claro que
+       todavía llega a 4,5:1 sobre su fondo, el listón del texto de cuerpo. */
+    --brand-strong: #cf2e4e;
+    --brand-soft: rgba(244, 63, 94, 0.10);
+
+    --alert: #f43f5e;
+    --alert-soft: #fff1f3;
+    --alert-border: #fda4af;
+    --alert-glow: rgba(244, 63, 94, 0.38);
+    --alert-ink: #ffffff;
+
+    /* El dorado más claro que aún despega del blanco encima (3,19:1). El
+       --gold normal se queda en 2,44:1 y el texto desaparece en el punto alto
+       de la animación; --gold-dark sí pasa, pero apaga el degradado. */
+    --gold-deep: #b8873f;
+}
+
+[data-theme='dark'] .sl {
+    --brand-strong: #fda4af;
+    --brand-soft: rgba(251, 113, 133, 0.16);
+
+    --alert: #fb7185;
+    --alert-soft: rgba(251, 113, 133, 0.18);
+    --alert-border: rgba(251, 113, 133, 0.5);
+    --alert-glow: rgba(251, 113, 133, 0.38);
+    --alert-ink: #4c0519;
+}
+
+.sl {
+    background: var(--bg);
+    color: var(--text-primary);
+    overflow-x: clip;
+    /* Deja sitio a la barra fija inferior. */
+    padding-bottom: 5.5rem;
+}
+
+.sl-container {
+    width: min(1120px, 100% - 2.5rem);
+    margin-inline: auto;
+}
+
+.sl-container--narrow {
+    width: min(760px, 100% - 2.5rem);
+}
+
+/* Los degradados animados van SIEMPRE en `alternate`: recorren la paleta de
+   ida y la desandan de vuelta. Sin eso, al llegar al final saltan de golpe al
+   color inicial — el corte que se veía antes. */
+
+@keyframes sl-shift {
+    to { background-position: 100% 50%; }
+}
+
+@keyframes sl-slide {
+    to { transform: translateX(-50%); }
+}
+
+/* ── Barra superior de anuncio ────────────────────────── */
+
+.sl-announce {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    overflow: hidden;
+    padding: 0.6rem 0;
+    background: linear-gradient(90deg, var(--primary), var(--alert), var(--gold-deep), var(--alert), var(--primary));
+    background-size: 250% 100%;
+    animation: sl-shift 9s ease-in-out infinite alternate;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+}
+
+.sl-announce__track {
+    display: flex;
+    width: max-content;
+    animation: sl-slide 22s linear infinite;
+}
+
+/* min-width en vez de width: si el texto no llega a llenar la ventana —lo que
+   pasa en escritorio— el grupo se estira hasta el ancho completo y space-around
+   reparte las copias de borde a borde. Si sí la llena —móvil—, manda el
+   contenido. Los dos grupos miden igual en ambos casos, que es lo que hace que
+   el translateX(-50%) empalme sin salto. */
+.sl-announce__group {
+    flex: 0 0 auto;
+    min-width: 100vw;
+    display: flex;
+    justify-content: space-around;
+    gap: 3rem;
+    padding-right: 3rem;
+}
+
+/* ── Hero ─────────────────────────────────────────────── */
+
+.sl-hero {
+    position: relative;
+    padding: clamp(2.5rem, 7vw, 5rem) 0 clamp(2.5rem, 6vw, 4rem);
+    text-align: center;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    isolation: isolate;
+}
+
+/* Halo que respira detrás del titular. */
+.sl-hero__glow {
+    position: absolute;
+    inset: -30% 0 auto 50%;
+    z-index: -1;
+    width: min(900px, 120vw);
+    aspect-ratio: 1;
+    transform: translateX(-50%);
+    background: radial-gradient(circle, var(--primary-glow), transparent 62%);
+    animation: sl-breathe 7s ease-in-out infinite;
+}
+
+@keyframes sl-breathe {
+    0%, 100% { opacity: 0.75; transform: translateX(-50%) scale(1); }
+    50%      { opacity: 1;    transform: translateX(-50%) scale(1.12); }
+}
+
+.sl-eyebrow {
+    display: inline-block;
+    margin: 0 0 1.25rem;
+    padding: 0.4rem 1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    background: var(--bg-elevated);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    box-shadow: var(--shadow-sm);
+}
+
+.sl-hero__title {
+    margin: 0 auto 1.25rem;
+    max-width: 18ch;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: clamp(2.1rem, 6vw, 4rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+}
+
+.sl-hero__title em {
+    display: inline-block;
+    font-family: var(--font-heading);
+    font-style: normal;
+    font-weight: 400;
+    /* La Kaushan Script tiene ojo pequeño: sin esto se ve menor que la DM Sans. */
+    font-size: 1.15em;
+    line-height: 1;
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-deep));
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: sl-shift 6s ease-in-out infinite alternate;
+}
+
+.sl-hero__sub {
+    margin: 0 auto clamp(2rem, 4vw, 2.75rem);
+    max-width: 58ch;
+    color: var(--text-secondary);
+    font-size: clamp(1rem, 2vw, 1.18rem);
+    line-height: 1.65;
+}
+
+.sl-hero__actions { margin-top: 2rem; }
+
+/* ── Cifras ───────────────────────────────────────────── */
+
+.sl-stats {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: clamp(1.5rem, 6vw, 4rem);
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+.sl-stat { display: grid; gap: 0.2rem; }
+
+.sl-stat__value {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: var(--primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.sl-stat__label {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+}
+
+/* ── Video ────────────────────────────────────────────── */
+
+.sl-video {
+    position: relative;
+    display: block;
+    width: 100%;
+    max-width: 820px;
+    margin-inline: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-xl);
+}
+
+.sl-video__frame { width: 100%; height: 100%; border: 0; }
+
+.sl-video__facade {
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sl-video__facade:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-glow);
+}
+
+.sl-video__thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.sl-video__play {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-content: center;
+    font-size: 1.75rem;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.sl-video__play::before {
+    content: '';
+    position: absolute;
+    inset: 50% auto auto 50%;
+    width: 5rem;
+    height: 5rem;
+    transform: translate(-50%, -50%);
+    border-radius: var(--radius-full);
+    background: var(--primary);
+    animation: sl-pulse 2.4s ease-out infinite;
+}
+
+@keyframes sl-pulse {
+    0%   { box-shadow: 0 0 0 0 var(--primary-glow); }
+    70%  { box-shadow: 0 0 0 1.75rem transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+.sl-video--pending {
+    display: grid;
+    place-content: center;
+    gap: 0.75rem;
+    text-align: center;
+    color: var(--text-muted);
+    border-style: dashed;
+}
+
+.sl-video__pending-icon { font-size: 2.5rem; }
+
+/* ── Llamada a la acción ──────────────────────────────── */
+
+.sl-cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.1rem 2.5rem;
+    overflow: hidden;
+    border-radius: var(--radius-full);
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-deep), var(--alert), var(--primary));
+    background-size: 250% 100%;
+    color: #fff;
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-decoration: none;
+    box-shadow: 0 8px 32px var(--alert-glow);
+    animation:
+        sl-throb 2.8s ease-in-out infinite,
+        sl-shift 7s ease-in-out infinite alternate;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Destello que barre el botón cada pocos segundos. */
+.sl-cta::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 -60%;
+    width: 45%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-20deg);
+    animation: sl-sweep 3.5s ease-in-out infinite;
+}
+
+@keyframes sl-throb {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.035); }
+}
+
+@keyframes sl-sweep {
+    0%, 55%   { left: -60%; }
+    85%, 100% { left: 130%; }
+}
+
+.sl-cta:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-xl), 0 8px 40px var(--alert-glow);
+    animation-play-state: paused;
+}
+
+.sl-cta__icon { font-size: 1.15em; }
+
+.sl-cta__hint {
+    margin: 0.85rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* ── Palabras clave ───────────────────────────────────── */
+
+.sl-mark {
+    padding: 0.08em 0.28em;
+    border-radius: 0.28em;
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    font-weight: 700;
+}
+
+/* ── Secciones ────────────────────────────────────────── */
+
+.sl-section { padding: clamp(3rem, 7vw, 5rem) 0; }
+
+.sl-section--alt {
+    background: var(--surface);
+    border-block: 1px solid var(--border);
+}
+
+.sl-section__title {
+    margin: 0 0 1rem;
+    text-align: center;
+    font-family: var(--font-body);
+    font-weight: 800;
+    font-size: clamp(1.6rem, 4vw, 2.5rem);
+    letter-spacing: -0.02em;
+}
+
+.sl-section__intro {
+    margin: 0 auto clamp(2rem, 4vw, 2.75rem);
+    max-width: 56ch;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: clamp(1rem, 2vw, 1.1rem);
+    line-height: 1.65;
+}
+
+/* ── Cinta deslizante ─────────────────────────────────── */
+
+.sl-marquee {
+    overflow: hidden;
+    padding: 0.9rem 0;
+    background: var(--text-primary);
+    color: var(--bg);
+    border-block: 1px solid var(--border-strong);
+}
+
+.sl-marquee__track {
+    display: flex;
+    width: max-content;
+    animation: sl-slide 26s linear infinite;
+}
+
+.sl-marquee__group { display: flex; flex-shrink: 0; }
+
+.sl-marquee__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 2rem;
+    padding-right: 2rem;
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sl-marquee__item i { font-style: normal; color: var(--gold); }
+
+/* ── Lo que ganas ─────────────────────────────────────── */
+
+.sl-wins {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 0.9rem;
+}
+
+.sl-win {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 1.2rem 1.4rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sl-win:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.sl-win__tick {
+    flex-shrink: 0;
+    display: grid;
+    place-content: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: var(--radius-full);
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    font-weight: 800;
+    font-size: 0.9rem;
+}
+
+.sl-win p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ── Los 4 pilares ────────────────────────────────────── */
+
+.sl-modules {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.sl-module {
+    position: relative;
+    padding: 1.9rem 1.6rem 1.6rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sl-module:hover {
+    transform: translateY(-5px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-lg);
+}
+
+.sl-module__num {
+    position: absolute;
+    top: -0.9rem;
+    left: 1.6rem;
+    display: grid;
+    place-content: center;
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--primary), var(--gold));
+    color: #fff;
+    font-weight: 800;
+    font-size: 0.95rem;
+    box-shadow: var(--shadow-glow);
+}
+
+.sl-module__name {
+    margin: 1rem 0 0.9rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+}
+
+.sl-module__points {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+}
+
+.sl-module__points li {
+    position: relative;
+    padding-left: 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+
+.sl-module__points li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: var(--radius-full);
+    background: var(--gold);
+}
+
+/* ── Requisito de ingreso ─────────────────────────────── */
+
+.sl-requirement {
+    display: flex;
+    gap: 1.35rem;
+    align-items: flex-start;
+    padding: clamp(1.5rem, 4vw, 2.25rem);
+    border: 2px solid var(--gold);
+    border-radius: var(--radius-xl);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-gold);
+}
+
+.sl-requirement__icon { font-size: 2rem; line-height: 1; }
+
+.sl-requirement__title {
+    margin: 0 0 0.6rem;
+    font-family: var(--font-body);
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: var(--gold-dark);
+}
+
+.sl-requirement p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+/* ── Letra pequeña ────────────────────────────────────── */
+
+.sl-fineprint {
+    margin: 1.75rem auto 0;
+    max-width: 64ch;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    text-align: center;
+}
+
+/* ── Los dos grupos ───────────────────────────────────── */
+
+.sl-plans {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.sl-plan {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: clamp(1.75rem, 4vw, 2.5rem) clamp(1.35rem, 3vw, 2rem);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-xl);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.sl-plan:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); }
+
+/* El destacado se distingue por realce, nunca por rebajar al otro: la tarjeta
+   sin marco dorado sigue siendo una opción completa, no un descarte. */
+/* Dorada, no naranja: destacar una opción es recomendarla, no alarmar. */
+.sl-plan--featured {
+    border: 2px solid var(--gold);
+    box-shadow: var(--shadow-xl), 0 0 0 6px var(--gold-glow);
+}
+
+.sl-plan__badge {
+    align-self: flex-start;
+    margin-bottom: 1rem;
+    padding: 0.35rem 0.9rem;
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+}
+
+.sl-plan--featured .sl-plan__badge {
+    background: linear-gradient(120deg, var(--primary), var(--gold), var(--primary));
+    background-size: 220% 100%;
+    animation: sl-shift 7s ease-in-out infinite alternate;
+    border-color: transparent;
+    color: #fff;
+}
+
+.sl-plan__name {
+    margin: 0 0 0.4rem;
+    font-size: clamp(1.3rem, 3vw, 1.6rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+.sl-plan__tagline {
+    margin: 0 0 1.5rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
+.sl-plan__price {
+    margin: 0;
+    font-size: clamp(2.4rem, 6vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: var(--brand-strong);
+}
+
+.sl-plan--featured .sl-plan__price {
+    background: linear-gradient(120deg, var(--primary), var(--gold), var(--primary));
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: sl-shift 6s ease-in-out infinite alternate;
+}
+
+.sl-plan__price-note {
+    margin: 0.45rem 0 1.5rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.sl-plan__perks {
+    flex: 1;
+    margin: 0 0 1.75rem;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.8rem;
+}
+
+.sl-plan__perks li {
+    display: flex;
+    gap: 0.7rem;
+    align-items: flex-start;
+    color: var(--text-secondary);
+    line-height: 1.55;
+}
+
+.sl-plan__tick {
+    flex-shrink: 0;
+    color: var(--primary);
+    font-weight: 800;
+}
+
+/* Los extras comparten el mismo tick a propósito: cambiarles el símbolo
+   insinuaría que al otro grupo le faltan, y a ninguno le falta nada. Solo
+   cambia el color, y en dorado, que es el acento de "esto suma". */
+.sl-plan__perk--extra .sl-plan__tick { color: var(--gold-dark); }
+
+.sl-plan__perk--extra { color: var(--text-primary); }
+
+.sl-cta--plan {
+    width: 100%;
+    justify-content: center;
+    padding-inline: 1.25rem;
+    font-size: 1rem;
+}
+
+.sl-plan:not(.sl-plan--featured) .sl-cta--plan {
+    animation: sl-shift 7s ease-in-out infinite alternate;
+}
+
+.sl-plans__footer {
+    margin: 2.25rem auto 0;
+    max-width: 52ch;
+    text-align: center;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+/* ── Para quién ───────────────────────────────────────── */
+
+.sl-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.sl-list li {
+    position: relative;
+    padding-left: 2rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.sl-list--yes li::before {
+    content: '✓';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--primary);
+    font-weight: 800;
+}
+
+/* ── Testimonios ──────────────────────────────────────── */
+
+.sl-slider {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 0.9rem;
+    max-width: 860px;
+    margin-inline: auto;
+}
+
+.sl-slider__viewport {
+    overflow: hidden;
+    /* El carrusel se desplaza solo en horizontal; sin esto, el navegador
+       interpreta el arrastre lateral como scroll de la página y el gesto
+       nunca llega al manejador. */
+    touch-action: pan-y;
+}
+
+.sl-slider__track {
+    display: flex;
+    align-items: stretch;
+    transition: transform 0.45s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Cada diapositiva ocupa el ancho entero del visor: es lo que hace que
+   mover el carril un 100 % por índice caiga exactamente en la siguiente. */
+.sl-slider__track .sl-testimonial {
+    flex: 0 0 100%;
+    min-width: 0;
+}
+
+.sl-slider__arrow {
+    display: grid;
+    place-content: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    padding: 0 0 0.2rem;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-full);
+    background: var(--bg-elevated);
+    color: var(--primary);
+    font-size: 1.7rem;
+    line-height: 1;
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sl-slider__arrow:hover {
+    transform: scale(1.1);
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+    box-shadow: var(--shadow-glow);
+}
+
+.sl-slider__arrow:active { transform: scale(0.96); }
+
+.sl-slider__dots {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+}
+
+.sl-slider__dot {
+    width: 0.62rem;
+    height: 0.62rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-full);
+    background: var(--border-strong);
+    cursor: pointer;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+.sl-slider__dot--on {
+    width: 1.75rem;
+    background: var(--primary);
+}
+
+.sl-testimonial {
+    margin: 0;
+    padding: 1.75rem;
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    border-radius: var(--radius-lg);
+    background: var(--bg-elevated);
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.sl-testimonial__stars {
+    display: block;
+    margin-bottom: 0.9rem;
+    color: var(--gold);
+    letter-spacing: 0.15em;
+}
+
+.sl-testimonial blockquote {
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+    font-size: 1.02rem;
+    line-height: 1.65;
+}
+
+.sl-testimonial__result {
+    margin: 0 0 1.25rem;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-sm);
+    background: var(--brand-soft);
+    color: var(--brand-strong);
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.sl-testimonial figcaption { display: grid; gap: 0.15rem; font-size: 0.9rem; }
+
+.sl-testimonial figcaption span { color: var(--text-muted); }
+
+/* ── Cierre ───────────────────────────────────────────── */
+
+.sl-close {
+    padding: clamp(3rem, 7vw, 5rem) 0 clamp(3.5rem, 8vw, 5.5rem);
+    text-align: center;
+    background:
+        radial-gradient(ellipse 70% 60% at 50% 110%, var(--gold-glow), transparent 70%),
+        var(--bg);
+}
+
+.sl-scarcity {
+    position: relative;
+    margin: 0 auto 2.5rem;
+    max-width: 52ch;
+    padding: 1.6rem 1.35rem 1.1rem;
+    border: 2px dashed var(--alert-border);
+    border-radius: var(--radius-md);
+    background: var(--alert-soft);
+    color: var(--text-secondary);
+    font-size: 0.97rem;
+    line-height: 1.65;
+}
+
+.sl-scarcity__tag {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0.25rem 0.85rem;
+    border-radius: var(--radius-full);
+    background: var(--alert);
+    color: var(--alert-ink);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sl-close__title {
+    margin: 0 0 1rem;
+    font-family: var(--font-heading);
+    font-weight: 400;
+    font-size: clamp(2.1rem, 6vw, 3.4rem);
+    line-height: 1.2;
+    color: var(--primary);
+}
+
+.sl-close__body {
+    margin: 0 auto 2rem;
+    max-width: 48ch;
+    color: var(--text-secondary);
+    line-height: 1.65;
+}
+
+/* ── Barra fija inferior ──────────────────────────────── */
+
+.sl-sticky {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 45;
+    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom));
+    background: var(--bg-elevated);
+    border-top: 1px solid var(--border);
+    box-shadow: var(--shadow-xl);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), visibility 0.35s;
+}
+
+.sl-sticky--hidden {
+    transform: translateY(130%);
+    /* Fuera del alcance del tabulador mientras está escondida. */
+    visibility: hidden;
+}
+
+.sl-sticky .sl-cta {
+    display: flex;
+    width: min(420px, 100%);
+    margin-inline: auto;
+    justify-content: center;
+}
+
+/* ── Adaptaciones ─────────────────────────────────────── */
+
+@media (max-width: 640px) {
+    .sl-requirement { flex-direction: column; gap: 0.85rem; }
+
+    .sl-slider { gap: 0.4rem; }
+    .sl-slider__arrow { width: 2.4rem; height: 2.4rem; font-size: 1.45rem; }
+    .sl-testimonial { padding: 1.4rem 1.25rem; }
+}
