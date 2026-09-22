@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { useCountUp } from '../hooks/useCountUp';
 import { useAnyVisible } from '../hooks/useAnyVisible';
-import { SALES_LANDING, type SalesLandingStat, type SalesLandingPlan } from '../content/salesLanding';
+import { SALES_LANDING, type SalesLandingStat, type SalesLandingPlan, type SalesLandingTestimonial } from '../content/salesLanding';
 import './SalesLandingPage.css';
 
 const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
@@ -144,6 +144,97 @@ const PlanCard = ({ plan, whatsappTarget }: { plan: SalesLandingPlan; whatsappTa
         </a>
     </article>
 );
+
+/**
+ * Carrusel de casos de éxito.
+ *
+ * Uno a la vez: tres tarjetas apiladas son tres pantallas de móvil para algo
+ * que se lee en cinco segundos, y el resto de la página pierde el sitio.
+ *
+ * Las diapositivas inactivas se marcan `aria-hidden`: sin eso, un lector de
+ * pantalla leería los tres testimonios seguidos como si fueran texto corrido,
+ * que es justo la avalancha que el carrusel viene a evitar.
+ */
+const TestimonialSlider = ({ items }: { items: SalesLandingTestimonial[] }) => {
+    const [index, setIndex] = useState(0);
+    const touchStartX = useRef<number | null>(null);
+    const total = items.length;
+
+    if (total === 0) return null;
+
+    // El resto evita el índice negativo al retroceder desde el primero.
+    const go = (delta: number) => setIndex((i) => (i + delta + total) % total);
+
+    const onTouchStart = (e: React.TouchEvent) => {
+        touchStartX.current = e.touches[0].clientX;
+    };
+
+    const onTouchEnd = (e: React.TouchEvent) => {
+        if (touchStartX.current === null) return;
+        const delta = e.changedTouches[0].clientX - touchStartX.current;
+        // Por debajo del umbral es un dedo tembloroso al hacer scroll, no un gesto.
+        if (Math.abs(delta) > 45) go(delta < 0 ? 1 : -1);
+        touchStartX.current = null;
+    };
+
+    return (
+        <div className="sl-slider">
+            <button
+                type="button"
+                className="sl-slider__arrow"
+                onClick={() => go(-1)}
+                aria-label="Caso anterior"
+            >
+                ‹
+            </button>
+
+            <div
+                className="sl-slider__viewport"
+                onTouchStart={onTouchStart}
+                onTouchEnd={onTouchEnd}
+            >
+                <div
+                    className="sl-slider__track"
+                    style={{ transform: `translateX(-${index * 100}%)` }}
+                >
+                    {items.map((t, i) => (
+                        <figure className="sl-testimonial" key={i} aria-hidden={i !== index}>
+                            <span className="sl-testimonial__stars" aria-hidden="true">★★★★★</span>
+                            <blockquote>{t.quote}</blockquote>
+                            <p className="sl-testimonial__result">{t.result}</p>
+                            <figcaption>
+                                <strong>{t.author}</strong>
+                                <span>{t.detail}</span>
+                            </figcaption>
+                        </figure>
+                    ))}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                className="sl-slider__arrow"
+                onClick={() => go(1)}
+                aria-label="Caso siguiente"
+            >
+                ›
+            </button>
+
+            <div className="sl-slider__dots">
+                {items.map((_, i) => (
+                    <button
+                        key={i}
+                        type="button"
+                        className={`sl-slider__dot${i === index ? ' sl-slider__dot--on' : ''}`}
+                        onClick={() => setIndex(i)}
+                        aria-label={`Ir al caso ${i + 1} de ${total}`}
+                        aria-current={i === index}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
 
 export const SalesLandingPage = () => {
     useScrollReveal();
@@ -293,19 +384,7 @@ export const SalesLandingPage = () => {
             <section className="sl-section reveal">
                 <div className="sl-container">
                     <h2 className="sl-section__title">Lo que dicen las alumnas</h2>
-                    <div className="sl-testimonials">
-                        {c.testimonials.map((t, i) => (
-                            <figure key={i} className="sl-testimonial">
-                                <span className="sl-testimonial__stars" aria-hidden="true">★★★★★</span>
-                                <blockquote>{t.quote}</blockquote>
-                                <p className="sl-testimonial__result">{t.result}</p>
-                                <figcaption>
-                                    <strong>{t.author}</strong>
-                                    <span>{t.detail}</span>
-                                </figcaption>
-                            </figure>
-                        ))}
-                    </div>
+                    <TestimonialSlider items={c.testimonials} />
                 </div>
             </section>
 
