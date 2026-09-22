@@ -7,32 +7,37 @@
    REPARTO, y conviene respetarlo:
      · --brand (rosa)  → el acento por defecto. Ticks, marcas, flechas, precios.
      · --gold          → lo premium y lo que se recomienda.
-     · --warm (naranja) → SOLO aviso: el recuadro de cupos, la cinta de anuncio
-       y el degradado de los botones. Si el naranja aparece en todas partes deja
-       de avisar de nada, que es lo que pasaba antes. */
+     · --alert (vino)  → SOLO aviso: el recuadro de cupos, la cinta de anuncio
+       y el degradado de los botones.
+
+   El aviso es vino y no naranja a propósito. Un tercer matiz saturado compite
+   con el rosa y el dorado, y cuando los tres gritan igual ninguno destaca; el
+   vino es el MISMO matiz del rosa, oscurecido, así que armoniza por definición
+   y avisa por contraste de luminosidad, no de color. Si algún día se cambia,
+   que sea por otra profundización de la marca, no por un color nuevo. */
 
 .sl {
     --brand-strong: #b0246f;
     --brand-soft: rgba(232, 67, 147, 0.09);
 
-    --warm: #e8590c;
-    --warm-strong: #c2410c;
-    --warm-soft: #fff4ed;
-    --warm-border: #fdba74;
-    --warm-glow: rgba(232, 89, 12, 0.35);
-    --warm-ink: #ffffff;
+    --alert: #9f1239;
+    --alert-strong: #881337;
+    --alert-soft: #fff1f4;
+    --alert-border: #e9a8ba;
+    --alert-glow: rgba(159, 18, 57, 0.32);
+    --alert-ink: #ffffff;
 }
 
 [data-theme='dark'] .sl {
     --brand-strong: #fab1c9;
     --brand-soft: rgba(253, 121, 168, 0.16);
 
-    --warm: #fd9843;
-    --warm-strong: #ffc9a3;
-    --warm-soft: rgba(232, 89, 12, 0.18);
-    --warm-border: rgba(253, 152, 67, 0.42);
-    --warm-glow: rgba(253, 152, 67, 0.3);
-    --warm-ink: #2a1408;
+    --alert: #fb7185;
+    --alert-strong: #fecdd3;
+    --alert-soft: rgba(251, 113, 133, 0.16);
+    --alert-border: rgba(251, 113, 133, 0.42);
+    --alert-glow: rgba(251, 113, 133, 0.3);
+    --alert-ink: #4c0519;
 }
 
 .sl {
@@ -72,7 +77,9 @@
     z-index: 40;
     overflow: hidden;
     padding: 0.6rem 0;
-    background: linear-gradient(90deg, var(--primary), var(--warm), var(--gold), var(--warm), var(--primary));
+    /* --gold-dark y no --gold: el dorado claro con texto blanco encima da un
+       contraste de 2,2:1, ilegible. Mismo motivo en el botón y en el titular. */
+    background: linear-gradient(90deg, var(--primary), var(--alert), var(--gold-dark), var(--alert), var(--primary));
     background-size: 250% 100%;
     animation: sl-shift 9s ease-in-out infinite alternate;
     color: #fff;
@@ -162,7 +169,7 @@
     /* La Kaushan Script tiene ojo pequeño: sin esto se ve menor que la DM Sans. */
     font-size: 1.15em;
     line-height: 1;
-    background: linear-gradient(120deg, var(--primary), var(--warm), var(--gold));
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-dark));
     background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -289,14 +296,14 @@
     padding: 1.1rem 2.5rem;
     overflow: hidden;
     border-radius: var(--radius-full);
-    background: linear-gradient(120deg, var(--primary), var(--warm), var(--gold), var(--warm), var(--primary));
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-dark), var(--alert), var(--primary));
     background-size: 250% 100%;
     color: #fff;
     font-size: clamp(1rem, 2.2vw, 1.15rem);
     font-weight: 700;
     letter-spacing: -0.01em;
     text-decoration: none;
-    box-shadow: 0 8px 32px var(--warm-glow);
+    box-shadow: 0 8px 32px var(--alert-glow);
     animation:
         sl-throb 2.8s ease-in-out infinite,
         sl-shift 7s ease-in-out infinite alternate;
@@ -326,7 +333,7 @@
 
 .sl-cta:hover {
     transform: scale(1.05);
-    box-shadow: var(--shadow-xl), 0 8px 40px var(--warm-glow);
+    box-shadow: var(--shadow-xl), 0 8px 40px var(--alert-glow);
     animation-play-state: paused;
 }
 
@@ -868,9 +875,9 @@
     margin: 0 auto 2.5rem;
     max-width: 52ch;
     padding: 1.6rem 1.35rem 1.1rem;
-    border: 2px dashed var(--warm-border);
+    border: 2px dashed var(--alert-border);
     border-radius: var(--radius-md);
-    background: var(--warm-soft);
+    background: var(--alert-soft);
     color: var(--text-secondary);
     font-size: 0.97rem;
     line-height: 1.65;
@@ -883,8 +890,8 @@
     transform: translate(-50%, -50%);
     padding: 0.25rem 0.85rem;
     border-radius: var(--radius-full);
-    background: var(--warm);
-    color: var(--warm-ink);
+    background: var(--alert);
+    color: var(--alert-ink);
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
