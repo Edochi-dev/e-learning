@@ -1,14 +1,20 @@
 /**
- * Contenido de la página de ventas.
+ * Contenido de la página de ventas del Máster Educador Internacional.
  *
  * Vive separado de la maqueta porque el siguiente paso es servirlo desde la BD
  * con una pantalla de administración: cuando llegue ese momento, la página pasa
  * a recibir este mismo objeto desde un gateway y no cambia una sola línea de su
  * JSX. Mientras tanto, editar aquí y desplegar.
  *
- * ⚠️ Los campos marcados como PLACEHOLDER afirman un HECHO comprobable (cifras,
- * precios, garantías). Publicarlos sin sustituirlos por datos reales es
- * publicidad engañosa, y quien responde por ella es Maria.
+ * En los textos, **lo que va entre dobles asteriscos** se pinta resaltado. Lo
+ * interpreta el componente Highlight de la página.
+ *
+ * FUENTE: "Master Educador Online (Grabado con mentorias).pdf".
+ *
+ * ⚠️ El dossier insiste en que esto es una FORMACIÓN GRUPAL, no una mentoría
+ * privada, y el curso NO es reembolsable. Prometer aquí una cercanía que el
+ * programa no da deja a la alumna atrapada y a Maria expuesta. No subir el tono
+ * del acompañamiento por encima de lo que dice el dossier.
  */
 
 export interface SalesLandingStat {
@@ -19,27 +25,35 @@ export interface SalesLandingStat {
     label: string;
 }
 
-export interface SalesLandingBenefit {
-    icon: string;
-    title: string;
-    description: string;
+export interface SalesLandingModule {
+    number: string;
+    name: string;
+    points: string[];
 }
 
-export interface SalesLandingValueItem {
-    item: string;
-    worth: string;
-}
-
-export interface SalesLandingBonus {
-    icon: string;
-    title: string;
-    description: string;
-    worth: string;
-}
-
-export interface SalesLandingTransform {
-    before: string;
-    after: string;
+/**
+ * Un grupo del curso.
+ *
+ * REGLA DE REDACCIÓN, y es la que sostiene toda la sección: `perks` enumera
+ * SIEMPRE lo que ese grupo SÍ incluye. Nunca lo que le falta respecto al otro.
+ * Una lista con cruces convierte al grupo barato en el premio de consolación, y
+ * quien siente que se conformó es una alumna peor: exige más y recomienda menos.
+ * Cada grupo gana en algo distinto, y `tagline` dice en qué.
+ */
+export interface SalesLandingPlan {
+    id: string;
+    name: string;
+    badge: string;
+    /** En qué gana ESTE grupo. Todos ganan en algo. */
+    tagline: string;
+    featured: boolean;
+    price: string;
+    priceNote: string;
+    perks: string[];
+    /** Lo que este grupo suma sobre el otro, en positivo. */
+    extras: string[];
+    ctaLabel: string;
+    whatsappMessage: string;
 }
 
 export interface SalesLandingTestimonial {
@@ -47,11 +61,6 @@ export interface SalesLandingTestimonial {
     author: string;
     detail: string;
     result: string;
-}
-
-export interface SalesLandingFaq {
-    question: string;
-    answer: string;
 }
 
 export interface SalesLandingContent {
@@ -70,154 +79,192 @@ export interface SalesLandingContent {
     stats: SalesLandingStat[];
     marqueeWords: string[];
 
-    painTitle: string;
-    painPoints: string[];
-    painTurn: string;
+    winsTitle: string;
+    winsIntro: string;
+    wins: string[];
 
-    transforms: SalesLandingTransform[];
-    benefits: SalesLandingBenefit[];
+    modulesTitle: string;
+    modulesIntro: string;
+    modules: SalesLandingModule[];
 
-    valueStack: SalesLandingValueItem[];
-    totalWorth: string;
-    price: string;
-    priceNote: string;
+    requirementTitle: string;
+    requirementBody: string;
 
-    bonuses: SalesLandingBonus[];
-    guaranteeTitle: string;
-    guaranteeBody: string;
+    plansTitle: string;
+    plansIntro: string;
+    plans: SalesLandingPlan[];
+    plansFooter: string;
+    finePrint: string;
 
     forWhom: string[];
-    notForWhom: string[];
     testimonials: SalesLandingTestimonial[];
-    faqs: SalesLandingFaq[];
 
     scarcityNote: string;
     closingHeadline: string;
     closingBody: string;
-
-    exitTitle: string;
-    exitBody: string;
-    exitCtaLabel: string;
 }
 
 export const SALES_LANDING: SalesLandingContent = {
-    announcement: '🔥 Inscripciones abiertas · Cupos limitados por corrección personalizada',
+    announcement: '✨ INSCRIPCIONES ABIERTAS · 6 SEMANAS · 100 % ONLINE · CUPOS LIMITADOS',
 
     // Formato internacional sin '+', sin espacios ni guiones: lo exige wa.me.
     whatsappNumber: '000000000000',
-    whatsappMessage: 'Hola Maria, vi la página del curso y quiero información para inscribirme.',
+    whatsappMessage: 'Hola Maria, vi la página del Máster Educador Internacional y quiero información para inscribirme.',
 
     // Solo el identificador, no la URL completa.
     youtubeVideoId: 'REEMPLAZAR',
 
-    eyebrow: '✨ Formación profesional en uñas',
-    headline: 'Deja de cobrar barato por un trabajo',
-    headlineAccent: 'que ya haces bien',
+    eyebrow: 'Master Educador Elite',
+    headline: 'No te enseño a hacer uñas.',
+    headlineAccent: 'Te enseño a enseñar.',
     subheadline:
-        'Formación completa, corrección personalizada de TUS trabajos y certificado verificable. Para que dejes de competir por precio y empieces a cobrar lo que vale tu técnica.',
+        'Dominar la técnica te dio experiencia. Convertirla en **un método que otra persona pueda comprender, ejecutar y replicar** es lo que te convierte en educadora. Seis semanas para dar ese salto.',
 
-    ctaLabel: 'Quiero mi cupo ahora',
+    ctaLabel: 'Quiero mi cupo',
     ctaHint: 'Te responde Maria directamente · Sin compromiso',
 
-    // ⚠️ PLACEHOLDER — cifras reales de Maria antes de publicar.
+    // Cifras reales del dossier. Nada inventado.
     stats: [
-        { value: 0, prefix: '+', suffix: '', label: 'Alumnas formadas' },
-        { value: 0, prefix: '', suffix: '%', label: 'Terminan el curso' },
-        { value: 0, prefix: '', suffix: ' años', label: 'Enseñando' },
+        { value: 6, prefix: '', suffix: ' semanas', label: 'De formación' },
+        { value: 4, prefix: '', suffix: ' pilares', label: 'Contenido académico' },
+        { value: 2, prefix: '', suffix: '', label: 'Modalidades' },
     ],
 
     marqueeWords: [
-        'Acrílico esculpido',
-        'Nail art avanzado',
-        'Gel & semipermanente',
-        'Corrección 1 a 1',
-        'Certificado verificable',
-        'Clases grabadas',
+        'Andragogía',
+        'Oratoria y liderazgo',
+        'Manejo de grupos',
+        'Método de los 4 Pasos',
+        'Diagnóstico Causa–Efecto',
+        'Pricing estratégico',
+        'Aula digital',
+        'Marketing académico',
     ],
 
-    painTitle: '¿Te suena alguna de estas?',
-    painPoints: [
-        'Haces uñas bonitas, pero cuando ves el trabajo de otra sientes que al tuyo "le falta algo" y no sabes qué.',
-        'Cobras menos de lo que quisieras porque, en el fondo, no te sientes segura de tu acabado.',
-        'Aprendiste con videos sueltos de internet y te quedaron huecos que nadie te corrigió nunca.',
-        'Tu clienta te pide un diseño y le dices que no, no porque no puedas, sino porque no te atreves.',
-        'Llevas años haciendo uñas y no tienes ni un papel que lo respalde.',
-    ],
-    painTurn: 'Nada de eso se arregla viendo más videos. Se arregla con alguien que mire TU trabajo y te diga exactamente qué cambiar.',
-
-    transforms: [
-        { before: 'Copias diseños sin entender por qué funcionan', after: 'Entiendes la técnica y creas los tuyos' },
-        { before: 'Tu acabado "casi" queda profesional', after: 'Tu acabado se defiende solo en una foto' },
-        { before: 'Compites bajando el precio', after: 'Tu clienta paga lo que pides y vuelve' },
-        { before: 'Nadie respalda lo que sabes hacer', after: 'Tienes un certificado que se verifica en línea' },
+    winsTitle: 'Tu experiencia todavía no es una metodología',
+    winsIntro:
+        'Esto no es un curso técnico centrado en estructuras. Es una **formación pedagógica de nivel superior** para quien ya domina la técnica y ahora quiere dominar el arte de transmitirla.',
+    wins: [
+        'Un **método propio, replicable**, que otra persona puede seguir y ejecutar',
+        'Criterio para **diagnosticar el error de una alumna sin tocarle la mano**',
+        '**Oratoria y liderazgo** para sostener un grupo y a las alumnas difíciles',
+        'Saber **cuánto cobrar por tu tiempo** y cómo llenar tus propias formaciones',
+        'Manuales y aula digital **de alta gama**, diseñados con criterio profesional',
+        'Una **certificación profesional** que diferencia tu academia en el mercado',
     ],
 
-    benefits: [
-        {
-            icon: '🎥',
-            title: 'Clases grabadas, a tu ritmo',
-            description: 'Ves cada técnica las veces que necesites, desde el celular, sin horarios que cumplir.',
-        },
-        {
-            icon: '✍️',
-            title: 'Corrección personalizada',
-            description: 'Subes fotos de TU trabajo y recibes una revisión con lo que hay que ajustar. Esto es lo que no te da ningún video de YouTube.',
-        },
-        {
-            icon: '🎓',
-            title: 'Certificado verificable',
-            description: 'Con código de verificación en línea. Tu clienta entra a la web y comprueba que es auténtico.',
-        },
-        {
-            icon: '💬',
-            title: 'Te responde quien enseña',
-            description: 'Preguntas lo que no entiendes y te contesta Maria. Ni un bot, ni un foro abandonado.',
-        },
-    ],
+    modulesTitle: 'Los 4 pilares',
+    modulesIntro:
+        'Enseñar, comunicar, diseñar y **vender tu propia formación** con criterio profesional.',
 
-    // ⚠️ PLACEHOLDER — los "valor" deben ser lo que Maria cobraría de verdad
-    // por cada cosa suelta. Inventar cifras para inflar el total es engañoso.
-    valueStack: [
-        { item: 'Formación completa en video', worth: '$000' },
-        { item: 'Corrección personalizada de tus trabajos', worth: '$000' },
-        { item: 'Certificado verificable', worth: '$000' },
-        { item: 'Acompañamiento directo por WhatsApp', worth: '$000' },
-    ],
-    totalWorth: '$000',
-    price: '$000',
-    priceNote: 'Pago único · Sin mensualidades',
-
-    // ⚠️ PLACEHOLDER — bonos reales que Maria vaya a entregar de verdad.
-    bonuses: [
+    // ⚠️ REVISAR CON MARIA: el dossier agrupa las viñetas por página, no por
+    // módulo, así que este reparto es una interpretación razonable — no un dato
+    // literal. Confirmar antes de publicar.
+    modules: [
         {
-            icon: '📋',
-            title: 'Guía de precios',
-            description: 'Cómo calcular cuánto cobrar sin regalar tu trabajo ni espantar a la clienta.',
-            worth: '$000',
+            number: '01',
+            name: 'La Identidad de la Mentora',
+            points: [
+                'Andragogía: cómo enseñarle a personas adultas',
+                'Oratoria y liderazgo frente a un grupo',
+                'Manejo de grupos y de alumnas difíciles',
+            ],
         },
         {
-            icon: '📸',
-            title: 'Mini clase de fotos',
-            description: 'Cómo fotografiar tus uñas para que se vean como lo que son en Instagram.',
-            worth: '$000',
+            number: '02',
+            name: 'Ingeniería de la Instrucción',
+            points: [
+                'Método de los 4 Pasos para demostraciones perfectas',
+                'Diagnóstico “Causa–Efecto”: detectar errores sin tocar la mano',
+                'Planificación curricular y cronogramas de clase',
+            ],
+        },
+        {
+            number: '03',
+            name: 'Arquitectura Visual y Aula Digital',
+            points: [
+                'Creación de contenido pedagógico con inteligencia artificial',
+                'Diseño de manuales de alta gama para tus alumnas',
+            ],
+        },
+        {
+            number: '04',
+            name: 'Business & Marketing Académico',
+            points: [
+                'Pricing estratégico: cuánto cobrar por tu tiempo',
+                'Guiones de venta para llenar tus cursos',
+                'Legalidad, certificados y términos de uso',
+            ],
         },
     ],
 
-    // ⚠️ PLACEHOLDER — no publicar una garantía que no se vaya a cumplir.
-    guaranteeTitle: 'Garantía de satisfacción',
-    guaranteeBody:
-        '[Definir con Maria: plazo y condiciones reales. Si no va a haber garantía, borrar esta sección entera en vez de dejar una promesa vaga.]',
+    requirementTitle: 'Requisito de ingreso',
+    requirementBody:
+        'Debes **dominar previamente al menos una técnica** del área de uñas que quieras enseñar. Uña natural, nivelación, reconstrucción, estructuras, acrílico, gel, dual system, nail art… la que sea. Este Máster **no sustituye una formación técnica inicial**: aquí aprendes a enseñar lo que ya sabes hacer.',
+
+    plansTitle: 'Elige cómo quieres cursarlo',
+    plansIntro:
+        'Mismo programa, mismas evaluaciones, misma certificación. **Lo que cambia es el acompañamiento** — y cada grupo gana en algo distinto. En el video te cuento el detalle.',
+
+    plans: [
+        {
+            id: 'grabado',
+            name: 'Grupo grabado',
+            badge: 'A tu ritmo',
+            tagline: 'Gana en **libertad**: tú decides cuándo, dónde y a qué ritmo.',
+            featured: false,
+            price: 'USD 100',
+            priceNote: 'USD 50 de inscripción + USD 50 antes del inicio',
+            perks: [
+                'Los 4 pilares y el Laboratorio de criterio técnico',
+                'Clases, materiales y **evaluaciones corregidas**',
+                'Certificación verificable al aprobar',
+            ],
+            extras: [
+                'Clases **pregrabadas en la plataforma**, disponibles según la programación',
+                '**2 mentorías grupales en vivo** para profundizar y resolver dudas',
+                'Avanzas cuando puedes, **sin horarios que cumplir**',
+                'Repites cada clase **las veces que necesites**',
+            ],
+            ctaLabel: 'Quiero el grupo grabado',
+            whatsappMessage: 'Hola Maria, quiero información del MÁSTER EDUCADOR en el GRUPO GRABADO para inscribirme.',
+        },
+        {
+            id: 'vivo',
+            name: 'Grupo en vivo',
+            badge: 'Más cercanía',
+            // ⚠️ PLACEHOLDER — falta el dossier del grupo en vivo. Confirmar
+            // cada punto y el precio con Maria antes de publicar.
+            tagline: 'Gana en **cercanía**: Maria contigo, en directo.',
+            featured: true,
+            price: 'USD 000',
+            priceNote: 'Pago único · Cupos muy limitados',
+            perks: [
+                'Los 4 pilares y el Laboratorio de criterio técnico',
+                'Clases, materiales y **evaluaciones corregidas**',
+                'Certificación verificable al aprobar',
+            ],
+            extras: [
+                '**Clases en directo** con Maria: preguntas en el momento',
+                '**Acompañamiento por WhatsApp, día a día**',
+                '**Grupo cerrado y reducido**: más tiempo para cada participante',
+                'Cada clase queda grabada **30 días** desde su emisión',
+            ],
+            ctaLabel: 'Quiero el grupo en vivo',
+            whatsappMessage: 'Hola Maria, quiero información del MÁSTER EDUCADOR en el GRUPO EN VIVO para inscribirme.',
+        },
+    ],
+    plansFooter:
+        '¿No sabes cuál te conviene? **Escríbeme y lo vemos juntas.** Te digo con honestidad cuál encaja con tu tiempo y tu objetivo.',
+
+    finePrint:
+        'La inscripción se descuenta del valor total. La inscripción y el valor del curso no son reembolsables, y el curso no es transferible. En casos excepcionales y comprobables —por ejemplo, razones médicas documentadas— el monto puede reagendarse para una futura edición. El acceso a las clases está condicionado al pago total.',
 
     forWhom: [
-        'Ya haces uñas pero sientes que tu acabado no termina de verse profesional',
-        'Cobras menos de lo que quisieras porque no te sientes segura de tu técnica',
-        'Aprendiste viendo videos sueltos y te quedaron huecos',
-        'Quieres un certificado que respalde lo que ya sabes hacer',
-    ],
-
-    notForWhom: [
-        'Buscas un curso de fin de semana para "salir certificada" sin practicar',
-        'No estás dispuesta a subir tus trabajos para que te los corrijan',
+        'Eres **manicurista y dominas una técnica** que quieres enseñar de forma profesional',
+        'Tienes **una academia** y quieres profesionalizar tu forma de enseñar',
+        'Quieres **diferenciar tu marca** con una metodología propia y de prestigio',
+        'Ya das clases, pero **improvisas** y quieres un método que no dependa de la inspiración',
     ],
 
     // ⚠️ PLACEHOLDER — testimonios REALES, con permiso de la alumna.
@@ -225,56 +272,27 @@ export const SALES_LANDING: SalesLandingContent = {
         {
             quote: '[Testimonio real pendiente — pedirle a la alumna su texto y su permiso]',
             author: 'Nombre de la alumna',
-            detail: 'Curso · Ciudad',
+            detail: 'Edición · Ciudad',
             result: 'Resultado concreto',
         },
         {
             quote: '[Testimonio real pendiente — pedirle a la alumna su texto y su permiso]',
             author: 'Nombre de la alumna',
-            detail: 'Curso · Ciudad',
+            detail: 'Edición · Ciudad',
             result: 'Resultado concreto',
         },
         {
             quote: '[Testimonio real pendiente — pedirle a la alumna su texto y su permiso]',
             author: 'Nombre de la alumna',
-            detail: 'Curso · Ciudad',
+            detail: 'Edición · Ciudad',
             result: 'Resultado concreto',
         },
     ],
 
-    faqs: [
-        {
-            question: '¿Cuánto tiempo tengo acceso?',
-            answer: 'El acceso tiene una duración definida al momento de inscribirte, y te la confirmo por WhatsApp antes de que pagues. Dentro de ese periodo ves las clases las veces que quieras.',
-        },
-        {
-            question: '¿Necesito tener experiencia?',
-            answer: 'La formación asume que ya trabajas o practicas con uñas. Si estás empezando desde cero, escríbeme y te digo con honestidad si te conviene o si es mejor que esperes.',
-        },
-        {
-            question: '¿Cómo funciona la corrección de trabajos?',
-            answer: 'Subes fotos de tu práctica desde tu cuenta y recibes una revisión con lo que hay que ajustar. Por eso los cupos son limitados: corregir bien toma tiempo.',
-        },
-        {
-            question: '¿Cómo pago?',
-            answer: 'Escríbeme por WhatsApp y coordinamos el medio de pago que te quede mejor. Una vez confirmado, te llega tu enlace de acceso personal.',
-        },
-        {
-            question: '¿El certificado sirve?',
-            answer: 'Lleva un código de verificación en línea: cualquiera puede entrar a la web y comprobar que es auténtico y a nombre de quién está emitido.',
-        },
-        {
-            question: '¿Y si no tengo tiempo ahora?',
-            answer: 'Las clases quedan grabadas y las ves a tu ritmo. Lo que sí tiene tope son los cupos, porque la corrección personalizada la hago yo.',
-        },
-    ],
+    scarcityNote:
+        'Los cupos son limitados: cada edición lleva **evaluación individual** de cada participante, y eso **pone un tope real** a cuántas educadoras puedo acompañar a la vez. **Escríbeme para saber la próxima fecha disponible.**',
 
-    scarcityNote: 'Los cupos son limitados de verdad: cada alumna recibe corrección personalizada de sus trabajos, y eso pone un tope real a cuántas puedo acompañar a la vez.',
-
-    closingHeadline: 'Tu técnica ya vale. Falta que se note.',
-    closingBody: 'Escríbeme y te digo sin compromiso si esta formación es para ti. Si veo que no lo es, te lo digo.',
-
-    exitTitle: '¿Te vas sin preguntar?',
-    exitBody: 'Escríbeme y te digo en dos minutos si esta formación te sirve. Preguntar no cuesta nada y no te compromete a nada.',
-    exitCtaLabel: 'Va, pregunto',
+    closingHeadline: 'Tu talento te hizo artista, tu pedagogía te hará leyenda.',
+    closingBody:
+        'Escríbeme y vemos juntas cuál de los dos grupos te conviene. **Sin compromiso.**',
 };

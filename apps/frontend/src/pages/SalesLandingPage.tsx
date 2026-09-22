@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { useCountUp } from '../hooks/useCountUp';
-import { useExitIntent } from '../hooks/useExitIntent';
-import { SALES_LANDING, type SalesLandingStat } from '../content/salesLanding';
+import { useAnyVisible } from '../hooks/useAnyVisible';
+import { SALES_LANDING, type SalesLandingStat, type SalesLandingPlan } from '../content/salesLanding';
 import './SalesLandingPage.css';
 
 const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
@@ -10,6 +10,25 @@ const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
 function buildWhatsappUrl(number: string, message: string): string {
     return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
+
+/**
+ * Pinta **lo marcado entre dobles asteriscos** con el color de énfasis.
+ *
+ * El texto vive en un objeto de configuración que mañana llegará de la base de
+ * datos, así que no puede traer JSX. Un marcador dentro de la cadena deja que
+ * quien escribe el copy decida qué se resalta sin tocar la maqueta — y sin
+ * abrir la puerta a inyectar HTML, porque lo único que se interpreta son los
+ * asteriscos.
+ */
+const Highlight = ({ text }: { text: string }) => (
+    <>
+        {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+            part.startsWith('**') && part.endsWith('**')
+                ? <mark key={i} className="sl-mark">{part.slice(2, -2)}</mark>
+                : part,
+        )}
+    </>
+);
 
 /**
  * Fachada del video: pinta la miniatura y solo monta el iframe al pulsar.
@@ -72,19 +91,71 @@ const Stat = ({ stat }: { stat: SalesLandingStat }) => {
     );
 };
 
+/**
+ * Tarjeta de un grupo.
+ *
+ * `perks` y `extras` se pintan con el mismo tick: los extras solo cambian de
+ * color. Es deliberado — marcar los extras con otro símbolo insinuaría que a
+ * la otra tarjeta le faltan, y aquí ninguna carece de nada: cada una suma.
+ */
+const PlanCard = ({ plan, whatsappNumber }: { plan: SalesLandingPlan; whatsappNumber: string }) => (
+    <article className={`sl-plan${plan.featured ? ' sl-plan--featured' : ''}`}>
+        <span className="sl-plan__badge">{plan.badge}</span>
+        <h3 className="sl-plan__name">{plan.name}</h3>
+        <p className="sl-plan__tagline"><Highlight text={plan.tagline} /></p>
+
+        <p className="sl-plan__price">{plan.price}</p>
+        <p className="sl-plan__price-note">{plan.priceNote}</p>
+
+        <ul className="sl-plan__perks">
+            {plan.perks.map((perk) => (
+                <li key={perk}>
+                    <span className="sl-plan__tick" aria-hidden="true">✓</span>
+                    <span><Highlight text={perk} /></span>
+                </li>
+            ))}
+            {plan.extras.map((extra) => (
+                <li key={extra} className="sl-plan__perk--extra">
+                    <span className="sl-plan__tick" aria-hidden="true">✓</span>
+                    <span><Highlight text={extra} /></span>
+                </li>
+            ))}
+        </ul>
+
+        <a
+            href={buildWhatsappUrl(whatsappNumber, plan.whatsappMessage)}
+            className="sl-cta sl-cta--plan sl-cta--inline"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <span className="sl-cta__icon" aria-hidden="true">💬</span>
+            {plan.ctaLabel}
+        </a>
+    </article>
+);
+
 export const SalesLandingPage = () => {
     useScrollReveal();
 
     const c = SALES_LANDING;
     const whatsappUrl = buildWhatsappUrl(c.whatsappNumber, c.whatsappMessage);
-    const exiting = useExitIntent();
-    const [exitDismissed, setExitDismissed] = useState(false);
-    const showExitModal = exiting && !exitDismissed;
+
+    // La barra fija solo se asoma cuando ningún botón del contenido está a la
+    // vista: si no, la visitante ve el mismo botón dos veces a la vez.
+    const inlineCtaVisible = useAnyVisible('.sl-cta--inline');
+
+    // Los botones que viven en el contenido llevan además `sl-cta--inline`:
+    // es lo que observa useAnyVisible para decidir si esconder la barra fija.
+    const INLINE_VARIANTS = ['hero', 'close'];
 
     const cta = (variant: string, label = c.ctaLabel) => (
         <a
             href={whatsappUrl}
-            className={`sl-cta sl-cta--${variant}`}
+            className={[
+                'sl-cta',
+                `sl-cta--${variant}`,
+                INLINE_VARIANTS.includes(variant) ? 'sl-cta--inline' : '',
+            ].join(' ').trim()}
             target="_blank"
             rel="noopener noreferrer"
         >
@@ -97,8 +168,11 @@ export const SalesLandingPage = () => {
         <div className="sl">
             <div className="sl-announce">
                 <div className="sl-announce__track">
-                    <span>{c.announcement}</span>
-                    <span aria-hidden="true">{c.announcement}</span>
+                    {[0, 1].map((copy) => (
+                        <div className="sl-announce__group" key={copy} aria-hidden={copy === 1}>
+                            {[0, 1, 2].map((i) => <span key={i}>{c.announcement}</span>)}
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -110,7 +184,7 @@ export const SalesLandingPage = () => {
                     <h1 className="sl-hero__title">
                         {c.headline} <em>{c.headlineAccent}</em>
                     </h1>
-                    <p className="sl-hero__sub">{c.subheadline}</p>
+                    <p className="sl-hero__sub"><Highlight text={c.subheadline} /></p>
 
                     <VideoEmbed videoId={c.youtubeVideoId} />
 
@@ -138,96 +212,69 @@ export const SalesLandingPage = () => {
                 </div>
             </div>
 
-            {/* ─── DOLOR ────────────────────────────────────────── */}
-            <section className="sl-section sl-pain reveal">
-                <div className="sl-container sl-container--narrow">
-                    <h2 className="sl-section__title">{c.painTitle}</h2>
-                    <ul className="sl-pain__list">
-                        {c.painPoints.map((p) => (
-                            <li key={p}><span aria-hidden="true">😮‍💨</span>{p}</li>
-                        ))}
-                    </ul>
-                    <p className="sl-pain__turn">{c.painTurn}</p>
-                </div>
-            </section>
-
-            {/* ─── ANTES / DESPUÉS ──────────────────────────────── */}
-            <section className="sl-section sl-section--alt reveal">
+            {/* ─── LO QUE GANAS ─────────────────────────────────── */}
+            <section className="sl-section reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">Lo que cambia</h2>
-                    <div className="sl-transforms">
-                        {c.transforms.map((t) => (
-                            <div className="sl-transform" key={t.after}>
-                                <p className="sl-transform__before">{t.before}</p>
-                                <span className="sl-transform__arrow" aria-hidden="true">→</span>
-                                <p className="sl-transform__after">{t.after}</p>
+                    <h2 className="sl-section__title">{c.winsTitle}</h2>
+                    <p className="sl-section__intro"><Highlight text={c.winsIntro} /></p>
+                    <div className="sl-wins">
+                        {c.wins.map((w) => (
+                            <div className="sl-win" key={w}>
+                                <span className="sl-win__tick" aria-hidden="true">✓</span>
+                                <p><Highlight text={w} /></p>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ─── BENEFICIOS ───────────────────────────────────── */}
-            <section className="sl-section reveal">
+            {/* ─── LOS 4 PILARES ───────────────────────────────── */}
+            <section className="sl-section sl-section--alt reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">Qué incluye</h2>
-                    <div className="sl-benefits">
-                        {c.benefits.map((b) => (
-                            <article key={b.title} className="sl-benefit">
-                                <span className="sl-benefit__icon" aria-hidden="true">{b.icon}</span>
-                                <h3 className="sl-benefit__title">{b.title}</h3>
-                                <p className="sl-benefit__desc">{b.description}</p>
+                    <h2 className="sl-section__title">{c.modulesTitle}</h2>
+                    <p className="sl-section__intro"><Highlight text={c.modulesIntro} /></p>
+                    <div className="sl-modules">
+                        {c.modules.map((m) => (
+                            <article className="sl-module" key={m.number}>
+                                <span className="sl-module__num">{m.number}</span>
+                                <h3 className="sl-module__name">{m.name}</h3>
+                                <ul className="sl-module__points">
+                                    {m.points.map((pt) => <li key={pt}>{pt}</li>)}
+                                </ul>
                             </article>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ─── PILA DE VALOR + PRECIO ───────────────────────── */}
-            <section className="sl-section sl-section--alt reveal">
+            {/* ─── REQUISITO ───────────────────────────────────── */}
+            <section className="sl-section reveal">
                 <div className="sl-container sl-container--narrow">
-                    <h2 className="sl-section__title">Todo lo que te llevas</h2>
-                    <div className="sl-stack">
-                        {c.valueStack.map((v) => (
-                            <div className="sl-stack__row" key={v.item}>
-                                <span className="sl-stack__check" aria-hidden="true">✓</span>
-                                <span className="sl-stack__item">{v.item}</span>
-                                <s className="sl-stack__worth">{v.worth}</s>
-                            </div>
-                        ))}
-
-                        {c.bonuses.map((b) => (
-                            <div className="sl-stack__row sl-stack__row--bonus" key={b.title}>
-                                <span className="sl-stack__check" aria-hidden="true">{b.icon}</span>
-                                <span className="sl-stack__item">
-                                    <strong>BONO:</strong> {b.title}
-                                    <em>{b.description}</em>
-                                </span>
-                                <s className="sl-stack__worth">{b.worth}</s>
-                            </div>
-                        ))}
-
-                        <div className="sl-stack__total">
-                            <span>Valor total</span>
-                            <s>{c.totalWorth}</s>
-                        </div>
-                    </div>
-
-                    <div className="sl-price">
-                        <p className="sl-price__label">Tu inversión hoy</p>
-                        <p className="sl-price__amount">{c.price}</p>
-                        <p className="sl-price__note">{c.priceNote}</p>
-                        {cta('price')}
-                        <p className="sl-cta__hint">{c.ctaHint}</p>
-                    </div>
-
-                    <div className="sl-guarantee">
-                        <span className="sl-guarantee__seal" aria-hidden="true">🛡️</span>
+                    <div className="sl-requirement">
+                        <span className="sl-requirement__icon" aria-hidden="true">🔑</span>
                         <div>
-                            <h3>{c.guaranteeTitle}</h3>
-                            <p>{c.guaranteeBody}</p>
+                            <h2 className="sl-requirement__title">{c.requirementTitle}</h2>
+                            <p><Highlight text={c.requirementBody} /></p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* ─── LOS DOS GRUPOS ───────────────────────────────── */}
+            <section className="sl-section sl-section--alt reveal">
+                <div className="sl-container">
+                    <h2 className="sl-section__title">{c.plansTitle}</h2>
+                    <p className="sl-section__intro"><Highlight text={c.plansIntro} /></p>
+
+                    <div className="sl-plans">
+                        {c.plans.map((plan) => (
+                            <PlanCard key={plan.id} plan={plan} whatsappNumber={c.whatsappNumber} />
+                        ))}
+                    </div>
+
+                    <p className="sl-plans__footer"><Highlight text={c.plansFooter} /></p>
+
+                    <p className="sl-fineprint">{c.finePrint}</p>
                 </div>
             </section>
 
@@ -253,87 +300,33 @@ export const SalesLandingPage = () => {
 
             {/* ─── PARA QUIÉN ───────────────────────────────────── */}
             <section className="sl-section sl-section--alt reveal">
-                <div className="sl-container sl-fit">
-                    <div className="sl-fit__col">
-                        <h2 className="sl-fit__title">Esto es para ti si…</h2>
-                        <ul className="sl-list sl-list--yes">
-                            {c.forWhom.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                    </div>
-                    <div className="sl-fit__col">
-                        <h2 className="sl-fit__title">No es para ti si…</h2>
-                        <ul className="sl-list sl-list--no">
-                            {c.notForWhom.map((item) => <li key={item}>{item}</li>)}
-                        </ul>
-                    </div>
-                </div>
-            </section>
-
-            {/* ─── PREGUNTAS ────────────────────────────────────── */}
-            <section className="sl-section reveal">
                 <div className="sl-container sl-container--narrow">
-                    <h2 className="sl-section__title">Preguntas frecuentes</h2>
-                    <div className="sl-faqs">
-                        {c.faqs.map((f) => (
-                            <details key={f.question} className="sl-faq">
-                                <summary>{f.question}</summary>
-                                <p>{f.answer}</p>
-                            </details>
+                    <h2 className="sl-section__title">Esto es para ti si…</h2>
+                    <ul className="sl-list sl-list--yes">
+                        {c.forWhom.map((item) => (
+                            <li key={item}><Highlight text={item} /></li>
                         ))}
-                    </div>
+                    </ul>
                 </div>
             </section>
 
             {/* ─── CIERRE ───────────────────────────────────────── */}
             <section className="sl-close reveal">
                 <div className="sl-container sl-container--narrow">
-                    <p className="sl-scarcity">{c.scarcityNote}</p>
+                    <p className="sl-scarcity">
+                        <span className="sl-scarcity__tag">Cupos limitados</span>
+                        <Highlight text={c.scarcityNote} />
+                    </p>
                     <h2 className="sl-close__title">{c.closingHeadline}</h2>
-                    <p className="sl-close__body">{c.closingBody}</p>
+                    <p className="sl-close__body"><Highlight text={c.closingBody} /></p>
                     {cta('close')}
                     <p className="sl-cta__hint">{c.ctaHint}</p>
                 </div>
             </section>
 
-            {/* ─── PERSISTENTES ─────────────────────────────────── */}
-            <div className="sl-sticky">{cta('sticky')}</div>
-
-            <a
-                href={whatsappUrl}
-                className="sl-bubble"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Escribir por WhatsApp"
-            >
-                💬
-            </a>
-
-            {showExitModal && (
-                <div className="sl-modal" role="dialog" aria-modal="true" aria-labelledby="sl-modal-title">
-                    <div className="sl-modal__backdrop" onClick={() => setExitDismissed(true)} />
-                    <div className="sl-modal__box">
-                        <button
-                            type="button"
-                            className="sl-modal__close"
-                            onClick={() => setExitDismissed(true)}
-                            aria-label="Cerrar"
-                        >
-                            ✕
-                        </button>
-                        <span className="sl-modal__icon" aria-hidden="true">👋</span>
-                        <h2 id="sl-modal-title">{c.exitTitle}</h2>
-                        <p>{c.exitBody}</p>
-                        {cta('modal', c.exitCtaLabel)}
-                        <button
-                            type="button"
-                            className="sl-modal__dismiss"
-                            onClick={() => setExitDismissed(true)}
-                        >
-                            Ahora no
-                        </button>
-                    </div>
-                </div>
-            )}
+            <div className={`sl-sticky${inlineCtaVisible ? ' sl-sticky--hidden' : ''}`}>
+                {cta('sticky')}
+            </div>
         </div>
     );
 };
