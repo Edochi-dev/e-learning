@@ -3,10 +3,29 @@ import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import type { Request, Response } from 'express';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // ── IP real del cliente ───────────────────────────────────────────────────
+  // ThrottlerGuard limita por `req.ip`. En producción la API corre bajo PM2
+  // detrás de nginx en la MISMA máquina, así que sin esto Express ve como
+  // origen la IP del proxy —127.0.0.1— para todas las peticiones, y los
+  // límites dejan de ser por persona para pasar a ser globales: las 10
+  // peticiones por minuto de /users/login se reparten entre TODAS las alumnas,
+  // y agotar el cupo de todo el mundo cuesta un script de diez líneas.
+  //
+  // 'loopback' y no `true`: solo se confía en un proxy que conecte desde la
+  // propia máquina. Con `true` se confiaría en el último salto sea quien sea,
+  // y cualquiera podría falsificar X-Forwarded-For para saltarse el límite.
+  //
+  // Verificado el 2026-09-22 por SSH: nginx envía
+  // `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`
+  // (/etc/nginx/sites-available/marisnails). Si eso deja de ser cierto, esto
+  // no arregla nada y hay que revisarlo antes que nada.
+  app.set('trust proxy', 'loopback');
 
   // ── Seguridad: cabeceras HTTP ──────────────────────────────────────────────
   // helmet añade automáticamente varias cabeceras de seguridad estándar.
