@@ -76,7 +76,21 @@ fi
 echo "============================================"
 echo "  BACKUP: Respaldando archivos subidos..."
 echo "============================================"
-"$PROJECT_DIR/backup-files.sh"
+# El código 3 es "la copia local está hecha, la externa falló". Eso no es razón
+# para abortar un despliegue: lo que protege al deploy es la copia local, y esa
+# existe. Cualquier otro fallo sí significa que no hay respaldo, y entonces no
+# se toca nada.
+BACKUP_FILES_STATUS=0
+"$PROJECT_DIR/backup-files.sh" || BACKUP_FILES_STATUS=$?
+
+if [ "$BACKUP_FILES_STATUS" -eq 3 ]; then
+    echo ""
+    echo "  AVISO: la copia externa falló; se continúa con el despliegue."
+elif [ "$BACKUP_FILES_STATUS" -ne 0 ]; then
+    echo ""
+    echo "  ERROR: no se pudo respaldar los archivos subidos. Abortando."
+    exit 1
+fi
 echo ""
 
 # ============================================================

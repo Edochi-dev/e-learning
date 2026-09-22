@@ -16,14 +16,16 @@ set -euo pipefail
 #    (y desde cron, a diario — ver el README al final)
 # ============================================================
 
-PROJECT_DIR="/home/cerberus/e-learning"
+# Se pueden sobrescribir por entorno para poder ejercitar el script contra un
+# árbol de prueba. Sin ellas, los valores del servidor.
+PROJECT_DIR="${PROJECT_DIR:-/home/cerberus/e-learning}"
 SOURCE_DIR="$PROJECT_DIR/apps/backend/public"
 
 # Fuera del proyecto A PROPÓSITO: un backup dentro del árbol que respalda
 # desaparece con él si alguien borra el proyecto. Mismo disco, eso sí, que es
 # lo que permite los hardlinks (ver más abajo) — y también su límite: esto NO
 # protege contra el fallo del disco. Para eso hace falta una copia externa.
-BACKUP_ROOT="$HOME/backups-marisnails/files"
+BACKUP_ROOT="${BACKUP_ROOT:-$HOME/backups-marisnails/files}"
 
 KEEP=10
 
@@ -92,7 +94,6 @@ fi
 ln -sfn "$DEST" "$LATEST"
 
 BACKUP_SIZE=$(du -sh "$DEST" | cut -f1)
-TOTAL_SIZE=$(du -sh "$BACKUP_ROOT" | cut -f1)
 echo "  Copia verificada: $DEST_COUNT archivos ($BACKUP_SIZE aparentes)"
 
 # ── Rotación ───────────────────────────────────────────────────────────
@@ -107,6 +108,8 @@ if [ "${#SNAPSHOTS[@]}" -gt "$KEEP" ]; then
     done
 fi
 
+# Se mide DESPUÉS de rotar: antes reportaría el espacio que ya se liberó.
+TOTAL_SIZE=$(du -sh "$BACKUP_ROOT" | cut -f1)
 echo "  Snapshots conservados: $(find "$BACKUP_ROOT" -maxdepth 1 -type d -name '20*' | wc -l) (ocupan $TOTAL_SIZE en total)"
 echo "  Restaurar:  cp -a $LATEST/. $SOURCE_DIR/"
 
@@ -136,6 +139,13 @@ fi
 
 echo "  Subiendo a $RCLONE_REMOTE ..."
 
+# --progress redibuja una línea en bucle con secuencias de terminal: útil a
+# mano, kilobytes de basura dentro del log del cron.
+PROGRESS=()
+if [ -t 1 ]; then
+    PROGRESS=(--progress)
+fi
+
 # `copy`, NO `sync`, y es deliberado: sync replica los borrados, así que un
 # origen vacío o corrupto arrasaría también la copia remota — justo el
 # escenario del que este backup debería protegernos. `copy` solo añade: lo
@@ -144,7 +154,20 @@ echo "  Subiendo a $RCLONE_REMOTE ..."
 #
 # Se sube el último snapshot, no todos: Google Drive no tiene hardlinks, así
 # que subir los diez multiplicaría el espacio por diez sin aportar nada.
-rclone copy "$LATEST/" "$RCLONE_REMOTE/" --progress --stats-one-line
+#
+# El fallo se atrapa a mano en vez de dejarlo a `set -e`: así el script muere
+# gritando por qué y no cortando el log a media línea, que en un sistema de
+# respaldo es la diferencia entre enterarse y no enterarse.
+if ! rclone copy "$LATEST/" "$RCLONE_REMOTE/" \
+        "${PROGRESS[@]}" --stats-one-line --retries 3; then
+    echo ""
+    echo "  ERROR: la copia externa a $RCLONE_REMOTE FALLÓ."
+    echo "         La copia LOCAL sí quedó hecha y verificada en:"
+    echo "           $DEST"
+    echo "         Pero hoy NO existe copia fuera de este disco."
+    echo "============================================"
+    exit 3
+fi
 
 echo "  Copia externa completada."
 echo "============================================"

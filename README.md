@@ -223,7 +223,8 @@ npm run test               # Vitest
 `deploy.sh` runs on the server and performs, in order:
 
 1. `pg_dump` backup of the database (aborts the deploy if the dump is empty; keeps the 10
-   most recent under `backups/`)
+   most recent under `backups/`), then `backup-files.sh` for the uploaded files — see
+   [Backups](#backups)
 2. `git pull origin main`
 3. `npm ci` **once, from the monorepo root** — never per-app. A stray local `node_modules`
    inside `apps/backend/` or `apps/frontend/` once made npm treat that folder as a
@@ -245,6 +246,53 @@ than in production.
 
 SSL certificates live in `ssl/` and are git-ignored, as are `backups/` and every real
 `.env`.
+
+---
+
+## Backups
+
+Two different things need saving, and only one of them is in the database.
+
+**The database** is dumped by `deploy.sh` (`pg_dump`, ten most recent kept). It aborts the
+deploy if the dump comes out empty.
+
+**The uploaded files** — issued certificates, the templates they are generated from,
+correction photos, thumbnails — live only on disk. `backup-files.sh` snapshots
+`apps/backend/public` with `rsync --link-dest`, so files identical to the previous snapshot
+are hardlinked rather than copied and ten snapshots cost about as much as one. It refuses to
+run when the source is missing or empty, and verifies the file count before moving the
+`latest` pointer, so a half-finished copy never becomes the base of the next snapshot.
+
+Set `RCLONE_REMOTE` to also push the newest snapshot off-site. It uses `rclone copy`, never
+`sync`: sync would replicate a local wipe to the remote and destroy the very copy meant to
+survive it.
+
+Exit codes matter, because `deploy.sh` reads them: `0` all good, `3` the local snapshot is
+fine but the off-site copy failed (a deploy continues — what protects the deploy is the local
+copy), anything else means there is no backup and the deploy aborts.
+
+**Verification.** `verify-backup.sh` compares the snapshot against the live source byte by
+byte with `cmp`, and checks the off-site copy by hash with `rclone check --one-way`. Counting
+files proves there are 751 things, not that those things are the certificates. It also
+asserts that each backed-up file has its **own inode**: sharing one with the original would
+mean a single copy of the data under two names, where corrupting the original corrupts the
+backup in the same act. Files present only in the source (issued since the snapshot) or only
+in the snapshot (deleted since) are reported, not treated as failures.
+
+```bash
+./verify-backup.sh        # every file
+./verify-backup.sh 200    # random sample of 200
+```
+
+Both scripts honour `PROJECT_DIR` and `BACKUP_ROOT` overrides so they can be exercised
+against a throwaway tree instead of real data.
+
+Suggested crontab on the server:
+
+```cron
+0 3 * * * RCLONE_REMOTE="gdrive:marisnails-backup" /home/cerberus/e-learning/backup-files.sh >> $HOME/backup-files.log 2>&1
+0 4 * * 0 RCLONE_REMOTE="gdrive:marisnails-backup" /home/cerberus/e-learning/verify-backup.sh 200 >> $HOME/backup-verify.log 2>&1
+```
 
 ---
 
