@@ -4,20 +4,24 @@ import { LookupCertificateUseCase } from './lookup-certificate.use-case';
 import { CertificateGateway } from '../gateways/certificate.gateway';
 
 /**
- * Tests para LookupCertificateUseCase — búsqueda pública de certificado.
+ * Tests para LookupCertificateUseCase — verificación pública de certificado.
  *
- * Este endpoint es PÚBLICO (no requiere JWT). Cualquiera puede verificar
- * si un certificado es real ingresando su número correlativo (ej: MR-00001).
+ * El endpoint es PÚBLICO (no requiere JWT) y exige DOS datos: el número
+ * correlativo y el nombre del titular. El número solo no basta a propósito:
+ * es correlativo, y recorrerlo permitía cosechar los nombres de las alumnas.
  *
- * Por seguridad, solo retorna { id } — no expone datos del lote ni del template.
- * El frontend usa ese id para redirigir a /certificados/:id donde se muestra más info.
- *
- * Detalle importante: normaliza a UPPERCASE antes de buscar.
- * Así "mr-00001" y "MR-00001" encuentran el mismo certificado.
+ * Solo retorna { id } — no expone datos del lote ni del template. El frontend
+ * usa ese id para redirigir a /certificados/:id.
  */
 describe('LookupCertificateUseCase', () => {
   let useCase: LookupCertificateUseCase;
   let certificateGateway: jest.Mocked<CertificateGateway>;
+
+  const certificado = {
+    id: 'cert-uuid-123',
+    recipientName: 'María José Pérez',
+    certificateNumber: 'MR-00001',
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -27,9 +31,7 @@ describe('LookupCertificateUseCase', () => {
         LookupCertificateUseCase,
         {
           provide: CertificateGateway,
-          useValue: {
-            findByNumber: jest.fn(),
-          },
+          useValue: { findByNumber: jest.fn() },
         },
       ],
     }).compile();
@@ -41,38 +43,86 @@ describe('LookupCertificateUseCase', () => {
   it('lanza NotFoundException si el certificado no existe', async () => {
     certificateGateway.findByNumber.mockResolvedValue(null);
 
-    await expect(useCase.execute('MR-99999')).rejects.toThrow(
+    await expect(useCase.execute('MR-99999', 'Quien Sea')).rejects.toThrow(
       NotFoundException,
     );
   });
 
-  it('retorna solo { id } cuando el certificado existe (no expone datos sensibles)', async () => {
-    certificateGateway.findByNumber.mockResolvedValue({
-      id: 'cert-uuid-123',
-      recipientName: 'María López', // esto NO debe aparecer en el resultado
-      certificateNumber: 'MR-00001',
-    } as any);
+  it('retorna solo { id } cuando número y nombre coinciden', async () => {
+    certificateGateway.findByNumber.mockResolvedValue(certificado as any);
 
-    const result = await useCase.execute('MR-00001');
+    const result = await useCase.execute('MR-00001', 'María José Pérez');
 
     expect(result).toEqual({ id: 'cert-uuid-123' });
-    // Verificar que NO expone otros campos
     expect(result).not.toHaveProperty('recipientName');
     expect(result).not.toHaveProperty('certificateNumber');
   });
 
-  /**
-   * El número se normaliza a UPPERCASE antes de la búsqueda.
-   * Esto hace la búsqueda case-insensitive sin depender de la DB.
-   */
   it('normaliza el número a uppercase antes de buscar', async () => {
-    certificateGateway.findByNumber.mockResolvedValue({
-      id: 'cert-uuid-123',
-    } as any);
+    certificateGateway.findByNumber.mockResolvedValue(certificado as any);
 
-    await useCase.execute('mr-00001'); // minúsculas
+    await useCase.execute('mr-00001', 'María José Pérez');
 
-    // El gateway debe recibir "MR-00001" en mayúsculas
     expect(certificateGateway.findByNumber).toHaveBeenCalledWith('MR-00001');
+  });
+
+  describe('la comprobación del nombre no rechaza a la titular legítima', () => {
+    beforeEach(() => {
+      certificateGateway.findByNumber.mockResolvedValue(certificado as any);
+    });
+
+    // Cada uno de estos falló alguna vez en algún formulario del mundo real.
+    it.each([
+      ['sin tildes', 'Maria Jose Perez'],
+      ['todo en minúsculas', 'maría josé pérez'],
+      ['todo en mayúsculas', 'MARÍA JOSÉ PÉREZ'],
+      ['con espacios de sobra al pegar', '  María   José   Pérez  '],
+      ['sin tildes y en minúsculas', 'maria jose perez'],
+    ])('acepta el nombre %s', async (_caso, nombre) => {
+      await expect(useCase.execute('MR-00001', nombre)).resolves.toEqual({
+        id: 'cert-uuid-123',
+      });
+    });
+  });
+
+  describe('la comprobación del nombre sí frena la cosecha', () => {
+    beforeEach(() => {
+      certificateGateway.findByNumber.mockResolvedValue(certificado as any);
+    });
+
+    it.each([
+      ['otra persona', 'Ana Gómez'],
+      ['solo el nombre de pila', 'María'],
+      ['solo el apellido', 'Pérez'],
+      ['vacío', ''],
+    ])('rechaza %s', async (_caso, nombre) => {
+      await expect(useCase.execute('MR-00001', nombre)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  /**
+   * INVARIANTE DE SEGURIDAD — no relajar.
+   *
+   * "El número no existe" y "el nombre no coincide" tienen que ser
+   * indistinguibles desde fuera. Si el segundo devolviera otro error u otro
+   * mensaje, recorrer el rango seguiría revelando QUÉ números están emitidos,
+   * que es el primer paso de la cosecha que esto viene a impedir.
+   */
+  it('devuelve el mismo error cuando el número no existe que cuando el nombre no coincide', async () => {
+    certificateGateway.findByNumber.mockResolvedValue(null);
+    const inexistente = await useCase
+      .execute('MR-99999', 'María José Pérez')
+      .catch((e: Error) => e);
+
+    certificateGateway.findByNumber.mockResolvedValue(certificado as any);
+    const nombreMalo = await useCase
+      .execute('MR-00001', 'Ana Gómez')
+      .catch((e: Error) => e);
+
+    expect(nombreMalo).toBeInstanceOf(NotFoundException);
+    expect(inexistente).toBeInstanceOf(NotFoundException);
+    expect((nombreMalo as Error).message).toBe((inexistente as Error).message);
   });
 });

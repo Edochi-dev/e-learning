@@ -163,7 +163,12 @@ export interface CertificateGateway {
 
     // Público
     getCertificate(id: string): Promise<Certificate>;
-    lookupByNumber(certificateNumber: string): Promise<{ id: string }>;
+    /**
+     * Verifica un certificado. Exige el nombre del titular además del número:
+     * el número es correlativo y por sí solo permitía cosechar los nombres de
+     * las alumnas recorriendo el rango.
+     */
+    lookupByNumber(certificateNumber: string, recipientName: string): Promise<{ id: string }>;
 
     /**
      * Descarga el PDF de un certificado como Blob.
