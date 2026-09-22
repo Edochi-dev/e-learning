@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { BrowserRouter, Routes, Route, Link, useNavigate, useLocation } from 'react-router-dom';
 import './App.css';
 import { HttpCertificateGateway } from './gateways/HttpCertificateGateway';
@@ -16,29 +16,10 @@ import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { CourseDetailsPage } from './pages/CourseDetailsPage';
-import { LessonPage } from './pages/LessonPage';
-import { CourseLearnPage } from './pages/CourseLearnPage';
 import { ThemeSwitch } from './components/ThemeSwitch';
 import { UserMenu } from './components/UserMenu';
 import { useTheme } from './hooks/useTheme';
-import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
-import { CorrectionsAdminPage } from './pages/admin/CorrectionsAdminPage';
-import { NameChangeRequestsAdminPage } from './pages/admin/NameChangeRequestsAdminPage';
-import { SchedulePage } from './pages/admin/SchedulePage';
-import { ReviewCorrectionPage } from './pages/admin/ReviewCorrectionPage';
-import { CoursesAdminPage } from './pages/admin/CoursesAdminPage';
-import { CreateCoursePage } from './pages/admin/CreateCoursePage';
-import { EditCoursePage } from './pages/admin/EditCoursePage';
-import { CourseStudentsPage } from './pages/admin/CourseStudentsPage';
-import { CourseInvitationsPage } from './pages/admin/CourseInvitationsPage';
 import { RedeemInvitationPage } from './pages/RedeemInvitationPage';
-import { CertificatesAdminPage } from './pages/admin/CertificatesAdminPage';
-import { CreateCertificateTemplatePage } from './pages/admin/CreateCertificateTemplatePage';
-import { EditCertificateTemplatePage } from './pages/admin/EditCertificateTemplatePage';
-import { EditTemplateDesignPage } from './pages/admin/EditTemplateDesignPage';
-import { GenerateCertificatesPage } from './pages/admin/GenerateCertificatesPage';
-import { SearchCertificatesPage } from './pages/admin/SearchCertificatesPage';
-import { CertificateDetailAdminPage } from './pages/admin/CertificateDetailAdminPage';
 import { CertificateVerificationPage } from './pages/CertificateVerificationPage';
 import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { AccountPage } from './pages/AccountPage';
@@ -55,6 +36,75 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
 import { ToastProvider } from './components/Toast';
+
+/**
+ * Rutas diferidas.
+ *
+ * React Router no reparte el código por sí solo: cualquier página importada
+ * arriba entra en el paquete inicial aunque nadie visite su ruta. Sin esto, la
+ * visitante que llega a /oferta desde un anuncio se descarga el panel de
+ * administración entero —con el lector de PDF y el calendario— antes de ver
+ * una letra.
+ *
+ * Las páginas exportan con nombre y lazy() espera `default`, de ahí el .then.
+ */
+const LessonPage = lazy(() =>
+  import('./pages/LessonPage').then((m) => ({ default: m.LessonPage })),
+);
+const CourseLearnPage = lazy(() =>
+  import('./pages/CourseLearnPage').then((m) => ({ default: m.CourseLearnPage })),
+);
+const AdminDashboardPage = lazy(() =>
+  import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
+);
+const CorrectionsAdminPage = lazy(() =>
+  import('./pages/admin/CorrectionsAdminPage').then((m) => ({ default: m.CorrectionsAdminPage })),
+);
+const NameChangeRequestsAdminPage = lazy(() =>
+  import('./pages/admin/NameChangeRequestsAdminPage').then((m) => ({ default: m.NameChangeRequestsAdminPage })),
+);
+const SchedulePage = lazy(() =>
+  import('./pages/admin/SchedulePage').then((m) => ({ default: m.SchedulePage })),
+);
+const ReviewCorrectionPage = lazy(() =>
+  import('./pages/admin/ReviewCorrectionPage').then((m) => ({ default: m.ReviewCorrectionPage })),
+);
+const CoursesAdminPage = lazy(() =>
+  import('./pages/admin/CoursesAdminPage').then((m) => ({ default: m.CoursesAdminPage })),
+);
+const CreateCoursePage = lazy(() =>
+  import('./pages/admin/CreateCoursePage').then((m) => ({ default: m.CreateCoursePage })),
+);
+const EditCoursePage = lazy(() =>
+  import('./pages/admin/EditCoursePage').then((m) => ({ default: m.EditCoursePage })),
+);
+const CourseStudentsPage = lazy(() =>
+  import('./pages/admin/CourseStudentsPage').then((m) => ({ default: m.CourseStudentsPage })),
+);
+const CourseInvitationsPage = lazy(() =>
+  import('./pages/admin/CourseInvitationsPage').then((m) => ({ default: m.CourseInvitationsPage })),
+);
+const CertificatesAdminPage = lazy(() =>
+  import('./pages/admin/CertificatesAdminPage').then((m) => ({ default: m.CertificatesAdminPage })),
+);
+const CreateCertificateTemplatePage = lazy(() =>
+  import('./pages/admin/CreateCertificateTemplatePage').then((m) => ({ default: m.CreateCertificateTemplatePage })),
+);
+const EditCertificateTemplatePage = lazy(() =>
+  import('./pages/admin/EditCertificateTemplatePage').then((m) => ({ default: m.EditCertificateTemplatePage })),
+);
+const EditTemplateDesignPage = lazy(() =>
+  import('./pages/admin/EditTemplateDesignPage').then((m) => ({ default: m.EditTemplateDesignPage })),
+);
+const GenerateCertificatesPage = lazy(() =>
+  import('./pages/admin/GenerateCertificatesPage').then((m) => ({ default: m.GenerateCertificatesPage })),
+);
+const SearchCertificatesPage = lazy(() =>
+  import('./pages/admin/SearchCertificatesPage').then((m) => ({ default: m.SearchCertificatesPage })),
+);
+const CertificateDetailAdminPage = lazy(() =>
+  import('./pages/admin/CertificateDetailAdminPage').then((m) => ({ default: m.CertificateDetailAdminPage })),
+);
 
 function AppContent() {
   const { user } = useAuth();
@@ -118,6 +168,7 @@ function AppContent() {
       <ScrollToTop />
 
       <main>
+        <Suspense fallback={<div className="route-loading" aria-busy="true" />}>
         <Routes>
           {/* Rutas siempre públicas */}
           <Route path="/login" element={<LoginPage />} />
@@ -166,7 +217,8 @@ function AppContent() {
 
           {/* Cualquier otra URL → página de próximamente */}
           <Route path="*" element={<ComingSoonPage />} />
-        </Routes>
+          </Routes>
+      </Suspense>
       </main>
 
       <footer className="footer">
