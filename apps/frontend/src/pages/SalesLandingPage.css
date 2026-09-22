@@ -10,22 +10,26 @@
      · --alert (vino)  → SOLO aviso: el recuadro de cupos, la cinta de anuncio
        y el degradado de los botones.
 
-   El aviso es vino y no naranja a propósito. Un tercer matiz saturado compite
-   con el rosa y el dorado, y cuando los tres gritan igual ninguno destaca; el
-   vino es el MISMO matiz del rosa, oscurecido, así que armoniza por definición
-   y avisa por contraste de luminosidad, no de color. Si algún día se cambia,
-   que sea por otra profundización de la marca, no por un color nuevo. */
+   El aviso es un coral de la MISMA familia que el rosa (matiz ~350° frente a
+   ~330°), no un color ajeno. Por eso armoniza: un tercer matiz saturado —el
+   naranja que había antes— competía con el rosa y el dorado, y cuando los tres
+   gritan igual ninguno destaca. Si se cambia, que siga siendo un vecino del
+   rosa, no un color nuevo. */
 
 .sl {
     --brand-strong: #b0246f;
     --brand-soft: rgba(232, 67, 147, 0.09);
 
-    --alert: #9f1239;
-    --alert-strong: #881337;
-    --alert-soft: #fff1f4;
-    --alert-border: #e9a8ba;
-    --alert-glow: rgba(159, 18, 57, 0.32);
+    --alert: #f43f5e;
+    --alert-soft: #fff1f3;
+    --alert-border: #fda4af;
+    --alert-glow: rgba(244, 63, 94, 0.38);
     --alert-ink: #ffffff;
+
+    /* El dorado más claro que aún despega del blanco encima (3,19:1). El
+       --gold normal se queda en 2,44:1 y el texto desaparece en el punto alto
+       de la animación; --gold-dark sí pasa, pero apaga el degradado. */
+    --gold-deep: #b8873f;
 }
 
 [data-theme='dark'] .sl {
@@ -33,10 +37,9 @@
     --brand-soft: rgba(253, 121, 168, 0.16);
 
     --alert: #fb7185;
-    --alert-strong: #fecdd3;
-    --alert-soft: rgba(251, 113, 133, 0.16);
-    --alert-border: rgba(251, 113, 133, 0.42);
-    --alert-glow: rgba(251, 113, 133, 0.3);
+    --alert-soft: rgba(251, 113, 133, 0.18);
+    --alert-border: rgba(251, 113, 133, 0.5);
+    --alert-glow: rgba(251, 113, 133, 0.38);
     --alert-ink: #4c0519;
 }
 
@@ -77,9 +80,7 @@
     z-index: 40;
     overflow: hidden;
     padding: 0.6rem 0;
-    /* --gold-dark y no --gold: el dorado claro con texto blanco encima da un
-       contraste de 2,2:1, ilegible. Mismo motivo en el botón y en el titular. */
-    background: linear-gradient(90deg, var(--primary), var(--alert), var(--gold-dark), var(--alert), var(--primary));
+    background: linear-gradient(90deg, var(--primary), var(--alert), var(--gold-deep), var(--alert), var(--primary));
     background-size: 250% 100%;
     animation: sl-shift 9s ease-in-out infinite alternate;
     color: #fff;
@@ -169,7 +170,7 @@
     /* La Kaushan Script tiene ojo pequeño: sin esto se ve menor que la DM Sans. */
     font-size: 1.15em;
     line-height: 1;
-    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-dark));
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-deep));
     background-size: 220% auto;
     -webkit-background-clip: text;
     background-clip: text;
@@ -296,7 +297,7 @@
     padding: 1.1rem 2.5rem;
     overflow: hidden;
     border-radius: var(--radius-full);
-    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-dark), var(--alert), var(--primary));
+    background: linear-gradient(120deg, var(--primary), var(--alert), var(--gold-deep), var(--alert), var(--primary));
     background-size: 250% 100%;
     color: #fff;
     font-size: clamp(1rem, 2.2vw, 1.15rem);
