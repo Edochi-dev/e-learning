@@ -65,7 +65,7 @@ export interface SalesLandingTestimonial {
 
 export interface SalesLandingContent {
     announcement: string;
-    whatsappNumber: string;
+    whatsappTarget: string;
     whatsappMessage: string;
     youtubeVideoId: string;
 
@@ -107,14 +107,22 @@ export interface SalesLandingContent {
 export const SALES_LANDING: SalesLandingContent = {
     announcement: '✨ INSCRIPCIONES ABIERTAS · 6 SEMANAS · 100 % ONLINE · CUPOS LIMITADOS',
 
-    // Formato internacional sin '+', sin espacios ni guiones: lo exige wa.me.
-    whatsappNumber: '000000000000',
+    // Admite dos formas, y NO dan el mismo resultado:
+    //
+    //   · Un número internacional sin '+' ni separadores: permite prellenar el
+    //     mensaje, así que cada tarjeta dice de qué grupo viene la consulta.
+    //   · Un enlace corto de WhatsApp Business (wa.me/message/XXXX): IGNORA el
+    //     mensaje prellenado — el saludo lo fija el perfil de la empresa, y
+    //     todas las tarjetas acaban mandando lo mismo.
+    //
+    // Los `whatsappMessage` de abajo solo surten efecto con la primera forma.
+    whatsappTarget: '56946622112',
     whatsappMessage: 'Hola Maria, vi la página del Máster Educador Internacional y quiero información para inscribirme.',
 
     // Solo el identificador, no la URL completa.
     youtubeVideoId: 'REEMPLAZAR',
 
-    eyebrow: 'Master Educador Elite',
+    eyebrow: 'Máster Educador Internacional',
     headline: 'No te enseño a hacer uñas.',
     headlineAccent: 'Te enseño a enseñar.',
     subheadline:
@@ -157,16 +165,15 @@ export const SALES_LANDING: SalesLandingContent = {
     modulesIntro:
         'Enseñar, comunicar, diseñar y **vender tu propia formación** con criterio profesional.',
 
-    // ⚠️ REVISAR CON MARIA: el dossier agrupa las viñetas por página, no por
-    // módulo, así que este reparto es una interpretación razonable — no un dato
-    // literal. Confirmar antes de publicar.
+    // Reparto confirmado por Maria el 2026-09-22 (el dossier agrupa las
+    // viñetas por página, no por módulo; este es el reparto real).
     modules: [
         {
             number: '01',
             name: 'La Identidad de la Mentora',
             points: [
-                'Andragogía: cómo enseñarle a personas adultas',
-                'Oratoria y liderazgo frente a un grupo',
+                'Andragogía — cómo enseñarle a personas adultas',
+                'Oratoria y liderazgo — el poder del blazer frente a un grupo',
                 'Manejo de grupos y de alumnas difíciles',
             ],
         },
@@ -175,7 +182,7 @@ export const SALES_LANDING: SalesLandingContent = {
             name: 'Ingeniería de la Instrucción',
             points: [
                 'Método de los 4 Pasos para demostraciones perfectas',
-                'Diagnóstico “Causa–Efecto”: detectar errores sin tocar la mano',
+                'Diagnóstico “Causa–Efecto” — detectar errores sin tocar la mano de la alumna',
                 'Planificación curricular y cronogramas de clase',
             ],
         },
@@ -191,7 +198,7 @@ export const SALES_LANDING: SalesLandingContent = {
             number: '04',
             name: 'Business & Marketing Académico',
             points: [
-                'Pricing estratégico: cuánto cobrar por tu tiempo',
+                'Pricing estratégico — cuánto cobrar por tu tiempo',
                 'Guiones de venta para llenar tus cursos',
                 'Legalidad, certificados y términos de uso',
             ],
@@ -233,12 +240,12 @@ export const SALES_LANDING: SalesLandingContent = {
             id: 'vivo',
             name: 'Grupo en vivo',
             badge: 'Más cercanía',
-            // ⚠️ PLACEHOLDER — falta el dossier del grupo en vivo. Confirmar
-            // cada punto y el precio con Maria antes de publicar.
+            // ⚠️ Falta el dossier del grupo en vivo: los `extras` vienen de lo
+            // que dictó Edgar de palabra. Confirmar con Maria.
             tagline: 'Gana en **cercanía**: Maria contigo, en directo.',
             featured: true,
-            price: 'USD 000',
-            priceNote: 'Pago único · Cupos muy limitados',
+            price: 'USD 300',
+            priceNote: 'USD 100 de reserva + USD 200 antes del inicio · Cupos muy limitados',
             perks: [
                 'Los 4 pilares y el Laboratorio de criterio técnico',
                 'Clases, materiales y **evaluaciones corregidas**',

@@ -7,7 +7,18 @@ import './SalesLandingPage.css';
 
 const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
 
-function buildWhatsappUrl(number: string, message: string): string {
+/**
+ * Construye el enlace de WhatsApp según la forma del destino.
+ *
+ * El enlace corto de WhatsApp Business (wa.me/message/XXXX) IGNORA el parámetro
+ * `text`: el saludo lo fija el perfil de la empresa. Se devuelve tal cual, y se
+ * pierde el prellenado — las dos tarjetas acaban mandando el mismo mensaje.
+ * Con un número, en cambio, cada tarjeta puede anunciar de qué grupo viene.
+ */
+function buildWhatsappUrl(target: string, message: string): string {
+    if (target.includes('wa.me/message/')) return target;
+
+    const number = target.replace(/\D/g, '');
     return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
@@ -98,7 +109,7 @@ const Stat = ({ stat }: { stat: SalesLandingStat }) => {
  * color. Es deliberado — marcar los extras con otro símbolo insinuaría que a
  * la otra tarjeta le faltan, y aquí ninguna carece de nada: cada una suma.
  */
-const PlanCard = ({ plan, whatsappNumber }: { plan: SalesLandingPlan; whatsappNumber: string }) => (
+const PlanCard = ({ plan, whatsappTarget }: { plan: SalesLandingPlan; whatsappTarget: string }) => (
     <article className={`sl-plan${plan.featured ? ' sl-plan--featured' : ''}`}>
         <span className="sl-plan__badge">{plan.badge}</span>
         <h3 className="sl-plan__name">{plan.name}</h3>
@@ -123,7 +134,7 @@ const PlanCard = ({ plan, whatsappNumber }: { plan: SalesLandingPlan; whatsappNu
         </ul>
 
         <a
-            href={buildWhatsappUrl(whatsappNumber, plan.whatsappMessage)}
+            href={buildWhatsappUrl(whatsappTarget, plan.whatsappMessage)}
             className="sl-cta sl-cta--plan sl-cta--inline"
             target="_blank"
             rel="noopener noreferrer"
@@ -138,7 +149,7 @@ export const SalesLandingPage = () => {
     useScrollReveal();
 
     const c = SALES_LANDING;
-    const whatsappUrl = buildWhatsappUrl(c.whatsappNumber, c.whatsappMessage);
+    const whatsappUrl = buildWhatsappUrl(c.whatsappTarget, c.whatsappMessage);
 
     // La barra fija solo se asoma cuando ningún botón del contenido está a la
     // vista: si no, la visitante ve el mismo botón dos veces a la vez.
@@ -268,7 +279,7 @@ export const SalesLandingPage = () => {
 
                     <div className="sl-plans">
                         {c.plans.map((plan) => (
-                            <PlanCard key={plan.id} plan={plan} whatsappNumber={c.whatsappNumber} />
+                            <PlanCard key={plan.id} plan={plan} whatsappTarget={c.whatsappTarget} />
                         ))}
                     </div>
 
