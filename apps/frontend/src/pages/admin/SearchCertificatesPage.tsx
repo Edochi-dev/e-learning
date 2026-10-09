@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificates } from '../../hooks/useCertificates';
+import { parseCalendarDate } from '../../lib/calendar-date';
 
 interface Props {
     gateway: CertificateGateway;
@@ -91,7 +92,7 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
                                 {cert.certificateNumber}
                             </span>
                             <span className="admin-course-link-meta">
-                                {new Date(cert.issuedAt).toLocaleDateString('es-MX')}
+                                {parseCalendarDate(cert.certificateDate).toLocaleDateString('es-MX')}
                             </span>
                             <span className="admin-course-link-meta" style={{
                                 color: 'var(--text-muted)',

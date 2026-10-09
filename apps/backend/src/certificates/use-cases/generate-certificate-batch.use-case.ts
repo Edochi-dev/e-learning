@@ -8,6 +8,7 @@ import { QrCodeGateway } from '../gateways/qr-code.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { Certificate } from '../entities/certificate.entity';
 import { GenerateCertificateBatchDto } from '../dto/generate-certificate-batch.dto';
+import { CertificateDate } from '../value-objects';
 
 export interface GeneratedCertificateSummary {
   id: string;
@@ -64,6 +65,12 @@ export class GenerateCertificateBatchUseCase {
       'FRONTEND_URL',
       'http://localhost:5173',
     );
+    // One date for the whole batch: every certificate printed together carries the same day.
+    const certificateDate = dto.certificateDate
+      ? CertificateDate.fromIso(dto.certificateDate)
+      : CertificateDate.today();
+    const dateText = certificateDate.toDisplay();
+
     const results: GeneratedCertificateSummary[] = [];
 
     for (const recipient of dto.recipients) {
@@ -92,14 +99,6 @@ export class GenerateCertificateBatchUseCase {
           backgroundColor: template.qrStyle.backgroundColor,
         },
       );
-
-      // Fecha de emisión en formato DD/MM/YYYY.
-      // Se genera en el momento exacto de creación de cada certificado.
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const yyyy = now.getFullYear();
-      const dateText = `${dd}/${mm}/${yyyy}`;
 
       // 4. Generar el PDF con nombre, QR y (opcionalmente) fecha superpuestos
       const { nameStyle, qrStyle, dateStyle } = template;
@@ -154,6 +153,7 @@ export class GenerateCertificateBatchUseCase {
           paperFormat: template.paperFormat,
         },
         filePath,
+        certificateDate: certificateDate.toIso(),
         // Vínculo opcional al alumno (modo híbrido): null si es un nombre libre.
         userId: recipient.userId ?? null,
       } as Partial<Certificate>);

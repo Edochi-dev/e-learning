@@ -76,12 +76,12 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async generateBatch(templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]> {
+    async generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]> {
         const res = await fetch(`${this.baseUrl}/admin/certificates/batch`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ templateId, recipients }),
+            body: JSON.stringify({ templateId, recipients, certificateDate }),
         });
         if (!res.ok) throw new Error(`Error al generar certificados: ${res.statusText}`);
         return res.json();
