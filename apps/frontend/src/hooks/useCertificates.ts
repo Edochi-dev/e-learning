@@ -61,8 +61,8 @@ export const useCertificates = (gateway: CertificateGateway) => {
         return template;
     };
 
-    const generateBatch = async (templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]> => {
-        return gateway.generateBatch(templateId, recipients);
+    const generateBatch = async (templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]> => {
+        return gateway.generateBatch(templateId, recipients, certificateDate);
     };
 
     const downloadBatch = async (ids: string[]): Promise<void> => {

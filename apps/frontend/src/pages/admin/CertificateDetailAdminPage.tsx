@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificate } from '../../hooks/useCertificate';
+import { parseCalendarDate } from '../../lib/calendar-date';
 
 interface Props {
     gateway: CertificateGateway;
@@ -78,7 +79,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
         URL.revokeObjectURL(url);
     };
 
-    const issuedDate = new Date(certificate.issuedAt).toLocaleDateString('es-MX', {
+    const issuedDate = parseCalendarDate(certificate.certificateDate).toLocaleDateString('es-MX', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',

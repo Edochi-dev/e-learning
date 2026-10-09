@@ -329,6 +329,59 @@ describe('GenerateCertificateBatchUseCase', () => {
     expect(result[2].certificateNumber).toBe('MR-00003');
   });
 
+  describe('fecha del certificado', () => {
+    const templateShowingDate = {
+      ...fakeTemplate,
+      dateStyle: { ...fakeTemplate.dateStyle, show: true },
+    } as CertificateTemplate;
+
+    beforeEach(() => {
+      templateGateway.findOne.mockResolvedValue(templateShowingDate);
+      configService.get.mockReturnValue('http://localhost:5173');
+      certGateway.countByAbbreviation.mockResolvedValue(0);
+      qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
+      generatorGateway.generate.mockResolvedValue(Buffer.from('pdf'));
+      certGateway.create.mockImplementation(
+        async (data) => ({ ...data }) as Certificate,
+      );
+    });
+
+    it('imprime y persiste la fecha personalizada cuando se envía', async () => {
+      await useCase.execute({
+        templateId: 'tpl-1',
+        recipients: [{ name: 'Ana' }, { name: 'Luis' }],
+        certificateDate: '2026-10-15',
+      });
+
+      expect(generatorGateway.generate).toHaveBeenCalledTimes(2);
+      for (const [params] of generatorGateway.generate.mock.calls) {
+        expect(params.dateText).toBe('15/10/2026');
+      }
+      expect(certGateway.create).toHaveBeenCalledWith(
+        expect.objectContaining({ certificateDate: '2026-10-15' }),
+      );
+    });
+
+    it('usa la fecha de hoy cuando no se envía fecha', async () => {
+      jest.useFakeTimers({ now: new Date(2026, 9, 8, 12, 0, 0) });
+      try {
+        await useCase.execute({
+          templateId: 'tpl-1',
+          recipients: [{ name: 'Ana' }],
+        });
+      } finally {
+        jest.useRealTimers();
+      }
+
+      expect(generatorGateway.generate).toHaveBeenCalledWith(
+        expect.objectContaining({ dateText: '08/10/2026' }),
+      );
+      expect(certGateway.create).toHaveBeenCalledWith(
+        expect.objectContaining({ certificateDate: '2026-10-08' }),
+      );
+    });
+  });
+
   /**
    * RACE CONDITION DOCUMENTADA:
    * Si dos requests llegan simultáneamente con la misma abreviatura, ambos hacen
