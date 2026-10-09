@@ -7,6 +7,7 @@ import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
 import type { CertificateGateway, Certificate } from '../gateways/CertificateGateway';
 import type { StudentNameChangeGateway } from '../gateways/NameChangeGateway';
 import { OrderStatus, NameChangeRequestStatus, type NameChangeRequest } from '@maris-nails/shared';
+import { parseCalendarDate } from '../lib/calendar-date';
 
 interface Props {
     gateway: AuthGateway;
@@ -389,7 +390,7 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
                                                     {cert.templateSnapshot?.name ?? 'Certificado'}
                                                 </p>
                                                 <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                                    {cert.certificateNumber} · {new Date(cert.issuedAt).toLocaleDateString('es', {
+                                                    {cert.certificateNumber} · {parseCalendarDate(cert.certificateDate).toLocaleDateString('es', {
                                                         day: '2-digit', month: 'long', year: 'numeric',
                                                     })}
                                                 </p>

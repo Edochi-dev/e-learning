@@ -80,6 +80,8 @@ export interface Certificate {
      */
     template: CertificateTemplate | null;
     filePath: string;
+    /** Date printed on the certificate (YYYY-MM-DD). Show this, not `issuedAt`. */
+    certificateDate: string;
     issuedAt: string;
 }
 
@@ -150,7 +152,7 @@ export interface CertificateGateway {
     updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate>;
     listTemplates(): Promise<CertificateTemplate[]>;
     getTemplate(id: string): Promise<CertificateTemplate>;
-    generateBatch(templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]>;
+    generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]>;
     listCertificates(): Promise<Certificate[]>;
     searchCertificates(query: string): Promise<Certificate[]>;
     downloadBatch(ids: string[]): Promise<Blob>;

@@ -8,6 +8,8 @@ import {
   IsUUID,
   IsOptional,
   ValidateNested,
+  Matches,
+  IsISO8601,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -43,4 +45,14 @@ export class GenerateCertificateBatchDto {
   @ValidateNested({ each: true })
   @Type(() => RecipientDto)
   recipients: RecipientDto[];
+
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'certificateDate debe tener el formato YYYY-MM-DD',
+  })
+  @IsISO8601(
+    { strict: true },
+    { message: 'certificateDate no es una fecha válida' },
+  )
+  certificateDate?: string;
 }

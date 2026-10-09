@@ -4,6 +4,7 @@ import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSumma
 import type { AuthGateway } from '../../gateways/AuthGateway';
 import type { User } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
+import { parseCalendarDate } from '../../lib/calendar-date';
 
 interface Props {
     gateway: CertificateGateway;
@@ -14,6 +15,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [namesText, setNamesText] = useState('');
+    const [certificateDate, setCertificateDate] = useState('');
     const [generated, setGenerated] = useState<GeneratedCertificateSummary[]>([]);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
@@ -85,7 +87,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
 
         setLoading(true);
         try {
-            const result = await gateway.generateBatch(selectedTemplateId, recipients);
+            const result = await gateway.generateBatch(selectedTemplateId, recipients, certificateDate || undefined);
             setGenerated(result);
             setSelected(new Set(result.map(c => c.id)));
         } catch (err) {
@@ -152,6 +154,22 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                             No hay plantillas. <a href="/admin/certificados/plantillas/nueva">Sube una primero.</a>
                         </p>
                     )}
+                </div>
+
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label" htmlFor="certificate-date">Fecha personalizada (opcional)</label>
+                    <input
+                        id="certificate-date"
+                        type="date"
+                        className="form-input"
+                        value={certificateDate}
+                        onChange={e => setCertificateDate(e.target.value)}
+                    />
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        {certificateDate
+                            ? `Se imprimirá ${parseCalendarDate(certificateDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}.`
+                            : 'Si la dejas vacía se usa la fecha de hoy. Úsala para certificados impresos por adelantado.'}
+                    </p>
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
