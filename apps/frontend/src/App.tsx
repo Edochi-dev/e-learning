@@ -126,8 +126,9 @@ function AppContent() {
         <Routes>
         {/* Fuera del layout a propósito: una página de ventas no ofrece
             salidas, y la cabecera lleva a la home, que para el público es
-            la de "próximamente". */}
-        <Route path="/oferta" element={<SalesLandingPage />} />
+            la de "próximamente". Protegida por el guard hasta que el video y los
+            testimonios reemplacen los recuadros de "pendiente". */}
+        <Route path="/oferta" element={<ComingSoonGuard><SalesLandingPage /></ComingSoonGuard>} />
 
         <Route element={<SiteLayout />}>
             {/* Rutas siempre públicas */}
