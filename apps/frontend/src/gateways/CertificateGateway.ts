@@ -80,9 +80,26 @@ export interface Certificate {
      */
     template: CertificateTemplate | null;
     filePath: string;
+    /** Set when the certificate is linked to a student account. */
+    userId: string | null;
     /** Date printed on the certificate (YYYY-MM-DD). Show this, not `issuedAt`. */
     certificateDate: string;
     issuedAt: string;
+}
+
+/** Every field is optional and they combine with AND. Dates are YYYY-MM-DD, inclusive. */
+export interface CertificateSearchFilters {
+    search?: string;
+    course?: string;
+    from?: string;
+    to?: string;
+    account?: 'linked' | 'unlinked';
+}
+
+/** A course that has issued certificates, keyed by the abbreviation frozen on them. */
+export interface CertificateCourse {
+    abbreviation: string;
+    name: string;
 }
 
 export interface GeneratedCertificateSummary {
@@ -153,12 +170,13 @@ export interface CertificateGateway {
     listTemplates(): Promise<CertificateTemplate[]>;
     getTemplate(id: string): Promise<CertificateTemplate>;
     generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]>;
-    listCertificates(): Promise<Certificate[]>;
-    searchCertificates(query: string): Promise<Certificate[]>;
+    searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]>;
+    listCertificateCourses(): Promise<CertificateCourse[]>;
     downloadBatch(ids: string[]): Promise<Blob>;
 
     deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void>;
-    deleteCertificate(id: string): Promise<void>;
+    /** All or nothing: if any id no longer exists, nothing is deleted. */
+    deleteCertificates(ids: string[]): Promise<void>;
 
     // Alumno autenticado: sus propios certificados (los ligados a su cuenta).
     getMyCertificates(): Promise<Certificate[]>;
