@@ -68,9 +68,7 @@ export class GenerateCertificateBatchUseCase {
       'http://localhost:5173',
     );
     // One date for the whole batch: every certificate printed together carries the same day.
-    const certificateDate = dto.certificateDate
-      ? CertificateDate.fromIso(dto.certificateDate)
-      : CertificateDate.today();
+    const certificateDate = CertificateDate.fromIso(dto.certificateDate);
     const dateText = certificateDate.toDisplay();
 
     const results: GeneratedCertificateSummary[] = [];
@@ -102,7 +100,7 @@ export class GenerateCertificateBatchUseCase {
         },
       );
 
-      // 4. Generar el PDF con nombre, QR y (opcionalmente) fecha superpuestos
+      // 4. Generar el PDF con nombre, QR y fecha superpuestos
       const { nameStyle, qrStyle, dateStyle } = template;
 
       const pdfBuffer = await this.generatorGateway.generate({
@@ -116,17 +114,12 @@ export class GenerateCertificateBatchUseCase {
         nameAlign: nameStyle.align ?? 'left',
         qrPosition: { x: qrStyle.positionX, y: qrStyle.positionY },
         qrSize: qrStyle.size,
-        ...(dateStyle.show && {
-          dateText,
-          datePosition: {
-            x: dateStyle.positionX,
-            y: dateStyle.positionY,
-          },
-          dateFontSize: dateStyle.fontSize,
-          dateColor: dateStyle.color,
-          dateFontFamily: dateStyle.fontFamily,
-          dateAlign: dateStyle.align ?? 'left',
-        }),
+        dateText,
+        datePosition: { x: dateStyle.positionX, y: dateStyle.positionY },
+        dateFontSize: dateStyle.fontSize,
+        dateColor: dateStyle.color,
+        dateFontFamily: dateStyle.fontFamily,
+        dateAlign: dateStyle.align ?? 'left',
       });
 
       // 5. Guardar el PDF generado via FileStorageGateway

@@ -20,10 +20,4 @@ describe('CertificateDate', () => {
     expect(() => CertificateDate.fromIso('2026-02-30')).toThrow();
     expect(() => CertificateDate.fromIso('2026-13-01')).toThrow();
   });
-
-  it('today() usa la fecha local del reloj recibido', () => {
-    expect(CertificateDate.today(new Date(2026, 9, 8, 23, 59)).toIso()).toBe(
-      '2026-10-08',
-    );
-  });
 });

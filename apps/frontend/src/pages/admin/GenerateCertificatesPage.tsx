@@ -4,7 +4,7 @@ import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSumma
 import type { AuthGateway } from '../../gateways/AuthGateway';
 import type { User } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
-import { parseCalendarDate } from '../../lib/calendar-date';
+import { parseCalendarDate, todayCalendarDate } from '../../lib/calendar-date';
 
 interface Props {
     gateway: CertificateGateway;
@@ -15,7 +15,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [namesText, setNamesText] = useState('');
-    const [certificateDate, setCertificateDate] = useState('');
+    const [certificateDate, setCertificateDate] = useState(todayCalendarDate);
     const [generated, setGenerated] = useState<GeneratedCertificateSummary[]>([]);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
@@ -77,7 +77,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     }, [authGateway]);
 
     const handleGenerate = async () => {
-        if (!selectedTemplateId || recipientCount === 0) return;
+        if (!selectedTemplateId || recipientCount === 0 || !certificateDate) return;
 
         // Combinamos: nombres libres (sin userId) + alumnos elegidos (con userId).
         const recipients: CertificateRecipient[] = [
@@ -87,7 +87,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
 
         setLoading(true);
         try {
-            const result = await gateway.generateBatch(selectedTemplateId, recipients, certificateDate || undefined);
+            const result = await gateway.generateBatch(selectedTemplateId, recipients, certificateDate);
             setGenerated(result);
             setSelected(new Set(result.map(c => c.id)));
         } catch (err) {
@@ -157,18 +157,19 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label" htmlFor="certificate-date">Fecha personalizada (opcional)</label>
+                    <label className="form-label" htmlFor="certificate-date">Fecha del certificado</label>
                     <input
                         id="certificate-date"
                         type="date"
                         className="form-input"
                         value={certificateDate}
                         onChange={e => setCertificateDate(e.target.value)}
+                        required
                     />
                     <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
                         {certificateDate
-                            ? `Se imprimirá ${parseCalendarDate(certificateDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}.`
-                            : 'Si la dejas vacía se usa la fecha de hoy. Úsala para certificados impresos por adelantado.'}
+                            ? `Se imprimirá ${parseCalendarDate(certificateDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Cámbiala para certificados impresos por adelantado.`
+                            : 'Elige la fecha que se imprimirá en los certificados.'}
                     </p>
                 </div>
 
@@ -267,7 +268,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 <button
                     className="btn-primary"
                     onClick={handleGenerate}
-                    disabled={loading || !selectedTemplateId || recipientCount === 0}
+                    disabled={loading || !selectedTemplateId || recipientCount === 0 || !certificateDate}
                 >
                     {loading ? 'Generando...' : `Generar Certificados (${recipientCount})`}
                 </button>

@@ -184,40 +184,37 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
       height: qrSize,
     });
 
-    // Si la plantilla tiene fecha activada, la superponemos con su propia fuente
-    if (dateText && datePosition && dateFontSize) {
-      const { font: dateFont, isCustom: isDateCustom } = await this.embedFont(
-        pdfDoc,
-        dateFontFamily ?? 'Helvetica',
-      );
-      const dateRgb = this.hexToRgb(dateColor ?? '#000000');
-      const dateDrawX = this.resolveDrawX(
-        datePosition.x,
-        dateAlign ?? 'left',
-        dateText,
-        dateFontSize,
-        dateFont,
-      );
-      const dateDrawY = pageHeight - datePosition.y - dateFontSize;
-      const dateRgbColor = rgb(dateRgb.r, dateRgb.g, dateRgb.b);
+    const { font: dateFont, isCustom: isDateCustom } = await this.embedFont(
+      pdfDoc,
+      dateFontFamily,
+    );
+    const dateRgb = this.hexToRgb(dateColor);
+    const dateDrawX = this.resolveDrawX(
+      datePosition.x,
+      dateAlign,
+      dateText,
+      dateFontSize,
+      dateFont,
+    );
+    const dateDrawY = pageHeight - datePosition.y - dateFontSize;
+    const dateRgbColor = rgb(dateRgb.r, dateRgb.g, dateRgb.b);
 
-      if (isDateCustom) {
-        this.drawTextCharByChar(page, dateText, {
-          x: dateDrawX,
-          y: dateDrawY,
-          size: dateFontSize,
-          font: dateFont,
-          color: dateRgbColor,
-        });
-      } else {
-        page.drawText(dateText, {
-          x: dateDrawX,
-          y: dateDrawY,
-          size: dateFontSize,
-          font: dateFont,
-          color: dateRgbColor,
-        });
-      }
+    if (isDateCustom) {
+      this.drawTextCharByChar(page, dateText, {
+        x: dateDrawX,
+        y: dateDrawY,
+        size: dateFontSize,
+        font: dateFont,
+        color: dateRgbColor,
+      });
+    } else {
+      page.drawText(dateText, {
+        x: dateDrawX,
+        y: dateDrawY,
+        size: dateFontSize,
+        font: dateFont,
+        color: dateRgbColor,
+      });
     }
 
     const pdfBytes = await pdfDoc.save();

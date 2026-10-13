@@ -36,6 +36,7 @@ import { AddCourseAccessDuration1783500000000 } from './migrations/1783500000000
 import { AddCourseInvitations1783600000000 } from './migrations/1783600000000-AddCourseInvitations';
 import { AddCertificateDate1783700000000 } from './migrations/1783700000000-AddCertificateDate';
 import { AddCertificateNumberSequences1783800000000 } from './migrations/1783800000000-AddCertificateNumberSequences';
+import { RemoveCertificateDateToggle1783900000000 } from './migrations/1783900000000-RemoveCertificateDateToggle';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -93,4 +94,5 @@ export const MIGRATIONS = [
   AddCourseInvitations1783600000000,
   AddCertificateDate1783700000000,
   AddCertificateNumberSequences1783800000000,
+  RemoveCertificateDateToggle1783900000000,
 ];

@@ -22,13 +22,6 @@ export class CertificateDate {
     return new CertificateDate(value);
   }
 
-  static today(now: Date = new Date()): CertificateDate {
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const dd = String(now.getDate()).padStart(2, '0');
-    return new CertificateDate(`${yyyy}-${mm}-${dd}`);
-  }
-
   toIso(): string {
     return this.iso;
   }
