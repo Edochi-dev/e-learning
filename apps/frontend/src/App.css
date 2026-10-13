@@ -7203,3 +7203,52 @@ input:checked+.slider .icon-moon {
   gap: 0.5rem;
   margin-top: 0.25rem;
 }
+
+/* ============================================================================
+   UPDATE PROMPT
+   Aviso de versión nueva tras un deploy (service worker en modo "prompt").
+   ============================================================================ */
+
+.update-prompt {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-xl);
+  animation: updatePromptIn var(--dur-slow) var(--ease-out);
+}
+
+.update-prompt__text {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.update-prompt__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+@keyframes updatePromptIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

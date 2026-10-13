@@ -33,6 +33,7 @@ import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
 import { ToastProvider } from './components/Toast';
+import { UpdatePrompt } from './components/UpdatePrompt';
 
 /**
  * Rutas diferidas.
@@ -121,6 +122,7 @@ function AppContent() {
   return (
     <>
       <ScrollToTop />
+      <UpdatePrompt />
 
       <Suspense fallback={<div className="route-loading" aria-busy="true" />}>
         <Routes>
