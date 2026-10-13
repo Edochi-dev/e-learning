@@ -3,6 +3,8 @@ import { Certificate } from '../entities/certificate.entity';
 export abstract class CertificateGateway {
   abstract create(data: Partial<Certificate>): Promise<Certificate>;
   abstract findOne(id: string): Promise<Certificate | null>;
+  /** Loads the live template too; user-facing data still comes from the snapshot. */
+  abstract findOneWithTemplate(id: string): Promise<Certificate | null>;
   abstract findByIds(ids: string[]): Promise<Certificate[]>;
   abstract findByNumber(certificateNumber: string): Promise<Certificate | null>;
   abstract findByUser(userId: string): Promise<Certificate[]>;

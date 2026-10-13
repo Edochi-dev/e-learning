@@ -81,6 +81,10 @@ export class CertificatesRepository
     return this.repo.findOne({ where: { id } });
   }
 
+  async findOneWithTemplate(id: string): Promise<Certificate | null> {
+    return this.repo.findOne({ where: { id }, relations: { template: true } });
+  }
+
   async findByIds(ids: string[]): Promise<Certificate[]> {
     return this.repo.find({ where: { id: In(ids) } });
   }

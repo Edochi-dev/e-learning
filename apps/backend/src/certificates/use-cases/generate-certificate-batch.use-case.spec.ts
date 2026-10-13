@@ -393,7 +393,7 @@ describe('GenerateCertificateBatchUseCase', () => {
 
       expect(generatorGateway.generate).toHaveBeenCalledTimes(2);
       for (const [params] of generatorGateway.generate.mock.calls) {
-        expect(params.dateText).toBe('15/10/2026');
+        expect(params.date.text).toBe('15/10/2026');
       }
       expect(certGateway.create).toHaveBeenCalledWith(
         expect.objectContaining({ certificateDate: '2026-10-15' }),
@@ -409,11 +409,14 @@ describe('GenerateCertificateBatchUseCase', () => {
 
       expect(generatorGateway.generate).toHaveBeenCalledWith(
         expect.objectContaining({
-          datePosition: { x: 0, y: 0 },
-          dateFontSize: 18,
-          dateColor: '#000000',
-          dateFontFamily: 'Helvetica',
-          dateAlign: 'left',
+          date: {
+            text: '15/10/2026',
+            position: { x: 0, y: 0 },
+            fontSize: 18,
+            color: '#000000',
+            fontFamily: 'Helvetica',
+            align: 'left',
+          },
         }),
       );
     });
