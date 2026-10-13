@@ -10,11 +10,11 @@ export default defineConfig({
   plugins: [
     react(),
     // PWA instalable (ícono en pantalla de inicio, arranque a pantalla completa).
-    // autoUpdate: al desplegar una versión nueva, el service worker se actualiza
-    // solo y no sirve JS viejo. Las llamadas al API son a otro origen
-    // (localhost:3000), así que el SW no las intercepta ni cachea.
+    // prompt: tras un deploy, las pestañas abiertas siguen con el JS viejo en
+    // memoria; UpdatePrompt ofrece recargar en vez de hacerlo por sorpresa.
+    // Las llamadas al API son a otro origen, así que el SW no las intercepta.
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['favicon.png'],
       manifest: {
         name: "Mari's Nails Academy",
