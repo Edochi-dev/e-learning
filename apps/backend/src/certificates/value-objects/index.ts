@@ -3,3 +3,5 @@ export { QrStyle, DEFAULT_QR_STYLE } from './qr-style.vo';
 export { DateStyle, DEFAULT_DATE_STYLE } from './date-style.vo';
 export { TemplateSnapshot } from './template-snapshot.vo';
 export { CertificateDate } from './certificate-date.vo';
+export type { DateStamp } from './date-stamp.vo';
+export { createDateStamp } from './date-stamp.vo';

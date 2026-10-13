@@ -9,7 +9,7 @@ import { QrCodeGateway } from '../gateways/qr-code.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { Certificate } from '../entities/certificate.entity';
 import { GenerateCertificateBatchDto } from '../dto/generate-certificate-batch.dto';
-import { CertificateDate } from '../value-objects';
+import { CertificateDate, createDateStamp } from '../value-objects';
 
 export interface GeneratedCertificateSummary {
   id: string;
@@ -69,7 +69,7 @@ export class GenerateCertificateBatchUseCase {
     );
     // One date for the whole batch: every certificate printed together carries the same day.
     const certificateDate = CertificateDate.fromIso(dto.certificateDate);
-    const dateText = certificateDate.toDisplay();
+    const dateStamp = createDateStamp(template.dateStyle, certificateDate);
 
     const results: GeneratedCertificateSummary[] = [];
 
@@ -101,7 +101,7 @@ export class GenerateCertificateBatchUseCase {
       );
 
       // 4. Generar el PDF con nombre, QR y fecha superpuestos
-      const { nameStyle, qrStyle, dateStyle } = template;
+      const { nameStyle, qrStyle } = template;
 
       const pdfBuffer = await this.generatorGateway.generate({
         templatePath: templateBuffer,
@@ -114,12 +114,7 @@ export class GenerateCertificateBatchUseCase {
         nameAlign: nameStyle.align ?? 'left',
         qrPosition: { x: qrStyle.positionX, y: qrStyle.positionY },
         qrSize: qrStyle.size,
-        dateText,
-        datePosition: { x: dateStyle.positionX, y: dateStyle.positionY },
-        dateFontSize: dateStyle.fontSize,
-        dateColor: dateStyle.color,
-        dateFontFamily: dateStyle.fontFamily,
-        dateAlign: dateStyle.align ?? 'left',
+        date: dateStamp,
       });
 
       // 5. Guardar el PDF generado via FileStorageGateway

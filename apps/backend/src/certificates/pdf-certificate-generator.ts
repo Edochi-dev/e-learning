@@ -6,6 +6,8 @@ import {
   CertificateGeneratorGateway,
   GenerateCertificateParams,
 } from './gateways/certificate-generator.gateway';
+import { CertificateDateStamperGateway } from './gateways/certificate-date-stamper.gateway';
+import { DateStamp } from './value-objects';
 
 // fontkit permite incrustar fuentes TTF/OTF custom en los PDFs generados por pdf-lib.
 // Usamos require() porque @pdf-lib/fontkit es un módulo CJS y su export por defecto
@@ -40,7 +42,9 @@ const fontkit = fontkitModule.default ?? fontkitModule;
  * (que vienen desde la esquina superior-izquierda) a coordenadas PDF.
  */
 @Injectable()
-export class PdfCertificateGenerator implements CertificateGeneratorGateway {
+export class PdfCertificateGenerator
+  implements CertificateGeneratorGateway, CertificateDateStamperGateway
+{
   private readonly logger = new Logger(PdfCertificateGenerator.name);
 
   // Ruta a la carpeta de fuentes TTF (se copia de src/ a dist/ via nest-cli.json assets)
@@ -111,12 +115,7 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
       nameAlign,
       qrPosition,
       qrSize,
-      dateText,
-      datePosition,
-      dateFontSize,
-      dateColor,
-      dateFontFamily,
-      dateAlign,
+      date,
     } = params;
 
     // templatePath ahora es un Buffer (leído por el Use Case via FileStorageGateway).
@@ -184,41 +183,49 @@ export class PdfCertificateGenerator implements CertificateGeneratorGateway {
       height: qrSize,
     });
 
-    const { font: dateFont, isCustom: isDateCustom } = await this.embedFont(
-      pdfDoc,
-      dateFontFamily,
-    );
-    const dateRgb = this.hexToRgb(dateColor);
-    const dateDrawX = this.resolveDrawX(
-      datePosition.x,
-      dateAlign,
-      dateText,
-      dateFontSize,
-      dateFont,
-    );
-    const dateDrawY = pageHeight - datePosition.y - dateFontSize;
-    const dateRgbColor = rgb(dateRgb.r, dateRgb.g, dateRgb.b);
-
-    if (isDateCustom) {
-      this.drawTextCharByChar(page, dateText, {
-        x: dateDrawX,
-        y: dateDrawY,
-        size: dateFontSize,
-        font: dateFont,
-        color: dateRgbColor,
-      });
-    } else {
-      page.drawText(dateText, {
-        x: dateDrawX,
-        y: dateDrawY,
-        size: dateFontSize,
-        font: dateFont,
-        color: dateRgbColor,
-      });
-    }
+    await this.drawDate(pdfDoc, page, date);
 
     const pdfBytes = await pdfDoc.save();
     return Buffer.from(pdfBytes);
+  }
+
+  async stamp(pdf: Buffer, date: DateStamp): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.load(pdf);
+    await this.drawDate(pdfDoc, pdfDoc.getPages()[0], date);
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
+  }
+
+  // Shared by generate() and stamp(): a stamped date must be indistinguishable
+  // from one drawn at issuance.
+  private async drawDate(
+    pdfDoc: PDFDocument,
+    page: PDFPage,
+    date: DateStamp,
+  ): Promise<void> {
+    const { height: pageHeight } = page.getSize();
+    const { font, isCustom } = await this.embedFont(pdfDoc, date.fontFamily);
+    const color = this.hexToRgb(date.color);
+    const options = {
+      x: this.resolveDrawX(
+        date.position.x,
+        date.align,
+        date.text,
+        date.fontSize,
+        font,
+      ),
+      y: pageHeight - date.position.y - date.fontSize,
+      size: date.fontSize,
+      font,
+      color: rgb(color.r, color.g, color.b),
+    };
+
+    if (isCustom) {
+      this.drawTextCharByChar(page, date.text, options);
+    } else {
+      page.drawText(date.text, options);
+    }
   }
 
   /**

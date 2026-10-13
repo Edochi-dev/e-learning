@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { GenerateCertificateParams } from './gateways/certificate-generator.gateway';
+import { DateStamp } from './value-objects';
 
 // fontkit para cargar fuentes directamente en los tests de ancho
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -106,26 +107,47 @@ describe('PdfCertificateGenerator — text integrity', () => {
       nameAlign: 'center',
       qrPosition: { x: 50, y: 700 },
       qrSize: 60,
-      dateText: '08/10/2026',
-      datePosition: { x: 297, y: 480 },
-      dateFontSize: 14,
-      dateColor: '#000000',
-      dateFontFamily: 'Helvetica',
-      dateAlign: 'center',
+      date: makeDateStamp('Helvetica'),
     };
   }
 
+  function makeDateStamp(fontFamily: string): DateStamp {
+    return {
+      text: '08/10/2026',
+      position: { x: 297, y: 480 },
+      fontSize: 14,
+      color: '#000000',
+      fontFamily,
+      align: 'center',
+    };
+  }
+
+  // A custom font is drawn one operator per character, so a date in a custom
+  // font contributes one operator per character to the page.
   it('dibuja siempre la fecha, además del nombre', async () => {
     const params = {
       ...makeParams('Maria', 'Helvetica'),
-      dateFontFamily: customFonts[0],
+      date: makeDateStamp(customFonts[0]),
     };
     const pdfBuffer = await generator.generate(params);
 
-    // A custom font is drawn one operator per character, so the date alone
-    // contributes one operator per character on top of the name's.
     const { tjCount } = countTextOperators(extractPageContentStream(pdfBuffer));
-    expect(tjCount).toBeGreaterThanOrEqual(params.dateText.length + 1);
+    expect(tjCount).toBeGreaterThanOrEqual(params.date.text.length + 1);
+  });
+
+  it('stamp() añade la fecha a un PDF ya emitido sin perder su contenido', async () => {
+    const issued = await generator.generate(makeParams('Maria', 'Helvetica'));
+    const before = countTextOperators(extractPageContentStream(issued)).tjCount;
+
+    const stamped = await generator.stamp(
+      issued,
+      makeDateStamp(customFonts[0]),
+    );
+
+    const after = countTextOperators(extractPageContentStream(stamped)).tjCount;
+    expect(after).toBe(before + '08/10/2026'.length);
+    const doc = await PDFDocument.load(stamped);
+    expect(doc.getPageCount()).toBe(1);
   });
 
   // ─── Smoke test: todas las fuentes generan PDFs válidos ───────────────
