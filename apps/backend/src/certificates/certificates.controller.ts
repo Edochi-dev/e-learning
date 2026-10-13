@@ -30,6 +30,8 @@ import { EditCertificateTemplateDto } from './dto/edit-certificate-template.dto'
 import { UpdateTemplateDesignDto } from './dto/update-template-design.dto';
 import { GenerateCertificateBatchDto } from './dto/generate-certificate-batch.dto';
 import { DownloadCertificateBatchDto } from './dto/download-certificate-batch.dto';
+import { DeleteCertificateBatchDto } from './dto/delete-certificate-batch.dto';
+import { SearchCertificatesQueryDto } from './dto/search-certificates-query.dto';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
@@ -40,11 +42,12 @@ import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 import type { CertAction } from './use-cases/delete-certificate-template.use-case';
-import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
+import { DeleteCertificateBatchUseCase } from './use-cases/delete-certificate-batch.use-case';
+import { SearchCertificatesUseCase } from './use-cases/search-certificates.use-case';
+import { ListCertificateCoursesUseCase } from './use-cases/list-certificate-courses.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
 import { LookupCertificateDto } from './dto/lookup-certificate.dto';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
-import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
 export class CertificatesController {
@@ -57,9 +60,10 @@ export class CertificatesController {
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
     private readonly getCertificateUseCase: GetCertificateUseCase,
     private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
-    private readonly certificateGateway: CertificateGateway,
     private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
-    private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
+    private readonly deleteCertificateBatchUseCase: DeleteCertificateBatchUseCase,
+    private readonly searchCertificatesUseCase: SearchCertificatesUseCase,
+    private readonly listCertificateCoursesUseCase: ListCertificateCoursesUseCase,
     private readonly lookupCertificateUseCase: LookupCertificateUseCase,
     private readonly getMyCertificatesUseCase: GetMyCertificatesUseCase,
   ) {}
@@ -183,12 +187,15 @@ export class CertificatesController {
   @Get('admin/certificates')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  listCertificates(@Query('search') search?: string) {
-    const term = search?.trim().slice(0, 200);
-    if (term) {
-      return this.certificateGateway.search(term);
-    }
-    return this.certificateGateway.findAll();
+  searchCertificates(@Query() query: SearchCertificatesQueryDto) {
+    return this.searchCertificatesUseCase.execute(query.toCriteria());
+  }
+
+  @Get('admin/certificates/courses')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  listCertificateCourses() {
+    return this.listCertificateCoursesUseCase.execute();
   }
 
   @Post('admin/certificates/download')
@@ -209,12 +216,13 @@ export class CertificatesController {
     res.send(result.buffer);
   }
 
-  @Delete('admin/certificates/:id')
+  // POST, not DELETE: request bodies on DELETE are not reliably supported.
+  @Post('admin/certificates/delete')
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.deleteCertificateUseCase.execute(id);
+  deleteCertificateBatch(@Body() dto: DeleteCertificateBatchDto) {
+    return this.deleteCertificateBatchUseCase.execute(dto.ids);
   }
 
   // ==========================================

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { CertificateGateway } from '../gateways/certificate.gateway';
+import { CertificateNumberSequenceGateway } from '../gateways/certificate-number-sequence.gateway';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateGeneratorGateway } from '../gateways/certificate-generator.gateway';
 import { QrCodeGateway } from '../gateways/qr-code.gateway';
@@ -41,6 +42,7 @@ export interface GeneratedCertificateSummary {
 export class GenerateCertificateBatchUseCase {
   constructor(
     private readonly certificateGateway: CertificateGateway,
+    private readonly numberSequenceGateway: CertificateNumberSequenceGateway,
     private readonly templateGateway: CertificateTemplateGateway,
     private readonly generatorGateway: CertificateGeneratorGateway,
     private readonly qrGateway: QrCodeGateway,
@@ -77,11 +79,11 @@ export class GenerateCertificateBatchUseCase {
       const trimmedName = recipient.name.trim();
       if (!trimmedName) continue;
 
-      // 1. Calcular el número correlativo de este certificado
-      const count = await this.certificateGateway.countByAbbreviation(
+      // 1. Reservar el número correlativo de este certificado
+      const sequenceNumber = await this.numberSequenceGateway.next(
         template.courseAbbreviation,
       );
-      const certificateNumber = `${template.courseAbbreviation}-${String(count + 1).padStart(5, '0')}`;
+      const certificateNumber = `${template.courseAbbreviation}-${String(sequenceNumber).padStart(5, '0')}`;
 
       // 2. Generar UUID que será el ID del certificado y la URL de verificación
       const certId = randomUUID();

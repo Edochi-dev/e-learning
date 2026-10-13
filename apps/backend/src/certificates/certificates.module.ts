@@ -5,13 +5,17 @@ import { StorageModule } from '../storage/storage.module';
 import { CertificatesController } from './certificates.controller';
 import { CertificateTemplate } from './entities/certificate-template.entity';
 import { Certificate } from './entities/certificate.entity';
+import { CertificateNumberSequence } from './entities/certificate-number-sequence.entity';
 import { CertificateTemplateGateway } from './gateways/certificate-template.gateway';
 import { CertificateGateway } from './gateways/certificate.gateway';
+import { CertificateNumberSequenceGateway } from './gateways/certificate-number-sequence.gateway';
+import { CertificateSearchGateway } from './gateways/certificate-search.gateway';
 import { CertificateGeneratorGateway } from './gateways/certificate-generator.gateway';
 import { QrCodeGateway } from './gateways/qr-code.gateway';
 import { CertificateArchiveGateway } from './gateways/certificate-archive.gateway';
 import { CertificateTemplatesRepository } from './certificate-templates.repository';
 import { CertificatesRepository } from './certificates.repository';
+import { CertificateNumberSequenceRepository } from './certificate-number-sequence.repository';
 import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { QrCodeService } from './qr-code.service';
 import { ArchiverZipGateway } from './archiver-zip.gateway';
@@ -24,7 +28,9 @@ import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificat
 import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
-import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
+import { DeleteCertificateBatchUseCase } from './use-cases/delete-certificate-batch.use-case';
+import { SearchCertificatesUseCase } from './use-cases/search-certificates.use-case';
+import { ListCertificateCoursesUseCase } from './use-cases/list-certificate-courses.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 
@@ -41,7 +47,11 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CertificateTemplate, Certificate]),
+    TypeOrmModule.forFeature([
+      CertificateTemplate,
+      Certificate,
+      CertificateNumberSequence,
+    ]),
     ConfigModule, // Necesario para ConfigService en GenerateCertificateBatchUseCase
     StorageModule, // Necesario para FileStorageGateway en delete use cases
   ],
@@ -57,7 +67,9 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
     GetCertificateUseCase,
     DownloadCertificateBatchUseCase,
     DeleteCertificateTemplateUseCase,
-    DeleteCertificateUseCase,
+    DeleteCertificateBatchUseCase,
+    SearchCertificatesUseCase,
+    ListCertificateCoursesUseCase,
     LookupCertificateUseCase,
     GetMyCertificatesUseCase,
 
@@ -67,6 +79,12 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
       useClass: CertificateTemplatesRepository,
     },
     { provide: CertificateGateway, useClass: CertificatesRepository },
+    // Same instance: one repository implements both segregated contracts.
+    { provide: CertificateSearchGateway, useExisting: CertificateGateway },
+    {
+      provide: CertificateNumberSequenceGateway,
+      useClass: CertificateNumberSequenceRepository,
+    },
     { provide: CertificateGeneratorGateway, useClass: PdfCertificateGenerator },
     { provide: QrCodeGateway, useClass: QrCodeService },
     { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },

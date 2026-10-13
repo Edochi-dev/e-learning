@@ -1,4 +1,13 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse } from './CertificateGateway';
+
+// NestJS validation errors carry `message` as an array of strings.
+async function errorMessage(res: Response, fallback: string): Promise<string> {
+    const body = await res.json().catch(() => ({}));
+    const message: unknown = body.message;
+    if (Array.isArray(message)) return message.join('. ');
+    if (typeof message === 'string') return message;
+    return `${fallback}: ${res.statusText}`;
+}
 
 export class HttpCertificateGateway implements CertificateGateway {
     private readonly baseUrl: string;
@@ -95,21 +104,23 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async listCertificates(): Promise<Certificate[]> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates`, {
-            credentials: 'include',
-        });
-        if (!res.ok) throw new Error(`Error al cargar certificados: ${res.statusText}`);
-        return res.json();
-    }
-
-    async searchCertificates(query: string): Promise<Certificate[]> {
+    async searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]> {
         const url = new URL(`${this.baseUrl}/admin/certificates`);
-        url.searchParams.set('search', query);
+        for (const [key, value] of Object.entries(filters)) {
+            if (value) url.searchParams.set(key, value);
+        }
         const res = await fetch(url.toString(), {
             credentials: 'include',
         });
-        if (!res.ok) throw new Error(`Error al buscar certificados: ${res.statusText}`);
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al buscar certificados'));
+        return res.json();
+    }
+
+    async listCertificateCourses(): Promise<CertificateCourse[]> {
+        const res = await fetch(`${this.baseUrl}/admin/certificates/courses`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error(`Error al cargar los cursos: ${res.statusText}`);
         return res.json();
     }
 
@@ -137,15 +148,14 @@ export class HttpCertificateGateway implements CertificateGateway {
         }
     }
 
-    async deleteCertificate(id: string): Promise<void> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates/${id}`, {
-            method: 'DELETE',
+    async deleteCertificates(ids: string[]): Promise<void> {
+        const res = await fetch(`${this.baseUrl}/admin/certificates/delete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
+            body: JSON.stringify({ ids }),
         });
-        if (!res.ok) {
-            const body = await res.json().catch(() => ({}));
-            throw new Error(body.message ?? `Error al eliminar certificado: ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al eliminar certificados'));
     }
 
     async getCertificate(id: string): Promise<Certificate> {
