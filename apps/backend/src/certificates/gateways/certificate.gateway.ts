@@ -7,7 +7,6 @@ export abstract class CertificateGateway {
   abstract findOne(id: string): Promise<Certificate | null>;
   abstract findByNumber(certificateNumber: string): Promise<Certificate | null>;
   abstract findByUser(userId: string): Promise<Certificate[]>;
-  abstract countByAbbreviation(abbreviation: string): Promise<number>;
   abstract findByTemplateId(templateId: string): Promise<Certificate[]>;
   abstract countByTemplateId(templateId: string): Promise<number>;
   abstract unlinkAllFromTemplate(templateId: string): Promise<void>;

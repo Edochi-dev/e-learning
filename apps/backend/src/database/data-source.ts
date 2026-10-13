@@ -9,6 +9,7 @@ import { Enrollment } from '../enrollments/entities/enrollment.entity';
 import { LessonProgress } from '../progress/entities/lesson-progress.entity';
 import { CertificateTemplate } from '../certificates/entities/certificate-template.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
+import { CertificateNumberSequence } from '../certificates/entities/certificate-number-sequence.entity';
 import { Order } from '../orders/entities/order.entity';
 import { VideoLesson } from '../courses/entities/video-lesson.entity';
 import { ExamLesson } from '../courses/entities/exam-lesson.entity';
@@ -45,6 +46,7 @@ export const AppDataSource = new DataSource({
     LessonProgress,
     CertificateTemplate,
     Certificate,
+    CertificateNumberSequence,
     Order,
     QuizQuestion,
     QuizOption,

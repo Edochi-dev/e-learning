@@ -53,17 +53,6 @@ export class CertificatesRepository implements CertificateGateway {
     });
   }
 
-  async countByAbbreviation(abbreviation: string): Promise<number> {
-    // Cuenta todos los certificados cuyo número empieza con la abreviatura dada.
-    // Ej: "MR-" → cuenta MR-00001, MR-00002, etc.
-    return this.repo
-      .createQueryBuilder('cert')
-      .where('cert.certificateNumber LIKE :prefix', {
-        prefix: `${abbreviation}-%`,
-      })
-      .getCount();
-  }
-
   async findByTemplateId(templateId: string): Promise<Certificate[]> {
     return this.repo.find({ where: { template: { id: templateId } } });
   }

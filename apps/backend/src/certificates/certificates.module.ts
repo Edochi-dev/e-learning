@@ -5,13 +5,16 @@ import { StorageModule } from '../storage/storage.module';
 import { CertificatesController } from './certificates.controller';
 import { CertificateTemplate } from './entities/certificate-template.entity';
 import { Certificate } from './entities/certificate.entity';
+import { CertificateNumberSequence } from './entities/certificate-number-sequence.entity';
 import { CertificateTemplateGateway } from './gateways/certificate-template.gateway';
 import { CertificateGateway } from './gateways/certificate.gateway';
+import { CertificateNumberSequenceGateway } from './gateways/certificate-number-sequence.gateway';
 import { CertificateGeneratorGateway } from './gateways/certificate-generator.gateway';
 import { QrCodeGateway } from './gateways/qr-code.gateway';
 import { CertificateArchiveGateway } from './gateways/certificate-archive.gateway';
 import { CertificateTemplatesRepository } from './certificate-templates.repository';
 import { CertificatesRepository } from './certificates.repository';
+import { CertificateNumberSequenceRepository } from './certificate-number-sequence.repository';
 import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { QrCodeService } from './qr-code.service';
 import { ArchiverZipGateway } from './archiver-zip.gateway';
@@ -41,7 +44,11 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
  */
 @Module({
   imports: [
-    TypeOrmModule.forFeature([CertificateTemplate, Certificate]),
+    TypeOrmModule.forFeature([
+      CertificateTemplate,
+      Certificate,
+      CertificateNumberSequence,
+    ]),
     ConfigModule, // Necesario para ConfigService en GenerateCertificateBatchUseCase
     StorageModule, // Necesario para FileStorageGateway en delete use cases
   ],
@@ -67,6 +74,10 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
       useClass: CertificateTemplatesRepository,
     },
     { provide: CertificateGateway, useClass: CertificatesRepository },
+    {
+      provide: CertificateNumberSequenceGateway,
+      useClass: CertificateNumberSequenceRepository,
+    },
     { provide: CertificateGeneratorGateway, useClass: PdfCertificateGenerator },
     { provide: QrCodeGateway, useClass: QrCodeService },
     { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },
