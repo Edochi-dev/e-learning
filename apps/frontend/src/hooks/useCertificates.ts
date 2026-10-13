@@ -33,7 +33,7 @@ export const useCertificates = (gateway: CertificateGateway) => {
         return template;
     };
 
-    const generateBatch = async (templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]> => {
+    const generateBatch = async (templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]> => {
         return gateway.generateBatch(templateId, recipients, certificateDate);
     };
 

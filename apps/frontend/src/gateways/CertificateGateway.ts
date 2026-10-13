@@ -27,7 +27,6 @@ export interface QrStyle {
 }
 
 export interface DateStyle {
-    show: boolean;
     positionX: number;
     positionY: number;
     fontSize: number;
@@ -169,7 +168,8 @@ export interface CertificateGateway {
     updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate>;
     listTemplates(): Promise<CertificateTemplate[]>;
     getTemplate(id: string): Promise<CertificateTemplate>;
-    generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate?: string): Promise<GeneratedCertificateSummary[]>;
+    /** `certificateDate` (YYYY-MM-DD) is printed on every certificate of the batch. */
+    generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]>;
     searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]>;
     listCertificateCourses(): Promise<CertificateCourse[]>;
     downloadBatch(ids: string[]): Promise<Blob>;

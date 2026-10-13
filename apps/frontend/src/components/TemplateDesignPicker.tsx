@@ -192,7 +192,6 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     const [qrSize,         setQrSize]         = useState(initialStyles?.qrStyle.size         ?? 90);
     const [qrFgColor,     setQrFgColor]     = useState(initialStyles?.qrStyle.foregroundColor ?? '#000000');
     const [qrBgColor,     setQrBgColor]     = useState(initialStyles?.qrStyle.backgroundColor ?? '#ffffff');
-    const [showDate,       setShowDate]       = useState(initialStyles?.dateStyle.show       ?? true);
     const [dateFontSize,   setDateFontSize]   = useState(initialStyles?.dateStyle.fontSize   ?? 18);
     const [dateColor,      setDateColor]      = useState(initialStyles?.dateStyle.color      ?? '#1a1a1a');
     const [dateFontFamily, setDateFontFamily] = useState(initialStyles?.dateStyle.fontFamily ?? 'Helvetica');
@@ -308,7 +307,6 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     backgroundColor: qrBgColor,
                 },
                 dateStyle: {
-                    show: showDate,
                     positionX: datePct.x * pdfDims.w,
                     positionY: datePct.y * pdfDims.h,
                     fontSize: dateFontSize,
@@ -471,42 +469,40 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                 </div>
                                             </Draggable>
 
-                                            {showDate && (
-                                                <Draggable
-                                                    nodeRef={dateNodeRef}
-                                                    bounds="parent"
-                                                    defaultPosition={dateDefaultPos!}
-                                                    onStop={onDateStop}
-                                                    scale={zoomLevel}
-                                                >
-                                                    <div ref={dateNodeRef} style={{
-                                                        position: 'absolute',
-                                                        top: 0,
-                                                        left: 0,
-                                                        cursor: 'grab',
-                                                        userSelect: 'none',
-                                                        padding: 0,
-                                                        background: 'rgba(100, 180, 100, 0.10)',
-                                                        border: '1.5px dashed #4caf50',
-                                                        borderRadius: '3px',
-                                                        fontFamily: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).css,
-                                                        fontWeight: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).weight,
-                                                        fontStyle:  (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).style,
-                                                        fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
-                                                        color: dateColor,
-                                                        whiteSpace: 'nowrap',
-                                                        lineHeight: 'normal',
-                                                        ...(dateAlign === 'center' && {
-                                                            backgroundImage: 'linear-gradient(#4caf50 1px, transparent 1px)',
-                                                            backgroundSize: '1px 4px',
-                                                            backgroundPosition: '50% 0',
-                                                            backgroundRepeat: 'repeat-y',
-                                                        }),
-                                                    }}>
-                                                        11/03/2026
-                                                    </div>
-                                                </Draggable>
-                                            )}
+                                            <Draggable
+                                                nodeRef={dateNodeRef}
+                                                bounds="parent"
+                                                defaultPosition={dateDefaultPos!}
+                                                onStop={onDateStop}
+                                                scale={zoomLevel}
+                                            >
+                                                <div ref={dateNodeRef} style={{
+                                                    position: 'absolute',
+                                                    top: 0,
+                                                    left: 0,
+                                                    cursor: 'grab',
+                                                    userSelect: 'none',
+                                                    padding: 0,
+                                                    background: 'rgba(100, 180, 100, 0.10)',
+                                                    border: '1.5px dashed #4caf50',
+                                                    borderRadius: '3px',
+                                                    fontFamily: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).css,
+                                                    fontWeight: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).weight,
+                                                    fontStyle:  (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).style,
+                                                    fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
+                                                    color: dateColor,
+                                                    whiteSpace: 'nowrap',
+                                                    lineHeight: 'normal',
+                                                    ...(dateAlign === 'center' && {
+                                                        backgroundImage: 'linear-gradient(#4caf50 1px, transparent 1px)',
+                                                        backgroundSize: '1px 4px',
+                                                        backgroundPosition: '50% 0',
+                                                        backgroundRepeat: 'repeat-y',
+                                                    }),
+                                                }}>
+                                                    11/03/2026
+                                                </div>
+                                            </Draggable>
                                         </>
                                     )}
                                 </div>
@@ -518,7 +514,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                 <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
                     <span><span style={{ color: '#e84393', fontWeight: 700 }}>━ ━</span> Nombre del alumno</span>
                     <span><span style={{ color: '#d4a574', fontWeight: 700 }}>━ ━</span> Código QR</span>
-                    {showDate && <span><span style={{ color: '#4caf50', fontWeight: 700 }}>━ ━</span> Fecha</span>}
+                    <span><span style={{ color: '#4caf50', fontWeight: 700 }}>━ ━</span> Fecha</span>
                 </div>
             </div>
 
@@ -643,79 +639,67 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                 <hr style={{ marginBottom: '1.25rem', borderColor: 'var(--border)' }} />
 
                 <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}>
-                        <input type="checkbox" checked={showDate} onChange={e => setShowDate(e.target.checked)}
-                            style={{ accentColor: '#4caf50', width: '16px', height: '16px' }} />
-                        Mostrar fecha de emisión
-                    </label>
+                    <label className="form-label">Tipo de letra (fecha)</label>
+                    <select className="form-input" value={dateFontFamily} onChange={e => setDateFontFamily(e.target.value)}>
+                        {FONT_GROUPS.map(group => (
+                            <optgroup key={group} label={group}>
+                                {FONT_OPTIONS.filter(f => f.group === group).map(f => (
+                                    <option key={f.value} value={f.value}>{f.label}</option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
                 </div>
 
-                {showDate && (
-                    <>
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label className="form-label">Tipo de letra (fecha)</label>
-                            <select className="form-input" value={dateFontFamily} onChange={e => setDateFontFamily(e.target.value)}>
-                                {FONT_GROUPS.map(group => (
-                                    <optgroup key={group} label={group}>
-                                        {FONT_OPTIONS.filter(f => f.group === group).map(f => (
-                                            <option key={f.value} value={f.value}>{f.label}</option>
-                                        ))}
-                                    </optgroup>
-                                ))}
-                            </select>
-                        </div>
+                <div style={{ marginBottom: '1rem' }}>
+                    <label className="form-label">Posición de la fecha</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        {(['left', 'center'] as const).map(opt => (
+                            <button
+                                key={opt}
+                                type="button"
+                                onClick={() => setDateAlign(opt)}
+                                style={{
+                                    flex: 1,
+                                    padding: '0.4rem',
+                                    border: `2px solid ${dateAlign === opt ? '#4caf50' : 'var(--border)'}`,
+                                    borderRadius: '6px',
+                                    background: dateAlign === opt ? 'rgba(76,175,80,0.08)' : 'transparent',
+                                    color: dateAlign === opt ? '#4caf50' : 'var(--text-muted)',
+                                    fontWeight: dateAlign === opt ? 700 : 400,
+                                    fontSize: '0.8rem',
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
+                            </button>
+                        ))}
+                    </div>
+                </div>
 
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label className="form-label">Posición de la fecha</label>
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                {(['left', 'center'] as const).map(opt => (
-                                    <button
-                                        key={opt}
-                                        type="button"
-                                        onClick={() => setDateAlign(opt)}
-                                        style={{
-                                            flex: 1,
-                                            padding: '0.4rem',
-                                            border: `2px solid ${dateAlign === opt ? '#4caf50' : 'var(--border)'}`,
-                                            borderRadius: '6px',
-                                            background: dateAlign === opt ? 'rgba(76,175,80,0.08)' : 'transparent',
-                                            color: dateAlign === opt ? '#4caf50' : 'var(--text-muted)',
-                                            fontWeight: dateAlign === opt ? 700 : 400,
-                                            fontSize: '0.8rem',
-                                            cursor: 'pointer',
-                                        }}
-                                    >
-                                        {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
+                <div style={{ marginBottom: '1rem' }}>
+                    <label className="form-label">Tamaño de fuente (fecha)</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input type="range" min={6} max={80} step={1} value={dateFontSize}
+                            onChange={e => setDateFontSize(Number(e.target.value))}
+                            style={{ flex: 1, accentColor: '#4caf50' }} />
+                        <input type="number" min={6} max={80} value={dateFontSize}
+                            onChange={e => setDateFontSize(Math.min(80, Math.max(6, Number(e.target.value))))}
+                            style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
+                    </div>
+                </div>
 
-                        <div style={{ marginBottom: '1rem' }}>
-                            <label className="form-label">Tamaño de fuente (fecha)</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                <input type="range" min={6} max={80} step={1} value={dateFontSize}
-                                    onChange={e => setDateFontSize(Number(e.target.value))}
-                                    style={{ flex: 1, accentColor: '#4caf50' }} />
-                                <input type="number" min={6} max={80} value={dateFontSize}
-                                    onChange={e => setDateFontSize(Math.min(80, Math.max(6, Number(e.target.value))))}
-                                    style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
-                            </div>
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label className="form-label">Color de la fecha</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                                <input type="color" value={dateColor} onChange={e => setDateColor(e.target.value)}
-                                    style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
-                                <input type="text" className="form-input" value={dateColor}
-                                    onChange={e => setDateColor(e.target.value)}
-                                    style={{ fontFamily: 'monospace', flex: 1 }} />
-                            </div>
-                        </div>
-                    </>
-                )}
+                <div style={{ marginBottom: '1.5rem' }}>
+                    <label className="form-label">Color de la fecha</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <input type="color" value={dateColor} onChange={e => setDateColor(e.target.value)}
+                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
+                        <input type="text" className="form-input" value={dateColor}
+                            onChange={e => setDateColor(e.target.value)}
+                            style={{ fontFamily: 'monospace', flex: 1 }} />
+                    </div>
+                </div>
 
                 {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
 

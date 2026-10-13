@@ -39,7 +39,6 @@ describe('UpdateTemplateDesignUseCase', () => {
         size: 90,
       },
       dateStyle: {
-        show: true,
         positionX: 100,
         positionY: 400,
         fontSize: 18,

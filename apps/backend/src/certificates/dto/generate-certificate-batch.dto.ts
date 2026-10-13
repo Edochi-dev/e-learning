@@ -46,7 +46,8 @@ export class GenerateCertificateBatchDto {
   @Type(() => RecipientDto)
   recipients: RecipientDto[];
 
-  @IsOptional()
+  // Required: the server's clock (America/Santiago for Node, UTC for Postgres)
+  // is not the admin's, so a server-side "today" can be the wrong day.
   @Matches(/^\d{4}-\d{2}-\d{2}$/, {
     message: 'certificateDate debe tener el formato YYYY-MM-DD',
   })
@@ -54,5 +55,5 @@ export class GenerateCertificateBatchDto {
     { strict: true },
     { message: 'certificateDate no es una fecha válida' },
   )
-  certificateDate?: string;
+  certificateDate: string;
 }

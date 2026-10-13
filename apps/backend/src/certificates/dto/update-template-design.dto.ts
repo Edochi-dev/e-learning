@@ -1,7 +1,6 @@
 import {
   IsNumber,
   IsString,
-  IsBoolean,
   IsOptional,
   Matches,
   Min,
@@ -80,9 +79,6 @@ export class QrStyleDto {
 }
 
 export class DateStyleDto {
-  @IsBoolean()
-  show: boolean;
-
   @IsNumber()
   @Min(0)
   @Max(2000)

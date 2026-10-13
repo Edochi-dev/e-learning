@@ -55,7 +55,6 @@ describe('GenerateCertificateBatchUseCase', () => {
       size: 80,
     },
     dateStyle: {
-      show: false,
       positionX: 0,
       positionY: 0,
       fontSize: 18,
@@ -128,7 +127,11 @@ describe('GenerateCertificateBatchUseCase', () => {
     templateGateway.findOne.mockResolvedValue(null);
 
     await expect(
-      useCase.execute({ templateId: 'tpl-inexistente', recipients: [{ name: 'Ana' }] }),
+      useCase.execute({
+        certificateDate: '2026-10-08',
+        templateId: 'tpl-inexistente',
+        recipients: [{ name: 'Ana' }],
+      }),
     ).rejects.toThrow(NotFoundException);
   });
 
@@ -142,7 +145,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(fileStorageGateway.readFileByUrl).toHaveBeenCalledWith(
       '/static/certificates/templates/tpl-1.pdf',
@@ -159,7 +166,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(fileStorageGateway.saveBuffer).toHaveBeenCalledWith(
       Buffer.from('pdf'),
@@ -173,6 +184,7 @@ describe('GenerateCertificateBatchUseCase', () => {
     configService.get.mockReturnValue('http://localhost:5173');
 
     const result = await useCase.execute({
+      certificateDate: '2026-10-08',
       templateId: 'tpl-1',
       recipients: [{ name: '   ' }, { name: '\t' }, { name: '' }],
     });
@@ -194,8 +206,14 @@ describe('GenerateCertificateBatchUseCase', () => {
     } as Certificate);
 
     const result = await useCase.execute({
+      certificateDate: '2026-10-08',
       templateId: 'tpl-1',
-      recipients: [{ name: '   ' }, { name: 'Ana García' }, { name: '' }, { name: '  ' }],
+      recipients: [
+        { name: '   ' },
+        { name: 'Ana García' },
+        { name: '' },
+        { name: '  ' },
+      ],
     });
 
     expect(result).toHaveLength(1);
@@ -213,6 +231,7 @@ describe('GenerateCertificateBatchUseCase', () => {
     );
 
     const result = await useCase.execute({
+      certificateDate: '2026-10-08',
       templateId: 'tpl-1',
       recipients: [{ name: 'Luis' }],
     });
@@ -230,7 +249,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'https://maris-nails.com/certificados/cert-uuid-123',
@@ -252,7 +275,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       'http://localhost:5173/certificados/cert-uuid-123',
@@ -280,7 +307,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(qrGateway.generate).toHaveBeenCalledWith(
       expect.any(String),
@@ -299,7 +330,11 @@ describe('GenerateCertificateBatchUseCase', () => {
       async (data) => ({ ...data }) as Certificate,
     );
 
-    await useCase.execute({ templateId: 'tpl-1', recipients: [{ name: 'Ana' }] });
+    await useCase.execute({
+      certificateDate: '2026-10-08',
+      templateId: 'tpl-1',
+      recipients: [{ name: 'Ana' }],
+    });
 
     expect(certGateway.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -326,6 +361,7 @@ describe('GenerateCertificateBatchUseCase', () => {
     );
 
     const result = await useCase.execute({
+      certificateDate: '2026-10-08',
       templateId: 'tpl-1',
       recipients: [{ name: 'Ana' }, { name: 'Luis' }, { name: 'María' }],
     });
@@ -337,13 +373,8 @@ describe('GenerateCertificateBatchUseCase', () => {
   });
 
   describe('fecha del certificado', () => {
-    const templateShowingDate = {
-      ...fakeTemplate,
-      dateStyle: { ...fakeTemplate.dateStyle, show: true },
-    } as CertificateTemplate;
-
     beforeEach(() => {
-      templateGateway.findOne.mockResolvedValue(templateShowingDate);
+      templateGateway.findOne.mockResolvedValue(fakeTemplate);
       configService.get.mockReturnValue('http://localhost:5173');
       numberSequence.next.mockResolvedValue(1);
       qrGateway.generate.mockResolvedValue(Buffer.from('qr'));
@@ -353,7 +384,7 @@ describe('GenerateCertificateBatchUseCase', () => {
       );
     });
 
-    it('imprime y persiste la fecha personalizada cuando se envía', async () => {
+    it('imprime y persiste la misma fecha en todo el lote', async () => {
       await useCase.execute({
         templateId: 'tpl-1',
         recipients: [{ name: 'Ana' }, { name: 'Luis' }],
@@ -369,22 +400,21 @@ describe('GenerateCertificateBatchUseCase', () => {
       );
     });
 
-    it('usa la fecha de hoy cuando no se envía fecha', async () => {
-      jest.useFakeTimers({ now: new Date(2026, 9, 8, 12, 0, 0) });
-      try {
-        await useCase.execute({
-          templateId: 'tpl-1',
-          recipients: [{ name: 'Ana' }],
-        });
-      } finally {
-        jest.useRealTimers();
-      }
+    it('dibuja la fecha con el estilo y la posición de la plantilla', async () => {
+      await useCase.execute({
+        templateId: 'tpl-1',
+        recipients: [{ name: 'Ana' }],
+        certificateDate: '2026-10-15',
+      });
 
       expect(generatorGateway.generate).toHaveBeenCalledWith(
-        expect.objectContaining({ dateText: '08/10/2026' }),
-      );
-      expect(certGateway.create).toHaveBeenCalledWith(
-        expect.objectContaining({ certificateDate: '2026-10-08' }),
+        expect.objectContaining({
+          datePosition: { x: 0, y: 0 },
+          dateFontSize: 18,
+          dateColor: '#000000',
+          dateFontFamily: 'Helvetica',
+          dateAlign: 'left',
+        }),
       );
     });
   });
@@ -400,6 +430,7 @@ describe('GenerateCertificateBatchUseCase', () => {
     );
 
     const result = await useCase.execute({
+      certificateDate: '2026-10-08',
       templateId: 'tpl-1',
       recipients: [{ name: 'Ana' }],
     });

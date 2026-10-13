@@ -106,8 +106,27 @@ describe('PdfCertificateGenerator — text integrity', () => {
       nameAlign: 'center',
       qrPosition: { x: 50, y: 700 },
       qrSize: 60,
+      dateText: '08/10/2026',
+      datePosition: { x: 297, y: 480 },
+      dateFontSize: 14,
+      dateColor: '#000000',
+      dateFontFamily: 'Helvetica',
+      dateAlign: 'center',
     };
   }
+
+  it('dibuja siempre la fecha, además del nombre', async () => {
+    const params = {
+      ...makeParams('Maria', 'Helvetica'),
+      dateFontFamily: customFonts[0],
+    };
+    const pdfBuffer = await generator.generate(params);
+
+    // A custom font is drawn one operator per character, so the date alone
+    // contributes one operator per character on top of the name's.
+    const { tjCount } = countTextOperators(extractPageContentStream(pdfBuffer));
+    expect(tjCount).toBeGreaterThanOrEqual(params.dateText.length + 1);
+  });
 
   // ─── Smoke test: todas las fuentes generan PDFs válidos ───────────────
 
