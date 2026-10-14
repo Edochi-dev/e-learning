@@ -184,7 +184,8 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     switch (lessonData.type) {
       case 'class':
         lesson.videoData = this.videoLessonRepository.create({
-          videoUrl: lessonData.videoUrl,
+          // A live class may arrive without a recording yet: store null, not ''.
+          videoUrl: lessonData.videoUrl || null,
           duration: lessonData.duration,
           isLive: lessonData.isLive ?? false,
           liveStartsAt:
@@ -263,7 +264,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
       case 'class':
         if (lesson.videoData) {
           if (data.videoUrl !== undefined)
-            lesson.videoData.videoUrl = data.videoUrl;
+            lesson.videoData.videoUrl = data.videoUrl || null;
           if (data.duration !== undefined)
             lesson.videoData.duration = data.duration;
           if (data.isLive !== undefined) lesson.videoData.isLive = data.isLive;

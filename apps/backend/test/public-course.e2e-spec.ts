@@ -256,6 +256,43 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
       });
     });
 
+    it('acepta una clase en vivo sin video: la grabación se agrega después', async () => {
+      const { videoUrl: _omit, ...withoutVideo } = liveLesson(
+        '2030-03-03T22:00:00.000Z',
+        '2030-03-04T00:00:00.000Z',
+      );
+      void _omit;
+      await (
+        await loginAs(admin)
+      )
+        .post(`/courses/${draftId}/lessons`)
+        .send({ ...withoutVideo, title: 'En vivo sin video E2E' })
+        .expect(201);
+
+      const res = await http().get(`/courses/${draftId}`).expect(200);
+      const lesson = (
+        res.body as {
+          lessons: { title: string; videoData?: { provider?: string } }[];
+        }
+      ).lessons.find((l) => l.title === 'En vivo sin video E2E');
+      expect(lesson?.videoData).toBeDefined();
+      expect(lesson?.videoData?.provider).toBeUndefined();
+    });
+
+    it('una clase grabada sigue exigiendo su video', async () => {
+      await (
+        await loginAs(admin)
+      )
+        .post(`/courses/${draftId}/lessons`)
+        .send({
+          title: 'Grabada sin video',
+          description: 'd',
+          type: 'class',
+          isLive: false,
+        })
+        .expect(400);
+    });
+
     it('rechaza una hora sin zona horaria', async () => {
       await (await loginAs(admin))
         .post(`/courses/${draftId}/lessons`)

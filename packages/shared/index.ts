@@ -33,7 +33,7 @@ export interface QuizQuestion {
 // Esto evita campos nullable sueltos que "solo aplican si type es X".
 
 export interface VideoLessonData {
-    videoUrl: string;
+    videoUrl?: string | null; // null en una clase en vivo hasta que se agrega su grabación
     duration?: string;       // Ej: "10:00", "1h 30m". Nullable porque las lecciones en vivo no tienen duración.
     isLive: boolean;
     liveStartsAt?: string;   // ISO 8601 — obligatorio cuando isLive (fecha/hora de la clase en vivo)
@@ -56,7 +56,8 @@ export const LIVE_JOIN_LEAD_MINUTES = 15;
 
 /** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
 export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
-    provider: VideoProvider;
+    /** Absent while there is nothing to play yet (a live class before its recording). */
+    provider?: VideoProvider;
 }
 
 export interface ExamLessonData {

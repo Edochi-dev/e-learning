@@ -44,6 +44,7 @@ import { AddVideoAssets1784200000000 } from './migrations/1784200000000-AddVideo
 import { AddAuthSessions1784300000000 } from './migrations/1784300000000-AddAuthSessions';
 import { AddCoursePublication1784400000000 } from './migrations/1784400000000-AddCoursePublication';
 import { LiveLessonInstants1784500000000 } from './migrations/1784500000000-LiveLessonInstants';
+import { OptionalLiveLessonVideo1784600000000 } from './migrations/1784600000000-OptionalLiveLessonVideo';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -109,4 +110,5 @@ export const MIGRATIONS = [
   AddAuthSessions1784300000000,
   AddCoursePublication1784400000000,
   LiveLessonInstants1784500000000,
+  OptionalLiveLessonVideo1784600000000,
 ];

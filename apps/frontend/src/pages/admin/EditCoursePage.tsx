@@ -39,6 +39,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toLocalInputValue, withLiveInstants } from '../../lib/local-datetime';
+import { LiveScheduleFields } from '../../components/LiveScheduleFields';
 
 // ============================================================
 // Componente interno: SortableLessonItem
@@ -118,22 +119,23 @@ function SortableLessonItem({
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
                                 <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
                             </div>
-                            {editLessonForm.isLive && (
-                                <div className="form-row live-schedule-row">
-                                    <label>Inicio (en vivo)
-                                        <input type="datetime-local" name="liveStartsAt" value={editLessonForm.liveStartsAt ?? ''} onChange={onEditChange} required />
-                                    </label>
-                                    <label>Fin (en vivo)
-                                        <input type="datetime-local" name="liveEndsAt" value={editLessonForm.liveEndsAt ?? ''} onChange={onEditChange} required />
-                                    </label>
+                            {editLessonForm.isLive ? (
+                                <>
+                                    <LiveScheduleFields
+                                        liveStartsAt={editLessonForm.liveStartsAt}
+                                        liveEndsAt={editLessonForm.liveEndsAt}
+                                        onChange={onEditFormUpdate}
+                                    />
+                                    <div className="form-row">
+                                        <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="Grabación (opcional, agrégala después de la clase)" />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="form-row">
+                                    <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
+                                    <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="URL del Video" required />
                                 </div>
                             )}
-                            <div className="form-row">
-                                {!editLessonForm.isLive && (
-                                    <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
-                                )}
-                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="URL del Video" required />
-                            </div>
                         </>
                     )}
                     {editLessonForm.type === LessonType.EXAM && (
@@ -972,30 +974,30 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                             <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
                                         </div>
                                     </div>
-                                    {lessonForm.isLive && (
-                                        <div className="form-row live-schedule-row" style={{ marginBottom: '1.25rem' }}>
-                                            <div>
-                                                <label htmlFor="lesson-liveStartsAt">Inicio (en vivo)</label>
-                                                <input type="datetime-local" id="lesson-liveStartsAt" name="liveStartsAt" value={lessonForm.liveStartsAt ?? ''} onChange={handleLessonChange} required />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="lesson-liveEndsAt">Fin (en vivo)</label>
-                                                <input type="datetime-local" id="lesson-liveEndsAt" name="liveEndsAt" value={lessonForm.liveEndsAt ?? ''} onChange={handleLessonChange} required />
-                                            </div>
+                                    {lessonForm.isLive ? (
+                                        <div style={{ marginBottom: '1.25rem' }}>
+                                            <LiveScheduleFields
+                                                liveStartsAt={lessonForm.liveStartsAt}
+                                                liveEndsAt={lessonForm.liveEndsAt}
+                                                onChange={patch => setLessonForm(prev => ({ ...prev, ...patch }))}
+                                            />
+                                            <p className="form-hint">
+                                                La clase se transmite desde la plataforma. La grabación se agrega
+                                                editando la lección cuando termine.
+                                            </p>
                                         </div>
-                                    )}
-                                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
-                                        {!lessonForm.isLive && (
+                                    ) : (
+                                        <div className="form-row" style={{ marginBottom: '1.25rem' }}>
                                             <div>
                                                 <label htmlFor="lesson-duration">Duración</label>
                                                 <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} placeholder="Ej: 15:00" />
                                             </div>
-                                        )}
-                                        <div>
-                                            <label htmlFor="lesson-videoUrl">URL del Video</label>
-                                            <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
+                                            <div>
+                                                <label htmlFor="lesson-videoUrl">URL del Video</label>
+                                                <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </>
                             ) : (
                                 <>

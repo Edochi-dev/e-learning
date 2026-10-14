@@ -22,8 +22,9 @@ export class VideoLesson {
   @PrimaryColumn('uuid')
   lessonId: string;
 
-  @Column()
-  videoUrl: string;
+  /** Null for a live class until its recording is added. */
+  @Column({ type: 'varchar', nullable: true })
+  videoUrl: string | null;
 
   @Column({ nullable: true })
   duration: string;
