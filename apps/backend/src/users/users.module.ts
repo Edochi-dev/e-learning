@@ -5,6 +5,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { User } from './entities/user.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { AuthSession } from './entities/auth-session.entity';
+import { AuthSessionGateway } from './gateways/auth-session.gateway';
+import { AuthSessionRepository } from './auth-session.repository';
+import { AuthSessionService } from './services/auth-session.service';
+import { ACCESS_TOKEN_TTL_SECONDS } from './services/session-policy';
+import { SessionCleanupCron } from './session-cleanup.cron';
+import { RefreshSessionUseCase } from './use-cases/refresh-session.use-case';
+import { LogoutUseCase } from './use-cases/logout.use-case';
+import { RevokeAllSessionsUseCase } from './use-cases/revoke-all-sessions.use-case';
 import { UsersService } from './users.service';
 import { UserGateway } from './gateways/user.gateway';
 import { PasswordResetTokenGateway } from './gateways/password-reset-token.gateway';
@@ -24,7 +33,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, PasswordResetToken]),
+    TypeOrmModule.forFeature([User, PasswordResetToken, AuthSession]),
     NotificationsModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -32,7 +41,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '1h' },
+        signOptions: { expiresIn: ACCESS_TOKEN_TTL_SECONDS },
       }),
     }),
   ],
@@ -46,6 +55,9 @@ import { NotificationsModule } from '../notifications/notifications.module';
       useClass: PasswordResetTokenRepository,
     },
     { provide: TokenGateway, useClass: JwtTokenService },
+    { provide: AuthSessionGateway, useClass: AuthSessionRepository },
+    AuthSessionService,
+    SessionCleanupCron,
     // Estrategia de Passport (necesita estar aquí para que NestJS la registre)
     JwtStrategy,
     // Casos de uso
@@ -56,7 +68,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
     UpdateProfileUseCase,
     RequestPasswordResetUseCase,
     ResetPasswordUseCase,
+    RefreshSessionUseCase,
+    LogoutUseCase,
+    RevokeAllSessionsUseCase,
   ],
-  exports: [UserGateway, TokenGateway],
+  exports: [UserGateway, AuthSessionService],
 })
 export class UsersModule {}
