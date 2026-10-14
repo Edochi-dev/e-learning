@@ -1176,6 +1176,76 @@ select:focus {
   color-scheme: dark;
 }
 
+/* Checkboxes, radios and the parts of native pickers that honour it use the
+   brand colour instead of the browser's blue. */
+html {
+  accent-color: var(--primary);
+}
+
+/* Customizable dropdowns where the browser supports them (Chrome/Edge 135+);
+   elsewhere selects stay native. Mouse-driven screens only: on phones the
+   native picker (iOS wheel, Android sheet) is the better experience. */
+@supports (appearance: base-select) {
+  @media (hover: hover) and (pointer: fine) {
+    select:not([multiple]):not([size]),
+    select:not([multiple]):not([size])::picker(select) {
+      appearance: base-select;
+    }
+
+    select:not([multiple]):not([size]) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      cursor: pointer;
+    }
+
+    select::picker-icon {
+      color: var(--text-muted);
+      transition: rotate var(--dur-base) var(--ease-out);
+    }
+
+    select:open::picker-icon {
+      rotate: 180deg;
+    }
+
+    ::picker(select) {
+      margin-top: 0.25rem;
+      padding: 0.3rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-lg);
+    }
+
+    select option {
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    select option:hover,
+    select option:focus-visible {
+      background: var(--surface);
+      outline: none;
+    }
+
+    select option:checked {
+      background: var(--primary-glow);
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    select option::checkmark {
+      color: var(--primary);
+    }
+  }
+}
+
 label {
   font-weight: 500;
   font-size: 0.9rem;
