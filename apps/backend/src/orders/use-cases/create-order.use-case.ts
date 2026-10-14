@@ -47,7 +47,8 @@ export class CreateOrderUseCase {
   async execute(userId: string, courseId: string): Promise<Order> {
     // 1. ¿El curso existe?
     const course = await this.courseGateway.findOne(courseId);
-    if (!course) {
+    // A draft is not for sale even to someone who has its direct link.
+    if (!course?.isPublished()) {
       throw new NotFoundException('Curso no encontrado');
     }
 

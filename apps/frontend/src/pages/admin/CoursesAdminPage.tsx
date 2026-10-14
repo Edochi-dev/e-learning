@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course } from '@maris-nails/shared';
+import { useToast } from '../../components/Toast';
 
 interface Props {
     gateway: CourseGateway;
@@ -36,12 +37,15 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
     // useRef (no useState) porque cambiar el timer no debe disparar re-renders.
     const confirmTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const [togglingId, setTogglingId] = useState<string | null>(null);
+    const toast = useToast();
+
     useEffect(() => {
         const loadCourses = async () => {
             try {
                 // findAll ahora devuelve una respuesta paginada; esta vista de
                 // admin usa la primera página (comportamiento previo).
-                const result = await courseGateway.findAll();
+                const result = await courseGateway.findAllForAdmin();
                 setCourses(result.data);
             } catch (err) {
                 console.error('Error loading courses', err);
@@ -88,9 +92,27 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
             // Actualizar la lista local sin hacer otro fetch al servidor
             setCourses(prev => prev.filter(c => c.id !== courseId));
         } catch (err) {
-            console.error('Error al eliminar curso', err);
+            toast.error(err instanceof Error ? err.message : 'No se pudo eliminar el curso.');
         } finally {
             setDeletingId(null);
+        }
+    };
+
+    const togglePublished = async (course: Course) => {
+        setTogglingId(course.id);
+        try {
+            if (course.publishedAt) {
+                await courseGateway.unpublish(course.id);
+            } else {
+                await courseGateway.publish(course.id);
+            }
+            const publishedAt = course.publishedAt ? null : new Date().toISOString();
+            setCourses(prev => prev.map(c => (c.id === course.id ? { ...c, publishedAt } : c)));
+            toast.success(publishedAt ? 'Curso publicado: ya aparece en el catálogo.' : 'Curso pasado a borrador.');
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'No se pudo cambiar el estado del curso.');
+        } finally {
+            setTogglingId(null);
         }
     };
 
@@ -139,7 +161,19 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
                                     <span className="admin-course-link-meta">
                                         {course.lessons?.length || 0} lecciones
                                     </span>
+                                    <span className={`admin-course-status admin-course-status--${course.publishedAt ? 'published' : 'draft'}`}>
+                                        {course.publishedAt ? 'Publicado' : 'Borrador'}
+                                    </span>
                                 </Link>
+
+                                <button
+                                    type="button"
+                                    className="admin-course-students"
+                                    onClick={() => togglePublished(course)}
+                                    disabled={togglingId === course.id}
+                                >
+                                    {togglingId === course.id ? '…' : course.publishedAt ? 'Despublicar' : 'Publicar'}
+                                </button>
 
                                 <Link
                                     to={`/admin/cursos/${course.id}/alumnas`}

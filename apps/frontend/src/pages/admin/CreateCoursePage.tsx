@@ -55,8 +55,10 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
             // Pedimos al componente hijo el archivo ya recortado con Canvas.
             // Si el admin no subió imagen, getCroppedFile() devuelve null.
             const croppedFile = await thumbnailRef.current?.getCroppedFile() ?? null;
-            await courseGateway.create(formData, croppedFile ?? undefined);
-            navigate('/admin');
+            const created = await courseGateway.create(formData, croppedFile ?? undefined);
+            // A new course is a draft with no lessons: the editor is the next step.
+            toast.success('Curso creado como borrador. Agrega las lecciones y publícalo cuando esté listo.');
+            navigate(`/admin/courses/${created.id}/edit`);
         } catch (err: any) {
             toast.error(err.message || 'Error al crear el curso');
         } finally {

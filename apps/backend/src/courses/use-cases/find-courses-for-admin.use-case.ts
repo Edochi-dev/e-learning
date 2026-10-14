@@ -3,11 +3,12 @@ import { Course } from '../entities/course.entity';
 import { CourseGateway, CourseFilters } from '../gateways/course.gateway';
 import { PaginatedResult } from '../../common/types/paginated-result.type';
 
+/** Every course with its full data, for the admin course list. */
 @Injectable()
-export class FindAllCoursesUseCase {
+export class FindCoursesForAdminUseCase {
   constructor(private readonly courseGateway: CourseGateway) {}
 
-  async execute(
+  execute(
     page: number,
     limit: number,
     filters?: CourseFilters,

@@ -78,7 +78,8 @@ export class Order {
   })
   user: User;
 
-  @ManyToOne(() => Course, { onDelete: 'CASCADE' })
+  // RESTRICT: deleting a course must never take payments or access with it.
+  @ManyToOne(() => Course, { onDelete: 'RESTRICT' })
   @JoinColumn({
     name: 'courseId',
     foreignKeyConstraintName: 'FK_orders_courseId',

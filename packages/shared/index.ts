@@ -110,11 +110,12 @@ export interface Course {
     level?: CourseLevel;    // Nivel: principiante / intermedio / avanzado
     accessDurationDays?: number | null; // null = acceso permanente
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
+    publishedAt?: string | null; // null = borrador: fuera del catálogo y sin venta
     lessons: Lesson[];
 }
 
 /** Public view of a course (see PublicLesson). The full Course is admin-only. */
-export interface PublicCourse extends Omit<Course, 'lessons'> {
+export interface PublicCourse extends Omit<Course, 'lessons' | 'publishedAt'> {
     lessons: PublicLesson[];
 }
 

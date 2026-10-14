@@ -25,13 +25,22 @@ export class HttpCourseGateway implements CourseGateway {
     // Pide una página concreta al backend (?page&limit) y devuelve la respuesta
     // paginada COMPLETA (data + total + page + limit), para que el hook pueda
     // renderizar los controles de paginación.
-    async findAll(page = 1, limit = 12, filters?: CourseFilters): Promise<PaginatedResult<Course>> {
+    findAll(page = 1, limit = 12, filters?: CourseFilters): Promise<PaginatedResult<PublicCourse>> {
+        return this.list('/courses', page, limit, filters);
+    }
+
+    // The admin screens list every course on one page, hence the larger default.
+    findAllForAdmin(page = 1, limit = 100, filters?: CourseFilters): Promise<PaginatedResult<Course>> {
+        return this.list('/courses/admin', page, limit, filters);
+    }
+
+    private async list<T>(path: string, page: number, limit: number, filters?: CourseFilters): Promise<PaginatedResult<T>> {
         const params = new URLSearchParams({ page: String(page), limit: String(limit) });
         if (filters?.search) params.set('search', filters.search);
         if (filters?.category) params.set('category', filters.category);
         if (filters?.level) params.set('level', filters.level);
 
-        const response = await this.http.fetch(`${this.baseUrl}/courses?${params.toString()}`);
+        const response = await this.http.fetch(`${this.baseUrl}${path}?${params.toString()}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch courses: ${response.statusText}`);
         }
@@ -123,6 +132,20 @@ export class HttpCourseGateway implements CourseGateway {
 
         if (!response.ok) {
             throw new Error(await this.parseErrorMessage(response, 'Error al eliminar la miniatura'));
+        }
+    }
+
+    async publish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/publish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo publicar el curso'));
+        }
+    }
+
+    async unpublish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/unpublish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo despublicar el curso'));
         }
     }
 

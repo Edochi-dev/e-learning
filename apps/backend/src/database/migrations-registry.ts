@@ -42,6 +42,7 @@ import { FixBackfilledCertificateDates1784000000000 } from './migrations/1784000
 import { AddMissingUuidDefaults1784100000000 } from './migrations/1784100000000-AddMissingUuidDefaults';
 import { AddVideoAssets1784200000000 } from './migrations/1784200000000-AddVideoAssets';
 import { AddAuthSessions1784300000000 } from './migrations/1784300000000-AddAuthSessions';
+import { AddCoursePublication1784400000000 } from './migrations/1784400000000-AddCoursePublication';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -105,4 +106,5 @@ export const MIGRATIONS = [
   AddMissingUuidDefaults1784100000000,
   AddVideoAssets1784200000000,
   AddAuthSessions1784300000000,
+  AddCoursePublication1784400000000,
 ];

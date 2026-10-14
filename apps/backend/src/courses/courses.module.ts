@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CoursesController } from './courses.controller';
-import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { FindPublicCoursesUseCase } from './use-cases/find-public-courses.use-case';
+import { FindCoursesForAdminUseCase } from './use-cases/find-courses-for-admin.use-case';
+import { PublishCourseUseCase } from './use-cases/publish-course.use-case';
+import { UnpublishCourseUseCase } from './use-cases/unpublish-course.use-case';
+import { CourseUsageGateway } from './gateways/course-usage.gateway';
+import { CourseUsageRepository } from './course-usage.repository';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
 import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
 import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
@@ -61,7 +66,11 @@ import { ScheduleModule } from '../schedule/schedule.module';
   controllers: [CoursesController],
   providers: [
     EnrollmentGuard,
-    FindAllCoursesUseCase,
+    FindPublicCoursesUseCase,
+    FindCoursesForAdminUseCase,
+    PublishCourseUseCase,
+    UnpublishCourseUseCase,
+    { provide: CourseUsageGateway, useClass: CourseUsageRepository },
     GetCourseCategoriesUseCase,
     FindPublicCourseUseCase,
     FindCourseForAdminUseCase,

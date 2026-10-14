@@ -10,6 +10,6 @@ export class GetCourseCategoriesUseCase {
   constructor(private readonly courseGateway: CourseGateway) {}
 
   async execute(): Promise<string[]> {
-    return this.courseGateway.findDistinctCategories();
+    return this.courseGateway.findDistinctCategories(true);
   }
 }

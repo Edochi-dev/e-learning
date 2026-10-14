@@ -44,8 +44,17 @@ export class Course {
   @Column('simple-json', { nullable: true })
   features: string[];
 
+  /** Null while the course is a draft: hidden from the catalog and not for sale. */
+  @Column({ type: 'timestamptz', nullable: true })
+  publishedAt: Date | null;
+
   @OneToMany(() => Lesson, (lesson) => lesson.course, { cascade: true })
   lessons: Lesson[];
+
+  // Boolean() and not `!== null`: an instance built in memory has undefined.
+  isPublished(): boolean {
+    return Boolean(this.publishedAt);
+  }
 
   /**
    * Fecha en que caduca una matrícula emitida en `from`, o null si el acceso es
