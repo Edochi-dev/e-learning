@@ -58,12 +58,18 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
 
   const http = () => request(app.getHttpServer());
 
+  // One login per user for the whole file: the login endpoint is rate
+  // limited, and a fresh login per test would trip it.
+  const agents = new Map<string, ReturnType<typeof request.agent>>();
   async function loginAs(creds: { email: string; password: string }) {
+    const cached = agents.get(creds.email);
+    if (cached) return cached;
     const agent = request.agent(app.getHttpServer());
     await agent
       .post('/users/login')
       .send({ email: creds.email, password: creds.password })
       .expect(200);
+    agents.set(creds.email, agent);
     return agent;
   }
 
@@ -214,6 +220,48 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
     expect(
       body.lessons[1].questions?.[0].options.map((o) => o.isCorrect),
     ).toEqual(expect.arrayContaining([true, false]));
+  });
+
+  describe('horario de clases en vivo', () => {
+    const liveLesson = (liveStartsAt: string, liveEndsAt: string) => ({
+      title: 'Clase en vivo E2E',
+      description: 'Indicaciones en directo',
+      type: 'class',
+      videoUrl: 'https://youtu.be/AbCdEfGhIjK',
+      isLive: true,
+      liveStartsAt,
+      liveEndsAt,
+    });
+
+    it('guarda el instante exacto y lo devuelve igual a cualquier zona horaria', async () => {
+      await (await loginAs(admin))
+        .post(`/courses/${draftId}/lessons`)
+        .send(
+          liveLesson('2030-03-01T22:00:00.000Z', '2030-03-01T23:30:00.000Z'),
+        )
+        .expect(201);
+
+      const res = await http().get(`/courses/${draftId}`).expect(200);
+      const live = (
+        res.body as {
+          lessons: {
+            title: string;
+            videoData?: { liveStartsAt?: string; liveEndsAt?: string };
+          }[];
+        }
+      ).lessons.find((l) => l.title === 'Clase en vivo E2E');
+      expect(live?.videoData).toMatchObject({
+        liveStartsAt: '2030-03-01T22:00:00.000Z',
+        liveEndsAt: '2030-03-01T23:30:00.000Z',
+      });
+    });
+
+    it('rechaza una hora sin zona horaria', async () => {
+      await (await loginAs(admin))
+        .post(`/courses/${draftId}/lessons`)
+        .send(liveLesson('2030-03-02T19:00:00', '2030-03-02T20:00:00'))
+        .expect(400);
+    });
   });
 
   describe('borrador / publicado', () => {

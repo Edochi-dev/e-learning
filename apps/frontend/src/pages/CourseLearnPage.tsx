@@ -12,6 +12,7 @@ import type { CorrectionGateway } from '../gateways/CorrectionGateway';
 import { useCourse } from '../hooks/useCourse';
 import { useEnrollments } from '../hooks/useEnrollments';
 import { VideoPlayer } from '../components/VideoPlayer';
+import { LiveLessonGate } from '../components/LiveLessonGate';
 import { QuizPlayer } from '../components/QuizPlayer';
 import { SubmissionPlayer } from '../components/SubmissionPlayer';
 
@@ -312,7 +313,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     // Los videos de YouTube no permiten tracking desde fuera del iframe,
     // así que los exoneramos del requisito de progreso.
     const isYoutubeLesson = activeLesson.videoData?.provider === VideoProvider.YOUTUBE;
-    const hasWatchedEnough = isExamLesson || isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
+    // A live stream has no fixed length to measure progress against.
+    const isLiveLesson = !!activeLesson.videoData?.isLive;
+    const hasWatchedEnough = isExamLesson || isYoutubeLesson || isLiveLesson || watchProgress >= WATCH_THRESHOLD;
 
     // Navegación entre lecciones
     const prevLesson = activeLessonIndex > 0 ? course.lessons[activeLessonIndex - 1] : null;
@@ -369,13 +372,19 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     </div>
                 ) : (
                     <div className="course-learn__video">
-                        <VideoPlayer
-                            title={activeLesson.title}
-                            lessonId={activeLesson.id}
-                            provider={activeLesson.videoData?.provider ?? VideoProvider.HOSTED}
-                            videoGateway={videoGateway}
-                            onWatchProgress={handleWatchProgress}
-                        />
+                        <LiveLessonGate
+                            lesson={activeLesson}
+                            courseTitle={course.title}
+                            courseUrl={`${window.location.origin}/courses/${courseId}/learn`}
+                        >
+                            <VideoPlayer
+                                title={activeLesson.title}
+                                lessonId={activeLesson.id}
+                                provider={activeLesson.videoData?.provider ?? VideoProvider.HOSTED}
+                                videoGateway={videoGateway}
+                                onWatchProgress={handleWatchProgress}
+                            />
+                        </LiveLessonGate>
                     </div>
                 )}
 

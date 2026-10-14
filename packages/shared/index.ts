@@ -48,6 +48,12 @@ export const VideoProvider = {
 
 export type VideoProvider = typeof VideoProvider[keyof typeof VideoProvider];
 
+/**
+ * How long before a live class its stream opens. The backend refuses the
+ * stream URL earlier and the student page shows the countdown until then.
+ */
+export const LIVE_JOIN_LEAD_MINUTES = 15;
+
 /** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
 export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
     provider: VideoProvider;
@@ -112,6 +118,16 @@ export interface Course {
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
     publishedAt?: string | null; // null = borrador: fuera del catálogo y sin venta
     lessons: Lesson[];
+}
+
+/** A live class on a student's schedule, across all her active enrollments. */
+export interface UpcomingLiveClass {
+    courseId: string;
+    courseTitle: string;
+    lessonId: string;
+    lessonTitle: string;
+    liveStartsAt: string; // ISO instant
+    liveEndsAt: string;   // ISO instant
 }
 
 /** Public view of a course (see PublicLesson). The full Course is admin-only. */

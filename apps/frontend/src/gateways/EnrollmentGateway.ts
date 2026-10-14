@@ -44,7 +44,7 @@ export interface CourseStudent {
     daysRemaining: number | null;
 }
 
-import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass } from '@maris-nails/shared';
 
 /**
  * EnrollmentGateway (Frontend) — Contrato para las operaciones de matrículas.
@@ -58,6 +58,8 @@ import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nai
 export interface EnrollmentGateway {
     /** Devuelve los cursos del usuario con su progreso calculado */
     getMyEnrollments(): Promise<EnrollmentWithProgress[]>;
+    /** Live classes not yet over in my active enrollments, soonest first. */
+    getMyUpcomingLiveClasses(): Promise<UpcomingLiveClass[]>;
 
     // No hay método para matricularse: el backend no expone auto-matrícula.
     // El acceso se obtiene con una compra confirmada o con una invitación.

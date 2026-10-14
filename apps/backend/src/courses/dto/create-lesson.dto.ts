@@ -9,11 +9,16 @@ import {
   IsArray,
   ValidateNested,
   ValidateIf,
+  Matches,
   IsUUID,
   IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { LessonType } from '@maris-nails/shared';
+
+const WITH_TIME_ZONE = /(Z|[+-]\d{2}:\d{2})$/;
+const TIME_ZONE_MESSAGE =
+  'La fecha/hora de la clase en vivo debe incluir su zona horaria.';
 
 // ─── Sub-DTOs para las preguntas del quiz ──────────────────────────────
 
@@ -74,15 +79,19 @@ export class CreateLessonDto {
 
   // Fecha/hora de la clase en vivo — OBLIGATORIA solo cuando isLive es true.
   // Si no es en vivo, el campo se ignora (ValidateIf lo salta).
+  // An instant with its zone (Z or ±hh:mm): a bare "19:00" would make the
+  // server guess whose 19:00 it is, and students live in several countries.
   @ValidateIf((o: CreateLessonDto) => o.type === 'class' && o.isLive === true)
   @IsDateString(
     {},
     { message: 'La clase en vivo requiere fecha/hora de inicio.' },
   )
+  @Matches(WITH_TIME_ZONE, { message: TIME_ZONE_MESSAGE })
   liveStartsAt?: string;
 
   @ValidateIf((o: CreateLessonDto) => o.type === 'class' && o.isLive === true)
   @IsDateString({}, { message: 'La clase en vivo requiere fecha/hora de fin.' })
+  @Matches(WITH_TIME_ZONE, { message: TIME_ZONE_MESSAGE })
   liveEndsAt?: string;
 
   // ─── Campos exclusivos de type='exam' ──────────────────────────────
