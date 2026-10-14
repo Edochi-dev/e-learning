@@ -1,14 +1,9 @@
-# Normaliza los finales de línea en el repositorio.
+# Line endings: LF everywhere, in the repository and in every working copy.
 #
-# El repo nació con archivos en CRLF y otros en LF, sin regla. Cualquier
-# herramienta que reescriba un archivo completo (un script, un formateador, un
-# editor con otra configuración) cambia TODAS sus líneas y produce un diff
-# ilegible que además arruina el `git blame`.
-#
-# `text=auto` guarda todo con LF en el repositorio y deja que git haga la
-# conversión en el checkout de cada quien. Los archivos ya versionados en CRLF
-# se normalizan la próxima vez que se toquen.
-* text=auto
+# `eol=lf` also forces LF on checkout (Windows included), so a tool that
+# rewrites a whole file in LF never turns an unrelated diff into "every line
+# changed". CI rejects any text file stored with CRLF (see ci.yml).
+* text=auto eol=lf
 
 # Binarios: nunca convertir, los corrompería.
 *.png binary

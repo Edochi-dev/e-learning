@@ -43,6 +43,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      # Fails on any text file stored with CRLF. A file rewritten with other
+      # line endings shows every line as changed, burying the real diff.
+      - name: Check line endings (LF only)
+        run: |
+          crlf=$(git ls-files --eol | awk '$1 == "i/crlf" || $1 == "i/mixed" { print $NF }')
+          if [ -n "$crlf" ]; then
+            echo "::error::Text files stored with CRLF line endings:"
+            echo "$crlf"
+            echo "Fix: git add --renormalize . (see .gitattributes)"
+            exit 1
+          fi
+
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:

@@ -100,6 +100,13 @@ If `npm run lint` was run by mistake and files outside the scope show up as modi
 revert them immediately with `git checkout HEAD -- <unrelated files>` before staging
 anything.
 
+### Line endings
+
+Every text file is **LF**, in the repository and on disk (`.gitattributes` sets
+`* text=auto eol=lf`; `.editorconfig` matches). CI rejects any text file stored with CRLF.
+If a diff shows a whole file as changed for a small edit, the line endings changed: check
+with `git diff --ignore-cr-at-eol --stat`, and fix with `git add --renormalize .`.
+
 ---
 
 ## Working instructions
