@@ -11,10 +11,10 @@ import { VideoAssetsRepository } from './video-assets.repository';
 import { VideoAssetKeysRepository } from './video-asset-keys.repository';
 import { FfmpegHlsTranscoder } from './adapters/ffmpeg/ffmpeg-hls-transcoder.adapter';
 import {
-  NvencEncoderProfile,
-  VideoEncoderProfile,
-  X264EncoderProfile,
-} from './adapters/ffmpeg/video-encoder-profile';
+  CpuX264Pipeline,
+  CudaNvencPipeline,
+  VideoPipelineProfile,
+} from './adapters/ffmpeg/video-pipeline-profile';
 import { FileHlsPlaylistStore } from './adapters/file-hls-playlist-store.adapter';
 import { NginxSecureLinkSigner } from './adapters/nginx-secure-link-signer.adapter';
 import { HlsConfig, HlsVideoEncoder } from './hls.config';
@@ -29,9 +29,9 @@ import { GetHlsMasterPlaylistUseCase } from './use-cases/get-hls-master-playlist
 import { GetHlsVariantPlaylistUseCase } from './use-cases/get-hls-variant-playlist.use-case';
 import { GetHlsKeyUseCase } from './use-cases/get-hls-key.use-case';
 
-const ENCODER_PROFILES: Record<HlsVideoEncoder, () => VideoEncoderProfile> = {
-  [HlsVideoEncoder.NVENC]: () => new NvencEncoderProfile(),
-  [HlsVideoEncoder.X264]: () => new X264EncoderProfile(),
+const PIPELINES: Record<HlsVideoEncoder, () => VideoPipelineProfile> = {
+  [HlsVideoEncoder.NVENC]: () => new CudaNvencPipeline(),
+  [HlsVideoEncoder.X264]: () => new CpuX264Pipeline(),
 };
 
 /**
@@ -53,8 +53,8 @@ const ENCODER_PROFILES: Record<HlsVideoEncoder, () => VideoEncoderProfile> = {
     { provide: HlsPlaylistStore, useClass: FileHlsPlaylistStore },
     { provide: HlsMediaUrlSigner, useClass: NginxSecureLinkSigner },
     {
-      provide: VideoEncoderProfile,
-      useFactory: (config: HlsConfig) => ENCODER_PROFILES[config.encoder](),
+      provide: VideoPipelineProfile,
+      useFactory: (config: HlsConfig) => PIPELINES[config.encoder](),
       inject: [HlsConfig],
     },
     RegisterVideoAssetUseCase,

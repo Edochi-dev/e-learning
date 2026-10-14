@@ -11,8 +11,8 @@ import { selectRenditions } from '../../domain/rendition-ladder';
 import { buildMasterPlaylist } from '../../domain/master-playlist';
 import { HlsConfig } from '../../hls.config';
 import { parseFfprobeOutput } from './source-probe';
-import { VideoEncoderProfile } from './video-encoder-profile';
-import { buildFfmpegHlsArgs } from './ffmpeg-hls-args';
+import { VideoPipelineProfile } from './video-pipeline-profile';
+import { buildAudioEncodeArgs, buildFfmpegHlsArgs } from './ffmpeg-hls-args';
 import { runProcess } from './run-process';
 
 /** Placeholder written into the playlists; replaced per request when served. */
@@ -24,7 +24,7 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
 
   constructor(
     private readonly config: HlsConfig,
-    private readonly encoder: VideoEncoderProfile,
+    private readonly pipeline: VideoPipelineProfile,
   ) {}
 
   async transcode(request: TranscodeRequest): Promise<TranscodeResult> {
@@ -33,9 +33,9 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
     // Written beside the final directory and renamed into place, so a reader
     // never sees a half-written asset and a crash leaves only the .tmp behind.
     const workDir = `${finalDir}.tmp`;
-    // The key file lives only for the duration of the run and never inside
-    // the directory the web server exposes.
-    const keyDir = `${finalDir}.key.tmp`;
+    // The key and the intermediate audio live only for the duration of the
+    // run, and never inside the directory the web server exposes.
+    const scratchDir = `${finalDir}.scratch.tmp`;
 
     const source = parseFfprobeOutput(
       await runProcess(this.config.ffprobePath, [
@@ -54,11 +54,11 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
     for (const r of renditions) {
       await mkdir(join(workDir, r.name), { recursive: true });
     }
-    await mkdir(keyDir, { recursive: true, mode: 0o700 });
+    await mkdir(scratchDir, { recursive: true, mode: 0o700 });
 
     try {
-      const keyPath = join(keyDir, 'enc.key');
-      const keyInfoPath = join(keyDir, 'enc.keyinfo');
+      const keyPath = join(scratchDir, 'enc.key');
+      const keyInfoPath = join(scratchDir, 'enc.keyinfo');
       await writeFile(keyPath, request.key, { mode: 0o600 });
       await writeFile(
         keyInfoPath,
@@ -67,15 +67,26 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
       );
 
       const started = Date.now();
+      const encodedAudioPath = source.hasAudio
+        ? join(scratchDir, 'audio.m4a')
+        : null;
+      if (encodedAudioPath) {
+        await runProcess(
+          this.config.ffmpegPath,
+          buildAudioEncodeArgs(inputPath, encodedAudioPath),
+        );
+      }
+
       await runProcess(
         this.config.ffmpegPath,
         buildFfmpegHlsArgs({
           inputPath,
+          encodedAudioPath,
           outputDir: workDir,
           keyInfoPath,
           source,
           renditions,
-          encoder: this.encoder,
+          pipeline: this.pipeline,
         }),
       );
 
@@ -102,7 +113,7 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
       await rm(workDir, { recursive: true, force: true });
       throw error;
     } finally {
-      await rm(keyDir, { recursive: true, force: true });
+      await rm(scratchDir, { recursive: true, force: true });
     }
   }
 }

@@ -7,7 +7,7 @@ import {
 
 export const AUDIO_BITRATE_KBPS = 128;
 
-/** H.264 High@4.0 and AAC-LC, matching what the encoder profiles produce. */
+/** H.264 High@4.0 and AAC-LC, matching what the pipeline profiles produce. */
 const CODECS_WITH_AUDIO = 'avc1.640028,mp4a.40.2';
 const CODECS_VIDEO_ONLY = 'avc1.640028';
 
