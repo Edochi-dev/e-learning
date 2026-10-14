@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 // marcar la lección como completada.
 const WATCH_THRESHOLD = 80;
 import { useParams, Link } from 'react-router-dom';
-import { LessonType } from '@maris-nails/shared';
+import { LessonType, VideoProvider } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import type { VideoGateway } from '../gateways/VideoGateway';
@@ -311,7 +311,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
 
     // Los videos de YouTube no permiten tracking desde fuera del iframe,
     // así que los exoneramos del requisito de progreso.
-    const isYoutubeLesson = activeLesson.videoData?.videoUrl?.includes('youtube.com') || activeLesson.videoData?.videoUrl?.includes('youtu.be');
+    const isYoutubeLesson = activeLesson.videoData?.provider === VideoProvider.YOUTUBE;
     const hasWatchedEnough = isExamLesson || isYoutubeLesson || watchProgress >= WATCH_THRESHOLD;
 
     // Navegación entre lecciones
@@ -370,9 +370,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                 ) : (
                     <div className="course-learn__video">
                         <VideoPlayer
-                            src={activeLesson.videoData?.videoUrl ?? ''}
                             title={activeLesson.title}
                             lessonId={activeLesson.id}
+                            provider={activeLesson.videoData?.provider ?? VideoProvider.HOSTED}
                             videoGateway={videoGateway}
                             onWatchProgress={handleWatchProgress}
                         />

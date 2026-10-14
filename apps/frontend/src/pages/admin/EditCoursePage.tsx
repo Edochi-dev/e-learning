@@ -394,7 +394,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         if (!courseId) return;
         try {
             setIsLoading(true);
-            const data = await courseGateway.findOne(courseId);
+            const data = await courseGateway.findOneForAdmin(courseId);
             setCourse(data);
             setLessons(data.lessons ?? []);
             setCourseForm({

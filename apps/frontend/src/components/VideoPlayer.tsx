@@ -1,23 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { VideoProvider } from '@maris-nails/shared';
 import type { VideoGateway } from '../gateways/VideoGateway';
 
 interface VideoPlayerProps {
-    src: string;
     title: string;
-    lessonId?: string;           // Si se pasa, pide URL firmada al backend
-    videoGateway?: VideoGateway; // Gateway para obtener URLs firmadas
+    lessonId: string;
+    provider: VideoProvider;
+    videoGateway: VideoGateway;
     onWatchProgress?: (percent: number) => void;  // Callback: 0-100
 }
 
 /**
- * VideoPlayer — Reproductor de video protegido
- *
- * Soporta 3 modos:
- * 1. YouTube/Vimeo → iframe (ya están protegidos por ellos)
- * 2. Video local con lessonId → pide URL firmada al backend
- * 3. Video externo sin lessonId → reproduce directo (fallback)
+ * Plays a lesson's video. The URL never travels with the course data: it is
+ * requested per lesson from the enrollment-checked signed-url endpoint, which
+ * returns an embeddable link for YouTube and a signed stream for hosted files.
  */
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, videoGateway, onWatchProgress }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provider, videoGateway, onWatchProgress }) => {
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -62,24 +60,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
         onWatchProgress?.(100);
     }, [onWatchProgress]);
 
-    // 1. Detectar si es YouTube
-    const isYoutube = src.includes('youtube.com') || src.includes('youtu.be');
+    const isYoutube = provider === VideoProvider.YOUTUBE;
 
     useEffect(() => {
-        // Si es YouTube o no tiene lessonId, usar src directo
-        if (isYoutube || !lessonId) {
-            setVideoSrc(src);
-            return;
-        }
-
-        // Si no hay gateway, no podemos pedir URL firmada
-        if (!videoGateway) {
-            setVideoSrc(src);
-            return;
-        }
-
-        // Si es un video local, pedir URL firmada via gateway
         let cancelled = false;
+        setVideoSrc(null);
 
         const fetchSignedUrl = async () => {
             setLoading(true);
@@ -89,9 +74,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
 
                 if (cancelled) return;
 
-                // Si es URL externa (YouTube, etc.), usar directamente.
-                // Si es URL local firmada (/videos/stream?...), el gateway
-                // ya sabe cómo construir la URL completa.
                 setVideoSrc(data.url);
             } catch (err) {
                 if (cancelled) return;
@@ -104,9 +86,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
 
         fetchSignedUrl();
         return () => { cancelled = true; };
-    }, [lessonId, src, isYoutube, videoGateway]);
+    }, [lessonId, videoGateway]);
 
-    if (isYoutube) {
+    if (isYoutube && videoSrc) {
         return (
             <div className="video-player-container" style={{
                 position: 'relative',
@@ -118,7 +100,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
                 boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
             }}>
                 <iframe
-                    src={videoSrc || src}
+                    src={videoSrc}
                     title={title}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"

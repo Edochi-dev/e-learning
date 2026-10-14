@@ -1,4 +1,4 @@
-import type { Course, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
+import type { Course, PublicCourse, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
 import type { CourseGateway, CourseFilters } from './CourseGateway';
 import type { HttpClient } from '../http/HttpClient';
 
@@ -46,8 +46,16 @@ export class HttpCourseGateway implements CourseGateway {
         return response.json();
     }
 
-    async findOne(id: string): Promise<Course> {
+    async findOne(id: string): Promise<PublicCourse> {
         const response = await this.http.fetch(`${this.baseUrl}/courses/${id}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch course: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async findOneForAdmin(id: string): Promise<Course> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/admin`);
         if (!response.ok) {
             throw new Error(`Failed to fetch course: ${response.statusText}`);
         }
