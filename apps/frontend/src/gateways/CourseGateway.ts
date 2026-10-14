@@ -30,6 +30,10 @@ export interface CourseGateway {
     findOne(id: string): Promise<PublicCourse>;
     /** Full course for the editor (admin only). */
     findOneForAdmin(id: string): Promise<Course>;
+    /** Shows a draft in the catalog and opens it for sale. */
+    publish(id: string): Promise<void>;
+    /** Back to draft; enrolled students keep their access. */
+    unpublish(id: string): Promise<void>;
     create(course: CreateCoursePayload, thumbnail?: File): Promise<Course>;
     update(id: string, data: UpdateCoursePayload): Promise<Course>;
     updateThumbnail(id: string, file: File): Promise<Course>;

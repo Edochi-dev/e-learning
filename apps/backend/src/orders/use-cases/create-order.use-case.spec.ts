@@ -52,6 +52,7 @@ describe('CreateOrderUseCase', () => {
       title: 'Manicure Básico',
       price: 50,
       accessDurationDays: null,
+      publishedAt: new Date('2026-10-01T00:00:00Z'),
       ...overrides,
     });
 
@@ -138,6 +139,15 @@ describe('CreateOrderUseCase', () => {
    *   a) Lanza NotFoundException con el mensaje correcto.
    *   b) NO llama a orderGateway.create (no se creó ninguna orden basura).
    */
+  it('rechaza comprar un curso en borrador aunque se conozca su id', async () => {
+    courseGateway.findOne.mockResolvedValue(buildCourse({ publishedAt: null }));
+
+    await expect(useCase.execute(userId, courseId)).rejects.toThrow(
+      NotFoundException,
+    );
+    expect(orderGateway.create).not.toHaveBeenCalled();
+  });
+
   it('lanza NotFoundException si el curso no existe', async () => {
     courseGateway.findOne.mockResolvedValue(null);
 

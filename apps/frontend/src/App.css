@@ -4366,6 +4366,36 @@ input:checked+.slider .icon-moon {
   background: var(--surface);
 }
 
+button.admin-course-students {
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+button.admin-course-students:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.admin-course-status {
+  flex-shrink: 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-course-status--draft {
+  border: 1px dashed var(--gold-dark);
+  color: var(--gold-dark);
+}
+
+.admin-course-status--published {
+  background: var(--primary);
+  color: var(--bg-elevated);
+}
+
 @media (max-width: 720px) {
   .student-row {
     grid-template-columns: 1fr;

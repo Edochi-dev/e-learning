@@ -14,6 +14,7 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   HttpCode,
+  HttpStatus,
   DefaultValuePipe,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -31,6 +32,8 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { FindPublicCoursesUseCase } from './use-cases/find-public-courses.use-case';
 import { FindCoursesForAdminUseCase } from './use-cases/find-courses-for-admin.use-case';
+import { PublishCourseUseCase } from './use-cases/publish-course.use-case';
+import { UnpublishCourseUseCase } from './use-cases/unpublish-course.use-case';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
 import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
 import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
@@ -68,6 +71,8 @@ export class CoursesController {
   constructor(
     private readonly findPublicCoursesUseCase: FindPublicCoursesUseCase,
     private readonly findCoursesForAdminUseCase: FindCoursesForAdminUseCase,
+    private readonly publishCourseUseCase: PublishCourseUseCase,
+    private readonly unpublishCourseUseCase: UnpublishCourseUseCase,
     private readonly getCourseCategoriesUseCase: GetCourseCategoriesUseCase,
     private readonly findPublicCourseUseCase: FindPublicCourseUseCase,
     private readonly findCourseForAdminUseCase: FindCourseForAdminUseCase,
@@ -161,6 +166,22 @@ export class CoursesController {
   @Get(':id')
   async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<PublicCourse> {
     return this.findPublicCourseUseCase.execute(id);
+  }
+
+  @Post(':id/publish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async publish(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.publishCourseUseCase.execute(id);
+  }
+
+  @Post(':id/unpublish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async unpublish(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.unpublishCourseUseCase.execute(id);
   }
 
   @Get(':id/admin')

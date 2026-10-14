@@ -18,6 +18,7 @@ import { VideoLesson } from '../src/courses/entities/video-lesson.entity';
 import { ExamLesson } from '../src/courses/entities/exam-lesson.entity';
 import { QuizQuestion } from '../src/courses/entities/quiz-question.entity';
 import { QuizOption } from '../src/courses/entities/quiz-option.entity';
+import { Enrollment } from '../src/enrollments/entities/enrollment.entity';
 
 /**
  * The public course detail must never hand out exam answers or video URLs
@@ -40,6 +41,8 @@ function configureApp(app: INestApplication): void {
 describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
   let app: INestApplication;
   let courseId: string;
+  let draftId: string;
+  let dataSource: DataSource;
 
   const admin = {
     fullName: 'Admin Curso Publico',
@@ -71,16 +74,38 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
     app = moduleRef.createNestApplication();
     configureApp(app);
     await app.init();
-    const dataSource = app.get(DataSource);
+    dataSource = app.get(DataSource);
 
     const course = await dataSource.getRepository(Course).save(
       dataSource.getRepository(Course).create({
         title: 'Curso Público E2E',
         price: 30,
         description: 'Curso con video no listado y examen.',
+        publishedAt: new Date(),
       }),
     );
     courseId = course.id;
+
+    const draft = await dataSource.getRepository(Course).save(
+      dataSource.getRepository(Course).create({
+        title: 'Borrador E2E',
+        price: 20,
+        description: 'Curso a medio armar.',
+      }),
+    );
+    draftId = draft.id;
+    const draftLesson = new Lesson();
+    Object.assign(draftLesson, {
+      title: 'Primera clase del borrador',
+      description: 'd',
+      type: 'class',
+      order: 0,
+      courseId: draftId,
+    });
+    draftLesson.videoData = Object.assign(new VideoLesson(), {
+      videoUrl: '/static/videos/borrador.mp4',
+    });
+    await dataSource.getRepository(Lesson).save(draftLesson);
 
     const video = new Lesson();
     Object.assign(video, {
@@ -189,5 +214,81 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
     expect(
       body.lessons[1].questions?.[0].options.map((o) => o.isCorrect),
     ).toEqual(expect.arrayContaining([true, false]));
+  });
+
+  describe('borrador / publicado', () => {
+    const catalogTitles = async () => {
+      const res = await http().get('/courses?limit=100').expect(200);
+      return (res.body as { data: { title: string }[] }).data.map(
+        (c) => c.title,
+      );
+    };
+
+    it('un borrador no aparece en el catálogo pero abre por enlace directo', async () => {
+      expect(await catalogTitles()).not.toContain('Borrador E2E');
+      await http().get(`/courses/${draftId}`).expect(200);
+    });
+
+    it('un borrador no se puede comprar aunque se conozca su id', async () => {
+      const agent = await loginAs(student);
+      await agent.post('/orders/me').send({ courseId: draftId }).expect(404);
+    });
+
+    it('solo la admin publica, y al publicar entra al catálogo', async () => {
+      await (await loginAs(student))
+        .post(`/courses/${draftId}/publish`)
+        .expect(403);
+
+      const adminAgent = await loginAs(admin);
+      await adminAgent.post(`/courses/${draftId}/publish`).expect(204);
+      expect(await catalogTitles()).toContain('Borrador E2E');
+
+      await adminAgent.post(`/courses/${draftId}/unpublish`).expect(204);
+      expect(await catalogTitles()).not.toContain('Borrador E2E');
+    });
+
+    it('no se puede publicar un curso sin lecciones', async () => {
+      const empty = await dataSource
+        .getRepository(Course)
+        .save(
+          dataSource
+            .getRepository(Course)
+            .create({ title: 'Vacío E2E', price: 1, description: 'd' }),
+        );
+      await (await loginAs(admin))
+        .post(`/courses/${empty.id}/publish`)
+        .expect(400);
+    });
+  });
+
+  describe('borrar un curso con alumnas', () => {
+    beforeAll(async () => {
+      const user = await dataSource
+        .getRepository(User)
+        .findOneByOrFail({ email: student.email });
+      await dataSource
+        .getRepository(Enrollment)
+        .save(
+          dataSource
+            .getRepository(Enrollment)
+            .create({ userId: user.id, courseId }),
+        );
+    });
+
+    it('la API lo rechaza con un mensaje que explica qué hacer', async () => {
+      const res = await (await loginAs(admin))
+        .delete(`/courses/${courseId}`)
+        .expect(409);
+      expect((res.body as { message: string }).message).toContain(
+        'Despublícalo',
+      );
+      await http().get(`/courses/${courseId}`).expect(200);
+    });
+
+    it('la base de datos también lo impide (RESTRICT), aunque se salte la API', async () => {
+      await expect(
+        dataSource.getRepository(Course).delete(courseId),
+      ).rejects.toThrow(/foreign key/i);
+    });
   });
 });

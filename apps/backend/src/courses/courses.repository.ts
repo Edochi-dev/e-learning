@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not, ILike, FindOptionsWhere } from 'typeorm';
+import { Repository, Not, IsNull, ILike, FindOptionsWhere } from 'typeorm';
 import type { CourseLevel } from '@maris-nails/shared';
 import {
   CourseGateway,
@@ -59,7 +59,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     limit: number,
     filters?: CourseFilters,
   ): Promise<PaginatedResult<Course>> {
-    const { search, category, level } = filters ?? {};
+    const { search, category, level, publishedOnly } = filters ?? {};
 
     // Filtros exactos (category/level) que se aplican SIEMPRE. Cuando además
     // hay búsqueda por texto, TypeORM necesita un array de condiciones (OR):
@@ -69,6 +69,7 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     // `level` viene como string crudo del query; casteamos al enum. Si no es un
     // nivel válido, la condición simplemente no coincide con ningún curso.
     if (level) baseWhere.level = level as CourseLevel;
+    if (publishedOnly) baseWhere.publishedAt = Not(IsNull());
 
     const where = search
       ? [
@@ -91,11 +92,13 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
     return { data, total, page, limit };
   }
 
-  async findDistinctCategories(): Promise<string[]> {
-    const rows = await this.courseRepository
+  async findDistinctCategories(publishedOnly: boolean): Promise<string[]> {
+    const query = this.courseRepository
       .createQueryBuilder('course')
       .select('DISTINCT course.category', 'category')
-      .where('course.category IS NOT NULL')
+      .where('course.category IS NOT NULL');
+    if (publishedOnly) query.andWhere('course.publishedAt IS NOT NULL');
+    const rows = await query
       .orderBy('course.category', 'ASC')
       .getRawMany<{ category: string }>();
     return rows.map((r) => r.category);
@@ -144,6 +147,10 @@ export class CoursesRepository implements CourseGateway, LessonGateway {
    * Esta es la solución más robusta: funciona con cualquier cliente
    * (ORM, SQL directo, psql) porque el contrato vive en la DB, no en el código.
    */
+  async setPublishedAt(id: string, publishedAt: Date | null): Promise<void> {
+    await this.courseRepository.update(id, { publishedAt });
+  }
+
   async delete(id: string): Promise<void> {
     const result = await this.courseRepository.delete(id);
     if (result.affected === 0) {

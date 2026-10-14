@@ -135,6 +135,20 @@ export class HttpCourseGateway implements CourseGateway {
         }
     }
 
+    async publish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/publish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo publicar el curso'));
+        }
+    }
+
+    async unpublish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/unpublish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo despublicar el curso'));
+        }
+    }
+
     async delete(id: string): Promise<void> {
         const response = await this.http.fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'DELETE',
