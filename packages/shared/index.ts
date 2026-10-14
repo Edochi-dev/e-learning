@@ -48,6 +48,12 @@ export const VideoProvider = {
 
 export type VideoProvider = typeof VideoProvider[keyof typeof VideoProvider];
 
+/**
+ * How long before a live class its stream opens. The backend refuses the
+ * stream URL earlier and the student page shows the countdown until then.
+ */
+export const LIVE_JOIN_LEAD_MINUTES = 15;
+
 /** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
 export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
     provider: VideoProvider;

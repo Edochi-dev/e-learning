@@ -5113,6 +5113,90 @@ button.admin-course-students:disabled {
   box-shadow: var(--shadow-md);
 }
 
+/* Live lesson: countdown card before the stream opens, banner once it does */
+.live-card {
+  aspect-ratio: 16 / 9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+
+.live-card__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.live-card__date {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  color: var(--text-primary);
+}
+
+.live-card__date::first-letter {
+  text-transform: uppercase;
+}
+
+.live-card__reference,
+.live-card__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.live-card__countdown {
+  margin: var(--space-2) 0 0;
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+}
+
+.live-card__countdown strong {
+  font-variant-numeric: tabular-nums;
+  color: var(--primary);
+  font-size: 1.4rem;
+}
+
+.live-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.live-gate__banner {
+  margin: 0 0 var(--space-2);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.live-gate__banner--open {
+  color: var(--primary);
+}
+
+.live-gate__banner--ended {
+  color: var(--text-muted);
+}
+
+@media (max-width: 600px) {
+  .live-card {
+    aspect-ratio: auto;
+    min-height: 260px;
+  }
+}
+
 /* Info de la lección */
 
 .course-learn__lesson-info {

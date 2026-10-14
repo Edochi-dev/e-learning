@@ -1,4 +1,5 @@
 import { Entity, PrimaryColumn, Column, OneToOne, JoinColumn } from 'typeorm';
+import { LIVE_JOIN_LEAD_MINUTES } from '@maris-nails/shared';
 import { Lesson } from './lessons.entity';
 
 /**
@@ -37,6 +38,14 @@ export class VideoLesson {
 
   @Column({ type: 'timestamptz', nullable: true })
   liveEndsAt: Date | null;
+
+  /** A recorded video is always available; a live stream opens shortly before it starts. */
+  isStreamOpenAt(now: Date): boolean {
+    if (!this.isLive || !this.liveStartsAt) return true;
+    const opensAt =
+      new Date(this.liveStartsAt).getTime() - LIVE_JOIN_LEAD_MINUTES * 60_000;
+    return now.getTime() >= opensAt;
+  }
 
   @OneToOne(() => Lesson, (lesson) => lesson.videoData, {
     onDelete: 'CASCADE',

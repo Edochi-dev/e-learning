@@ -1,7 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { VideoTokenService } from '../video-token.service';
+import { LIVE_JOIN_LEAD_MINUTES } from '@maris-nails/shared';
 import { youtubeEmbedUrl } from '../../courses/domain/video-provider';
 
 /**
@@ -32,6 +37,14 @@ export class GetSignedUrlUseCase {
     const videoUrl = lesson.videoData?.videoUrl;
     if (!videoUrl) {
       throw new NotFoundException('Esta lección no tiene video');
+    }
+
+    // Handing the stream URL out days early would let it circulate before
+    // the class; the student page shows a countdown until it opens.
+    if (!lesson.videoData!.isStreamOpenAt(new Date())) {
+      throw new ForbiddenException(
+        `La transmisión se abre ${LIVE_JOIN_LEAD_MINUTES} minutos antes de la clase.`,
+      );
     }
 
     // 2. Normalizar el URL: si tiene host (ej: "http://localhost:3000/static/videos/clase1.mp4")
