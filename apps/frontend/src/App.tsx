@@ -26,6 +26,7 @@ import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
 import { HttpNameChangeGateway } from './gateways/HttpNameChangeGateway';
 import { HttpScheduleGateway } from './gateways/HttpScheduleGateway';
 import { HttpInvitationGateway } from './gateways/HttpInvitationGateway';
+import { HttpPushGateway } from './gateways/HttpPushGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SiteLayout } from './components/SiteLayout';
 import { SalesLandingPage } from './pages/SalesLandingPage';
@@ -120,6 +121,7 @@ function AppContent({ http }: { http: HttpClient }) {
   const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL, http), [http]);
   const scheduleGateway = useMemo(() => new HttpScheduleGateway(API_URL, http), [http]);
   const invitationGateway = useMemo(() => new HttpInvitationGateway(API_URL, http), [http]);
+  const pushGateway = useMemo(() => new HttpPushGateway(API_URL, http), [http]);
 
   return (
     <>
@@ -163,7 +165,7 @@ function AppContent({ http }: { http: HttpClient }) {
             <Route element={<ProtectedRoute requiredRole={UserRole.ADMIN} />}>
               <Route path="/admin" element={<AdminDashboardPage correctionGateway={correctionGateway} nameChangeGateway={nameChangeGateway} />} />
               <Route path="/admin/cambios-nombre" element={<NameChangeRequestsAdminPage gateway={nameChangeGateway} />} />
-              <Route path="/admin/agenda" element={<SchedulePage gateway={scheduleGateway} />} />
+              <Route path="/admin/agenda" element={<SchedulePage gateway={scheduleGateway} pushGateway={pushGateway} />} />
               <Route path="/admin/correcciones" element={<CorrectionsAdminPage gateway={correctionGateway} courseGateway={courseGateway} />} />
               <Route path="/admin/correcciones/curso/:courseId" element={<ReviewCorrectionPage gateway={correctionGateway} />} />
               <Route path="/admin/cursos" element={<CoursesAdminPage gateway={courseGateway} />} />
