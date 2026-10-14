@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, type ReactNode } from 'react';
 import type { User, LoginCredentials, RegisterPayload } from '@maris-nails/shared';
 import type { AuthGateway } from '../gateways/AuthGateway';
+import type { SessionExpiryNotifier } from '../http/HttpClient';
 
 interface AuthContextType {
     user: User | null;
@@ -9,6 +10,7 @@ interface AuthContextType {
     forgotPassword: (email: string) => Promise<void>;
     resetPassword: (token: string, newPassword: string) => Promise<void>;
     logout: () => void;
+    logoutEverywhere: () => Promise<void>;
     isAuthenticated: boolean;
     isLoading: boolean;
 }
@@ -18,9 +20,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 interface AuthProviderProps {
     children: ReactNode;
     gateway: AuthGateway;
+    sessionExpiry: SessionExpiryNotifier;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway }) => {
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway, sessionExpiry }) => {
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -34,6 +37,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             .catch(() => setUser(null))
             .finally(() => setIsLoading(false));
     }, [gateway]);
+
+    // The session could not be renewed (expired, revoked, or the token was
+    // reused elsewhere): drop the user so protected routes send them to login.
+    useEffect(() => sessionExpiry.onSessionExpired(() => setUser(null)), [sessionExpiry]);
 
     const login = async (credentials: LoginCredentials): Promise<User> => {
         const response = await gateway.login(credentials);
@@ -66,6 +73,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
         setUser(null);
     };
 
+    const logoutEverywhere = async () => {
+        await gateway.revokeAllSessions();
+        setUser(null);
+    };
+
     return (
         <AuthContext.Provider value={{
             user,
@@ -74,6 +86,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, gateway })
             forgotPassword,
             resetPassword,
             logout,
+            logoutEverywhere,
             isAuthenticated: !!user,
             isLoading,
         }}>

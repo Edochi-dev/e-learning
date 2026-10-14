@@ -1,4 +1,5 @@
 import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse } from './CertificateGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 // NestJS validation errors carry `message` as an array of strings.
 async function errorMessage(res: Response, fallback: string): Promise<string> {
@@ -11,9 +12,11 @@ async function errorMessage(res: Response, fallback: string): Promise<string> {
 
 export class HttpCertificateGateway implements CertificateGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> {
@@ -23,7 +26,7 @@ export class HttpCertificateGateway implements CertificateGateway {
         body.append('paperFormat', paperFormat);
         body.append('file', file);
 
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates`, {
             method: 'POST',
             credentials: 'include',
             body,
@@ -43,7 +46,7 @@ export class HttpCertificateGateway implements CertificateGateway {
         if (payload.paperFormat !== undefined) body.append('paperFormat', payload.paperFormat);
         if (file) body.append('file', file);
 
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
             method: 'PATCH',
             credentials: 'include',
             body,
@@ -56,7 +59,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async updateTemplateDesign(id: string, design: TemplateDesign): Promise<CertificateTemplate> {
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}/design`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${id}/design`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -67,7 +70,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async listTemplates(): Promise<CertificateTemplate[]> {
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar plantillas: ${res.statusText}`);
@@ -75,7 +78,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async getTemplate(id: string): Promise<CertificateTemplate> {
-        const res = await fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${id}`, {
             credentials: 'include',
         });
         if (!res.ok) {
@@ -86,7 +89,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates/batch`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificates/batch`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -97,7 +100,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async getMyCertificates(): Promise<Certificate[]> {
-        const res = await fetch(`${this.baseUrl}/certificates/me`, {
+        const res = await this.http.fetch(`${this.baseUrl}/certificates/me`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar tus certificados: ${res.statusText}`);
@@ -109,7 +112,7 @@ export class HttpCertificateGateway implements CertificateGateway {
         for (const [key, value] of Object.entries(filters)) {
             if (value) url.searchParams.set(key, value);
         }
-        const res = await fetch(url.toString(), {
+        const res = await this.http.fetch(url.toString(), {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(await errorMessage(res, 'Error al buscar certificados'));
@@ -117,7 +120,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async listCertificateCourses(): Promise<CertificateCourse[]> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates/courses`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificates/courses`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar los cursos: ${res.statusText}`);
@@ -125,7 +128,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async downloadBatch(ids: string[]): Promise<Blob> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates/download`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificates/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -138,7 +141,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     async deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void> {
         const url = new URL(`${this.baseUrl}/admin/certificate-templates/${id}`);
         if (certAction) url.searchParams.set('certAction', certAction);
-        const res = await fetch(url.toString(), {
+        const res = await this.http.fetch(url.toString(), {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -149,7 +152,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async deleteCertificates(ids: string[]): Promise<void> {
-        const res = await fetch(`${this.baseUrl}/admin/certificates/delete`, {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificates/delete`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -159,7 +162,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async getCertificate(id: string): Promise<Certificate> {
-        const res = await fetch(`${this.baseUrl}/certificates/${id}`);
+        const res = await this.http.fetch(`${this.baseUrl}/certificates/${id}`);
         if (!res.ok) throw new Error('Certificado no encontrado');
         return res.json();
     }
@@ -168,13 +171,13 @@ export class HttpCertificateGateway implements CertificateGateway {
         const url = new URL(`${this.baseUrl}/certificates/lookup`);
         url.searchParams.set('number', certificateNumber);
         url.searchParams.set('name', recipientName);
-        const res = await fetch(url.toString());
+        const res = await this.http.fetch(url.toString());
         if (!res.ok) throw new Error('Certificado no encontrado');
         return res.json();
     }
 
     async downloadCertificatePdf(filePath: string): Promise<Blob> {
-        const res = await fetch(`${this.baseUrl}${filePath}`);
+        const res = await this.http.fetch(`${this.baseUrl}${filePath}`);
         if (!res.ok) throw new Error('Error al descargar el certificado PDF');
         return res.blob();
     }
