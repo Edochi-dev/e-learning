@@ -73,7 +73,15 @@ export const LiveLessonGate: React.FC<Props> = ({ lesson, courseTitle, courseUrl
                 <p className={`live-gate__banner live-gate__banner--${phase}`}>
                     {phase === 'open' ? '🔴 En vivo ahora' : 'Clase en vivo finalizada'}
                 </p>
-                {children}
+                {video.provider ? children : (
+                    <div className="live-card">
+                        <p className="live-card__countdown">
+                            {phase === 'open'
+                                ? 'La transmisión aparecerá aquí cuando empiece.'
+                                : 'La grabación estará disponible pronto.'}
+                        </p>
+                    </div>
+                )}
             </div>
         );
     }

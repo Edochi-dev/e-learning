@@ -62,10 +62,11 @@ export class CreateLessonDto {
 
   // ─── Campos exclusivos de type='class' ─────────────────────────────
 
-  // @ValidateIf(o => o.type === 'class') significa:
-  // "solo valida este campo si type es 'class'".
-  // Para exámenes o correcciones, videoUrl se ignora completamente.
-  @ValidateIf((o: CreateLessonDto) => o.type === 'class')
+  // Required for a recorded class. A live class has no video until its
+  // recording is added, so there it is optional but must be a URL if sent.
+  @ValidateIf(
+    (o: CreateLessonDto) => o.type === 'class' && (!o.isLive || !!o.videoUrl),
+  )
   @IsUrl({ protocols: ['http', 'https'], require_protocol: true })
   videoUrl?: string;
 

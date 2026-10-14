@@ -33,7 +33,9 @@ function toPublicLesson(lesson: Lesson): PublicLesson {
     order: lesson.order,
     videoData: video
       ? {
-          provider: videoProviderOf(video.videoUrl),
+          provider: video.videoUrl
+            ? videoProviderOf(video.videoUrl)
+            : undefined,
           duration: video.duration ?? undefined,
           isLive: video.isLive,
           liveStartsAt: video.liveStartsAt?.toISOString(),
