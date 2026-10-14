@@ -1,3 +1,4 @@
+import { EnableUuidOssp1739999999999 } from './migrations/1739999999999-EnableUuidOssp';
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema';
 import { Migration1771952849166 } from './migrations/1771952849166-Migration';
 import { AddLessonOrder1771952849167 } from './migrations/1771952849167-AddLessonOrder';
@@ -60,6 +61,7 @@ import { AddAuthSessions1784300000000 } from './migrations/1784300000000-AddAuth
  * con el timestamp de cada una).
  */
 export const MIGRATIONS = [
+  EnableUuidOssp1739999999999,
   InitialSchema1740000000000,
   Migration1771952849166,
   AddLessonOrder1771952849167,

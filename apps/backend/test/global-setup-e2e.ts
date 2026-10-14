@@ -54,12 +54,8 @@ export default async function globalSetup(): Promise<void> {
       'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;',
     );
 
-    // 2. Extensión uuid-ossp: dev/producción la tienen instalada (provee
-    //    uuid_generate_v4(), que varias migraciones usan como DEFAULT). Al no
-    //    crearla ninguna migración, hay que instalarla aquí en la DB fresca.
-    await dataSource.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-
-    // 3. Aplicar las MISMAS migraciones que producción → esquema idéntico.
+    // 2. Aplicar las MISMAS migraciones que producción → esquema idéntico.
+    //    La primera crea la extensión uuid-ossp que el resto necesita.
     await dataSource.runMigrations();
   } finally {
     await dataSource.destroy();
