@@ -1,41 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import sharp from 'sharp';
+import decodeHeic from 'heic-decode';
+
+const JPEG_QUALITY = 85;
 
 /**
- * ImageProcessorService — Servicio de infraestructura para procesamiento de imágenes.
- *
- * Vive en el módulo de storage porque es una preocupación de infraestructura,
- * no de dominio. Si mañana necesitamos procesar imágenes de perfil, thumbnails
- * automáticos, etc., este servicio se reutiliza sin duplicar lógica.
- *
- * Actualmente solo hace conversión HEIC→JPEG porque las alumnas usan iPhone
- * y iOS produce fotos en HEIC por defecto. Sin esta conversión, la profesora
- * necesitaría un visor especial para revisar las fotos — fricción innecesaria.
+ * Image conversions for uploads. Today it turns HEIC/HEIF photos (the iPhone
+ * default) into JPEG so the teacher can review them in any browser.
  */
 @Injectable()
 export class ImageProcessorService {
-  /**
-   * Determina si un archivo es HEIC/HEIF basándose en su mimetype.
-   *
-   * iOS envía 'image/heic' o 'image/heif'. Algunos clientes pueden
-   * enviar variantes con mayúsculas, así que normalizamos a lowercase.
-   */
   isHeic(mimetype: string): boolean {
     const normalized = mimetype.toLowerCase();
     return normalized === 'image/heic' || normalized === 'image/heif';
   }
 
   /**
-   * Convierte un buffer de imagen HEIC/HEIF a JPEG.
-   *
-   * sharp maneja la decodificación automáticamente — detecta el formato
-   * del input por los magic bytes, no por el mimetype.
-   *
-   * Quality 85 es el sweet spot: visualmente indistinguible de 100
-   * pero ~40% más liviano. Para fotos de nail art donde la profesora
-   * necesita ver detalle, 85 es más que suficiente.
+   * sharp's prebuilt libvips ships without HEVC (patent licensing), so it
+   * reads AV1-based HEIF but fails on iPhone photos, which are HEVC. Those
+   * fall back to heic-decode (libheif in WebAssembly). Do not drop the
+   * fallback after upgrading sharp: no prebuilt release includes HEVC.
    */
   async convertToJpeg(buffer: Buffer): Promise<Buffer> {
-    return sharp(buffer).jpeg({ quality: 85 }).toBuffer();
+    try {
+      return await sharp(buffer).jpeg({ quality: JPEG_QUALITY }).toBuffer();
+    } catch {
+      const { width, height, data } = await decodeHeic({ buffer });
+      return sharp(Buffer.from(data.buffer, data.byteOffset, data.byteLength), {
+        raw: { width, height, channels: 4 },
+      })
+        .jpeg({ quality: JPEG_QUALITY })
+        .toBuffer();
+    }
   }
 }
