@@ -1,5 +1,5 @@
 import { AUDIO_BITRATE_KBPS } from '../../domain/master-playlist';
-import { Rendition } from '../../domain/rendition-ladder';
+import { Rendition, outputDimensions } from '../../domain/rendition-ladder';
 import { SourceVideoInfo } from './source-probe';
 import { VideoEncoderProfile } from './video-encoder-profile';
 
@@ -25,7 +25,10 @@ export function buildFfmpegHlsArgs(input: FfmpegHlsArgsInput): string[] {
 
   // format=yuv420p: phones record 10-bit HDR, which 8-bit H.264 cannot take.
   const scaled = renditions
-    .map((r, i) => `[v${i}]scale=-2:${r.height},format=yuv420p[v${i}out]`)
+    .map((r, i) => {
+      const { width, height } = outputDimensions(r, source);
+      return `[v${i}]scale=${width}:${height},format=yuv420p[v${i}out]`;
+    })
     .join(';');
   const filter = `[0:v]split=${n}${renditions.map((_, i) => `[v${i}]`).join('')};${scaled}`;
 

@@ -7,12 +7,16 @@ import { RENDITION_LADDER } from '../../domain/rendition-ladder';
 
 const [r1080, r720] = RENDITION_LADDER;
 
-function build(hasAudio: boolean, encoder = new NvencEncoderProfile()) {
+function build(
+  hasAudio: boolean,
+  encoder = new NvencEncoderProfile(),
+  dimensions = { width: 1920, height: 1080 },
+) {
   return buildFfmpegHlsArgs({
     inputPath: '/src/clase.mov',
     outputDir: '/out/abc.tmp',
     keyInfoPath: '/keys/enc.keyinfo',
-    source: { durationSeconds: 60, width: 1920, height: 1080, hasAudio },
+    source: { durationSeconds: 60, ...dimensions, hasAudio },
     renditions: [r1080, r720],
     encoder,
   });
@@ -25,8 +29,15 @@ describe('buildFfmpegHlsArgs', () => {
   it('splits the decoded video once into one scaled 8-bit output per rendition', () => {
     expect(valueAfter(build(true), '-filter_complex')).toBe(
       '[0:v]split=2[v0][v1];' +
-        '[v0]scale=-2:1080,format=yuv420p[v0out];' +
-        '[v1]scale=-2:720,format=yuv420p[v1out]',
+        '[v0]scale=1920:1080,format=yuv420p[v0out];' +
+        '[v1]scale=1280:720,format=yuv420p[v1out]',
+    );
+  });
+
+  it('scales portrait video by its short side', () => {
+    const args = build(true, undefined, { width: 1080, height: 1920 });
+    expect(valueAfter(args, '-filter_complex')).toContain(
+      '[v1]scale=720:1280,format=yuv420p[v1out]',
     );
   });
 

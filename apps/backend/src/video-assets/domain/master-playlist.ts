@@ -1,4 +1,9 @@
-import { Rendition, peakBitrateKbps } from './rendition-ladder';
+import {
+  Dimensions,
+  Rendition,
+  outputDimensions,
+  peakBitrateKbps,
+} from './rendition-ladder';
 
 export const AUDIO_BITRATE_KBPS = 128;
 
@@ -8,18 +13,8 @@ const CODECS_VIDEO_ONLY = 'avc1.640028';
 
 export interface MasterPlaylistInput {
   renditions: Rendition[];
-  sourceWidth: number;
-  sourceHeight: number;
+  source: Dimensions;
   hasAudio: boolean;
-}
-
-/** Width after scaling to the rendition height, rounded to even like `-2`. */
-export function scaledWidth(
-  rendition: Rendition,
-  sourceWidth: number,
-  sourceHeight: number,
-): number {
-  return Math.round((sourceWidth * rendition.height) / sourceHeight / 2) * 2;
 }
 
 /**
@@ -32,10 +27,10 @@ export function buildMasterPlaylist(input: MasterPlaylistInput): string {
   for (const r of input.renditions) {
     const peakKbps =
       peakBitrateKbps(r) + (input.hasAudio ? AUDIO_BITRATE_KBPS : 0);
-    const width = scaledWidth(r, input.sourceWidth, input.sourceHeight);
+    const { width, height } = outputDimensions(r, input.source);
     lines.push(
       `#EXT-X-STREAM-INF:BANDWIDTH=${peakKbps * 1000},` +
-        `RESOLUTION=${width}x${r.height},` +
+        `RESOLUTION=${width}x${height},` +
         `CODECS="${input.hasAudio ? CODECS_WITH_AUDIO : CODECS_VIDEO_ONLY}"`,
       `${r.name}/index.m3u8`,
     );

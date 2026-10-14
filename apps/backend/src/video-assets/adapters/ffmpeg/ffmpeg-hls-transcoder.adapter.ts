@@ -48,7 +48,7 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
         inputPath,
       ]),
     );
-    const renditions = selectRenditions(source.height);
+    const renditions = selectRenditions(source);
 
     await rm(workDir, { recursive: true, force: true });
     for (const r of renditions) {
@@ -83,8 +83,7 @@ export class FfmpegHlsTranscoder implements VideoTranscoder {
         join(workDir, 'master.m3u8'),
         buildMasterPlaylist({
           renditions,
-          sourceWidth: source.width,
-          sourceHeight: source.height,
+          source,
           hasAudio: source.hasAudio,
         }),
       );
