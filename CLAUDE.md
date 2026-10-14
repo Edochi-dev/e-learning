@@ -116,8 +116,13 @@ anything.
 This repository is public and read by potential employers; a codebase narrating language
 and framework basics reads like a tutorial, not like production software.
 
-A comment earns its place only if it tells a maintainer something the code cannot:
+The goal is **concise, not absent**: comments must let the developer and Claude recognize
+at a glance what each piece does, without excessive explanation.
 
+Write:
+
+- A one- or two-line summary on a class or non-trivial method saying what it is and why
+  it exists, when the name alone does not tell you.
 - A non-obvious constraint (`this guard must run after AuthGuard, which populates req.user`).
 - A security invariant, phrased as a warning (`do not switch this to COMPLETED to unblock
   the flow — it would grant free access`).
@@ -126,7 +131,7 @@ A comment earns its place only if it tells a maintainer something the code canno
 
 Do **not** write:
 
-- Restatements of what the code plainly says.
+- Line-by-line narration of what the code plainly says.
 - Explanations of language or framework features (what `@ManyToOne` does, why
   `@PrimaryColumn` and not `@PrimaryGeneratedColumn`, how DI works).
 - Narrative history of a bug and its fix — that belongs in the commit message and the
@@ -134,7 +139,13 @@ Do **not** write:
 - Section banners and decorative ASCII separators inside a function body.
 
 Keep them short. If a comment needs more than about five lines, the explanation probably
-belongs in the chat, in the commit message, or in an issue.
+belongs in the chat, in the commit message, or in an issue. When trimming an existing
+over-long comment, **condense it to its summary — don't delete it outright**; keep warnings
+and invariants intact. `apps/backend/src/video-assets/` is a reference for the intended
+density.
+
+### Architecture principles
+
 - Always follow **pure** Clean Architecture — no shortcuts.
 - **The metric is architectural correctness, not file count.** Never dismiss a correct
   design as "over-engineering", and never trade correct design for implementation speed.
