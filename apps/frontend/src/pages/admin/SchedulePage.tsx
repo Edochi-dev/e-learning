@@ -14,11 +14,12 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin, { type DateClickArg } from '@fullcalendar/interaction';
 import type { ScheduleEvent } from '@maris-nails/shared';
 import type { ScheduleGateway } from '../../gateways/ScheduleGateway';
+import type { PushGateway } from '../../gateways/PushGateway';
 import { useToast } from '../../components/Toast';
-import { API_URL } from '../../config';
 
 interface Props {
     gateway: ScheduleGateway;
+    pushGateway: PushGateway;
 }
 
 // Convierte la clave VAPID (base64url) al Uint8Array que espera pushManager.subscribe.
@@ -101,7 +102,7 @@ const MOBILE_QUERY = '(max-width: 768px)';
  * estirar los eventos. La regla anti-solape la impone el backend: si algo choca,
  * se revierte el cambio en el calendario y se muestra el motivo.
  */
-export const SchedulePage: React.FC<Props> = ({ gateway }) => {
+export const SchedulePage: React.FC<Props> = ({ gateway, pushGateway }) => {
     const calendarRef = useRef<FullCalendar | null>(null);
     const [modal, setModal] = useState<ModalState>(CLOSED);
     const [saving, setSaving] = useState(false);
@@ -134,10 +135,7 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
                 return;
             }
             const reg = await navigator.serviceWorker.ready;
-            const keyRes = await fetch(`${API_URL}/push/public-key`, {
-                credentials: 'include',
-            });
-            const { publicKey } = await keyRes.json();
+            const publicKey = await pushGateway.getPublicKey();
             if (!publicKey) {
                 toast.error('El servidor aún no tiene las notificaciones configuradas.');
                 return;
@@ -146,13 +144,11 @@ export const SchedulePage: React.FC<Props> = ({ gateway }) => {
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(publicKey),
             });
-            const json = sub.toJSON();
-            await fetch(`${API_URL}/push/subscribe`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
-            });
+            const { endpoint, keys } = sub.toJSON();
+            if (!endpoint || !keys?.p256dh || !keys.auth) {
+                throw new Error('El navegador entregó una suscripción incompleta.');
+            }
+            await pushGateway.subscribe(endpoint, { p256dh: keys.p256dh, auth: keys.auth });
             toast.success('Recordatorios activados en este dispositivo.');
         } catch (err) {
             toast.error(
