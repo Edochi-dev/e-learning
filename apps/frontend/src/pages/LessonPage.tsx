@@ -1,4 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { VideoProvider } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { VideoGateway } from '../gateways/VideoGateway';
 import { useCourse } from '../hooks/useCourse';
@@ -33,9 +34,9 @@ export const LessonPage = ({ gateway, videoGateway }: LessonPageProps) => {
 
                 <div style={{ marginBottom: '1.5rem' }}>
                     <VideoPlayer
-                        src={currentLesson.videoData?.videoUrl ?? ''}
                         title={currentLesson.title}
                         lessonId={currentLesson.id}
+                        provider={currentLesson.videoData?.provider ?? VideoProvider.HOSTED}
                         videoGateway={videoGateway}
                     />
                 </div>

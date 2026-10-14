@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import type { Course } from '@maris-nails/shared';
+import type { PublicCourse } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 
 export const useCourse = (gateway: CourseGateway, id: string | undefined) => {
-    const [course, setCourse] = useState<Course | null>(null);
+    const [course, setCourse] = useState<PublicCourse | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
 

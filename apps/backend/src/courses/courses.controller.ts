@@ -21,7 +21,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRole } from '@maris-nails/shared';
+import { UserRole, PublicCourse } from '@maris-nails/shared';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
 import { PaginatedResult } from '../common/types/paginated-result.type';
@@ -31,7 +31,8 @@ import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
-import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
+import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
+import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
@@ -66,7 +67,8 @@ export class CoursesController {
   constructor(
     private readonly findAllCoursesUseCase: FindAllCoursesUseCase,
     private readonly getCourseCategoriesUseCase: GetCourseCategoriesUseCase,
-    private readonly findOneCourseUseCase: FindOneCourseUseCase,
+    private readonly findPublicCourseUseCase: FindPublicCourseUseCase,
+    private readonly findCourseForAdminUseCase: FindCourseForAdminUseCase,
     private readonly createCourseUseCase: CreateCourseUseCase,
     private readonly updateCourseUseCase: UpdateCourseUseCase,
     private readonly addLessonUseCase: AddLessonUseCase,
@@ -133,9 +135,19 @@ export class CoursesController {
     return this.getCourseCategoriesUseCase.execute();
   }
 
+  // Public: answers and video URLs are stripped. The editor uses ':id/admin'.
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Course> {
-    return this.findOneCourseUseCase.execute(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<PublicCourse> {
+    return this.findPublicCourseUseCase.execute(id);
+  }
+
+  @Get(':id/admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async findOneForAdmin(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Course> {
+    return this.findCourseForAdminUseCase.execute(id);
   }
 
   @Patch(':id')
@@ -203,9 +215,7 @@ export class CoursesController {
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async deleteThumbnail(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<void> {
+  async deleteThumbnail(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.deleteCourseThumbnailUseCase.execute(id);
   }
 

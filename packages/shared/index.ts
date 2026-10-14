@@ -40,6 +40,19 @@ export interface VideoLessonData {
     liveEndsAt?: string;     // ISO 8601 — obligatorio cuando isLive
 }
 
+/** Where a lesson's video is served from; the only video detail public views expose. */
+export const VideoProvider = {
+    YOUTUBE: 'youtube',
+    HOSTED: 'hosted',
+} as const;
+
+export type VideoProvider = typeof VideoProvider[keyof typeof VideoProvider];
+
+/** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
+export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
+    provider: VideoProvider;
+}
+
 export interface ExamLessonData {
     passingScore: number;    // Respuestas correctas mínimas para aprobar
 }
@@ -67,6 +80,14 @@ export interface Lesson {
 }
 
 /**
+ * What GET /courses/:id returns to anyone. Never carries video URLs or quiz
+ * questions: those would hand paid content and exam answers to visitors.
+ */
+export interface PublicLesson extends Omit<Lesson, 'videoData' | 'questions'> {
+    videoData?: PublicVideoLessonData;
+}
+
+/**
  * CourseLevel — Nivel del curso, para clasificar y filtrar en el catálogo.
  * Mismo patrón "const + as const" que UserRole/LessonType/OrderStatus.
  */
@@ -90,6 +111,11 @@ export interface Course {
     accessDurationDays?: number | null; // null = acceso permanente
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
     lessons: Lesson[];
+}
+
+/** Public view of a course (see PublicLesson). The full Course is admin-only. */
+export interface PublicCourse extends Omit<Course, 'lessons'> {
+    lessons: PublicLesson[];
 }
 
 // Este objeto define los roles permitidos en tu academia.

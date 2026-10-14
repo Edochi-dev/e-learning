@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { VideoTokenService } from '../video-token.service';
+import { youtubeEmbedUrl } from '../../courses/domain/video-provider';
 
 /**
  * GetSignedUrlUseCase — Genera una URL firmada temporal para un video
@@ -46,7 +47,7 @@ export class GetSignedUrlUseCase {
 
     // 3. Si no apunta a nuestro storage, es un video externo (YouTube, Vimeo...)
     if (!this.fileStorageGateway.isLocalFile(cleanPath)) {
-      return { url: videoUrl, expires: 0 };
+      return { url: youtubeEmbedUrl(videoUrl) ?? videoUrl, expires: 0 };
     }
 
     // 4. Extraer la ruta relativa del video via el gateway

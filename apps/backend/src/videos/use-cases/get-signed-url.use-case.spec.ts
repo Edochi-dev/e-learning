@@ -47,7 +47,9 @@ describe('GetSignedUrlUseCase', () => {
     useCase = module.get(GetSignedUrlUseCase);
     lessonGateway = module.get(LessonGateway);
     fileStorageGateway = module.get(FileStorageGateway);
-    videoTokenService = module.get(VideoTokenService) as jest.Mocked<VideoTokenService>;
+    videoTokenService = module.get(
+      VideoTokenService,
+    ) as jest.Mocked<VideoTokenService>;
   });
 
   it('lanza NotFoundException si la lección no existe', async () => {
@@ -67,19 +69,21 @@ describe('GetSignedUrlUseCase', () => {
 
   /**
    * Si el video es de YouTube o Vimeo, isLocalFile devuelve false.
-   * Retornamos la URL original sin firmar, con expires: 0.
+   * Retornamos el enlace embebible de YouTube sin firmar, con expires: 0.
    */
-  it('retorna la URL original si el video es externo (YouTube)', async () => {
+  it('para YouTube devuelve el enlace embebible, sin firmar', async () => {
     lessonGateway.findLesson.mockResolvedValue({
       id: lessonId,
-      videoData: { videoUrl: 'https://youtube.com/watch?v=abc123' },
+      videoData: { videoUrl: 'https://youtube.com/watch?v=abc123abc12' },
     } as unknown as Lesson);
 
     fileStorageGateway.isLocalFile.mockReturnValue(false);
 
     const result = await useCase.execute(lessonId);
 
-    expect(result.url).toBe('https://youtube.com/watch?v=abc123');
+    expect(result.url).toBe(
+      'https://www.youtube-nocookie.com/embed/abc123abc12',
+    );
     expect(result.expires).toBe(0);
     expect(videoTokenService.generateToken).not.toHaveBeenCalled();
   });
@@ -104,7 +108,9 @@ describe('GetSignedUrlUseCase', () => {
     expect(fileStorageGateway.toRelativePath).toHaveBeenCalledWith(
       '/static/videos/clase1.mp4',
     );
-    expect(videoTokenService.generateToken).toHaveBeenCalledWith('videos/clase1.mp4');
+    expect(videoTokenService.generateToken).toHaveBeenCalledWith(
+      'videos/clase1.mp4',
+    );
     expect(result.url).toContain('token=signed-token-123');
     expect(result.expires).toBe(1700007200000);
   });
