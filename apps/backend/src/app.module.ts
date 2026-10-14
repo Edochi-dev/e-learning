@@ -19,6 +19,7 @@ import { NameChangeRequestsModule } from './name-change-requests/name-change-req
 import { ScheduleModule } from './schedule/schedule.module';
 import { PushModule } from './push/push.module';
 import { OrdersModule } from './orders/orders.module';
+import { VideoAssetsModule } from './video-assets/video-assets.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
 import { buildTypeOrmOptions } from './database/typeorm.config';
@@ -56,6 +57,19 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
         VAPID_PUBLIC_KEY: Joi.string().optional(),
         VAPID_PRIVATE_KEY: Joi.string().optional(),
         VAPID_SUBJECT: Joi.string().optional(),
+        // HLS video pipeline — off by default. Turning it on without the
+        // nginx secret would sign segment URLs nginx then rejects.
+        HLS_ENABLED: Joi.boolean().default(false),
+        HLS_MEDIA_SECRET: Joi.string()
+          .min(32)
+          .when('HLS_ENABLED', { is: true, then: Joi.required() }),
+        HLS_MEDIA_BASE_URL: Joi.string().default('/hls-media'),
+        HLS_SOURCE_DIR: Joi.string().optional(),
+        HLS_MEDIA_DIR: Joi.string().optional(),
+        HLS_VIDEO_ENCODER: Joi.string().valid('nvenc', 'x264').default('nvenc'),
+        HLS_TOKEN_TTL_MINUTES: Joi.number().integer().min(1).default(30),
+        FFMPEG_PATH: Joi.string().default('ffmpeg'),
+        FFPROBE_PATH: Joi.string().default('ffprobe'),
       }).with('SMTP_HOST', [
         'SMTP_PORT',
         'SMTP_USER',
@@ -96,6 +110,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     NameChangeRequestsModule,
     ScheduleModule,
     PushModule,
+    VideoAssetsModule,
   ],
 })
 export class AppModule implements NestModule {

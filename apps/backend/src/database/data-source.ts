@@ -22,6 +22,8 @@ import { AssignmentSubmission } from '../corrections/entities/assignment-submiss
 import { NameChangeRequest } from '../name-change-requests/entities/name-change-request.entity';
 import { ScheduleEvent } from '../schedule/entities/schedule-event.entity';
 import { PushSubscription } from '../push/entities/push-subscription.entity';
+import { VideoAsset } from '../video-assets/entities/video-asset.entity';
+import { VideoAssetKey } from '../video-assets/entities/video-asset-key.entity';
 
 import { MIGRATIONS } from './migrations-registry';
 
@@ -56,6 +58,8 @@ export const AppDataSource = new DataSource({
     NameChangeRequest,
     ScheduleEvent,
     PushSubscription,
+    VideoAsset,
+    VideoAssetKey,
   ],
   migrations: MIGRATIONS,
 });
