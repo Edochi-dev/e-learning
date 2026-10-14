@@ -38,6 +38,7 @@ import {
     useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { toLocalInputValue, withLiveInstants } from '../../lib/local-datetime';
 
 // ============================================================
 // Componente interno: SortableLessonItem
@@ -282,9 +283,8 @@ const toUpdateClassForm = (lesson: Lesson): UpdateClassLessonPayload => ({
     videoUrl: lesson.videoData?.videoUrl ?? '',
     duration: lesson.videoData?.duration ?? '',
     isLive: lesson.videoData?.isLive ?? false,
-    // ISO -> "YYYY-MM-DDTHH:MM" para el input datetime-local.
-    liveStartsAt: lesson.videoData?.liveStartsAt?.slice(0, 16) ?? '',
-    liveEndsAt: lesson.videoData?.liveEndsAt?.slice(0, 16) ?? '',
+    liveStartsAt: lesson.videoData?.liveStartsAt ? toLocalInputValue(lesson.videoData.liveStartsAt) : '',
+    liveEndsAt: lesson.videoData?.liveEndsAt ? toLocalInputValue(lesson.videoData.liveEndsAt) : '',
 });
 
 const toUpdateExamForm = (lesson: Lesson): UpdateExamLessonPayload => ({
@@ -601,7 +601,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 payload = { ...payload, referenceImageUrl: url };
             }
 
-            await courseGateway.addLesson(courseId, payload);
+            await courseGateway.addLesson(courseId, withLiveInstants(payload));
             setLessonForm(emptyClassLesson());
             setReferenceImageFile(null);
             setIsAddingLesson(false);
@@ -664,7 +664,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
 
         try {
-            await courseGateway.updateLesson(courseId, editingLessonId, editLessonForm);
+            await courseGateway.updateLesson(courseId, editingLessonId, withLiveInstants(editLessonForm));
             setEditingLessonId(null);
             toast.success('¡Lección actualizada!');
             await loadCourse();

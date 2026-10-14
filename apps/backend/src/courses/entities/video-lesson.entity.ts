@@ -32,10 +32,10 @@ export class VideoLesson {
 
   // Programación de la clase en vivo (obligatoria cuando isLive; null si no).
   // Es la fuente de verdad del horario; su espejo vive en schedule_events.
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   liveStartsAt: Date | null;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   liveEndsAt: Date | null;
 
   @OneToOne(() => Lesson, (lesson) => lesson.videoData, {
