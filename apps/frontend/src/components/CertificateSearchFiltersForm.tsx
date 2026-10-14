@@ -19,7 +19,7 @@ export const CertificateSearchFiltersForm: React.FC<Props> = ({ filters, courses
                 <span>Nombre o número</span>
                 <input
                     type="search"
-                    className="form-input"
+                    className="filter-control"
                     value={filters.search ?? ''}
                     onChange={e => update('search', e.target.value)}
                     placeholder="Ej. Ana Pérez o MEP-00012"
@@ -29,7 +29,7 @@ export const CertificateSearchFiltersForm: React.FC<Props> = ({ filters, courses
             <label className="cert-search__field">
                 <span>Curso</span>
                 <select
-                    className="form-input"
+                    className="filter-control"
                     value={filters.course ?? ''}
                     onChange={e => update('course', e.target.value)}
                 >
@@ -46,7 +46,7 @@ export const CertificateSearchFiltersForm: React.FC<Props> = ({ filters, courses
                 <span>Desde</span>
                 <input
                     type="date"
-                    className="form-input"
+                    className="filter-control"
                     value={filters.from ?? ''}
                     max={filters.to}
                     onChange={e => update('from', e.target.value)}
@@ -57,7 +57,7 @@ export const CertificateSearchFiltersForm: React.FC<Props> = ({ filters, courses
                 <span>Hasta</span>
                 <input
                     type="date"
-                    className="form-input"
+                    className="filter-control"
                     value={filters.to ?? ''}
                     min={filters.from}
                     onChange={e => update('to', e.target.value)}
@@ -67,7 +67,7 @@ export const CertificateSearchFiltersForm: React.FC<Props> = ({ filters, courses
             <label className="cert-search__field">
                 <span>Cuenta</span>
                 <select
-                    className="form-input"
+                    className="filter-control"
                     value={filters.account ?? ''}
                     onChange={e => update('account', e.target.value)}
                 >

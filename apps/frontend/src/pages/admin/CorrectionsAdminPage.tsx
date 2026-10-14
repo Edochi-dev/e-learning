@@ -294,7 +294,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
             {/* Filtros */}
             <div className="history-filters">
                 <select
-                    className="history-filter-select"
+                    className="filter-control"
                     value={courseId}
                     onChange={(e) => setCourseId(e.target.value)}
                 >
@@ -305,7 +305,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                 </select>
 
                 <select
-                    className="history-filter-select"
+                    className="filter-control"
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
                 >
@@ -315,7 +315,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                 </select>
 
                 <select
-                    className="history-filter-select"
+                    className="filter-control"
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(e.target.value)}
                 >
