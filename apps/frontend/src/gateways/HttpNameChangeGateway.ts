@@ -3,6 +3,7 @@ import type {
     StudentNameChangeGateway,
     AdminNameChangeGateway,
 } from './NameChangeGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 /**
  * HttpNameChangeGateway — Implementación HTTP de ambos contratos.
@@ -16,13 +17,15 @@ export class HttpNameChangeGateway
     implements StudentNameChangeGateway, AdminNameChangeGateway
 {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async requestNameChange(requestedName: string): Promise<NameChangeRequest> {
-        const res = await fetch(`${this.baseUrl}/name-change-requests`, {
+        const res = await this.http.fetch(`${this.baseUrl}/name-change-requests`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -36,7 +39,7 @@ export class HttpNameChangeGateway
     }
 
     async getMyRequest(): Promise<NameChangeRequest | null> {
-        const res = await fetch(`${this.baseUrl}/name-change-requests/me`, {
+        const res = await this.http.fetch(`${this.baseUrl}/name-change-requests/me`, {
             credentials: 'include',
         });
         if (!res.ok) return null;
@@ -45,7 +48,7 @@ export class HttpNameChangeGateway
     }
 
     async listPending(): Promise<NameChangeRequest[]> {
-        const res = await fetch(`${this.baseUrl}/name-change-requests/pending`, {
+        const res = await this.http.fetch(`${this.baseUrl}/name-change-requests/pending`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error('Error al cargar las solicitudes pendientes');
@@ -57,7 +60,7 @@ export class HttpNameChangeGateway
         action: 'approve' | 'reject',
         feedback?: string,
     ): Promise<NameChangeRequest> {
-        const res = await fetch(`${this.baseUrl}/name-change-requests/${id}/review`, {
+        const res = await this.http.fetch(`${this.baseUrl}/name-change-requests/${id}/review`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

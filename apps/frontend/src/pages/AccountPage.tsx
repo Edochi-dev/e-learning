@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { UserAvatar, getColorFromName } from '../components/UserAvatar';
 import { useToast } from '../components/Toast';
+import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { AuthGateway } from '../gateways/AuthGateway';
 import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
 import type { CertificateGateway, Certificate } from '../gateways/CertificateGateway';
@@ -32,7 +33,7 @@ type Tab = 'cuenta' | 'certificados' | 'facturacion';
  * gateways como props, nunca los importan directamente).
  */
 export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificateGateway, nameChangeGateway }) => {
-    const { user } = useAuth();
+    const { user, logoutEverywhere } = useAuth();
 
     // ── Tab activa ──────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<Tab>('cuenta');
@@ -43,6 +44,21 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
     const [confirmPassword, setConfirmPassword] = useState('');
     const [changingPassword, setChangingPassword] = useState(false);
     const toast = useToast();
+
+    // ── Cerrar sesión en todos los dispositivos ─────────────────────────
+    const [confirmingLogoutAll, setConfirmingLogoutAll] = useState(false);
+    const [loggingOutAll, setLoggingOutAll] = useState(false);
+
+    const handleLogoutEverywhere = async () => {
+        setLoggingOutAll(true);
+        try {
+            await logoutEverywhere();
+        } catch (err) {
+            toast.error(err instanceof Error ? err.message : 'No se pudieron cerrar las sesiones.');
+            setLoggingOutAll(false);
+            setConfirmingLogoutAll(false);
+        }
+    };
 
     // ── Solicitud de cambio de nombre ───────────────────────────────────
     // El alumno NO cambia su nombre libremente: lo solicita y un admin lo
@@ -343,6 +359,36 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
                                 </button>
                             </form>
                         </section>
+
+                        <section className="account-card">
+                            <h2 className="account-card__title">Sesiones activas</h2>
+                            <p className="account-field__hint">
+                                Si usaste tu cuenta en un equipo ajeno o crees que alguien más entró,
+                                cierra la sesión en todos los dispositivos. Tendrás que volver a iniciar
+                                sesión también en este.
+                            </p>
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={() => setConfirmingLogoutAll(true)}
+                            >
+                                Cerrar sesión en todos los dispositivos
+                            </button>
+                        </section>
+
+                        {confirmingLogoutAll && (
+                            <ConfirmDialog
+                                title="¿Cerrar todas las sesiones?"
+                                confirmLabel="Cerrar todas"
+                                busyLabel="Cerrando…"
+                                busy={loggingOutAll}
+                                onConfirm={handleLogoutEverywhere}
+                                onCancel={() => setConfirmingLogoutAll(false)}
+                            >
+                                Se cerrará tu sesión en todos los equipos donde hayas entrado,
+                                incluido este.
+                            </ConfirmDialog>
+                        )}
                     </div>
                 )}
 

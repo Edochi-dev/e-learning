@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 
 import { User } from '../users/entities/user.entity';
 import { PasswordResetToken } from '../users/entities/password-reset-token.entity';
+import { AuthSession } from '../users/entities/auth-session.entity';
 import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../courses/entities/lessons.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
@@ -39,6 +40,7 @@ export const AppDataSource = new DataSource({
   entities: [
     User,
     PasswordResetToken,
+    AuthSession,
     Course,
     Lesson,
     VideoLesson,

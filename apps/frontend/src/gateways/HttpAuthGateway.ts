@@ -1,15 +1,18 @@
 import type { LoginCredentials, AuthResponse, RegisterPayload, User } from '@maris-nails/shared';
 import type { AuthGateway } from './AuthGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 export class HttpAuthGateway implements AuthGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async login(credentials: LoginCredentials): Promise<AuthResponse> {
-        const response = await fetch(`${this.baseUrl}/users/login`, {
+        const response = await this.http.fetch(`${this.baseUrl}/users/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -25,7 +28,7 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async register(payload: RegisterPayload): Promise<User> {
-        const response = await fetch(`${this.baseUrl}/users`, {
+        const response = await this.http.fetch(`${this.baseUrl}/users`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -41,7 +44,7 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/users/me/password`, {
+        const response = await this.http.fetch(`${this.baseUrl}/users/me/password`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -55,7 +58,7 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async forgotPassword(email: string): Promise<void> {
-        const res = await fetch(`${this.baseUrl}/users/forgot-password`, {
+        const res = await this.http.fetch(`${this.baseUrl}/users/forgot-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -65,7 +68,7 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async resetPassword(token: string, newPassword: string): Promise<void> {
-        const res = await fetch(`${this.baseUrl}/users/reset-password`, {
+        const res = await this.http.fetch(`${this.baseUrl}/users/reset-password`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -78,14 +81,21 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async logout(): Promise<void> {
-        await fetch(`${this.baseUrl}/users/logout`, {
+        await this.http.fetch(`${this.baseUrl}/users/logout`, {
             method: 'POST',
             credentials: 'include',
         });
     }
 
+    async revokeAllSessions(): Promise<void> {
+        const res = await this.http.fetch(`${this.baseUrl}/users/me/sessions/revoke-all`, {
+            method: 'POST',
+        });
+        if (!res.ok) throw new Error('No se pudieron cerrar las sesiones. Intenta de nuevo.');
+    }
+
     async getMe(): Promise<User | null> {
-        const res = await fetch(`${this.baseUrl}/users/me`, {
+        const res = await this.http.fetch(`${this.baseUrl}/users/me`, {
             credentials: 'include',
         });
         if (!res.ok) return null;
@@ -93,7 +103,7 @@ export class HttpAuthGateway implements AuthGateway {
     }
 
     async getAllUsers(): Promise<User[]> {
-        const res = await fetch(`${this.baseUrl}/users`, {
+        const res = await this.http.fetch(`${this.baseUrl}/users`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error('Error al cargar usuarios');

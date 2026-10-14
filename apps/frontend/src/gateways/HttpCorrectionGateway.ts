@@ -4,6 +4,7 @@ import type {
     CorrectionFilters,
     PaginatedSubmissions,
 } from './CorrectionGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 /**
  * HttpCorrectionGateway — Implementación HTTP del contrato de correcciones.
@@ -20,13 +21,15 @@ import type {
  */
 export class HttpCorrectionGateway implements CorrectionGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async getById(submissionId: string): Promise<AssignmentSubmission> {
-        const res = await fetch(`${this.baseUrl}/corrections/${submissionId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/${submissionId}`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar entrega: ${res.statusText}`);
@@ -34,7 +37,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     }
 
     async listPending(): Promise<AssignmentSubmission[]> {
-        const res = await fetch(`${this.baseUrl}/corrections/pending`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/pending`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al listar pendientes: ${res.statusText}`);
@@ -53,7 +56,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         const query = params.toString();
         const url = `${this.baseUrl}/corrections/history${query ? `?${query}` : ''}`;
 
-        const res = await fetch(url, { credentials: 'include' });
+        const res = await this.http.fetch(url, { credentials: 'include' });
         if (!res.ok) throw new Error(`Error al listar histórico: ${res.statusText}`);
         return res.json() as Promise<PaginatedSubmissions>;
     }
@@ -67,7 +70,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
 
         // courseId va como query param porque el EnrollmentGuard lo necesita
         // ANTES de que Multer parsee el body (guards corren antes que interceptors).
-        const res = await fetch(`${this.baseUrl}/corrections/submit?courseId=${courseId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/submit?courseId=${courseId}`, {
             method: 'POST',
             credentials: 'include',
             body,
@@ -80,7 +83,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     }
 
     async getMyStatus(lessonId: string): Promise<AssignmentSubmission | null> {
-        const res = await fetch(`${this.baseUrl}/corrections/me/${lessonId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/me/${lessonId}`, {
             credentials: 'include',
         });
         if (!res.ok) {
@@ -99,7 +102,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         action: 'approve' | 'reject',
         feedback: string,
     ): Promise<AssignmentSubmission> {
-        const res = await fetch(`${this.baseUrl}/corrections/${submissionId}/review`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/${submissionId}/review`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

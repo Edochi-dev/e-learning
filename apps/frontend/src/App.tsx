@@ -32,6 +32,8 @@ import { SalesLandingPage } from './pages/SalesLandingPage';
 import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
 import { API_URL } from './config';
+import { SessionRefreshingHttpClient } from './http/SessionRefreshingHttpClient';
+import type { HttpClient } from './http/HttpClient';
 import { ToastProvider } from './components/Toast';
 import { UpdatePrompt } from './components/UpdatePrompt';
 
@@ -104,20 +106,20 @@ const CertificateDetailAdminPage = lazy(() =>
   import('./pages/admin/CertificateDetailAdminPage').then((m) => ({ default: m.CertificateDetailAdminPage })),
 );
 
-function AppContent() {
+function AppContent({ http }: { http: HttpClient }) {
   // useMemo garantiza que solo creamos una instancia de cada gateway, no una por render.
   // Si creáramos el gateway dentro del render sin useMemo, cada re-render crearía
   // un objeto nuevo, lo que rompe las dependencias de useEffect en los hooks.
-  const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL), []);
-  const courseGateway = useMemo(() => new HttpCourseGateway(API_URL), []);
-  const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
-  const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL), []);
-  const orderGateway = useMemo(() => new HttpOrderGateway(API_URL), []);
-  const videoGateway = useMemo(() => new HttpVideoGateway(API_URL), []);
-  const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL), []);
-  const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL), []);
-  const scheduleGateway = useMemo(() => new HttpScheduleGateway(API_URL), []);
-  const invitationGateway = useMemo(() => new HttpInvitationGateway(API_URL), []);
+  const certificateGateway = useMemo(() => new HttpCertificateGateway(API_URL, http), [http]);
+  const courseGateway = useMemo(() => new HttpCourseGateway(API_URL, http), [http]);
+  const authGateway = useMemo(() => new HttpAuthGateway(API_URL, http), [http]);
+  const enrollmentGateway = useMemo(() => new HttpEnrollmentGateway(API_URL, http), [http]);
+  const orderGateway = useMemo(() => new HttpOrderGateway(API_URL, http), [http]);
+  const videoGateway = useMemo(() => new HttpVideoGateway(API_URL, http), [http]);
+  const correctionGateway = useMemo(() => new HttpCorrectionGateway(API_URL, http), [http]);
+  const nameChangeGateway = useMemo(() => new HttpNameChangeGateway(API_URL, http), [http]);
+  const scheduleGateway = useMemo(() => new HttpScheduleGateway(API_URL, http), [http]);
+  const invitationGateway = useMemo(() => new HttpInvitationGateway(API_URL, http), [http]);
 
   return (
     <>
@@ -188,13 +190,15 @@ function AppContent() {
 }
 
 function App() {
-  const authGateway = useMemo(() => new HttpAuthGateway(API_URL), []);
+  // One client for the whole app, so concurrent 401s share a single refresh.
+  const http = useMemo(() => new SessionRefreshingHttpClient(API_URL), []);
+  const authGateway = useMemo(() => new HttpAuthGateway(API_URL, http), [http]);
 
   return (
     <BrowserRouter>
-      <AuthProvider gateway={authGateway}>
+      <AuthProvider gateway={authGateway} sessionExpiry={http}>
         <ToastProvider>
-          <AppContent />
+          <AppContent http={http} />
         </ToastProvider>
       </AuthProvider>
     </BrowserRouter>

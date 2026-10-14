@@ -24,7 +24,8 @@ import { UsersModule } from '../users/users.module';
  * a usarlo fuera de la transacción, que es justo el error que este módulo
  * existe para hacer imposible.
  *
- * De UsersModule solo necesita TokenGateway, para firmar el JWT del auto-login.
+ * De UsersModule solo necesita AuthSessionService, para abrir la sesión del
+ * auto-login.
  */
 @Module({
   imports: [
