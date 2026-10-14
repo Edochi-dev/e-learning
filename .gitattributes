@@ -10,6 +10,8 @@
 *.jpg binary
 *.jpeg binary
 *.webp binary
+*.heic binary
+*.avif binary
 *.ico binary
 *.pdf binary
 *.mp4 binary
