@@ -146,6 +146,26 @@ describe('Detalle de curso: vista pública vs. admin (e2e)', () => {
     expect(body.lessons[0].videoData?.provider).toBe('youtube');
   });
 
+  it('GET /courses (catálogo) tampoco expone URLs de video', async () => {
+    const res = await http().get('/courses?limit=100').expect(200);
+    const raw = JSON.stringify(res.body);
+
+    expect(raw).toContain('Curso Público E2E');
+    expect(raw).not.toContain('videoUrl');
+    expect(raw).not.toContain('AbCdEfGhIjK');
+    expect(raw).not.toContain('isCorrect');
+  });
+
+  it('GET /courses/admin (lista completa) es solo para la admin', async () => {
+    await http().get('/courses/admin').expect(401);
+    await (await loginAs(student)).get('/courses/admin').expect(403);
+
+    const res = await (await loginAs(admin))
+      .get('/courses/admin?limit=100')
+      .expect(200);
+    expect(JSON.stringify(res.body)).toContain(SECRET_VIDEO);
+  });
+
   it('GET /courses/:id/admin exige sesión', async () => {
     await http().get(`/courses/${courseId}/admin`).expect(401);
   });

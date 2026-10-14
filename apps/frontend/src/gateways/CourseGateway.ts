@@ -20,7 +20,10 @@ export interface CourseGateway {
     // Cursos
     // Paginado: devuelve la página pedida junto con el total (para calcular
     // cuántas páginas hay). page/limit son opcionales; por defecto la 1ª página.
-    findAll(page?: number, limit?: number, filters?: CourseFilters): Promise<PaginatedResult<Course>>;
+    /** Catalog: public views only. */
+    findAll(page?: number, limit?: number, filters?: CourseFilters): Promise<PaginatedResult<PublicCourse>>;
+    /** Every course with full data (admin only). */
+    findAllForAdmin(page?: number, limit?: number, filters?: CourseFilters): Promise<PaginatedResult<Course>>;
     /** Categorías distintas existentes, para el filtro del catálogo. */
     getCategories(): Promise<string[]>;
     /** Public view: no video URLs, no exam questions. */

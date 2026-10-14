@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CoursesController } from './courses.controller';
-import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { FindPublicCoursesUseCase } from './use-cases/find-public-courses.use-case';
+import { FindCoursesForAdminUseCase } from './use-cases/find-courses-for-admin.use-case';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
 import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
 import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
@@ -61,7 +62,8 @@ import { ScheduleModule } from '../schedule/schedule.module';
   controllers: [CoursesController],
   providers: [
     EnrollmentGuard,
-    FindAllCoursesUseCase,
+    FindPublicCoursesUseCase,
+    FindCoursesForAdminUseCase,
     GetCourseCategoriesUseCase,
     FindPublicCourseUseCase,
     FindCourseForAdminUseCase,

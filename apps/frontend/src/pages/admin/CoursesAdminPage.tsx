@@ -41,7 +41,7 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
             try {
                 // findAll ahora devuelve una respuesta paginada; esta vista de
                 // admin usa la primera página (comportamiento previo).
-                const result = await courseGateway.findAll();
+                const result = await courseGateway.findAllForAdmin();
                 setCourses(result.data);
             } catch (err) {
                 console.error('Error loading courses', err);

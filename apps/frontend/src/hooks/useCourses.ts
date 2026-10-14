@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Course } from '@maris-nails/shared';
+import type { PublicCourse } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 
 /**
@@ -16,7 +16,7 @@ import type { CourseGateway } from '../gateways/CourseGateway';
  * @param limit    tamaño de página (por defecto 12, igual que el backend)
  */
 export const useCourses = (gateway: CourseGateway, limit = 12) => {
-    const [courses, setCourses] = useState<Course[]>([]);
+    const [courses, setCourses] = useState<PublicCourse[]>([]);
     const [page, setPage] = useState<number>(1);
     const [total, setTotal] = useState<number>(0);
     const [loading, setLoading] = useState<boolean>(true);
