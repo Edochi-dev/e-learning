@@ -21,7 +21,10 @@ import {
 import { MarkLessonCompleteUseCase } from './use-cases/mark-lesson-complete.use-case';
 import { UnenrollUseCase } from './use-cases/unenroll.use-case';
 import { SaveWatchProgressUseCase } from './use-cases/save-watch-progress.use-case';
-import { GetCourseProgressUseCase, CourseProgress } from './use-cases/get-course-progress.use-case';
+import {
+  GetCourseProgressUseCase,
+  CourseProgress,
+} from './use-cases/get-course-progress.use-case';
 import { EnrollmentOwnershipGuard } from './guards/enrollment-ownership.guard';
 import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { EnrollmentCheck } from '../common/decorators/enrollment-check.decorator';
@@ -39,6 +42,8 @@ import { SetEnrollmentExpiryDto } from './dto/set-enrollment-expiry.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@maris-nails/shared';
+import type { UpcomingLiveClass } from '@maris-nails/shared';
+import { GetUpcomingLiveClassesUseCase } from './use-cases/get-upcoming-live-classes.use-case';
 
 /**
  * EnrollmentsController — Endpoints HTTP del sistema de matrículas.
@@ -69,6 +74,7 @@ export class EnrollmentsController {
     private readonly getLastQuizAttemptUseCase: GetLastQuizAttemptUseCase,
     private readonly listCourseStudentsUseCase: ListCourseStudentsUseCase,
     private readonly setEnrollmentExpiryUseCase: SetEnrollmentExpiryUseCase,
+    private readonly getUpcomingLiveClassesUseCase: GetUpcomingLiveClassesUseCase,
   ) {}
 
   // No hay endpoint de auto-matrícula: sería acceso gratis a cualquier curso.
@@ -78,6 +84,13 @@ export class EnrollmentsController {
   @Get('me')
   async getMyEnrollments(@Req() req: any): Promise<EnrollmentWithProgress[]> {
     return this.getMyEnrollmentsUseCase.execute(req.user.id);
+  }
+
+  @Get('me/live-classes')
+  async getMyUpcomingLiveClasses(
+    @Req() req: { user: { id: string } },
+  ): Promise<UpcomingLiveClass[]> {
+    return this.getUpcomingLiveClassesUseCase.execute(req.user.id);
   }
 
   @Post('me/progress')

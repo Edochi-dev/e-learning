@@ -1,4 +1,4 @@
-import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass } from '@maris-nails/shared';
 import type { EnrollmentGateway, EnrollmentWithProgress, CourseStudent } from './EnrollmentGateway';
 import type { HttpClient } from '../http/HttpClient';
 
@@ -18,6 +18,12 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
         this.http = http;
+    }
+
+    async getMyUpcomingLiveClasses(): Promise<UpcomingLiveClass[]> {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/me/live-classes`);
+        if (!response.ok) throw new Error('No se pudieron cargar tus próximas clases');
+        return response.json();
     }
 
     async getMyEnrollments(): Promise<EnrollmentWithProgress[]> {

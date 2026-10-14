@@ -120,6 +120,16 @@ export interface Course {
     lessons: Lesson[];
 }
 
+/** A live class on a student's schedule, across all her active enrollments. */
+export interface UpcomingLiveClass {
+    courseId: string;
+    courseTitle: string;
+    lessonId: string;
+    lessonTitle: string;
+    liveStartsAt: string; // ISO instant
+    liveEndsAt: string;   // ISO instant
+}
+
 /** Public view of a course (see PublicLesson). The full Course is admin-only. */
 export interface PublicCourse extends Omit<Course, 'lessons' | 'publishedAt'> {
     lessons: PublicLesson[];

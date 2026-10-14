@@ -4,6 +4,7 @@ import { useEnrollments } from '../hooks/useEnrollments';
 
 import { API_URL as BACKEND_URL } from '../config';
 import { SkeletonCourseCard } from '../components/Skeleton';
+import { UpcomingLiveClasses } from '../components/UpcomingLiveClasses';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
@@ -77,6 +78,8 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                 <h1>Mis Cursos</h1>
                 <p className="my-courses-page__subtitle">{subtitle()}</p>
             </div>
+
+            <UpcomingLiveClasses gateway={gateway} />
 
             {enrollments.length === 0 ? (
                 <div className="my-courses-page__empty">
