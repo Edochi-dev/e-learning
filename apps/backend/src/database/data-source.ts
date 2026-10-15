@@ -25,6 +25,7 @@ import { ScheduleEvent } from '../schedule/entities/schedule-event.entity';
 import { PushSubscription } from '../push/entities/push-subscription.entity';
 import { VideoAsset } from '../video-assets/entities/video-asset.entity';
 import { VideoAssetKey } from '../video-assets/entities/video-asset-key.entity';
+import { EmailOutboxMessage } from '../notifications/entities/email-outbox-message.entity';
 
 import { MIGRATIONS } from './migrations-registry';
 
@@ -62,6 +63,7 @@ export const AppDataSource = new DataSource({
     PushSubscription,
     VideoAsset,
     VideoAssetKey,
+    EmailOutboxMessage,
   ],
   migrations: MIGRATIONS,
 });
