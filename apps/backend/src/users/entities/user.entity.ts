@@ -6,6 +6,7 @@ import {
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { UserRole } from '@maris-nails/shared';
+import { AlertTopic } from '../domain/alert-topic';
 
 @Entity('users') // Esto le dice a TypeORM que cree una tabla llamada "users"
 export class User {
@@ -28,6 +29,10 @@ export class User {
     default: UserRole.STUDENT, // Por defecto, el que se registre será estudiante
   })
   role: UserRole;
+
+  // Email alert topics this admin handles (see AlertRecipientsGateway).
+  @Column({ type: 'text', array: true, default: () => "'{}'" })
+  alertTopics: AlertTopic[];
 
   @CreateDateColumn() // Guarda automáticamente la fecha y hora en que se registró
   createdAt: Date;

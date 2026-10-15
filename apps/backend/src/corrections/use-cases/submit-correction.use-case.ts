@@ -10,7 +10,7 @@ import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { ImageProcessorService } from '../../storage/services/image-processor.service';
-import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
+import { PushNotificationGateway } from '../../push/gateways/push-notification.gateway';
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 
 /**
@@ -22,7 +22,7 @@ import { AssignmentSubmission } from '../entities/assignment-submission.entity';
  *   2. Image processing: ¿es HEIC? → convertir a JPEG
  *   3. Re-submit check: ¿ya tiene una entrega anterior? → borrar foto vieja
  *   4. Save: guardar foto nueva + crear/actualizar submission
- *   5. Notify: avisarle a la profesora que hay una nueva entrega
+ *   5. Notify: push inmediato a la profesora (el correo es un recordatorio aparte)
  *
  * Re-envíos:
  *   Si la alumna ya envió y la profesora rechazó, puede re-enviar.
@@ -37,7 +37,7 @@ export class SubmitCorrectionUseCase {
     private readonly fileStorageGateway: FileStorageGateway,
     private readonly orphanFileCleaner: OrphanFileCleaner,
     private readonly imageProcessor: ImageProcessorService,
-    private readonly notificationGateway: NotificationGateway,
+    private readonly push: PushNotificationGateway,
   ) {}
 
   async execute(
@@ -133,11 +133,12 @@ export class SubmitCorrectionUseCase {
       );
     }
 
-    // 7. Notificar a la profesora
-    await this.notificationGateway.sendEmail({
-      to: 'admin', // Se resolverá a la dirección real en el adapter
-      subject: 'Nueva entrega de corrección',
-      body: `<p>Una alumna envió su trabajo para la lección <strong>${lesson.title}</strong>.</p>`,
+    // 7. Aviso inmediato por push. Sin correo por entrega: el recordatorio de
+    //    pendientes (RemindPendingCorrectionsUseCase) cubre un push perdido.
+    await this.push.sendToAll({
+      title: 'Nueva entrega de corrección',
+      body: `Una alumna envió su trabajo para «${lesson.title}».`,
+      url: '/admin/correcciones',
     });
 
     return submission;
