@@ -7,6 +7,7 @@ import { NameChangeRequestGateway } from '../gateways/name-change-request.gatewa
 import { UserGateway } from '../../users/gateways/user.gateway';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
 import { NameChangeRequest } from '../entities/name-change-request.entity';
+import { html } from '../../notifications/templates/safe-html';
 
 /**
  * ReviewNameChangeUseCase — El admin aprueba o rechaza una solicitud.
@@ -61,17 +62,37 @@ export class ReviewNameChangeUseCase {
     // Notificar al alumno el resultado.
     const email = req.user?.email;
     if (email) {
+      const note = feedback
+        ? html`<p>
+            <strong>${isApproved ? 'Nota' : 'Motivo'}:</strong> ${feedback}
+          </p>`
+        : html``;
       await this.notificationGateway.sendEmail({
         to: email,
         subject: isApproved
           ? 'Tu cambio de nombre fue aprobado'
           : 'Tu solicitud de cambio de nombre fue rechazada',
-        body: isApproved
-          ? `<p>Tu nombre fue actualizado a <strong>${req.requestedName}</strong>.</p>
-             ${feedback ? `<p><strong>Nota:</strong> ${feedback}</p>` : ''}`
-          : `<p>Tu solicitud para cambiar tu nombre a <strong>${req.requestedName}</strong> fue rechazada.</p>
-             ${feedback ? `<p><strong>Motivo:</strong> ${feedback}</p>` : ''}
-             <p>Si crees que es un error, podés volver a solicitarlo.</p>`,
+        content: isApproved
+          ? {
+              heading: 'Tu nombre fue actualizado',
+              body: html`<p>
+                  Aprobamos tu solicitud: desde ahora tu nombre en la plataforma
+                  es <strong>${req.requestedName}</strong>.
+                </p>
+                ${note}`,
+              action: { label: 'Ver mi cuenta', path: '/cuenta' },
+            }
+          : {
+              heading: 'Tu solicitud no fue aprobada',
+              body: html`<p>
+                  Revisamos tu solicitud para cambiar tu nombre a
+                  <strong>${req.requestedName}</strong> y no pudimos aprobarla.
+                </p>
+                ${note}`,
+              action: { label: 'Ver mi cuenta', path: '/cuenta' },
+              footnote:
+                'Si crees que es un error, puedes volver a solicitarlo desde tu cuenta.',
+            },
       });
     }
 

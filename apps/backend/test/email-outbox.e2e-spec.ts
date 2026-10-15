@@ -7,6 +7,7 @@ import { NotificationGateway } from '../src/notifications/gateways/notification.
 import { EmailOutboxQueue } from '../src/notifications/gateways/email-outbox-queue.gateway';
 import { EmailPriority } from '../src/notifications/domain/email-priority';
 import { EmailOutboxMessage } from '../src/notifications/entities/email-outbox-message.entity';
+import { html } from '../src/notifications/templates/safe-html';
 
 /**
  * The outbox claim is SQL (SKIP LOCKED, ordering, due filter) that mocked
@@ -61,20 +62,24 @@ describe('Bandeja de salida de correos (e2e)', () => {
     await app.close();
   });
 
-  it('NotificationGateway encola el correo con su prioridad', async () => {
+  it('NotificationGateway encola el correo renderizado con su prioridad', async () => {
     const recipient = `${randomUUID()}@outbox.test`;
-    await app
-      .get(NotificationGateway)
-      .sendEmail(
-        { to: recipient, subject: 'Hola', body: '<p>x</p>' },
-        EmailPriority.HIGH,
-      );
+    await app.get(NotificationGateway).sendEmail(
+      {
+        to: recipient,
+        subject: 'Hola',
+        content: { heading: 'Hola', body: html`<p>Texto de prueba</p>` },
+      },
+      EmailPriority.HIGH,
+    );
 
     const row = await dataSource
       .getRepository(EmailOutboxMessage)
       .findOneByOrFail({ recipient });
     expect(row.subject).toBe('Hola');
     expect(row.priority).toBe(EmailPriority.HIGH);
+    expect(row.body).toContain('<p>Texto de prueba</p>');
+    expect(row.textBody).toContain('Texto de prueba');
   });
 
   it('reclama por prioridad y luego antigüedad, e incrementa los intentos', async () => {

@@ -1,4 +1,4 @@
-import { EmailMessage } from '../domain/email-message';
+import { EmailNotification } from '../domain/email-content';
 import { EmailPriority } from '../domain/email-priority';
 
 /**
@@ -12,7 +12,7 @@ export abstract class NotificationGateway {
    * Throws only if the email could not be accepted at all.
    */
   abstract sendEmail(
-    message: EmailMessage,
+    notification: EmailNotification,
     priority?: EmailPriority,
   ): Promise<void>;
 }

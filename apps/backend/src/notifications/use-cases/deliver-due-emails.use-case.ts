@@ -33,6 +33,7 @@ export class DeliverDueEmailsUseCase {
         to: email.recipient,
         subject: email.subject,
         body: email.body,
+        textBody: email.textBody,
       }));
     } catch (error) {
       await this.recordFailure(email, error);

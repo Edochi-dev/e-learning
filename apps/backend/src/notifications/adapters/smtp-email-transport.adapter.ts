@@ -1,6 +1,7 @@
 import * as nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { EmailMessage } from '../domain/email-message';
+import { inlineImagesFor } from '../templates/brand-assets';
 import {
   DeliveryReceipt,
   EmailTransport,
@@ -17,8 +18,8 @@ export interface SmtpSettings {
 }
 
 /**
- * Delivers through one SMTP relay. Provider-agnostic: Brevo and Resend are two
- * instances with different settings. The transporter is built once and reused.
+ * Delivers through one SMTP relay. Provider-agnostic: the primary and the
+ * fallback relay are two instances with different settings. The transporter is built once and reused.
  */
 export class SmtpEmailTransport extends EmailTransport {
   readonly name: string;
@@ -41,6 +42,8 @@ export class SmtpEmailTransport extends EmailTransport {
       to: message.to,
       subject: message.subject,
       html: message.body,
+      text: message.textBody ?? undefined,
+      attachments: inlineImagesFor(message.body),
     });
     return { provider: this.name };
   }

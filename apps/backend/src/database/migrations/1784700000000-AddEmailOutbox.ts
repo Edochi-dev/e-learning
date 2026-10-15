@@ -10,6 +10,7 @@ export class AddEmailOutbox1784700000000 implements MigrationInterface {
         `"recipient" character varying NOT NULL, ` +
         `"subject" character varying NOT NULL, ` +
         `"body" text NOT NULL, ` +
+        `"textBody" text, ` +
         `"priority" smallint NOT NULL DEFAULT 1, ` +
         `"status" character varying NOT NULL DEFAULT 'pending', ` +
         `"attempts" integer NOT NULL DEFAULT 0, ` +

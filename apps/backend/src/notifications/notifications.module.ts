@@ -7,6 +7,8 @@ import { EmailOutboxWriter } from './gateways/email-outbox-writer.gateway';
 import { EmailOutboxQueue } from './gateways/email-outbox-queue.gateway';
 import { EmailTransport } from './gateways/email-transport.gateway';
 import { OutboxNotificationGateway } from './adapters/outbox-notification.gateway';
+import { EmailRenderer } from './gateways/email-renderer.gateway';
+import { BrandedEmailRenderer } from './adapters/branded-email-renderer.adapter';
 import { EmailOutboxRepository } from './email-outbox.repository';
 import { EmailRetryPolicy } from './domain/email-retry-policy';
 import { buildEmailTransport } from './email-transport.factory';
@@ -23,6 +25,7 @@ import { EmailOutboxWorker } from './email-outbox.worker';
     EmailOutboxRepository,
     { provide: EmailOutboxWriter, useExisting: EmailOutboxRepository },
     { provide: EmailOutboxQueue, useExisting: EmailOutboxRepository },
+    { provide: EmailRenderer, useClass: BrandedEmailRenderer },
     { provide: NotificationGateway, useClass: OutboxNotificationGateway },
     {
       provide: EmailTransport,

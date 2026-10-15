@@ -9,6 +9,7 @@ import { AlertRecipientsGateway } from '../../users/gateways/alert-recipients.ga
 import { AlertTopic } from '../../users/domain/alert-topic';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
 import { NameChangeRequest } from '../entities/name-change-request.entity';
+import { html } from '../../notifications/templates/safe-html';
 
 /**
  * RequestNameChangeUseCase — El alumno solicita cambiar su nombre.
@@ -98,8 +99,17 @@ export class RequestNameChangeUseCase {
         this.notificationGateway.sendEmail({
           to,
           subject: 'Nueva solicitud de cambio de nombre',
-          body: `<p>El alumno <strong>${currentName}</strong> solicitó cambiar su nombre a <strong>${requestedName}</strong>.</p>
-                 <p>Revisá la solicitud en el panel de administración.</p>`,
+          content: {
+            heading: 'Nueva solicitud de cambio de nombre',
+            body: html`<p>
+              <strong>${currentName}</strong> solicitó cambiar su nombre a
+              <strong>${requestedName}</strong>.
+            </p>`,
+            action: {
+              label: 'Revisar solicitud',
+              path: '/admin/cambios-nombre',
+            },
+          },
         }),
       ),
     );

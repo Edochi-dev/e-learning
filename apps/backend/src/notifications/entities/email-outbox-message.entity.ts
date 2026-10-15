@@ -31,6 +31,9 @@ export class EmailOutboxMessage {
   @Column({ type: 'text' })
   body: string;
 
+  @Column({ type: 'text', nullable: true })
+  textBody: string | null;
+
   @Column({ type: 'smallint', default: EmailPriority.NORMAL })
   priority: EmailPriority;
 

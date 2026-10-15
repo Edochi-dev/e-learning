@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import { RemindPendingCorrectionsUseCase } from './remind-pending-corrections.use-case';
 import { PendingCorrectionsGateway } from '../gateways/pending-corrections.gateway';
 import { AlertRecipientsGateway } from '../../users/gateways/alert-recipients.gateway';
@@ -19,9 +18,6 @@ describe('RemindPendingCorrectionsUseCase', () => {
       { countPending } as PendingCorrectionsGateway,
       { findEmailsFor } as AlertRecipientsGateway,
       { sendEmail } as NotificationGateway,
-      {
-        get: (_key: string, fallback: string) => fallback,
-      } as unknown as ConfigService,
     );
   });
 
@@ -48,8 +44,10 @@ describe('RemindPendingCorrectionsUseCase', () => {
       }),
       EmailPriority.LOW,
     );
-    const [message] = sendEmail.mock.calls[0] as [{ body: string }];
-    expect(message.body).toContain('/admin/correcciones');
+    const [message] = sendEmail.mock.calls[0] as [
+      { content: { action: { path: string } } },
+    ];
+    expect(message.content.action.path).toBe('/admin/correcciones');
   });
 
   it('usa el singular cuando hay una sola', async () => {

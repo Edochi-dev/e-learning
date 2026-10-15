@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { randomBytes, createHash } from 'crypto';
 import { UserGateway } from '../gateways/user.gateway';
 import { PasswordResetTokenGateway } from '../gateways/password-reset-token.gateway';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
 import { EmailPriority } from '../../notifications/domain/email-priority';
+import { html } from '../../notifications/templates/safe-html';
 
 // El token vive 1 hora. Suficiente para revisar el correo, corto para reducir
 // la ventana de un enlace filtrado.
@@ -26,7 +26,6 @@ export class RequestPasswordResetUseCase {
     private readonly userGateway: UserGateway,
     private readonly tokenGateway: PasswordResetTokenGateway,
     private readonly notificationGateway: NotificationGateway,
-    private readonly config: ConfigService,
   ) {}
 
   async execute(email: string): Promise<void> {
@@ -41,23 +40,27 @@ export class RequestPasswordResetUseCase {
     const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
     await this.tokenGateway.create({ userId: user.id, tokenHash, expiresAt });
 
-    const frontendUrl = this.config.get<string>(
-      'FRONTEND_URL',
-      'http://localhost:5173',
-    );
-    const link = `${frontendUrl}/restablecer?token=${token}`;
-
     await this.notificationGateway.sendEmail(
       {
         to: user.email,
         subject: 'Restablece tu contraseña — Maris Nails Academy',
-        body: `
-        <p>Hola ${user.fullName},</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el
-        siguiente enlace para elegir una nueva. El enlace vence en 1 hora.</p>
-        <p><a href="${link}">Restablecer mi contraseña</a></p>
-        <p>Si no fuiste tú, puedes ignorar este correo: tu contraseña no cambiará.</p>
-      `,
+        content: {
+          preheader:
+            'El enlace para elegir una nueva contraseña vence en 1 hora.',
+          heading: 'Restablece tu contraseña',
+          body: html`<p>Hola ${user.fullName},</p>
+            <p>
+              Recibimos una solicitud para restablecer la contraseña de tu
+              cuenta. Toca el botón para elegir una nueva. El enlace vence en 1
+              hora.
+            </p>`,
+          action: {
+            label: 'Elegir nueva contraseña',
+            path: `/restablecer?token=${token}`,
+          },
+          footnote:
+            'Si no fuiste tú, ignora este correo: tu contraseña seguirá igual.',
+        },
       },
       EmailPriority.HIGH,
     );
