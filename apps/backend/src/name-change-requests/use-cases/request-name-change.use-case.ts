@@ -3,9 +3,10 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { UserRole } from '@maris-nails/shared';
 import { NameChangeRequestGateway } from '../gateways/name-change-request.gateway';
 import { UserGateway } from '../../users/gateways/user.gateway';
+import { AlertRecipientsGateway } from '../../users/gateways/alert-recipients.gateway';
+import { AlertTopic } from '../../users/domain/alert-topic';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
 import { NameChangeRequest } from '../entities/name-change-request.entity';
 
@@ -19,7 +20,8 @@ import { NameChangeRequest } from '../entities/name-change-request.entity';
  * Orquesta:
  *   - UserGateway            → leer nombre/email actuales.
  *   - NameChangeRequestGateway → validar historial + crear la solicitud.
- *   - NotificationGateway    → avisar (best-effort) a los admins.
+ *   - AlertRecipientsGateway → quién revisa estas solicitudes.
+ *   - NotificationGateway    → avisarle (best-effort).
  */
 const COOLDOWN_DAYS = 30;
 const COOLDOWN_MS = COOLDOWN_DAYS * 24 * 60 * 60 * 1000;
@@ -30,6 +32,7 @@ export class RequestNameChangeUseCase {
     private readonly requestGateway: NameChangeRequestGateway,
     private readonly userGateway: UserGateway,
     private readonly notificationGateway: NotificationGateway,
+    private readonly alertRecipients: AlertRecipientsGateway,
   ) {}
 
   async execute(
@@ -74,25 +77,26 @@ export class RequestNameChangeUseCase {
       requestedName,
     });
 
-    // Aviso a los admins. Best-effort: si el email falla, la solicitud igual
+    // Aviso a quien revisa. Best-effort: si el email falla, la solicitud igual
     // se creó — no bloqueamos al alumno por un problema de notificación.
-    await this.notifyAdmins(user.fullName, requestedName).catch(
+    await this.notifyReviewers(user.fullName, requestedName).catch(
       () => undefined,
     );
 
     return created;
   }
 
-  private async notifyAdmins(
+  private async notifyReviewers(
     currentName: string,
     requestedName: string,
   ): Promise<void> {
-    const users = await this.userGateway.findAll();
-    const admins = users.filter((u) => u.role === UserRole.ADMIN);
+    const reviewers = await this.alertRecipients.findEmailsFor(
+      AlertTopic.NAME_CHANGE_REQUESTS,
+    );
     await Promise.all(
-      admins.map((admin) =>
+      reviewers.map((to) =>
         this.notificationGateway.sendEmail({
-          to: admin.email,
+          to,
           subject: 'Nueva solicitud de cambio de nombre',
           body: `<p>El alumno <strong>${currentName}</strong> solicitó cambiar su nombre a <strong>${requestedName}</strong>.</p>
                  <p>Revisá la solicitud en el panel de administración.</p>`,
