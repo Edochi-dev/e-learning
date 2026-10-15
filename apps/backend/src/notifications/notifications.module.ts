@@ -1,61 +1,37 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmailOutboxMessage } from './entities/email-outbox-message.entity';
 import { NotificationGateway } from './gateways/notification.gateway';
-import { ConsoleNotificationGateway } from './adapters/console-notification.gateway';
-import { SmtpNotificationGateway } from './adapters/smtp-notification.gateway';
+import { EmailOutboxWriter } from './gateways/email-outbox-writer.gateway';
+import { EmailOutboxQueue } from './gateways/email-outbox-queue.gateway';
+import { EmailTransport } from './gateways/email-transport.gateway';
+import { OutboxNotificationGateway } from './adapters/outbox-notification.gateway';
+import { EmailOutboxRepository } from './email-outbox.repository';
+import { EmailRetryPolicy } from './domain/email-retry-policy';
+import { buildEmailTransport } from './email-transport.factory';
+import { DeliverDueEmailsUseCase } from './use-cases/deliver-due-emails.use-case';
+import { EmailOutboxWorker } from './email-outbox.worker';
 
 /**
- * NotificationsModule — Cablea el contrato NotificationGateway con su
- * adapter concreto, eligiendo en runtime según las variables de entorno.
- *
- * Regla de selección:
- *   Si SMTP_HOST está definido en .env → SmtpNotificationGateway (real)
- *   Si NO está definido               → ConsoleNotificationGateway (no envía)
- *
- * El switch es IMPLÍCITO (sin una flag dedicada NOTIFICATIONS_DRIVER) por
- * dos razones:
- *   1. Una env menos que mantener.
- *   2. Es imposible llegar a producción "sin querer en modo console":
- *      si configuras SMTP, automáticamente usa SMTP. Si no lo configuras,
- *      no hay credenciales que enviar — el modo console es la única opción
- *      sensata.
- *
- * Nota técnica del wiring:
- *   Usamos useFactory en lugar de useClass porque la decisión depende
- *   del ConfigService en runtime. NestJS resuelve la factory una sola
- *   vez al construir el módulo, y a partir de ahí inyecta SIEMPRE la
- *   misma instancia (singleton). Si SMTP es elegido, su onModuleInit
- *   también corre una sola vez y construye el transporter.
- *
- * Nota Clean Architecture:
- *   Todos los demás módulos del sistema solo conocen NotificationGateway.
- *   Nadie importa SmtpNotificationGateway ni ConsoleNotificationGateway
- *   directamente — eso rompería el desacoplamiento. Si en el futuro
- *   agregamos un MailgunNotificationGateway o un QueuedNotificationGateway,
- *   el cambio vive AQUÍ y nadie más se entera.
+ * Other modules only see NotificationGateway, which queues into the outbox.
+ * The worker delivers from there through the transport chain built from env.
  */
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, TypeOrmModule.forFeature([EmailOutboxMessage])],
   providers: [
+    EmailOutboxRepository,
+    { provide: EmailOutboxWriter, useExisting: EmailOutboxRepository },
+    { provide: EmailOutboxQueue, useExisting: EmailOutboxRepository },
+    { provide: NotificationGateway, useClass: OutboxNotificationGateway },
     {
-      provide: NotificationGateway,
+      provide: EmailTransport,
       inject: [ConfigService],
-      useFactory: (config: ConfigService): NotificationGateway => {
-        const smtpHost = config.get<string>('SMTP_HOST');
-
-        if (smtpHost) {
-          // Solo construimos el SmtpNotificationGateway cuando hay config.
-          // Su onModuleInit NO corre automáticamente porque lo creamos
-          // nosotros (no NestJS). Llamamos a onModuleInit manualmente
-          // para que construya el transporter.
-          const smtp = new SmtpNotificationGateway(config);
-          smtp.onModuleInit();
-          return smtp;
-        }
-
-        return new ConsoleNotificationGateway();
-      },
+      useFactory: buildEmailTransport,
     },
+    { provide: EmailRetryPolicy, useValue: new EmailRetryPolicy() },
+    DeliverDueEmailsUseCase,
+    EmailOutboxWorker,
   ],
   exports: [NotificationGateway],
 })

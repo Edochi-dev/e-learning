@@ -45,13 +45,21 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
         // Si SMTP_HOST está presente, las demás (excepto SMTP_SECURE) se vuelven
         // obligatorias por la regla `.with()` de abajo: queremos fail-fast en boot
         // si alguien configura SMTP a medias en lugar de descubrirlo en el primer email.
-        // Si SMTP_HOST NO está presente, NotificationsModule cae a ConsoleNotificationGateway.
+        // Si SMTP_HOST NO está presente, los correos se imprimen en consola (ConsoleEmailTransport).
         SMTP_HOST: Joi.string().optional(),
         SMTP_PORT: Joi.number().integer().optional(),
         SMTP_SECURE: Joi.string().valid('true', 'false').optional(),
         SMTP_USER: Joi.string().optional(),
         SMTP_PASS: Joi.string().optional(),
         SMTP_FROM: Joi.string().optional(),
+        // Relay de respaldo: se usa solo si el principal (SMTP_*) rechaza el
+        // envío. Mismo todo-o-nada, y exige que el principal exista.
+        SMTP_FALLBACK_HOST: Joi.string().optional(),
+        SMTP_FALLBACK_PORT: Joi.number().integer().optional(),
+        SMTP_FALLBACK_SECURE: Joi.string().valid('true', 'false').optional(),
+        SMTP_FALLBACK_USER: Joi.string().optional(),
+        SMTP_FALLBACK_PASS: Joi.string().optional(),
+        SMTP_FALLBACK_FROM: Joi.string().optional(),
         // Web-push (notificaciones de la agenda) — opcionales. Sin ellas, el
         // push queda desactivado (PushService.isConfigured() = false).
         VAPID_PUBLIC_KEY: Joi.string().optional(),
@@ -70,12 +78,15 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
         HLS_TOKEN_TTL_MINUTES: Joi.number().integer().min(1).default(30),
         FFMPEG_PATH: Joi.string().default('ffmpeg'),
         FFPROBE_PATH: Joi.string().default('ffprobe'),
-      }).with('SMTP_HOST', [
-        'SMTP_PORT',
-        'SMTP_USER',
-        'SMTP_PASS',
-        'SMTP_FROM',
-      ]),
+      })
+        .with('SMTP_HOST', ['SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'])
+        .with('SMTP_FALLBACK_HOST', [
+          'SMTP_HOST',
+          'SMTP_FALLBACK_PORT',
+          'SMTP_FALLBACK_USER',
+          'SMTP_FALLBACK_PASS',
+          'SMTP_FALLBACK_FROM',
+        ]),
     }),
 
     // 2. Conectamos TypeORM a PostgreSQL.
