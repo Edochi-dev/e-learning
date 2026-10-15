@@ -49,4 +49,18 @@ describe('BrandedEmailRenderer', () => {
       'Elegir contraseña: https://marisnails.academy/restablecer?token=abc',
     );
   });
+
+  it('makes every email unique so Gmail does not collapse repeated blocks', () => {
+    const again = renderer.render({
+      to: 'ana@example.com',
+      subject: 'Restablece tu contraseña',
+      content: { heading: 'Hola', body: html`<p>x</p>` },
+    });
+    const twice = renderer.render({
+      to: 'ana@example.com',
+      subject: 'Restablece tu contraseña',
+      content: { heading: 'Hola', body: html`<p>x</p>` },
+    });
+    expect(again.body).not.toBe(twice.body);
+  });
 });

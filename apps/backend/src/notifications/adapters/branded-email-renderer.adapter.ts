@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
 import { EmailRenderer } from '../gateways/email-renderer.gateway';
 import { EmailContent, EmailNotification } from '../domain/email-content';
 import { EmailMessage } from '../domain/email-message';
@@ -151,6 +152,7 @@ export class BrandedEmailRenderer extends EmailRenderer {
                         style="color:${COLOR.gold};text-decoration:none;"
                         >${siteLabel}</a
                       >
+                      ${this.uniqueMarker()}
                     </td>
                   </tr>
                 </table>
@@ -159,6 +161,16 @@ export class BrandedEmailRenderer extends EmailRenderer {
           </table>
         </body>
       </html>`;
+  }
+
+  // Gmail threads same-subject emails and hides any trailing block identical to
+  // an earlier message ("Mostrar texto citado"); a hidden unique id stops it.
+  // Matters for the twice-daily reminder, whose subject often repeats.
+  private uniqueMarker(): SafeHtml {
+    return html`<span
+      style="display:none;font-size:0;line-height:0;max-height:0;overflow:hidden;opacity:0;"
+      >${randomUUID()}</span
+    >`;
   }
 
   // Hidden text that inbox lists show as the preview line.
