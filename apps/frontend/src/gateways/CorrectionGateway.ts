@@ -33,15 +33,31 @@ export interface AssignmentData {
     instructions: string;
 }
 
+/**
+ * Una revisión de la profesora. Las anteriores a los audios no tienen audio
+ * (ni fecha de vencimiento) y traen el comentario escrito en `transcript`.
+ */
+export interface CorrectionReview {
+    id: string;
+    decision: 'approved' | 'rejected';
+    hasAudio: boolean;
+    audioDurationSeconds: number | null;
+    audioExpiresAt: string | null;
+    transcript: string | null;
+    transcriptStatus: 'pending' | 'processing' | 'done' | 'failed' | 'unavailable';
+    reviewedAt: string;
+}
+
 export interface AssignmentSubmission {
     id: string;
     studentId: string;
     lessonId: string;
     photoUrl: string;
     status: 'pending' | 'approved' | 'rejected';
-    feedback: string | null;
     submittedAt: string;
     reviewedAt: string | null;
+    /** La más reciente primero. */
+    reviews: CorrectionReview[];
     student: SubmissionStudent;
     lesson: SubmissionLesson & {
         assignmentData?: AssignmentData;
@@ -78,12 +94,15 @@ export interface CorrectionGateway {
     /** Admin: histórico paginado con filtros opcionales. */
     listHistory(filters?: CorrectionFilters): Promise<PaginatedSubmissions>;
 
-    /** Admin: aprobar o rechazar una entrega con feedback obligatorio. */
+    /** Admin: aprobar o rechazar una entrega con una nota de voz. */
     review(
         submissionId: string,
         action: 'approve' | 'reject',
-        feedback: string,
-    ): Promise<AssignmentSubmission>;
+        audio: Blob,
+    ): Promise<CorrectionReview>;
+
+    /** Alumna dueña o admin: descarga el audio de una revisión. */
+    getReviewAudio(reviewId: string): Promise<Blob>;
 
     // ── Métodos de alumna ──────────────────────────────────────────────
 

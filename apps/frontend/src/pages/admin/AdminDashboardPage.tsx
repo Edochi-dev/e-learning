@@ -77,7 +77,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                             <span className="admin-badge">{pendingCount}</span>
                         )}
                     </h3>
-                    <p>Revisa las entregas de tus alumnas, aprueba o pide correcciones con feedback.</p>
+                    <p>Revisa las entregas de tus alumnas, aprueba o pide correcciones con un audio.</p>
                     <Link to="/admin/correcciones" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
                         Revisar Correcciones
                     </Link>
