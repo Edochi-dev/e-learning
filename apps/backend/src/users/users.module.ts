@@ -16,6 +16,8 @@ import { LogoutUseCase } from './use-cases/logout.use-case';
 import { RevokeAllSessionsUseCase } from './use-cases/revoke-all-sessions.use-case';
 import { UsersService } from './users.service';
 import { UserGateway } from './gateways/user.gateway';
+import { AlertRecipientsGateway } from './gateways/alert-recipients.gateway';
+import { AlertRecipientsRepository } from './alert-recipients.repository';
 import { PasswordResetTokenGateway } from './gateways/password-reset-token.gateway';
 import { PasswordResetTokenRepository } from './password-reset-token.repository';
 import { UsersController } from './users.controller';
@@ -50,6 +52,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     // Bindings Clean Architecture: abstract → concrete
     // Los use cases inyectan el gateway abstracto, nunca la clase concreta
     { provide: UserGateway, useClass: UsersService },
+    { provide: AlertRecipientsGateway, useClass: AlertRecipientsRepository },
     {
       provide: PasswordResetTokenGateway,
       useClass: PasswordResetTokenRepository,
@@ -72,6 +75,6 @@ import { NotificationsModule } from '../notifications/notifications.module';
     LogoutUseCase,
     RevokeAllSessionsUseCase,
   ],
-  exports: [UserGateway, AuthSessionService],
+  exports: [UserGateway, AlertRecipientsGateway, AuthSessionService],
 })
 export class UsersModule {}

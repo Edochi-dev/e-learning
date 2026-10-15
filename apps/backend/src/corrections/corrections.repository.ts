@@ -7,6 +7,7 @@ import {
   CreateSubmissionData,
   UpdateSubmissionData,
 } from './gateways/correction.gateway';
+import { PendingCorrectionsGateway } from './gateways/pending-corrections.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 
 /**
@@ -16,7 +17,9 @@ import { PaginatedResult } from '../common/types/paginated-result.type';
  * abstracto usando TypeORM como adaptador de persistencia.
  */
 @Injectable()
-export class CorrectionsRepository implements CorrectionGateway {
+export class CorrectionsRepository
+  implements CorrectionGateway, PendingCorrectionsGateway
+{
   constructor(
     @InjectRepository(AssignmentSubmission)
     private readonly submissionRepository: Repository<AssignmentSubmission>,
@@ -61,6 +64,10 @@ export class CorrectionsRepository implements CorrectionGateway {
 
     Object.assign(submission, data);
     return this.submissionRepository.save(submission);
+  }
+
+  async countPending(): Promise<number> {
+    return this.submissionRepository.countBy({ status: 'pending' });
   }
 
   async findPending(): Promise<AssignmentSubmission[]> {

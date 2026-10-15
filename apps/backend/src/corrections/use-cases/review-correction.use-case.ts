@@ -8,6 +8,7 @@ import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.g
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
+import { html } from '../../notifications/templates/safe-html';
 
 /**
  * ReviewCorrectionUseCase — La profesora aprueba o rechaza una entrega.
@@ -102,22 +103,43 @@ export class ReviewCorrectionUseCase {
     }
 
     // 7. Notificar a la alumna
-    const studentEmail = submission.student?.email ?? 'student';
+    const studentEmail = submission.student?.email;
     const lessonTitle = submission.lesson?.title ?? 'la lección';
     const isApproved = action === 'approve';
 
-    await this.notificationGateway.sendEmail({
-      to: studentEmail,
-      subject: isApproved
-        ? `¡Tu trabajo fue aprobado! — ${lessonTitle}`
-        : `Tu trabajo necesita correcciones — ${lessonTitle}`,
-      body: isApproved
-        ? `<p>¡Felicidades! Tu entrega para <strong>${lessonTitle}</strong> fue aprobada.</p>
-           <p><strong>Feedback:</strong> ${feedback}</p>`
-        : `<p>Tu entrega para <strong>${lessonTitle}</strong> necesita correcciones.</p>
-           <p><strong>Feedback:</strong> ${feedback}</p>
-           <p>Revisá el feedback y enviá tu trabajo de nuevo cuando estés lista.</p>`,
-    });
+    if (studentEmail) {
+      await this.notificationGateway.sendEmail({
+        to: studentEmail,
+        subject: isApproved
+          ? `¡Tu trabajo fue aprobado! — ${lessonTitle}`
+          : `Tu trabajo necesita correcciones — ${lessonTitle}`,
+        content: isApproved
+          ? {
+              heading: '¡Tu trabajo fue aprobado!',
+              body: html`<p>
+                  ¡Felicidades! Tu entrega para
+                  <strong>${lessonTitle}</strong> fue aprobada.
+                </p>
+                <p>
+                  <strong>Comentario de tu profesora:</strong> ${feedback}
+                </p>`,
+              action: { label: 'Seguir con mi curso', path: '/mis-cursos' },
+            }
+          : {
+              heading: 'Tu trabajo necesita algunos ajustes',
+              body: html`<p>
+                  Tu entrega para <strong>${lessonTitle}</strong> necesita
+                  correcciones.
+                </p>
+                <p><strong>Comentario de tu profesora:</strong> ${feedback}</p>
+                <p>
+                  Revisa el comentario y envía tu trabajo de nuevo cuando estés
+                  lista.
+                </p>`,
+              action: { label: 'Volver a mi curso', path: '/mis-cursos' },
+            },
+      });
+    }
 
     return updated;
   }
