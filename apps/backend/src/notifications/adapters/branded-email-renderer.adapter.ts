@@ -25,7 +25,7 @@ const BRAND_NAME = 'Maris Nails Academy';
 
 /**
  * Wraps content in the site's look: gold monogram, cream background, white
- * card and a rose pill button. Table layout and inline styles on purpose —
+ * card and a rose pill button, all centered (the emails are short). Table layout and inline styles on purpose —
  * that is what Gmail and Outlook render reliably.
  */
 @Injectable()
@@ -122,7 +122,8 @@ export class BrandedEmailRenderer extends EmailRenderer {
                   <tr>
                     <td
                       class="card"
-                      style="background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:20px;padding:40px 40px 32px;font-family:${FONT};color:${COLOR.textSecondary};font-size:16px;line-height:1.6;"
+                      align="center"
+                      style="text-align:center;background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:20px;padding:40px 40px 32px;font-family:${FONT};color:${COLOR.textSecondary};font-size:16px;line-height:1.6;"
                     >
                       <h1
                         style="margin:0;font-family:${FONT};font-size:24px;line-height:1.3;font-weight:700;color:${COLOR.text};"
@@ -130,7 +131,7 @@ export class BrandedEmailRenderer extends EmailRenderer {
                         ${content.heading}
                       </h1>
                       <div
-                        style="width:48px;height:3px;background:${COLOR.gold};border-radius:3px;margin:16px 0 24px;line-height:3px;font-size:0;"
+                        style="width:48px;height:3px;background:${COLOR.gold};border-radius:3px;margin:16px auto 24px;line-height:3px;font-size:0;"
                       >
                         &nbsp;
                       </div>
@@ -178,7 +179,8 @@ export class BrandedEmailRenderer extends EmailRenderer {
       cellpadding="0"
       cellspacing="0"
       border="0"
-      style="margin:8px 0 24px;"
+      align="center"
+      style="margin:8px auto 24px;"
     >
       <tr>
         <td
