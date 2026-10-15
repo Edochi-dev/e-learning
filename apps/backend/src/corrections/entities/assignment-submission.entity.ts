@@ -4,37 +4,20 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  OneToMany,
   Unique,
   JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Lesson } from '../../courses/entities/lessons.entity';
+import { CorrectionReview } from './correction-review.entity';
 
 /**
- * AssignmentSubmission — Entrega de una alumna para una lección tipo corrección.
+ * A student's submission for a correction lesson: one row per (student,
+ * lesson). A re-submission updates the photo and goes back to 'pending'; each
+ * review is kept as its own CorrectionReview, so the history survives.
  *
- * Modelo de datos:
- *   Una sola fila por (studentId, lessonId). La constraint @Unique garantiza
- *   esto a nivel de base de datos — si se intenta crear un segundo registro,
- *   PostgreSQL rechaza el INSERT.
- *
- * Re-envíos:
- *   Cuando la alumna re-envía, se ACTUALIZA la fila existente (nueva photoUrl,
- *   status vuelve a 'pending', submittedAt se renueva). No se crea una fila
- *   nueva — decisión de diseño para mantener el modelo simple y evitar
- *   historial ilimitado de fotos.
- *
- * Ciclo de vida del status:
- *   1. Alumna sube foto         → status = 'pending'
- *   2. Profesora aprueba        → status = 'approved', feedback obligatorio
- *   3. Profesora rechaza        → status = 'rejected', feedback obligatorio
- *   4. Alumna re-envía (si 3)   → status = 'pending' de nuevo
- *
- * Relaciones:
- *   - ManyToOne a User (la alumna que envió)
- *   - ManyToOne a Lesson (la lección tipo corrección)
- *   Ambas con onDelete: CASCADE — si se borra la alumna o la lección,
- *   la submission se borra automáticamente.
+ * Status: pending → approved | rejected; rejected → pending on re-submission.
  */
 @Entity('assignment_submissions')
 @Unique(['studentId', 'lessonId'])
@@ -54,9 +37,6 @@ export class AssignmentSubmission {
   @Column({ default: 'pending' })
   status: string;
 
-  @Column({ type: 'text', nullable: true })
-  feedback: string | null;
-
   @CreateDateColumn()
   submittedAt: Date;
 
@@ -72,4 +52,8 @@ export class AssignmentSubmission {
   @ManyToOne(() => Lesson, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'lessonId' })
   lesson: Lesson;
+
+  /** Newest first when loaded through the repository. */
+  @OneToMany(() => CorrectionReview, (review) => review.submission)
+  reviews: CorrectionReview[];
 }

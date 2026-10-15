@@ -13,7 +13,7 @@ import { HlsConfig } from '../../hls.config';
 import { parseFfprobeOutput } from './source-probe';
 import { VideoPipelineProfile } from './video-pipeline-profile';
 import { buildAudioEncodeArgs, buildFfmpegHlsArgs } from './ffmpeg-hls-args';
-import { runProcess } from './run-process';
+import { runProcess } from '../../../common/process/run-process';
 
 /** Placeholder written into the playlists; replaced per request when served. */
 export const KEY_URI_PLACEHOLDER = 'key';

@@ -408,11 +408,27 @@ export const SubmissionStatus = {
 export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
 
 /**
+ * CorrectionReview — Una revisión de la profesora: su decisión y una nota de
+ * voz. Las revisiones anteriores a los audios no tienen audio; su texto viene
+ * en `transcript`.
+ */
+export interface CorrectionReview {
+    id: string;
+    decision: 'approved' | 'rejected';
+    hasAudio: boolean;
+    audioDurationSeconds: number | null;
+    audioExpiresAt: string | null;   // ISO 8601 — cuándo se borra el audio
+    transcript: string | null;
+    transcriptStatus: 'pending' | 'processing' | 'done' | 'failed' | 'unavailable';
+    reviewedAt: string;              // ISO 8601
+}
+
+/**
  * AssignmentSubmission — Entrega de una alumna para una lección tipo corrección.
  *
  * Una sola fila por (alumna, lección). Si la alumna re-envía, se sobreescribe
- * la foto y el status vuelve a PENDING. El feedback de la profesora se mantiene
- * como audit trail.
+ * la foto y el status vuelve a PENDING; cada revisión queda en `reviews`
+ * (la más reciente primero).
  */
 export interface AssignmentSubmission {
     id: string;
@@ -420,9 +436,9 @@ export interface AssignmentSubmission {
     studentId: string;
     photoUrl: string;
     status: SubmissionStatus;
-    feedback?: string;       // Texto de la profesora (obligatorio al revisar)
     submittedAt: string;     // ISO 8601 — cuándo se envió/re-envió
     reviewedAt?: string;     // ISO 8601 — cuándo la profesora revisó
+    reviews: CorrectionReview[];
 }
 
 // ─── Quiz Submission & Results ─────────────────────────────────────────

@@ -14,6 +14,8 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   ParseUUIDPipe,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
@@ -28,6 +30,9 @@ import { ListPendingCorrectionsUseCase } from './use-cases/list-pending-correcti
 import { ListAllCorrectionsUseCase } from './use-cases/list-all-corrections.use-case';
 import { ReviewCorrectionUseCase } from './use-cases/review-correction.use-case';
 import { GetCorrectionByIdUseCase } from './use-cases/get-correction-by-id.use-case';
+import { GetReviewAudioUseCase } from './use-cases/get-review-audio.use-case';
+import { CorrectionReview } from './entities/correction-review.entity';
+import { AuthenticatedUser } from '../users/authenticated-user';
 import { SubmitCorrectionDto } from './dto/submit-correction.dto';
 import { ReviewCorrectionDto } from './dto/review-correction.dto';
 import { AssignmentSubmission } from './entities/assignment-submission.entity';
@@ -43,7 +48,10 @@ import { AssignmentSubmission } from './entities/assignment-submission.entity';
  *   GET   /corrections/pending            → Listar entregas pendientes
  *   GET   /corrections/history            → Histórico con filtros
  *   GET   /corrections/:id               → Detalle de una entrega
- *   PATCH /corrections/:id/review         → Aprobar o rechazar una entrega
+ *   PATCH /corrections/:id/review         → Aprobar o rechazar con un audio
+ *
+ * Alumna dueña o admin:
+ *   GET   /corrections/reviews/:reviewId/audio → Audio de una revisión
  *
  * Nota de diseño: las rutas admin van ANTES de las rutas con parámetros
  * dinámicos (como /me/:lessonId) para evitar que NestJS confunda
@@ -52,6 +60,9 @@ import { AssignmentSubmission } from './entities/assignment-submission.entity';
  * El upload acepta JPEG, PNG, WebP y HEIC (convertido a JPEG en el use case).
  * Tamaño máximo: 5 MB.
  */
+// Two minutes of browser audio is well under 5 MB; the rest is headroom.
+const MAX_AUDIO_BYTES = 10 * 1024 * 1024;
+
 @Controller('corrections')
 @UseGuards(AuthGuard('jwt'))
 export class CorrectionsController {
@@ -62,6 +73,7 @@ export class CorrectionsController {
     private readonly listAllCorrectionsUseCase: ListAllCorrectionsUseCase,
     private readonly reviewCorrectionUseCase: ReviewCorrectionUseCase,
     private readonly getCorrectionByIdUseCase: GetCorrectionByIdUseCase,
+    private readonly getReviewAudioUseCase: GetReviewAudioUseCase,
   ) {}
 
   // ── Rutas Admin ───────────────────────────────────────────────────────
@@ -103,7 +115,10 @@ export class CorrectionsController {
     @Query('limit') limitStr?: string,
   ) {
     const page = Math.max(1, parseInt(pageStr ?? '1', 10) || 1);
-    const limit = Math.min(50, Math.max(1, parseInt(limitStr ?? '20', 10) || 20));
+    const limit = Math.min(
+      50,
+      Math.max(1, parseInt(limitStr ?? '20', 10) || 20),
+    );
     const month = monthStr ? parseInt(monthStr, 10) : undefined;
     const year = yearStr ? parseInt(yearStr, 10) : undefined;
 
@@ -131,27 +146,44 @@ export class CorrectionsController {
   }
 
   /**
-   * PATCH /corrections/:id/review — Aprobar o rechazar una entrega.
-   *
-   * Solo ADMIN. Body: { action: 'approve'|'reject', feedback: string }
-   *
-   * ¿Por qué PATCH y no PUT?
-   *   Porque no estamos reemplazando TODO el recurso — solo actualizamos
-   *   el status, feedback y reviewedAt. PATCH = actualización parcial.
-   *
-   * ¿Por qué /review como sub-recurso y no solo PATCH /:id?
-   *   Porque "revisar" es una ACCIÓN de negocio, no un CRUD genérico.
-   *   El endpoint comunica intención: no estás editando campos arbitrarios,
-   *   estás ejecutando el acto de revisar una entrega.
+   * PATCH /corrections/:id/review — Aprobar o rechazar con una nota de voz.
+   * Multipart: `action` + `audio` (lo que grabe el navegador; el servidor lo
+   * normaliza). Es una acción de negocio, por eso es un sub-recurso.
    */
   @Patch(':id/review')
   @UseGuards(RolesGuard)
   @Roles(UserRole.ADMIN)
+  @UseInterceptors(FileInterceptor('audio'))
   async review(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: ReviewCorrectionDto,
-  ): Promise<AssignmentSubmission> {
-    return this.reviewCorrectionUseCase.execute(id, dto.action, dto.feedback);
+    @UploadedFile(
+      new ParseFilePipe({
+        validators: [new MaxFileSizeValidator({ maxSize: MAX_AUDIO_BYTES })],
+      }),
+    )
+    audio: Express.Multer.File,
+  ): Promise<CorrectionReview> {
+    return this.reviewCorrectionUseCase.execute(id, dto.action, audio.buffer);
+  }
+
+  /**
+   * GET /corrections/reviews/:reviewId/audio — Solo la alumna dueña o un
+   * admin; el use case responde 404 a cualquier otra persona.
+   */
+  @Get('reviews/:reviewId/audio')
+  // Personal data: no shared cache (nginx, proxies) may keep a copy.
+  @Header('Cache-Control', 'private, no-store')
+  async reviewAudio(
+    @Req() req: { user: AuthenticatedUser },
+    @Param('reviewId', ParseUUIDPipe) reviewId: string,
+  ): Promise<StreamableFile> {
+    const audio = await this.getReviewAudioUseCase.execute(reviewId, req.user);
+    return new StreamableFile(audio.stream, {
+      type: audio.contentType,
+      length: audio.size,
+      disposition: 'inline',
+    });
   }
 
   // ── Rutas Alumna ──────────────────────────────────────────────────────
