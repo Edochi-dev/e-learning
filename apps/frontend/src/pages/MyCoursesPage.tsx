@@ -5,6 +5,7 @@ import { useEnrollments } from '../hooks/useEnrollments';
 import { API_URL as BACKEND_URL } from '../config';
 import { SkeletonCourseCard } from '../components/Skeleton';
 import { UpcomingLiveClasses } from '../components/UpcomingLiveClasses';
+import { renewWhatsappUrl } from '../lib/whatsapp';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
@@ -165,24 +166,24 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                 )}
 
                                 {/* CTA */}
+                                {/* La tarjeta lleva a la portada del curso: ahí la alumna
+                                    ve su avance y decide por dónde seguir. */}
                                 {enrollment.isActive ? (
                                     <Link
-                                        to={`/courses/${enrollment.course.id}/learn`}
+                                        to={`/mis-cursos/${enrollment.course.id}`}
                                         className="enrollment-card__cta"
                                     >
-                                        {enrollment.progressPercent === 100
-                                            ? 'Repasar curso'
-                                            : enrollment.progressPercent > 0
-                                                ? 'Continuar →'
-                                                : 'Empezar →'}
+                                        Ir al curso →
                                     </Link>
                                 ) : (
-                                    <Link
-                                        to={`/courses/${enrollment.course.id}`}
+                                    <a
+                                        href={renewWhatsappUrl(enrollment.course.title)}
                                         className="enrollment-card__cta enrollment-card__cta--renew"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                     >
                                         Renovar acceso
-                                    </Link>
+                                    </a>
                                 )}
                             </div>
                         </article>

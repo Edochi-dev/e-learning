@@ -42,7 +42,10 @@ import { SetEnrollmentExpiryDto } from './dto/set-enrollment-expiry.dto';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@maris-nails/shared';
-import type { UpcomingLiveClass } from '@maris-nails/shared';
+import type {
+  UpcomingLiveClass,
+  WatchProgressResult,
+} from '@maris-nails/shared';
 import { GetUpcomingLiveClassesUseCase } from './use-cases/get-upcoming-live-classes.use-case';
 
 /**
@@ -121,21 +124,20 @@ export class EnrollmentsController {
 
   /**
    * PATCH /enrollments/me/watch-progress
-   * Guarda el porcentaje de video visto. El frontend lo llama cada vez que
-   * el progreso sube 5 puntos (throttle para no saturar la API).
+   * Suma los segmentos de video vistos en la sesión. Responde el porcentaje
+   * acumulado y si con él la lección quedó completada sola.
    */
   @Patch('me/watch-progress')
   @UseGuards(EnrollmentGuard)
   @EnrollmentCheck({ lessonIdFrom: 'body', courseIdFrom: 'body' })
-  @HttpCode(HttpStatus.NO_CONTENT)
   async saveWatchProgress(
     @Req() req: any,
     @Body() dto: SaveWatchProgressDto,
-  ): Promise<void> {
+  ): Promise<WatchProgressResult> {
     return this.saveWatchProgressUseCase.execute(
       req.user.id,
       dto.lessonId,
-      dto.percent,
+      dto.segments,
     );
   }
 

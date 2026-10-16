@@ -2,14 +2,18 @@ import { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { OrderGateway } from '../gateways/OrderGateway';
+import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useAuth } from '../context/AuthContext';
 import { useCourse } from '../hooks/useCourse';
+import { useEnrollments } from '../hooks/useEnrollments';
+import { enrollWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
 import { OrderStatus } from '@maris-nails/shared';
-import { API_URL as BACKEND_URL } from '../config';
+import { API_URL as BACKEND_URL, ONLINE_PAYMENTS } from '../config';
 
 interface CourseDetailsPageProps {
     gateway: CourseGateway;
     orderGateway: OrderGateway;
+    enrollmentGateway: EnrollmentGateway;
 }
 
 /**
@@ -27,9 +31,12 @@ interface CourseDetailsPageProps {
  *   - URLs absolutas (https://...) se usan directas
  *   - Rutas relativas (/static/...) se prefijan con BACKEND_URL
  */
-export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPageProps) => {
+export const CourseDetailsPage = ({ gateway, orderGateway, enrollmentGateway }: CourseDetailsPageProps) => {
     const { id } = useParams<{ id: string }>();
     const { course, loading, error } = useCourse(gateway, id);
+    // La ficha cambia su llamado a la acción según la relación con el curso.
+    const { enrollments } = useEnrollments(enrollmentGateway);
+    const enrollment = enrollments.find((e) => e.course.id === id);
     const { user } = useAuth();
     const navigate = useNavigate();
 
@@ -89,7 +96,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
         </div>
     );
     if (error) return (
-        <div className="container" style={{ padding: '6rem 0', textAlign: 'center', color: 'var(--error, #e53e3e)' }}>
+        <div className="container" style={{ padding: '6rem 0', textAlign: 'center', color: 'var(--danger)' }}>
             Error: {error}
         </div>
     );
@@ -203,21 +210,44 @@ export const CourseDetailsPage = ({ gateway, orderGateway }: CourseDetailsPagePr
                 {/* Columna derecha: card de compra sticky */}
                 <aside className="cd-sidebar">
                     <div className="cd-purchase-card">
-                        <div className="cd-purchase-card__price">
-                            <span className="cd-purchase-card__currency">$</span>
-                            <span className="cd-purchase-card__amount">{course.price}</span>
-                        </div>
-
-                        <button
-                            className="btn-primary cd-purchase-card__cta"
-                            onClick={handlePurchase}
-                            disabled={purchasing || purchaseSuccess || purchasePending}
-                        >
-                            {purchasing ? 'Procesando...' :
-                             purchaseSuccess ? 'Compra exitosa' :
-                             purchasePending ? 'Solicitud enviada' :
-                             'Inscribirme Ahora'}
-                        </button>
+                        {enrollment?.isActive ? (
+                            <>
+                                <p className="cd-purchase-card__enrolled">✓ Ya estás inscrita en este curso</p>
+                                <Link to={`/mis-cursos/${course.id}`} className="btn-primary cd-purchase-card__cta">
+                                    Ir al curso
+                                </Link>
+                            </>
+                        ) : enrollment ? (
+                            <>
+                                <p className="cd-purchase-card__enrolled">Tu acceso a este curso terminó. Tu progreso se conserva.</p>
+                                <a href={renewWhatsappUrl(course.title)} className="btn-primary cd-purchase-card__cta" target="_blank" rel="noopener noreferrer">
+                                    Renovar acceso por WhatsApp
+                                </a>
+                            </>
+                        ) : (
+                            <>
+                                <div className="cd-purchase-card__price">
+                                    <span className="cd-purchase-card__currency">$</span>
+                                    <span className="cd-purchase-card__amount">{course.price}</span>
+                                </div>
+                                {ONLINE_PAYMENTS ? (
+                                    <button
+                                        className="btn-primary cd-purchase-card__cta"
+                                        onClick={handlePurchase}
+                                        disabled={purchasing || purchaseSuccess || purchasePending}
+                                    >
+                                        {purchasing ? 'Procesando...' :
+                                         purchaseSuccess ? 'Compra exitosa' :
+                                         purchasePending ? 'Solicitud enviada' :
+                                         'Inscribirme Ahora'}
+                                    </button>
+                                ) : (
+                                    <a href={enrollWhatsappUrl(course.title)} className="btn-primary cd-purchase-card__cta" target="_blank" rel="noopener noreferrer">
+                                        Quiero inscribirme
+                                    </a>
+                                )}
+                            </>
+                        )}
 
                         {purchaseError && (
                             <p className="cd-purchase-card__error">{purchaseError}</p>

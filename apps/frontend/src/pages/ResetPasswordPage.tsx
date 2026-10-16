@@ -61,13 +61,13 @@ export const ResetPasswordPage = () => {
                 <>
                     {error && (
                         <div style={{
-                            background: 'linear-gradient(135deg, #fff0f0, #ffe8e8)',
-                            color: '#c0392b',
+                            background: 'var(--danger-soft)',
+                            color: 'var(--danger)',
                             padding: '0.85rem 1rem',
                             borderRadius: 'var(--radius-md)',
                             marginBottom: '1.25rem',
                             fontSize: '0.85rem',
-                            border: '1px solid rgba(192, 57, 43, 0.12)',
+                            border: '1px solid var(--danger-soft)',
                             fontWeight: 500,
                         }}>
                             ⚠️ {error}
@@ -88,7 +88,7 @@ export const ResetPasswordPage = () => {
                                 placeholder="••••••••"
                             />
                             {password && !passwordValid && (
-                                <p style={{ fontSize: '0.8rem', color: '#c0392b', marginTop: '0.4rem' }}>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: '0.4rem' }}>
                                     Mínimo 8 caracteres, con letras y números.
                                 </p>
                             )}
@@ -107,7 +107,7 @@ export const ResetPasswordPage = () => {
                                 placeholder="••••••••"
                             />
                             {confirm && !passwordsMatch && (
-                                <p style={{ fontSize: '0.8rem', color: '#c0392b', marginTop: '0.4rem' }}>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: '0.4rem' }}>
                                     Las contraseñas no coinciden.
                                 </p>
                             )}

@@ -1,4 +1,12 @@
-import { IsUUID, IsNumber, Min, Max } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsInt,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
+import { WATCH_SEGMENTS } from '../../progress/domain/watched-segments';
 
 export class SaveWatchProgressDto {
   @IsUUID()
@@ -7,8 +15,11 @@ export class SaveWatchProgressDto {
   @IsUUID()
   courseId: string;
 
-  @IsNumber()
-  @Min(0)
-  @Max(100)
-  percent: number;
+  /** Índices (0-99) de los segmentos de 1% vistos en esta sesión. */
+  @IsArray()
+  @ArrayMaxSize(WATCH_SEGMENTS)
+  @IsInt({ each: true })
+  @Min(0, { each: true })
+  @Max(WATCH_SEGMENTS - 1, { each: true })
+  segments: number[];
 }

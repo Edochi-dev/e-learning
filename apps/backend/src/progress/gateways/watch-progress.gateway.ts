@@ -13,14 +13,14 @@
  */
 export abstract class WatchProgressGateway {
   /**
-   * Guarda (upsert) el porcentaje de video visto para una lección.
-   * Solo actualiza si el nuevo percent es MAYOR al guardado (nunca retrocede).
+   * Suma los segmentos vistos en una sesión a los ya guardados (unión: nunca
+   * retrocede) y devuelve el porcentaje acumulado de la lección.
    */
-  abstract saveWatchProgress(
+  abstract recordWatchedSegments(
     userId: string,
     lessonId: string,
-    percent: number,
-  ): Promise<void>;
+    segments: number[],
+  ): Promise<number>;
 
   /**
    * Devuelve el porcentaje visto por lección dentro de un curso.

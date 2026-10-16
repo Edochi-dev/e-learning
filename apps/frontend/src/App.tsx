@@ -55,6 +55,9 @@ const LessonPage = lazy(() =>
 const CourseLearnPage = lazy(() =>
   import('./pages/CourseLearnPage').then((m) => ({ default: m.CourseLearnPage })),
 );
+const CourseHomePage = lazy(() =>
+  import('./pages/CourseHomePage').then((m) => ({ default: m.CourseHomePage })),
+);
 const AdminDashboardPage = lazy(() =>
   import('./pages/admin/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage })),
 );
@@ -149,15 +152,16 @@ function AppContent({ http }: { http: HttpClient }) {
             <Route path="/certificados/:id" element={<CertificateVerificationPage gateway={certificateGateway} />} />
 
             {/* Rutas públicas — visibles solo para ADMIN en modo coming soon */}
-            <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} /></ComingSoonGuard>} />
-            <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} /></ComingSoonGuard>} />
-            <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} orderGateway={orderGateway} /></ComingSoonGuard>} />
+            <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
+            <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
+            <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} orderGateway={orderGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
             <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} videoGateway={videoGateway} /></ComingSoonGuard>} />
 
             {/* Rutas protegidas — cualquier usuario autenticado */}
             <Route element={<ProtectedRoute />}>
               <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} nameChangeGateway={nameChangeGateway} />} />
               <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
+              <Route path="/mis-cursos/:courseId" element={<CourseHomePage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} />} />
               <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
             </Route>
 

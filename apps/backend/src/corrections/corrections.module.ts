@@ -42,6 +42,8 @@ import { StorageModule } from '../storage/storage.module';
 import { ProgressModule } from '../progress/progress.module';
 import { UsersModule } from '../users/users.module';
 import { PushModule } from '../push/push.module';
+import { SubmissionStatusGateway } from './gateways/submission-status.gateway';
+import { SubmissionStatusRepository } from './submission-status.repository';
 
 /**
  * CorrectionsModule — Módulo de correcciones (entregas de tareas).
@@ -70,6 +72,7 @@ import { PushModule } from '../push/push.module';
   providers: [
     CorrectionsRepository,
     { provide: CorrectionGateway, useExisting: CorrectionsRepository },
+    { provide: SubmissionStatusGateway, useClass: SubmissionStatusRepository },
     { provide: PendingCorrectionsGateway, useExisting: CorrectionsRepository },
     CorrectionReviewsRepository,
     {
@@ -111,6 +114,6 @@ import { PushModule } from '../push/push.module';
     ReviewTranscriptionWorker,
     ReviewAudioRetentionCron,
   ],
-  exports: [CorrectionGateway],
+  exports: [CorrectionGateway, SubmissionStatusGateway],
 })
 export class CorrectionsModule {}

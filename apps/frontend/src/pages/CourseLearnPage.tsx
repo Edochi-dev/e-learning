@@ -3,8 +3,8 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 // Porcentaje mínimo del video que el alumno debe ver para poder
 // marcar la lección como completada.
 const WATCH_THRESHOLD = 80;
-import { useParams, Link } from 'react-router-dom';
-import { LessonType, VideoProvider } from '@maris-nails/shared';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { AUTO_COMPLETE_WATCH_PERCENT, LessonType, VideoProvider } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import type { VideoGateway } from '../gateways/VideoGateway';
@@ -15,6 +15,8 @@ import { VideoPlayer } from '../components/VideoPlayer';
 import { LiveLessonGate } from '../components/LiveLessonGate';
 import { QuizPlayer } from '../components/QuizPlayer';
 import { SubmissionPlayer } from '../components/SubmissionPlayer';
+import { useToast } from '../components/Toast';
+import { enrollWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
 
 /**
  * CourseLearnPage — Página de ESTUDIO del curso.
@@ -83,25 +85,21 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     const hasActiveAccess = enrollment?.isActive ?? false;
 
     /**
-     * currentLessonId — controla qué lección se muestra.
+     * currentLessonId — qué lección se muestra; null = la primera.
      *
-     * Empieza en null (aún no sabemos cuál mostrar). Cuando el curso
-     * carga, usamos la primera lección como default.
-     *
-     * ¿Por qué estado local y no en la URL?
-     * Porque cambiar de lección dentro del player es una acción INTERNA
-     * de esta página, no una navegación. El usuario no espera que el
-     * botón "atrás" del navegador lo lleve a la lección anterior —
-     * espera que lo saque del player. Si metiéramos cada lección en la
-     * URL, contaminaríamos el historial de navegación.
+     * Se toma de ?leccion= (la portada enlaza a una lección concreta) y se
+     * mantiene ahí con `replace`: recargar conserva la lección, pero cambiar
+     * de lección no agrega historial — "atrás" saca del player, como espera
+     * la alumna, en vez de recorrer lección por lección.
      */
-    const [currentLessonId, setCurrentLessonId] = useState<string | null>(null);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [currentLessonId, setCurrentLessonId] = useState<string | null>(() => searchParams.get('leccion'));
 
     /**
      * isSidebarOpen: controla el temario colapsable.
      *
      * Reglas:
-     * - En mobile (≤768px), el drawer SIEMPRE arranca cerrado. Un drawer
+     * - Bajo 1100px (drawer), SIEMPRE arranca cerrado. Un drawer
      *   abierto en mobile tapa la pantalla entera y bloquea el video —
      *   ningún caso de uso justifica arrancar así.
      * - En desktop, respetamos la preferencia guardada en localStorage
@@ -110,7 +108,8 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
      *   mobile no contamina la preferencia desktop ni al revés.
      */
     const SIDEBAR_STORAGE_KEY = 'course-learn.sidebar-open';
-    const MOBILE_MEDIA_QUERY = '(max-width: 768px)';
+    // Debe coincidir con el corte del drawer en App.css (.course-learn).
+    const MOBILE_MEDIA_QUERY = '(max-width: 1099px)';
     const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(() => {
         if (typeof window === 'undefined') return true;
         if (window.matchMedia(MOBILE_MEDIA_QUERY).matches) return false;
@@ -127,18 +126,16 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
         localStorage.setItem(SIDEBAR_STORAGE_KEY, String(isSidebarOpen));
     }, [isSidebarOpen]);
 
-    // watchProgress: porcentaje del video actual que el alumno ha visto (0-100).
+    // watchProgress: porcentaje acumulado de la lección activa (todas las
+    // sesiones), tal como lo calcula el servidor a partir de los segmentos.
     const [watchProgress, setWatchProgress] = useState(0);
-    const lastReportedProgressRef = useRef(0);
-    // lastSavedThresholdRef: último umbral del 5% que ya enviamos al backend.
-    // Evita enviar la misma llamada dos veces para el mismo umbral.
-    const lastSavedThresholdRef = useRef(0);
 
     // completedLessonIds y watchProgress se cargan desde el backend al montar la página,
     // así el alumno nunca pierde su progreso entre sesiones o dispositivos.
     const [completedLessonIds, setCompletedLessonIds] = useState<Set<string>>(new Set());
     const [savedWatchProgress, setSavedWatchProgress] = useState<Record<string, number>>({});
     const [markingComplete, setMarkingComplete] = useState(false);
+    const toast = useToast();
 
     useEffect(() => {
         if (!courseId || !isEnrolled) return;
@@ -148,53 +145,86 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
         }).catch(() => { /* Si falla, empezamos en cero — no es bloqueante */ });
     }, [courseId, isEnrolled, enrollmentGateway]);
 
-    const handleWatchProgress = useCallback((percent: number) => {
-        // Re-render solo si el progreso subió al menos 1 punto
-        if (percent - lastReportedProgressRef.current >= 1 || percent === 100) {
-            lastReportedProgressRef.current = percent;
-            setWatchProgress(percent);
-        }
-    }, []);
-
-    // activeLessonIdForEffect captura el currentLessonId actual para usarlo en los effects
-    const activeLessonIdForEffect = currentLessonId;
+    // Sin lección elegida (o con una ajena al curso en la URL) se muestra la
+    // primera: su progreso también se guarda.
+    const activeLessonIdForEffect =
+        course?.lessons.find((l) => l.id === currentLessonId)?.id ?? course?.lessons[0]?.id ?? null;
+    const activeLessonRef = useRef<string | null>(null);
+    const completedRef = useRef(completedLessonIds);
+    useEffect(() => { activeLessonRef.current = activeLessonIdForEffect; }, [activeLessonIdForEffect]);
+    useEffect(() => { completedRef.current = completedLessonIds; }, [completedLessonIds]);
 
     // Cuando llegan los datos del backend, sincronizamos el progreso de la lección activa.
     useEffect(() => {
         if (!activeLessonIdForEffect) return;
-        const saved = savedWatchProgress[activeLessonIdForEffect] ?? 0;
-        if (saved > 0) {
-            setWatchProgress(saved);
-            lastReportedProgressRef.current = saved;
-            lastSavedThresholdRef.current = Math.floor(saved / 5) * 5;
-        }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [savedWatchProgress]);
+        setWatchProgress(savedWatchProgress[activeLessonIdForEffect] ?? 0);
+    }, [savedWatchProgress, activeLessonIdForEffect]);
 
-    // Guardamos en el backend cada vez que el alumno cruza un umbral del 5%
-    useEffect(() => {
-        if (!courseId || !activeLessonIdForEffect) return;
-        const threshold = Math.floor(watchProgress / 5) * 5;
-        if (threshold > lastSavedThresholdRef.current && threshold > 0) {
-            lastSavedThresholdRef.current = threshold;
-            enrollmentGateway.saveWatchProgress(activeLessonIdForEffect, courseId, threshold);
+    // Segmentos de la sesión pendientes de enviar, y cuántos se enviaron ya.
+    const pendingRef = useRef<{ lessonId: string; segments: number[] } | null>(null);
+    const sentCountRef = useRef(0);
+
+    const sendSegments = useCallback((lessonId: string, segments: number[]) => {
+        if (!courseId || segments.length === 0) return;
+        sentCountRef.current = segments.length;
+        enrollmentGateway.saveWatchedSegments(lessonId, courseId, segments)
+            .then(({ watchedPercent, lessonCompleted }) => {
+                setSavedWatchProgress(prev => ({
+                    ...prev,
+                    [lessonId]: Math.max(prev[lessonId] ?? 0, watchedPercent),
+                }));
+                if (lessonCompleted && !completedRef.current.has(lessonId)) {
+                    setCompletedLessonIds(prev => new Set(prev).add(lessonId));
+                    toast.success('¡Lección completada!');
+                }
+            })
+            // Sin red no se pierde nada: el próximo envío lleva todos los segmentos de la sesión.
+            .catch(() => { sentCountRef.current = 0; });
+    }, [courseId, enrollmentGateway, toast]);
+
+    // Se envía cada 2% nuevo, y siempre al pausar o terminar el video.
+    const handleWatchedSegments = useCallback((segments: number[], flush: boolean) => {
+        const lessonId = activeLessonRef.current;
+        if (!lessonId) return;
+        pendingRef.current = { lessonId, segments };
+        setWatchProgress(p => Math.max(p, segments.length));
+        const unsent = segments.length - sentCountRef.current;
+        if (unsent >= 2 || (flush && unsent > 0)) sendSegments(lessonId, segments);
+    }, [sendSegments]);
+
+    const flushPending = useCallback(() => {
+        const pending = pendingRef.current;
+        if (pending && pending.segments.length > sentCountRef.current) {
+            sendSegments(pending.lessonId, pending.segments);
         }
-    }, [watchProgress, courseId, activeLessonIdForEffect, enrollmentGateway]);
+    }, [sendSegments]);
+
+    // Al ocultar la pestaña (bloquear el teléfono, cambiar de app) o salir de
+    // la página, lo visto desde el último envío se guarda igual.
+    useEffect(() => {
+        const onVisibility = () => { if (document.visibilityState === 'hidden') flushPending(); };
+        document.addEventListener('visibilitychange', onVisibility);
+        return () => {
+            document.removeEventListener('visibilitychange', onVisibility);
+            flushPending();
+        };
+    }, [flushPending]);
 
     // Al cambiar de lección, inicializamos el progreso con el valor guardado en BD.
     // En mobile, cerramos el drawer automáticamente — si la alumna tocó una
     // lección del temario, su intención es VER esa lección; mantener el
     // drawer abierto taparía el video que acaba de pedir.
     const handleLessonChange = useCallback((lessonId: string) => {
+        flushPending();
+        pendingRef.current = null;
+        sentCountRef.current = 0;
         setCurrentLessonId(lessonId);
-        const saved = savedWatchProgress[lessonId] ?? 0;
-        setWatchProgress(saved);
-        lastReportedProgressRef.current = saved;
-        lastSavedThresholdRef.current = Math.floor(saved / 5) * 5;
+        setSearchParams({ leccion: lessonId }, { replace: true });
+        setWatchProgress(savedWatchProgress[lessonId] ?? 0);
         if (typeof window !== 'undefined' && window.matchMedia(MOBILE_MEDIA_QUERY).matches) {
             setIsSidebarOpen(false);
         }
-    }, [savedWatchProgress]);
+    }, [savedWatchProgress, flushPending, setSearchParams]);
 
     /**
      * handleMarkComplete — Marca la lección actual como completada.
@@ -256,8 +286,10 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
             <div className="container course-learn">
                 <div className="course-learn__error">
                     <h2>No tienes acceso a este curso</h2>
-                    <p>Necesitas comprar el curso para acceder a sus lecciones.</p>
-                    <Link to={`/courses/${courseId}`} className="btn-primary">Ver curso</Link>
+                    <p>Para ver sus lecciones, coordina tu inscripción con la profesora.</p>
+                    <a href={enrollWhatsappUrl(course.title)} className="btn-primary" target="_blank" rel="noopener noreferrer">
+                        Quiero inscribirme
+                    </a>
                 </div>
             </div>
         );
@@ -272,9 +304,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                         Tu progreso y tus certificados se conservan. Al renovar, retomas
                         el curso justo donde lo dejaste.
                     </p>
-                    <Link to={`/courses/${courseId}`} className="btn-primary">
-                        Renovar acceso
-                    </Link>
+                    <a href={renewWhatsappUrl(course.title)} className="btn-primary" target="_blank" rel="noopener noreferrer">
+                        Renovar acceso por WhatsApp
+                    </a>
                     <Link to="/mis-cursos" className="btn-secondary">
                         Volver a mis cursos
                     </Link>
@@ -323,14 +355,8 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
 
     return (
         <div className={`course-learn ${isSidebarOpen ? '' : 'course-learn--sidebar-closed'}`}>
-            {/* Lengüeta toggle del temario.
-                - En DESKTOP: solo aparece cuando el sidebar está cerrado
-                  (se desvanece al abrir para no flotar sobre el video).
-                  El cerrar vive adentro del sidebar-header.
-                - En MOBILE: se queda visible en ambos estados como TOGGLE
-                  único — cambia su ícono/texto a "Cerrar". Así abrir y
-                  cerrar ocurren en el MISMO lugar (bottom-right), cómodo
-                  para el pulgar. El closer del header se oculta en mobile. */}
+            {/* Lengüeta del temario, solo en escritorio y con el temario cerrado.
+                Bajo 1100px el temario se abre desde la barra de contexto. */}
             <button
                 type="button"
                 className="course-learn__sidebar-opener"
@@ -339,15 +365,37 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                 aria-controls="course-learn-sidebar"
             >
                 <span className="course-learn__sidebar-opener-chevron" aria-hidden="true">
-                    {isSidebarOpen ? '›' : '‹'}
+                    ‹
                 </span>
                 <span className="course-learn__sidebar-opener-label">
-                    {isSidebarOpen ? 'Cerrar' : 'Temario'}
+                    Temario
                 </span>
             </button>
 
             {/* ── Área principal: Video + info ── */}
             <div className="course-learn__main">
+                <div className="course-learn__context">
+                    <Link to={`/mis-cursos/${course.id}`} className="course-learn__back">
+                        <span aria-hidden="true">←</span>
+                        <span className="course-learn__course-title">{course.title}</span>
+                    </Link>
+                    <span className="course-learn__context-progress">
+                        {completedLessonIds.size} / {course.lessons.length}
+                    </span>
+                    <button
+                        type="button"
+                        className="course-learn__context-toggle"
+                        onClick={() => setIsSidebarOpen(true)}
+                        aria-expanded={isSidebarOpen}
+                        aria-controls="course-learn-sidebar"
+                    >
+                        ☰ Temario
+                        <span className="course-learn__context-toggle-count">
+                            {completedLessonIds.size}/{course.lessons.length}
+                        </span>
+                    </button>
+                </div>
+
                 {/* Contenido principal: Video, Quiz o Corrección según tipo */}
                 {isCorrectionLesson ? (
                     <div className="course-learn__quiz">
@@ -382,7 +430,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                                 lessonId={activeLesson.id}
                                 provider={activeLesson.videoData?.provider ?? VideoProvider.HOSTED}
                                 videoGateway={videoGateway}
-                                onWatchProgress={handleWatchProgress}
+                                onWatchedSegments={handleWatchedSegments}
                             />
                         </LiveLessonGate>
                     </div>
@@ -420,11 +468,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                         {!isExamLesson && !isCorrectionLesson && (
                             <div className="course-learn__complete-wrap">
                                 <button
-                                    className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''} ${!isCurrentCompleted && !isYoutubeLesson ? 'course-learn__complete-btn--progress' : ''}`}
+                                    className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''} ${!isCurrentCompleted && !isYoutubeLesson && !isLiveLesson ? 'course-learn__complete-btn--progress' : ''}`}
                                     onClick={() => handleMarkComplete(activeLesson.id)}
                                     disabled={isCurrentCompleted || markingComplete || !hasWatchedEnough}
                                     style={
-                                        !isCurrentCompleted && !isYoutubeLesson
+                                        !isCurrentCompleted && !isYoutubeLesson && !isLiveLesson
                                             ? ({ '--watch-fill': `${watchProgress}%` } as React.CSSProperties)
                                             : undefined
                                     }
@@ -433,9 +481,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                                         {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
                                     </span>
                                 </button>
-                                {!isCurrentCompleted && !isYoutubeLesson && (
+                                {!isCurrentCompleted && !isYoutubeLesson && !isLiveLesson && (
                                     <span className="course-learn__complete-hint">
-                                        Mínimo {WATCH_THRESHOLD}% visto para completar
+                                        {hasWatchedEnough
+                                            ? `Se completa sola al ver el ${AUTO_COMPLETE_WATCH_PERCENT}%`
+                                            : `Podrás marcarla al ver el ${WATCH_THRESHOLD}%`}
                                     </span>
                                 )}
                             </div>

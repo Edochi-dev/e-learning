@@ -476,6 +476,56 @@ export interface QuizResultDetail {
 }
 
 /**
+ * Estado de una lección para la alumna en la portada del curso. Cada tipo de
+ * lección llega a él a su manera: una clase se ve, un quiz se aprueba, una
+ * práctica la aprueba la profesora.
+ */
+export const LessonStatus = {
+    NOT_STARTED: 'not_started',
+    IN_PROGRESS: 'in_progress',
+    IN_REVIEW: 'in_review',
+    NEEDS_CHANGES: 'needs_changes',
+    FAILED: 'failed',
+    COMPLETED: 'completed',
+} as const;
+
+export type LessonStatus = typeof LessonStatus[keyof typeof LessonStatus];
+
+export interface LessonOverview {
+    lessonId: string;
+    status: LessonStatus;
+    watchedPercent: number;
+}
+
+/** Estado de la alumna en un curso, para su portada. */
+export interface CourseOverview {
+    lessons: LessonOverview[];
+    completedLessons: number;
+    totalLessons: number;
+    progressPercent: number;
+    /** Por dónde seguir: la primera lección que espera algo de la alumna. */
+    nextLessonId: string | null;
+}
+
+/**
+ * Un video se divide en WATCH_SEGMENTS partes iguales (cada una, 1%). El
+ * progreso es la unión de las partes vistas en todas las sesiones.
+ */
+export const WATCH_SEGMENTS = 100;
+
+/** Con este porcentaje acumulado visto, una clase se completa sola. */
+export const AUTO_COMPLETE_WATCH_PERCENT = 95;
+
+/**
+ * WatchProgressResult — Respuesta al guardar segmentos vistos: el porcentaje
+ * acumulado de todas las sesiones y si con él la lección quedó completada.
+ */
+export interface WatchProgressResult {
+    watchedPercent: number;
+    lessonCompleted: boolean;
+}
+
+/**
  * QuizResult — Respuesta del backend tras evaluar un quiz.
  */
 export interface QuizResult {

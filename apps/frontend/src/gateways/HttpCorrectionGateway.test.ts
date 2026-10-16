@@ -47,6 +47,16 @@ describe('HttpCorrectionGateway — revisiones con audio', () => {
         });
     });
 
+    it('getMyStatus devuelve null cuando la alumna aún no entrega (body vacío)', async () => {
+        fetchMock.mockResolvedValue(new Response('', { status: 200 }));
+        await expect(gateway.getMyStatus('l1')).resolves.toBeNull();
+    });
+
+    it('getMyStatus devuelve la entrega cuando existe', async () => {
+        fetchMock.mockResolvedValue(new Response(JSON.stringify({ id: 's1' }), { status: 200 }));
+        await expect(gateway.getMyStatus('l1')).resolves.toEqual({ id: 's1' });
+    });
+
     it('getReviewAudio explica cuando el audio ya venció', async () => {
         fetchMock.mockResolvedValue({ ok: false, status: 403 });
         await expect(gateway.getReviewAudio('r1')).rejects.toThrow('Este audio ya no está disponible.');

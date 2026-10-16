@@ -11,6 +11,16 @@ export function liveClassPhase(startsAt: Date, endsAt: Date, now: Date): LiveCla
     return now.getTime() >= opensAt ? 'open' : 'upcoming';
 }
 
+/**
+ * Label for an open class: the room opens LIVE_JOIN_LEAD_MINUTES early, but
+ * until the start time it is not live yet and must not say so.
+ */
+export function openClassLabel(startsAt: Date, now: Date): string {
+    return now < startsAt
+        ? `Empieza en ${formatCountdown(startsAt.getTime() - now.getTime())} · ya puedes entrar`
+        : '🔴 En vivo ahora';
+}
+
 /** "3 d 4 h", "2 h 05 min", "12:07" (under an hour, with seconds). */
 export function formatCountdown(ms: number): string {
     const total = Math.max(0, Math.floor(ms / 1000));

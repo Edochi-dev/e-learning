@@ -4,6 +4,7 @@ import { API_URL } from '../config';
 import { ReviewAudioPlayer } from './ReviewAudioPlayer';
 import { ReviewHistory } from './ReviewHistory';
 import { useSubmissionStatus } from '../hooks/useSubmissionStatus';
+import { compressPhoto } from '../lib/compress-photo';
 
 /**
  * SubmissionPlayer — Interfaz de la alumna para lecciones tipo corrección.
@@ -48,6 +49,8 @@ interface SubmissionPlayerProps {
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'];
+// Algunos navegadores (Chrome en Windows) entregan los HEIC sin tipo MIME.
+const HEIC_NAME = /\.hei[cf]$/i;
 
 const StatusBadge: React.FC<{ status: AssignmentSubmission['status'] }> = ({ status }) => {
     const config = {
@@ -76,32 +79,40 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [isResubmitting, setIsResubmitting] = useState(false);
+    const [photo, setPhoto] = useState<File | null>(null);
+    const [isPreparing, setIsPreparing] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         return () => { if (preview) URL.revokeObjectURL(preview); };
     }, [preview]);
 
-    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const selected = e.target.files?.[0];
+        if (!selected) return;
         setError(null);
+        setPhoto(null);
 
-        if (!ALLOWED_TYPES.includes(file.type)) {
+        if (!ALLOWED_TYPES.includes(selected.type) && !HEIC_NAME.test(selected.name)) {
             setError('Solo se permiten imágenes (JPG, PNG, WebP, HEIC).');
             return;
         }
+
+        setIsPreparing(true);
+        const file = await compressPhoto(selected);
+        setIsPreparing(false);
         if (file.size > MAX_FILE_SIZE) {
-            setError('La foto no puede pesar más de 5 MB.');
+            setError('No pudimos achicar esta foto. Prueba sacarla de nuevo con la cámara del teléfono.');
             return;
         }
 
         if (preview) URL.revokeObjectURL(preview);
         setPreview(URL.createObjectURL(file));
+        setPhoto(file);
     };
 
     const handleSubmit = async () => {
-        const file = fileRef.current?.files?.[0];
+        const file = photo;
         if (!file) return;
 
         setIsSubmitting(true);
@@ -111,6 +122,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
             const result = await gateway.submit(lessonId, courseId, file);
             setSubmission(result);
             setPreview(null);
+            setPhoto(null);
             setIsResubmitting(false);
             if (fileRef.current) fileRef.current.value = '';
         } catch (err) {
@@ -205,7 +217,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                     <label htmlFor="submission-file" className="submission-file-dropzone">
                                         <span className="submission-file-dropzone-icon" aria-hidden="true">📷</span>
                                         <span>Seleccionar foto</span>
-                                        <span className="submission-file-dropzone-hint">JPG · PNG · WebP · HEIC · máx 5 MB</span>
+                                        <span className="submission-file-dropzone-hint">JPG · PNG · WebP · HEIC</span>
                                     </label>
                                 )}
                             </div>
@@ -225,10 +237,10 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                 <div className="submission-cell-actions">
                                     <button
                                         className="btn-primary submission-entry-btn"
-                                        disabled={!preview || isSubmitting}
+                                        disabled={!photo || isSubmitting || isPreparing}
                                         onClick={handleSubmit}
                                     >
-                                        {isSubmitting ? 'Enviando...' : submission ? 'Enviar nueva entrega' : 'Enviar entrega'}
+                                        {isPreparing ? 'Preparando foto...' : isSubmitting ? 'Enviando...' : submission ? 'Enviar nueva entrega' : 'Enviar entrega'}
                                     </button>
                                     {isResubmitting && (
                                         <button
@@ -237,6 +249,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                             onClick={() => {
                                                 setIsResubmitting(false);
                                                 setPreview(null);
+                                                setPhoto(null);
                                                 setError(null);
                                                 if (fileRef.current) fileRef.current.value = '';
                                             }}

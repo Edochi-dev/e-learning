@@ -4,6 +4,7 @@ import type {
     AdminNameChangeGateway,
 } from './NameChangeGateway';
 import type { HttpClient } from '../http/HttpClient';
+import { readOptionalJson } from '../http/read-optional-json';
 
 /**
  * HttpNameChangeGateway — Implementación HTTP de ambos contratos.
@@ -43,8 +44,7 @@ export class HttpNameChangeGateway
             credentials: 'include',
         });
         if (!res.ok) return null;
-        // El backend devuelve el body "null" si el alumno nunca solicitó.
-        return res.json();
+        return readOptionalJson<NameChangeRequest>(res);
     }
 
     async listPending(): Promise<NameChangeRequest[]> {

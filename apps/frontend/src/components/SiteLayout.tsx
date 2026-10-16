@@ -33,30 +33,30 @@ export const SiteLayout = () => {
     }
 
     return (
-        <>
+        <div className="site-shell">
             <header className="header">
                 <div className="container nav">
                     <Link to="/" className="logo">
                         <img src="/images/logo.png" alt="" className="logo__img" />
                         <span className="logo__name"><em>Mari's Nails Academy</em></span>
                     </Link>
-                    <nav className="nav-links">
-                        {user?.role === UserRole.ADMIN && (
-                            <>
-                                <Link to="/cursos">Cursos</Link>
-                                <a href="#preguntas" onClick={(e) => handleSectionLink(e, 'preguntas')}>Preguntas frecuentes</a>
-                                <a href="#contacto" onClick={(e) => handleSectionLink(e, 'contacto')}>Contacto</a>
-                            </>
-                        )}
+                    {user?.role === UserRole.ADMIN && (
+                        <nav className="nav-links nav-links--sections" aria-label="Secciones">
+                            <Link to="/cursos">Cursos</Link>
+                            <a href="#preguntas" onClick={(e) => handleSectionLink(e, 'preguntas')}>Preguntas frecuentes</a>
+                            <a href="#contacto" onClick={(e) => handleSectionLink(e, 'contacto')}>Contacto</a>
+                        </nav>
+                    )}
+                    <div className="nav-links">
                         <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
                         {user ? (
                             <UserMenu />
                         ) : (
-                            <Link to="/login" className="btn-primary" style={{ padding: '0.5rem 1rem', color: 'white' }}>
+                            <Link to="/login" className="btn-primary nav-login">
                                 Ingresar
                             </Link>
                         )}
-                    </nav>
+                    </div>
                 </div>
             </header>
 
@@ -69,6 +69,6 @@ export const SiteLayout = () => {
                     <p>© {new Date().getFullYear()} Mari's Nails Academy. Todos los derechos reservados.</p>
                 </div>
             </footer>
-        </>
+        </div>
     );
 };

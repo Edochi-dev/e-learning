@@ -22,6 +22,8 @@ import { ProgressModule } from '../progress/progress.module';
 import { UpcomingLiveClassesGateway } from './gateways/upcoming-live-classes.gateway';
 import { UpcomingLiveClassesRepository } from './repositories/upcoming-live-classes.repository';
 import { GetUpcomingLiveClassesUseCase } from './use-cases/get-upcoming-live-classes.use-case';
+import { QuizResultsGateway } from './gateways/quiz-results.gateway';
+import { QuizResultsRepository } from './repositories/quiz-results.repository';
 
 /**
  * EnrollmentsModule — El "pegamento" del módulo de matrículas y progreso.
@@ -54,6 +56,7 @@ import { GetUpcomingLiveClassesUseCase } from './use-cases/get-upcoming-live-cla
     // --- Bindings: abstracción → implementación concreta ---
     //     (EnrollmentGateway lo aporta EnrollmentAccessModule)
     { provide: QuizAttemptGateway, useClass: QuizAttemptRepository },
+    { provide: QuizResultsGateway, useClass: QuizResultsRepository },
     {
       provide: UpcomingLiveClassesGateway,
       useClass: UpcomingLiveClassesRepository,
@@ -74,6 +77,6 @@ import { GetUpcomingLiveClassesUseCase } from './use-cases/get-upcoming-live-cla
     SetEnrollmentExpiryUseCase,
   ],
   // OrdersModule necesita EnrollmentGateway para matricular tras pago exitoso.
-  exports: [EnrollmentAccessModule],
+  exports: [EnrollmentAccessModule, QuizResultsGateway],
 })
 export class EnrollmentsModule {}

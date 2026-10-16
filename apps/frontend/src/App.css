@@ -30,6 +30,7 @@
   --text-muted: #9c8578;
   --danger: #c0392b;
   --danger-soft: rgba(192, 57, 43, 0.08);
+  --success: #27ae60;
   --border: rgba(212, 165, 116, 0.2);
   --border-strong: rgba(212, 165, 116, 0.4);
 
@@ -87,6 +88,7 @@
   */
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
+  --input-font-size: 0.95rem; /* 16px en mobile: menos hace que iOS haga zoom al enfocar */
 }
 
 /* === SKELETON LOADERS === */
@@ -127,6 +129,7 @@
   --text-muted: #8a7b72;
   --danger: #f1948a;
   --danger-soft: rgba(241, 148, 138, 0.12);
+  --success: #27ae60;
   --border: rgba(232, 201, 160, 0.1);
   --border-strong: rgba(232, 201, 160, 0.2);
 
@@ -177,10 +180,10 @@ img, video, picture {
    a 44px (Apple HIG / WCAG AA): cualquier cosa más chica es incómoda
    de pulsar con el pulgar. */
 @media (max-width: 768px) {
-  input,
-  select,
-  textarea {
-    font-size: 16px;
+  /* Un token y no un selector: `input[type="text"]` de las reglas globales
+     ganaba en especificidad a un `input` suelto y anulaba los 16px. */
+  :root {
+    --input-font-size: 16px;
   }
 
   .btn-primary,
@@ -300,6 +303,30 @@ a {
   display: flex;
   gap: 1.5rem;
   align-items: center;
+}
+
+.nav-links .nav-login {
+  padding: 0.5rem 1rem;
+  color: white;
+}
+
+/* Las secciones van separadas de los controles (tema, menú) para que en
+   mobile puedan bajar a su propia fila sin arrastrarlos. */
+.nav-links--sections {
+  margin-left: auto;
+  margin-right: 1.5rem;
+}
+
+/* El pie queda abajo aunque la página sea más corta que la pantalla. */
+.site-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-shell > main {
+  flex: 1 0 auto;
 }
 
 .nav-links a {
@@ -479,7 +506,7 @@ a {
 
 .badge-recorded {
   background: linear-gradient(135deg, #eafaf1, #d5f5e3);
-  color: #27ae60;
+  color: var(--success);
   border: 1px solid rgba(39, 174, 96, 0.15);
 }
 
@@ -905,6 +932,32 @@ a {
 .cd-sidebar {
   position: sticky;
   top: 6rem;
+  container-type: inline-size;
+}
+
+/* Container query: la tarjeta mira el ancho de SU columna, no el de la
+   pantalla. Angosta (sidebar de escritorio) va apilada; ancha (una sola
+   columna en tablet) pone precio y botón en una fila en vez de una caja enorme. */
+@container (min-width: 520px) {
+  .cd-purchase-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    column-gap: 2rem;
+  }
+
+  .cd-purchase-card > * {
+    grid-column: 1 / -1;
+  }
+
+  .cd-purchase-card > .cd-purchase-card__price {
+    grid-column: 1;
+    margin-bottom: 0;
+  }
+
+  .cd-purchase-card > .cd-purchase-card__price + .cd-purchase-card__cta {
+    grid-column: 2;
+  }
 }
 
 .cd-purchase-card {
@@ -984,9 +1037,9 @@ a {
   margin-top: 0.75rem;
   padding: 0.5rem 0.75rem;
   font-size: 0.85rem;
-  color: var(--error, #e53e3e);
+  color: var(--danger);
   background: rgba(229, 62, 62, 0.08);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
 }
 
 .cd-purchase-card__success {
@@ -995,7 +1048,7 @@ a {
   font-size: 0.85rem;
   color: var(--gold);
   background: rgba(212, 165, 116, 0.08);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
 }
 
 .cd-purchase-card__pending {
@@ -1047,14 +1100,27 @@ a {
 /* ── Responsive ── */
 @media (max-width: 968px) {
   .cd-hero {
-    grid-template-columns: 1fr;
     gap: 1.5rem;
   }
   .cd-body {
     grid-template-columns: 1fr;
   }
+  /* Precio e inscripción antes del temario: al final quedaban detrás de
+     todas las lecciones y casi nadie llegaba a verlos. */
   .cd-sidebar {
     position: static;
+    order: -1;
+  }
+}
+
+/* Foto y texto lado a lado mientras ambos tengan ~320px; en una columna,
+   la foto no debe comerse la pantalla. */
+@media (max-width: 700px) {
+  .cd-hero {
+    grid-template-columns: 1fr;
+  }
+  .cd-hero__visual {
+    max-height: 50svh;
   }
 }
 
@@ -1151,7 +1217,7 @@ input[type="month"],
 textarea,
 select {
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--input-font-size);
   background: var(--surface);
   color: var(--text-primary);
   border: 1.5px solid var(--border-strong);
@@ -1432,15 +1498,30 @@ input:checked+.slider .icon-moon {
   }
 
 
+  /* Una sola fila (logo | controles): el header es sticky y cada píxel que
+     ocupa se le quita al contenido durante todo el scroll. */
+  .header {
+    padding: 0.6rem 0;
+  }
+
+  /* Grid y no flex-wrap: los controles toman su ancho y el logo se encoge en
+     lo que queda, en vez de empujar los controles a otra fila. */
   .nav {
-    flex-direction: column;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.4rem 0.5rem;
   }
 
   .nav-links {
-    flex-wrap: wrap;
-    justify-content: center;
     gap: 0.75rem;
+  }
+
+  .nav-links--sections {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    justify-content: center;
+    gap: 1.25rem;
   }
 
   .course-details-card {
@@ -1458,13 +1539,32 @@ input:checked+.slider .icon-moon {
   }
 
 
+  /* Nombre en dos líneas: en una sola, logo + tema + "Ingresar" no caben
+     en 360px y los controles bajaban a otra fila. */
+  .logo {
+    gap: 0.4rem;
+  }
+
   .logo__img {
-    height: 38px;
+    height: 34px;
     width: auto;
   }
 
+  /* El padding extra deja sitio a la cola de la cursiva: el texto con
+     degradado se recorta en el borde de la caja. */
   .logo__name {
-    font-size: 1.1rem;
+    font-size: 1rem;
+    line-height: 1.05;
+    max-width: 7em;
+    padding-right: 0.5em;
+  }
+
+  .nav-links {
+    gap: 0.5rem;
+  }
+
+  .nav-links .nav-login {
+    padding: 0.5rem 0.9rem;
   }
 }
 
@@ -3363,9 +3463,11 @@ input.filter-control[type="search"] {
   font-weight: 300;
 }
 
+/* Columnas intrínsecas con tope: hasta 3, ninguna bajo 260px. Bajan de una
+   en una según el espacio, en vez de saltar de 3 a 1 en un breakpoint. */
 .preview-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(260px, (100% - 4rem) / 3)), 1fr));
   gap: 2rem;
   margin-bottom: 3rem;
 }
@@ -3409,6 +3511,8 @@ input.filter-control[type="search"] {
 
 .preview-card__visual {
   aspect-ratio: 16 / 9;
+  /* En una sola columna el 16:9 crecía con el ancho (hasta ~320px de alto). */
+  max-height: 240px;
   background: linear-gradient(135deg, #fce4ec 0%, #fff3e0 100%);
   display: flex;
   align-items: center;
@@ -3422,7 +3526,7 @@ input.filter-control[type="search"] {
 }
 
 .preview-card__body {
-  padding: 1.5rem 1.75rem 2rem;
+  padding: clamp(1.1rem, 4vw, 1.5rem) clamp(1.1rem, 4vw, 1.75rem) clamp(1.25rem, 4vw, 2rem);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -3457,6 +3561,13 @@ input.filter-control[type="search"] {
   flex-grow: 1;
   font-weight: 300;
   margin-bottom: 1.5rem;
+  /* Una tarjeta de listado resume: la descripción completa vive en el
+     detalle del curso. Completa, una tarjeta ocupaba ~75% de la pantalla. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
 }
 
 .preview-card__cta {
@@ -3557,7 +3668,7 @@ input.filter-control[type="search"] {
 }
 
 .catalog-hero {
-  padding: 5.5rem 0 4rem;
+  padding: clamp(2.5rem, 8vw, 5.5rem) 0 clamp(2rem, 6vw, 4rem);
   text-align: center;
 }
 
@@ -3567,12 +3678,12 @@ input.filter-control[type="search"] {
   width: 56px;
   height: 2px;
   background: linear-gradient(90deg, var(--primary), var(--gold));
-  margin: 2rem auto 0;
+  margin: clamp(1.25rem, 4vw, 2rem) auto 0;
   border-radius: 2px;
 }
 
 .catalog-hero h1 {
-  font-size: 3.75rem;
+  font-size: clamp(2.25rem, 1.5rem + 4vw, 3.75rem);
   margin-bottom: 1rem;
   letter-spacing: -0.02em;
 }
@@ -3624,10 +3735,12 @@ input.filter-control[type="search"] {
   pointer-events: none;
 }
 
-.catalog-filters__input {
+/* Con el contenedor delante: la regla global `input[type="search"]` es más
+   específica que una clase sola y le quitaba la píldora y el hueco de la lupa. */
+.catalog-filters__search .catalog-filters__input {
   width: 100%;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--input-font-size);
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1.5px solid var(--border-strong);
@@ -3654,9 +3767,9 @@ input.filter-control[type="search"] {
 
 /* Selects con chevron dorado propio (quitamos la flecha nativa) */
 .catalog-filters__select {
-  flex: 0 1 190px;
+  flex: 0 1 215px;
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--input-font-size);
   color: var(--text-primary);
   background-color: var(--bg-elevated);
   border: 1.5px solid var(--border-strong);
@@ -3676,6 +3789,13 @@ input.filter-control[type="search"] {
 .catalog-filters__select:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
+}
+
+/* A ancho completo: con su ancho fijo, el texto de la opción quedaba cortado. */
+@media (max-width: 480px) {
+  .catalog-filters__select {
+    flex: 1 1 100%;
+  }
 }
 
 /* ── Curso destacado — card horizontal grande ── */
@@ -3737,7 +3857,7 @@ input.filter-control[type="search"] {
 }
 
 .catalog-featured__content h2 {
-  font-size: 2.25rem;
+  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
   margin-bottom: 1rem;
   letter-spacing: -0.01em;
 }
@@ -3749,6 +3869,11 @@ input.filter-control[type="search"] {
   margin-bottom: 2rem;
   max-width: 500px;
   font-size: 1rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
 }
 
 .catalog-featured__visual {
@@ -3769,9 +3894,10 @@ input.filter-control[type="search"] {
 }
 
 /* ── Grid de cursos ── */
+/* Hasta 2 columnas, ninguna bajo 240px. */
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(240px, (100% - 2rem) / 2)), 1fr));
   gap: 2rem;
 }
 
@@ -3811,6 +3937,7 @@ input.filter-control[type="search"] {
 
 .catalog-card__visual {
   aspect-ratio: 16 / 9;
+  max-height: 240px;
   background: linear-gradient(135deg, #fce4ec 0%, #fff3e0 100%);
   display: flex;
   align-items: center;
@@ -3824,7 +3951,7 @@ input.filter-control[type="search"] {
 }
 
 .catalog-card__body {
-  padding: 1.75rem 2rem 2rem;
+  padding: clamp(1.1rem, 4vw, 1.5rem) clamp(1.1rem, 4vw, 1.75rem) clamp(1.25rem, 4vw, 2rem);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -3855,6 +3982,11 @@ input.filter-control[type="search"] {
   flex-grow: 1;
   font-weight: 300;
   margin-bottom: 1.75rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
 }
 
 .catalog-card__footer {
@@ -3900,31 +4032,47 @@ input.filter-control[type="search"] {
     text-align: center;
   }
 
+  /* Retrato con su proporción: a 100% × 280px quedaba una franja que solo
+     mostraba el tocado, sin la cara. */
   .home-about__avatar {
-    width: 100%;
-    height: 280px;
+    width: min(100%, 340px, 75svh * 34 / 42);
+    height: auto;
+    aspect-ratio: 34 / 42;
     margin: 0 auto;
+  }
+
+  .home-about__bio {
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .home-stats {
     justify-content: center;
   }
 
-  .preview-grid {
-    grid-template-columns: 1fr;
+  .catalog-featured {
+    gap: 1.5rem;
+    padding: clamp(1.25rem, 4vw, 2.5rem);
   }
 
+  .catalog-featured__desc {
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    margin-bottom: 1.5rem;
+  }
+}
+
+/* Imagen y texto lado a lado mientras quepan; debajo, la imagen sube arriba
+   en vez de desaparecer (sin ella era un bloque de texto a todo el ancho). */
+@media (max-width: 700px) {
   .catalog-featured {
     grid-template-columns: 1fr;
-    padding: 2.5rem;
   }
 
   .catalog-featured__visual {
-    display: none;
-  }
-
-  .catalog-grid {
-    grid-template-columns: 1fr;
+    order: -1;
+    max-height: min(30svh, 260px);
   }
 }
 
@@ -3946,9 +4094,6 @@ input.filter-control[type="search"] {
     font-size: 2.1rem;
   }
 
-  .catalog-hero h1 {
-    font-size: 2.5rem;
-  }
 
   .social-buttons {
     flex-direction: column;
@@ -4085,7 +4230,7 @@ input.filter-control[type="search"] {
 
 .pdf-uploader__error {
   font-size: 0.85rem;
-  color: var(--error, #e53e3e);
+  color: var(--danger);
   margin: 0;
   line-height: 1.5;
 }
@@ -4116,7 +4261,7 @@ input.filter-control[type="search"] {
   gap: 0.5rem;
   padding: 2rem 1.5rem;
   border: 2px dashed var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   background: var(--surface);
   cursor: pointer;
   transition: border-color 0.2s, background 0.2s;
@@ -4166,7 +4311,7 @@ input.filter-control[type="search"] {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   overflow: hidden;
   border: 1px solid var(--border-strong);
   background: #1a1a1a;
@@ -4368,7 +4513,7 @@ input.filter-control[type="search"] {
 
 /* Item de menú — padding-left alineado con el header.
    Usamos .user-menu__dropdown para ganar especificidad sobre .nav-links a,
-   que también aplica a estos <a> porque el menú vive dentro de <nav class="nav-links">. */
+   que también aplica a estos <a> porque el menú vive dentro de .nav-links. */
 .user-menu__dropdown .user-menu__item {
   -webkit-appearance: none;
   appearance: none;
@@ -4476,9 +4621,10 @@ input.filter-control[type="search"] {
 }
 
 /* Grid de tarjetas */
+/* Hasta 3 columnas, ninguna bajo 260px (antes 320px: a 600px ya no cabían dos). */
 .enrollment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(260px, (100% - 3.5rem) / 3)), 1fr));
   gap: 1.75rem;
 }
 
@@ -5070,6 +5216,14 @@ button.admin-course-students:disabled {
   border-bottom-color: var(--primary);
 }
 
+@media (max-width: 480px) {
+  .account-tabs__btn {
+    padding: 0.75rem 0.5rem;
+    white-space: nowrap;
+    min-height: var(--touch-min);
+  }
+}
+
 /* ── Contenido de la tab activa ── */
 .account-tab-content {
   display: flex;
@@ -5156,11 +5310,11 @@ button.admin-course-students:disabled {
 }
 
 .account-field__hint--error {
-  color: var(--error, #e53e3e);
+  color: var(--danger);
 }
 
 .account-field__hint--success {
-  color: var(--success, #38a169);
+  color: var(--success);
 }
 
 .account-card__empty {
@@ -5323,14 +5477,28 @@ button.admin-course-students:disabled {
   gap: 1.5rem;
   justify-content: center;
   flex-wrap: wrap;
+  container-type: inline-size;
+}
+
+/* Dos tarjetas lado a lado pero angostas: el CTA va abajo en ambas, para que
+   el par se vea igual (si no, solo bajaba el del texto más largo). */
+@container (min-width: 624px) and (max-width: 960px) {
+  .contact-card__cta {
+    flex-basis: 100%;
+    text-align: right;
+  }
 }
 
 .contact-card {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
-  padding: 1.5rem 1.75rem;
-  flex: 1;
+  gap: 1rem 1.25rem;
+  padding: clamp(1.1rem, 3vw, 1.5rem) clamp(1.1rem, 3vw, 1.75rem);
+  /* Base de 300px: si no caben dos, cada tarjeta toma su fila en vez de
+     estrujarse lado a lado. */
+  flex: 1 1 300px;
+  text-align: left;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
@@ -5373,7 +5541,11 @@ button.admin-course-students:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1;
+  /* Base de 9rem + wrap en la tarjeta: cuando no cabe junto al CTA, el CTA
+     baja de línea solo, en cualquier ancho, sin depender de un breakpoint. */
+  flex: 1 1 9rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .contact-card__platform {
@@ -5408,6 +5580,7 @@ button.admin-course-students:disabled {
   color: var(--text-muted);
   white-space: nowrap;
   flex-shrink: 0;
+  margin-left: auto;
   transition: color 0.2s;
 }
 
@@ -5419,6 +5592,21 @@ button.admin-course-students:disabled {
   color: #E1306C;
 }
 
+/* El CTA baja a su propia fila: al lado del texto partía el nombre y el
+   número de teléfono en dos líneas. */
+@media (max-width: 480px) {
+  .contact-card__body {
+    min-width: 0;
+  }
+
+  .contact-card__cta {
+    flex-basis: 100%;
+    text-align: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+}
+
 /* ============================================================================
    CourseLearnPage — Página de estudio (video player + sidebar temario)
    ============================================================================ */
@@ -5426,6 +5614,7 @@ button.admin-course-students:disabled {
 .course-learn {
   display: flex;
   min-height: calc(100vh - 80px);
+  min-height: calc(100dvh - 80px);
   background: var(--bg);
   /* El footer global tiene margin-top: 6rem (pensado para páginas tipo
      landing/catálogo). En esta página de estudio ese aire sobra — el
@@ -5449,8 +5638,23 @@ button.admin-course-students:disabled {
   gap: 1.25rem;
 }
 
+/* Columna de contenido con tope, no un porcentaje: así no se estira en
+   tablets ni se encoge al lado del temario. */
+.course-learn__context,
+.course-learn__video,
+.course-learn__quiz,
+.course-learn__nav,
+.course-learn__lesson-info {
+  width: 100%;
+  max-width: 960px;
+}
+
+/* El video también se limita por la ALTURA visible (svh: con las barras del
+   navegador desplegadas), para que en horizontal quepa junto a sus controles. */
 .course-learn__video {
-  width: 73%;
+  max-width: min(960px, calc((100vh - 13rem) * 16 / 9));
+  max-width: min(960px, calc((100svh - 13rem) * 16 / 9));
+  min-width: min(100%, 320px);
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-md);
@@ -5600,7 +5804,6 @@ button.admin-course-students:disabled {
 /* Info de la lección */
 
 .course-learn__lesson-info {
-  width: 73%;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -5612,7 +5815,7 @@ button.admin-course-students:disabled {
 
 .course-learn__lesson-title {
   font-family: var(--font-heading);
-  font-size: 1.75rem;
+  font-size: clamp(1.35rem, 1rem + 1.5vw, 1.75rem);
   color: var(--text-primary);
   margin: 0;
 }
@@ -5621,6 +5824,7 @@ button.admin-course-students:disabled {
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
+  max-width: 42rem;
 }
 
 /* Botón "Marcar como completada".
@@ -5680,8 +5884,8 @@ button.admin-course-students:disabled {
 }
 
 .course-learn__complete-btn--done {
-  background: #27ae60;
-  border-color: #27ae60;
+  background: var(--success);
+  border-color: var(--success);
   color: white;
   cursor: default;
 }
@@ -5706,7 +5910,6 @@ button.admin-course-students:disabled {
    sigue centrado en la grilla — no "salta" a un costado. */
 
 .course-learn__nav {
-  width: 73%;
   display: grid;
   /* minmax(0, 1fr) deja que las columnas laterales tomen todo el espacio
      sobrante después del botón central, pero permite shrink si el contenido
@@ -5748,13 +5951,24 @@ button.admin-course-students:disabled {
   font-size: 0.85rem;
   cursor: pointer;
   transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
-  /* El botón ocupa todo el ancho disponible de su columna grid, con
-     ellipsis si el título de la lección es muy largo. Sin max-width
-     fijo: el layout grid ya restringe la columna. */
+  /* Flex: el título se recorta con "…" y la flecha queda siempre visible
+     (con ellipsis en el botón entero, era la flecha la que se cortaba). */
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
   max-width: 100%;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.course-learn__nav-btn-title {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.course-learn__nav-btn-arrow {
+  flex-shrink: 0;
 }
 
 .course-learn__nav-btn:hover {
@@ -5780,6 +5994,7 @@ button.admin-course-students:disabled {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 80px);
+  height: calc(100dvh - 80px);
   position: sticky;
   top: 80px;
   overflow: hidden;
@@ -5949,7 +6164,7 @@ button.admin-course-students:disabled {
 }
 
 .course-learn__lesson-item--completed .course-learn__lesson-number {
-  background: #27ae60;
+  background: var(--success);
   color: white;
 }
 
@@ -6004,16 +6219,13 @@ button.admin-course-students:disabled {
   display: none;
 }
 
-/* ── Responsive mobile (≤768px) ──
-   Reestructuración completa del layout para pantallas chicas:
+/* ── Temario como drawer (<1100px) ──
+   El corte lo pone el contenido, no un dispositivo: por debajo de 1100px
+   los 320px del temario fijo dejaban el video y la navegación estrujados.
    - Main en column (sin sidebar al costado).
    - Sidebar como DRAWER fixed desde la derecha, overlay con backdrop.
-   - Videos/navs/info al 100% del ancho (sin el 73% de desktop).
-   - Botones prev/next circulares (solo flechas, sin título).
-   - Tipografía ajustada.
-   La lengüeta "Temario" mantiene su comportamiento pero se recalibra
-   su posición vertical para el viewport mobile. */
-@media (max-width: 768px) {
+   La lengüeta "Temario" pasa abajo a la derecha, al alcance del pulgar. */
+@media (max-width: 1099px) {
   .course-learn {
     flex-direction: column;
     /* El margin-bottom negativo de -6rem compensaba el footer en
@@ -6024,58 +6236,9 @@ button.admin-course-students:disabled {
 
   .course-learn__main {
     /* Main ocupa TODO el ancho del viewport (antes compartía con el
-       sidebar al costado). Padding simétrico reducido. */
-    padding: 1rem var(--mobile-pad-x);
+       sidebar al costado). */
+    padding: clamp(1rem, 3vw, 2rem) clamp(var(--mobile-pad-x), 4vw, 2rem);
     width: 100%;
-  }
-
-  /* El 73% de desktop deja de tener sentido cuando el main ya es el
-     ancho completo — forzamos 100% para aprovechar toda la pantalla. */
-  .course-learn__video,
-  .course-learn__nav,
-  .course-learn__lesson-info {
-    width: 100%;
-  }
-
-  .course-learn__lesson-title {
-    font-size: 1.35rem;
-  }
-
-  .course-learn__lesson-desc {
-    font-size: 0.92rem;
-  }
-
-  /* ── Nav controles (prev / completar / next) ──
-     Prev/next se colapsan a botones circulares de 44×44px mostrando
-     solo la flecha. El título de la lección se oculta con display:none
-     — la alumna ve el próximo título en el temario de todas formas.
-     Esto libera espacio para el botón central "Marcar completada". */
-  .course-learn__nav {
-    gap: 0.5rem;
-  }
-
-  .course-learn__nav-btn {
-    width: var(--touch-min);
-    height: var(--touch-min);
-    padding: 0;
-    border-radius: var(--radius-full);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.15rem;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .course-learn__nav-btn-title {
-    display: none;
-  }
-
-  /* Botón "Marcar como completada" a ancho completo disponible en mobile
-     — es el CTA principal, no queremos que quede estrangulado. */
-  .course-learn__complete-btn {
-    padding: 0.7rem 1rem;
-    font-size: 0.85rem;
   }
 
   /* ── Sidebar como DRAWER overlay ──
@@ -6091,8 +6254,9 @@ button.admin-course-students:disabled {
     bottom: 0;
     left: auto;
     width: min(90%, 360px);
-    height: 100vh;
-    max-height: 100vh;
+    /* Sin 100vh: en iOS mide más que lo visible y la barra de Safari tapaba
+       las últimas lecciones. top/bottom: 0 ya fijan la altura real. */
+    height: auto;
     /* z-index 110 lo pone por encima del navbar (z-index 100) y del
        backdrop (z-index 105). En mobile el drawer se comporta como
        modal: cuando está abierto, cubre todo el viewport incluyendo
@@ -6132,36 +6296,16 @@ button.admin-course-students:disabled {
     pointer-events: none;
   }
 
-  /* Lengüeta "Temario" anclada al bottom-right en mobile.
-     En desktop alineaba con el closer del sidebar-header. En mobile
-     al center del viewport tapaba el video o los botones de nav —
-     bottom-right es zona "FAB" donde no hay contenido crítico y
-     queda al alcance natural del pulgar. */
+  /* Sin lengüeta flotante: abajo a la derecha tapaba botones ("Siguiente"
+     del quiz, el audio de la profesora). Se abre desde la barra de contexto
+     y se cierra con la ✕ del propio drawer o tocando fuera. */
   .course-learn__sidebar-opener {
-    top: auto;
-    bottom: 1.5rem;
-    transform: none;
-    padding: 0.65rem 0.9rem;
-    font-size: 0.85rem;
-    box-shadow: var(--shadow-md);
-  }
-
-  /* En MOBILE, la lengüeta no se desvanece al abrir — es el toggle
-     único (abre Y cierra). Anulamos la regla del desktop que la
-     escondía y le subimos el z-index para que quede por encima del
-     drawer (110) cuando está abierto. */
-  .course-learn:not(.course-learn--sidebar-closed) .course-learn__sidebar-opener {
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-    z-index: 111;
-  }
-
-  /* El closer del sidebar-header sobra en mobile: el toggle único (la
-     lengüeta abajo-derecha) ya se encarga de abrir y cerrar. Esconderlo
-     elimina redundancia y la distancia entre abrir/cerrar. */
-  .course-learn__sidebar-closer {
     display: none;
+  }
+
+  .course-learn__sidebar-closer {
+    width: var(--touch-min);
+    height: var(--touch-min);
   }
 }
 
@@ -6181,8 +6325,8 @@ button.admin-course-students:disabled {
   padding: 0.65rem 1rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--card-bg);
-  color: var(--text);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 600;
   font-family: var(--font-body);
@@ -6238,7 +6382,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-builder__question {
-  background: var(--card-bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1rem;
@@ -6282,7 +6426,7 @@ button.admin-course-students:disabled {
   font-size: 0.9rem;
   font-family: var(--font-body);
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-primary);
   margin-bottom: 0.5rem;
   box-sizing: border-box;
 }
@@ -6312,7 +6456,7 @@ button.admin-course-students:disabled {
   font-size: 0.85rem;
   font-family: var(--font-body);
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .quiz-builder__options {
@@ -6343,7 +6487,7 @@ button.admin-course-students:disabled {
   font-size: 0.85rem;
   font-family: var(--font-body);
   background: var(--bg);
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .quiz-builder__option-input:focus {
@@ -6523,7 +6667,7 @@ button.admin-course-students:disabled {
   background: rgba(231, 76, 60, 0.08);
   border: 1px solid rgba(231, 76, 60, 0.2);
   border-radius: var(--radius-md);
-  color: var(--text);
+  color: var(--text-primary);
   font-size: 0.95rem;
   margin-top: 1rem;
 }
@@ -6536,7 +6680,7 @@ button.admin-course-students:disabled {
 /* ── Pregunta individual ── */
 
 .quiz-question {
-  background: var(--card-bg);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 1.25rem;
@@ -6610,7 +6754,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-result--passed .quiz-result__header h2 {
-  color: #27ae60;
+  color: var(--success);
 }
 
 .quiz-result--failed .quiz-result__header h2 {
@@ -6619,7 +6763,7 @@ button.admin-course-students:disabled {
 
 .quiz-result__score {
   font-size: 1.1rem;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 .quiz-result__minimum {
@@ -6643,7 +6787,7 @@ button.admin-course-students:disabled {
 
 .quiz-result__question--correct {
   background: rgba(39, 174, 96, 0.06);
-  border-left-color: #27ae60;
+  border-left-color: var(--success);
 }
 
 .quiz-result__question--wrong {
@@ -6667,7 +6811,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-result__question--correct .quiz-result__question-icon {
-  color: #27ae60;
+  color: var(--success);
 }
 
 .quiz-result__question--wrong .quiz-result__question-icon {
@@ -6692,7 +6836,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-result__success-message {
-  color: #27ae60;
+  color: var(--success);
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -6725,7 +6869,7 @@ button.admin-course-students:disabled {
 /* ── Contenedor del quiz dentro de CourseLearnPage ── */
 
 .course-learn__quiz {
-  background: var(--card-bg);
+  background: var(--bg-elevated);
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   min-height: 400px;
@@ -7670,7 +7814,10 @@ button.admin-course-students:disabled {
 .confirm-dialog {
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
+  /* Relativo al overlay (inset: 0, ya mide lo visible), no a 90vh: en iOS
+     90vh pasa del área visible y los botones quedaban fuera. */
+  max-height: 100%;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -7765,4 +7912,756 @@ button.admin-course-students:disabled {
     opacity: 1;
     transform: translate(-50%, 0);
   }
+}
+
+/* === VERIFICACIÓN PÚBLICA DE CERTIFICADO (/certificados/:id) === */
+.cert-verify {
+  max-width: 860px;
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.cert-verify__hero {
+  background: linear-gradient(135deg, var(--primary), var(--gold));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: white;
+}
+
+.cert-verify__hero-icon {
+  font-size: 2.5rem;
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.cert-verify__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.75rem;
+  color: white;
+  text-shadow: 0 1px 3px rgba(45, 27, 20, 0.2);
+}
+
+.cert-verify__academy {
+  margin: 0.25rem 0 0;
+  opacity: 0.92;
+}
+
+.cert-verify__facts {
+  margin: 0;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+
+.cert-verify__facts dt {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.25rem;
+}
+
+.cert-verify__facts dd {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.cert-verify__facts .cert-verify__number {
+  font-family: monospace;
+  color: var(--primary);
+}
+
+.cert-verify__validity {
+  margin: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: 1.25rem 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.cert-verify__validity strong {
+  color: var(--text-primary);
+}
+
+.cert-verify__download {
+  align-self: flex-start;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}
+
+.cert-verify__preview {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.cert-verify__preview-label {
+  margin: 0;
+  padding: 1rem 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.pdf-preview__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.pdf-preview__fallback {
+  margin: 0;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .cert-verify {
+    padding: 2rem var(--mobile-pad-x);
+  }
+
+  .cert-verify__facts {
+    padding: 1.25rem;
+  }
+
+  .cert-verify__download {
+    align-self: stretch;
+  }
+}
+
+/* === COMING SOON (público mientras el sitio no se lanza) === */
+.coming-soon {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.coming-soon__card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--gold);
+  border-radius: 1.5rem;
+  padding: 3rem 2.5rem;
+  max-width: 520px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-gold);
+}
+
+.coming-soon__badge {
+  width: 170px;
+  height: auto;
+  object-fit: contain;
+  margin: 0 auto 1rem;
+}
+
+.coming-soon__title {
+  font-family: var(--font-heading);
+  color: var(--primary);
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+.coming-soon__divider {
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), var(--gold));
+  margin: 0 auto 1.5rem;
+  border-radius: 2px;
+}
+
+.coming-soon__subtitle {
+  font-family: var(--font-heading);
+  color: var(--gold);
+  font-size: 1.2rem;
+  margin: 0 0 1rem;
+  font-style: italic;
+}
+
+.coming-soon__body {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 2rem;
+  font-size: 1rem;
+}
+
+.coming-soon__tagline {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+}
+
+.coming-soon__login {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+}
+
+.coming-soon__cert {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  max-width: 520px;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.coming-soon__cert-icon {
+  font-size: 1.75rem;
+  flex-shrink: 0;
+}
+
+.coming-soon__cert-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.coming-soon__cert-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.coming-soon__cert-body {
+  margin: 0.15rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.coming-soon__cert-link {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .coming-soon {
+    padding: 1.5rem var(--mobile-pad-x);
+  }
+
+  .coming-soon__card {
+    padding: 2.25rem 1.5rem 1.5rem;
+  }
+
+  .coming-soon__badge {
+    width: 130px;
+  }
+
+  /* El enlace baja a su propia fila: al lado del texto lo estrujaba a una
+     palabra por línea. */
+  .coming-soon__cert {
+    flex-wrap: wrap;
+    padding: 1.25rem;
+  }
+
+  .coming-soon__cert-link {
+    flex-basis: 100%;
+    justify-content: center;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+  }
+}
+
+/* Zonas táctiles de la alumna que quedaban entre 23 y 43px de alto. */
+@media (max-width: 768px) {
+  .user-menu__trigger,
+  .course-learn__sidebar-opener,
+  .course-learn__complete-btn,
+  .enrollment-card__cta,
+  .cd-back,
+  .preview-card__cta {
+    min-height: var(--touch-min);
+  }
+
+  .cd-back,
+  .preview-card__cta {
+    align-items: center;
+  }
+}
+
+/* ── Página del curso: contexto y ajustes de teléfono ── */
+.course-learn__context {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Vuelve a la portada del curso: flecha + título (con "…" si no cabe). */
+.course-learn__back {
+  flex: 1;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--touch-min);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.course-learn__back:hover {
+  color: var(--primary);
+}
+
+.course-learn__course-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-learn__context-progress {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Abre el temario bajo 1100px; en escritorio el temario ya está al costado. */
+.course-learn__context-toggle {
+  display: none;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: var(--touch-min);
+  padding: 0 0.9rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.course-learn__context-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.course-learn__context-toggle-count {
+  color: var(--text-muted);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 1099px) {
+  .course-learn__context-progress {
+    display: none;
+  }
+
+  .course-learn__context-toggle {
+    display: inline-flex;
+  }
+}
+
+/* Pantallas bajas (teléfono en horizontal): el header deja de ser sticky para
+   devolver la altura al contenido, y el video se mide sin él. */
+@media (max-height: 500px) {
+  .header {
+    position: static;
+  }
+
+  .course-learn__video {
+    max-width: min(960px, calc((100vh - 11rem) * 16 / 9));
+    max-width: min(960px, calc((100svh - 11rem) * 16 / 9));
+  }
+}
+
+/* Teléfonos: prev/next pasan a círculos de solo flecha para dejarle el
+   espacio al botón central; el título de la lección ya está en el temario. */
+@media (max-width: 600px) {
+  .course-learn__nav {
+    gap: 0.5rem;
+  }
+
+  .course-learn__nav-btn {
+    width: var(--touch-min);
+    height: var(--touch-min);
+    padding: 0;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .course-learn__nav-btn-title {
+    display: none;
+  }
+
+  .course-learn__complete-btn {
+    padding: 0.7rem 1rem;
+  }
+
+  /* Sin la tarjeta exterior: tres niveles de tarjeta anidada sumaban
+     padding y dejaban ~270px útiles en un teléfono de 390px. */
+  .course-learn__quiz {
+    background: none;
+    border: none;
+    min-height: 0;
+  }
+
+  .submission-player {
+    padding: 0;
+  }
+
+  .quiz-player {
+    padding: 1.25rem 1rem;
+  }
+}
+
+/* === PORTADA DEL CURSO (/mis-cursos/:id) === */
+.course-home {
+  max-width: 960px;
+  padding-top: clamp(1.25rem, 4vw, 2.5rem);
+  padding-bottom: clamp(2rem, 6vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.course-home--empty {
+  align-items: flex-start;
+}
+
+.course-home__muted {
+  color: var(--text-muted);
+}
+
+.course-home__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  align-self: flex-start;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.course-home__back:hover {
+  color: var(--primary);
+}
+
+/* Imagen y resumen lado a lado cuando ambos caben (≈ 2 × 300px). */
+.course-home__hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+  align-items: start;
+}
+
+.course-home__visual {
+  aspect-ratio: 16 / 10;
+  max-height: min(40svh, 360px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-home__visual .course-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.course-home__fallback {
+  font-size: 3rem;
+}
+
+.course-home__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.course-home__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.course-home__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
+  color: var(--text-primary);
+}
+
+.course-home__desc {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.course-home__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.course-home__access {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.course-home__actions {
+  margin-top: 0.25rem;
+}
+
+.course-home__cta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  max-width: 100%;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+}
+
+.course-home__cta-next {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.9;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-home__done {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.course-home__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.course-home__heading {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.course-home__live,
+.course-home__lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.course-home__live-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.course-home__live-when {
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.course-home__live-when::first-letter {
+  text-transform: uppercase;
+}
+
+.course-home__lesson {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+a.course-home__lesson:hover {
+  border-color: var(--primary);
+}
+
+.course-home__lesson--next {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.course-home__lesson--locked {
+  opacity: 0.7;
+}
+
+.course-home__lesson-index {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.course-home__lesson-index--done {
+  background: var(--success);
+  color: white;
+}
+
+.course-home__lesson-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.course-home__lesson-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.course-home__lesson-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.course-home__lesson-meta::first-letter {
+  text-transform: uppercase;
+}
+
+.course-home__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+.course-home__badge--done {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+}
+
+.course-home__badge--active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.course-home__badge--waiting {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+.course-home__badge--attention {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.course-home__certificate p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Fila angosta: la etiqueta de estado baja bajo el título. */
+@media (max-width: 420px) {
+  .course-home__lesson {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .course-home__badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* El llamado de la ficha puede ser enlace (Ir al curso, WhatsApp) o botón. */
+.cd-purchase-card__cta {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.cd-purchase-card__enrolled {
+  margin: 0.5rem 0 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }

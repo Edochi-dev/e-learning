@@ -37,10 +37,12 @@ export class AssignmentSubmission {
   @Column({ default: 'pending' })
   status: string;
 
-  @CreateDateColumn()
+  // Instantes (timestamptz): como timestamp sin zona, la primera entrega
+  // quedaba en UTC y los reenvíos en hora de Chile.
+  @CreateDateColumn({ type: 'timestamptz' })
   submittedAt: Date;
 
-  @Column({ type: 'timestamp', nullable: true })
+  @Column({ type: 'timestamptz', nullable: true })
   reviewedAt: Date | null;
 
   // ── Relaciones ──────────────────────────────────────────────────────
