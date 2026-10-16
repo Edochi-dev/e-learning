@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { LIVE_JOIN_LEAD_MINUTES, type PublicLesson } from '@maris-nails/shared';
 import {
     ACADEMY_TIME_ZONE,
@@ -6,8 +6,10 @@ import {
     formatCountdown,
     googleCalendarUrl,
     liveClassPhase,
+    openClassLabel,
     type CalendarEvent,
 } from '../lib/live-class';
+import { useNow } from '../hooks/useNow';
 
 interface Props {
     lesson: PublicLesson;
@@ -33,15 +35,6 @@ const academyTime = new Intl.DateTimeFormat('es', {
     minute: '2-digit',
     timeZone: ACADEMY_TIME_ZONE,
 });
-
-function useNow(intervalMs: number): Date {
-    const [now, setNow] = useState(() => new Date());
-    useEffect(() => {
-        const id = setInterval(() => setNow(new Date()), intervalMs);
-        return () => clearInterval(id);
-    }, [intervalMs]);
-    return now;
-}
 
 function downloadIcs(event: CalendarEvent): void {
     const blob = new Blob([buildIcs(event)], { type: 'text/calendar;charset=utf-8' });
@@ -71,7 +64,7 @@ export const LiveLessonGate: React.FC<Props> = ({ lesson, courseTitle, courseUrl
         return (
             <div className="live-gate">
                 <p className={`live-gate__banner live-gate__banner--${phase}`}>
-                    {phase === 'open' ? '🔴 En vivo ahora' : 'Clase en vivo finalizada'}
+                    {phase === 'open' ? openClassLabel(startsAt, now) : 'Clase en vivo finalizada'}
                 </p>
                 {video.provider ? children : (
                     <div className="live-card">

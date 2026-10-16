@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildIcs, formatCountdown, googleCalendarUrl, liveClassPhase } from './live-class';
+import { buildIcs, formatCountdown, googleCalendarUrl, liveClassPhase, openClassLabel } from './live-class';
 
 const start = new Date('2030-03-01T22:00:00.000Z');
 const end = new Date('2030-03-01T23:30:00.000Z');
@@ -64,5 +64,17 @@ describe('buildIcs', () => {
     it('escapa comas y punto y coma del texto', () => {
         expect(ics).toContain('SUMMARY:Clase en vivo: acrílico\\, parte 2');
         expect(ics).toContain('DESCRIPTION:Maris Nails Academy\\; trae tus materiales');
+    });
+});
+
+describe('openClassLabel', () => {
+    const startsAt = new Date('2030-03-01T22:00:00Z');
+
+    it('antes de la hora no dice "en vivo": la sala abre antes que la clase', () => {
+        expect(openClassLabel(startsAt, new Date('2030-03-01T21:50:00Z'))).toBe('Empieza en 10:00 · ya puedes entrar');
+    });
+
+    it('desde la hora de inicio, está en vivo', () => {
+        expect(openClassLabel(startsAt, new Date('2030-03-01T22:00:00Z'))).toBe('🔴 En vivo ahora');
     });
 });
