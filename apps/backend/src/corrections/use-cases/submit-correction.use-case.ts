@@ -114,7 +114,6 @@ export class SubmitCorrectionUseCase {
       submission = await this.correctionGateway.update(existing.id, {
         photoUrl,
         status: 'pending',
-        feedback: undefined,
         submittedAt: new Date(),
       });
     } else {

@@ -78,6 +78,16 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
         HLS_TOKEN_TTL_MINUTES: Joi.number().integer().min(1).default(30),
         FFMPEG_PATH: Joi.string().default('ffmpeg'),
         FFPROBE_PATH: Joi.string().default('ffprobe'),
+        // Correction voice notes. Transcription is off by default: it needs a
+        // Python with faster-whisper, which the Joi rule below insists on.
+        CORRECTION_AUDIO_DIR: Joi.string().optional(),
+        TRANSCRIPTION_ENABLED: Joi.boolean().default(false),
+        WHISPER_PYTHON: Joi.string().when('TRANSCRIPTION_ENABLED', {
+          is: true,
+          then: Joi.required(),
+        }),
+        WHISPER_MODEL: Joi.string().default('large-v3-turbo'),
+        WHISPER_DEVICE: Joi.string().valid('cuda', 'cpu').default('cuda'),
       })
         .with('SMTP_HOST', ['SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'])
         .with('SMTP_FALLBACK_HOST', [

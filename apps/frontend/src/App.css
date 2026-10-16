@@ -2521,25 +2521,6 @@ input.filter-control[type="search"] {
   white-space: pre-wrap;
 }
 
-.review-textarea {
-  width: 100%;
-  padding: 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  resize: vertical;
-  transition: border-color 0.2s ease;
-}
-
-.review-textarea:focus {
-  outline: none;
-  border-color: var(--primary, #e84393);
-}
-
 .review-actions {
   display: flex;
   gap: 0.75rem;
@@ -2587,6 +2568,268 @@ input.filter-control[type="search"] {
   border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+/* ── Revisión por voz (profesora) ──────────────────────────────────── */
+.voice-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.voice-review--approve,
+.voice-review--reject {
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+}
+
+.voice-review--approve { border-left: 4px solid var(--gold); }
+.voice-review--reject { border-left: 4px solid var(--danger); }
+
+.voice-review__hint {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.voice-review__error {
+  font-size: 0.85rem;
+  color: var(--danger);
+  background: var(--danger-soft);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+}
+
+.voice-review__decision {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.voice-review__live {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.voice-review__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--danger);
+  animation: voice-review-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes voice-review-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.8); }
+}
+
+.voice-review__timer {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.voice-review__progress {
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--border);
+  overflow: hidden;
+}
+
+.voice-review__progress span {
+  display: block;
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.25s linear;
+}
+
+.voice-review__buttons {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.voice-review__buttons > button {
+  flex: 1;
+  min-height: var(--touch-min);
+}
+
+.voice-review__preview {
+  width: 100%;
+}
+
+.voice-review__cancel {
+  align-self: center;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: var(--touch-min);
+}
+
+.review-actions .review-btn {
+  min-height: var(--touch-min);
+}
+
+/* ── Audio de una revisión (alumna y profesora) ───────────────────────── */
+.review-audio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.review-audio__play {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  min-height: var(--touch-min);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: #fff;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--shadow-glow);
+  transition: transform var(--dur-fast) var(--ease-out), opacity var(--dur-fast) var(--ease-out);
+}
+
+.review-audio__play:not(:disabled):active { transform: scale(0.97); }
+.review-audio__play:disabled { opacity: 0.6; cursor: wait; }
+
+.review-audio__play-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.22);
+  font-size: 0.8rem;
+}
+
+.review-audio__duration {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.85;
+  font-weight: 500;
+}
+
+.review-audio__player { width: 100%; }
+
+.review-audio__note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.review-audio__error {
+  font-size: 0.85rem;
+  color: var(--danger);
+}
+
+.review-audio__transcribing {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--touch-min);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.review-audio__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--border-strong);
+  border-top-color: var(--primary);
+  border-radius: var(--radius-full);
+  animation: spin 0.8s linear infinite;
+}
+
+.review-audio__legacy-text {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.review-audio__transcript summary,
+.review-history summary {
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+}
+
+.review-audio__transcript p {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin: var(--space-1) 0;
+}
+
+.review-audio__transcript small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Historial de revisiones ──────────────────────────────────────────── */
+.review-history {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-2);
+}
+
+.review-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.review-history__item {
+  padding-left: var(--space-3);
+  border-left: 2px solid var(--border-strong);
+}
+
+.review-history__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.review-history__decision {
+  font-weight: 700;
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--radius-full);
+}
+
+.review-history__decision--approved {
+  color: var(--gold-dark);
+  background: var(--gold-glow);
+}
+
+.review-history__decision--rejected {
+  color: var(--danger);
+  background: var(--danger-soft);
 }
 
 /* ── SubmissionPlayer (alumna — lecciones tipo corrección) ──────────── */

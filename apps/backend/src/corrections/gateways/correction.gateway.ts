@@ -17,7 +17,6 @@ export interface CreateSubmissionData {
 export interface UpdateSubmissionData {
   photoUrl?: string;
   status?: string;
-  feedback?: string;
   reviewedAt?: Date;
   submittedAt?: Date;
 }

@@ -20,6 +20,7 @@ import { QuizOption } from '../courses/entities/quiz-option.entity';
 import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from '../enrollments/entities/quiz-attempt-answer.entity';
 import { AssignmentSubmission } from '../corrections/entities/assignment-submission.entity';
+import { CorrectionReview } from '../corrections/entities/correction-review.entity';
 import { NameChangeRequest } from '../name-change-requests/entities/name-change-request.entity';
 import { ScheduleEvent } from '../schedule/entities/schedule-event.entity';
 import { PushSubscription } from '../push/entities/push-subscription.entity';
@@ -58,6 +59,7 @@ export const AppDataSource = new DataSource({
     QuizAttempt,
     QuizAttemptAnswer,
     AssignmentSubmission,
+    CorrectionReview,
     NameChangeRequest,
     ScheduleEvent,
     PushSubscription,

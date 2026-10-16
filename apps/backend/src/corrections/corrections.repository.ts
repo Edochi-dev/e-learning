@@ -31,13 +31,16 @@ export class CorrectionsRepository
   ): Promise<AssignmentSubmission | null> {
     return this.submissionRepository.findOne({
       where: { studentId, lessonId },
+      relations: ['reviews'],
+      order: { reviews: { reviewedAt: 'DESC' } },
     });
   }
 
   async findById(id: string): Promise<AssignmentSubmission | null> {
     return this.submissionRepository.findOne({
       where: { id },
-      relations: ['student', 'lesson', 'lesson.course'],
+      relations: ['student', 'lesson', 'lesson.course', 'reviews'],
+      order: { reviews: { reviewedAt: 'DESC' } },
     });
   }
 
@@ -73,8 +76,8 @@ export class CorrectionsRepository
   async findPending(): Promise<AssignmentSubmission[]> {
     return this.submissionRepository.find({
       where: { status: 'pending' },
-      relations: ['student', 'lesson', 'lesson.course'],
-      order: { submittedAt: 'ASC' },
+      relations: ['student', 'lesson', 'lesson.course', 'reviews'],
+      order: { submittedAt: 'ASC', reviews: { reviewedAt: 'DESC' } },
     });
   }
 
@@ -105,7 +108,9 @@ export class CorrectionsRepository
       .leftJoinAndSelect('sub.student', 'student')
       .leftJoinAndSelect('sub.lesson', 'lesson')
       .leftJoinAndSelect('lesson.course', 'course')
+      .leftJoinAndSelect('sub.reviews', 'review')
       .orderBy('sub.reviewedAt', 'DESC')
+      .addOrderBy('review.reviewedAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

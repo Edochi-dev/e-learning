@@ -1,55 +1,44 @@
 import {
+  BadRequestException,
   Injectable,
   NotFoundException,
-  BadRequestException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import { CorrectionGateway } from '../gateways/correction.gateway';
+import { CorrectionReviewGateway } from '../gateways/correction-review.gateway';
+import { SpeechTranscriber } from '../gateways/speech-transcriber.gateway';
+import { ReviewAudioRecorder } from '../services/review-audio-recorder.service';
 import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
+import { EnrollmentGateway } from '../../enrollments/gateways/enrollment.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
-import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 import { html } from '../../notifications/templates/safe-html';
+import { audioExpiry } from '../domain/review-audio-policy';
+import { TranscriptStatus } from '../domain/transcript-status';
+import {
+  CorrectionReview,
+  ReviewDecision,
+} from '../entities/correction-review.entity';
+import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 
 /**
- * ReviewCorrectionUseCase — La profesora aprueba o rechaza una entrega.
+ * The teacher approves or rejects a submission with a voice note.
  *
- * Este es el USE CASE más importante del módulo corrections porque
- * ORQUESTA múltiples gateways para ejecutar una operación de negocio
- * compleja. Veamos qué hace cada paso:
+ * The audio is stored before the review is recorded and discarded if that
+ * fails, so a review never points at a missing file. Transcription runs later,
+ * in ReviewTranscriptionWorker.
  *
- * APROBAR:
- *   1. Actualizar submission → status='approved', guardar feedback
- *   2. Marcar lección completa → LessonProgressGateway (módulo progress)
- *   3. Borrar foto → OrphanFileCleaner (módulo storage)
- *   4. Notificar alumna → NotificationGateway (módulo notifications)
- *
- * RECHAZAR:
- *   1. Actualizar submission → status='rejected', guardar feedback
- *   2. NO borrar foto (la alumna necesita verla para saber qué corregir)
- *   3. Notificar alumna → NotificationGateway
- *
- * ¿Por qué NO borrar la foto al rechazar?
- *   Porque la alumna necesita ver su trabajo junto con el feedback
- *   para entender qué hizo mal. La foto se borrará cuando re-envíe
- *   (SubmitCorrectionUseCase limpia la foto vieja al recibir la nueva).
- *
- * ¿Por qué SÍ borrar al aprobar?
- *   Porque una vez aprobada, la foto ya cumplió su propósito. Mantenerla
- *   consumiría disco innecesariamente. El feedback en texto queda como
- *   audit trail permanente.
- *
- * Fíjate que este use case NO sabe:
- *   - Cómo se guarda la submission (eso es del repository/TypeORM)
- *   - Cómo se marca una lección completa (eso es de ProgressModule)
- *   - Cómo se borra un archivo (eso es de StorageModule)
- *   - Cómo se envía un email (eso es de NotificationsModule)
- *
- * Solo conoce los CONTRATOS (gateways abstractos). Eso es Clean Architecture.
+ * Approving marks the lesson complete and deletes the photo; rejecting keeps
+ * the photo so the student can see what to fix.
  */
 @Injectable()
 export class ReviewCorrectionUseCase {
   constructor(
     private readonly correctionGateway: CorrectionGateway,
+    private readonly reviews: CorrectionReviewGateway,
+    private readonly audioRecorder: ReviewAudioRecorder,
+    private readonly transcriber: SpeechTranscriber,
+    private readonly enrollments: EnrollmentGateway,
     private readonly lessonProgressGateway: LessonProgressGateway,
     private readonly orphanFileCleaner: OrphanFileCleaner,
     private readonly notificationGateway: NotificationGateway,
@@ -58,89 +47,111 @@ export class ReviewCorrectionUseCase {
   async execute(
     submissionId: string,
     action: 'approve' | 'reject',
-    feedback: string,
-  ): Promise<AssignmentSubmission> {
-    // 1. Buscar la submission con relaciones (necesitamos student.email y lesson.title)
+    recording: Buffer,
+  ): Promise<CorrectionReview> {
     const submission = await this.correctionGateway.findById(submissionId);
     if (!submission) {
       throw new NotFoundException('Entrega no encontrada');
     }
-
-    // 2. Solo se puede revisar una submission que esté pendiente.
-    //    Si ya fue aprobada o rechazada, la profesora no debería poder
-    //    cambiar su decisión desde este endpoint — eso sería otro use case
-    //    (EditReview) con sus propias reglas de negocio.
+    // Changing a decision already made would be its own use case.
     if (submission.status !== 'pending') {
       throw new BadRequestException(
         `Esta entrega ya fue revisada (status: ${submission.status})`,
       );
     }
 
-    // 3. Determinar el nuevo status basado en la acción
-    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    const decision: ReviewDecision =
+      action === 'approve' ? 'approved' : 'rejected';
+    const reviewId = randomUUID();
+    const reviewedAt = new Date();
+    const audio = await this.audioRecorder.store(reviewId, recording);
 
-    // 4. Actualizar la submission
-    const updated = await this.correctionGateway.update(submissionId, {
-      status: newStatus,
-      feedback,
-      reviewedAt: new Date(),
-    });
+    let review: CorrectionReview;
+    try {
+      review = await this.reviews.record({
+        id: reviewId,
+        submissionId,
+        decision,
+        audioFile: audio.audioFile,
+        audioDurationSeconds: audio.durationSeconds,
+        audioExpiresAt: await this.audioExpiresAt(submission, reviewedAt),
+        transcriptStatus: this.transcriber.enabled
+          ? TranscriptStatus.PENDING
+          : TranscriptStatus.UNAVAILABLE,
+        reviewedAt,
+      });
+    } catch (error) {
+      await this.audioRecorder.discard(audio.audioFile);
+      throw error;
+    }
 
-    // 5. Si aprueba → marcar la lección como completa
-    if (action === 'approve') {
+    if (decision === 'approved') {
       await this.lessonProgressGateway.markLessonComplete(
         submission.studentId,
         submission.lessonId,
       );
-    }
-
-    // 6. Si aprueba → borrar la foto (ya no se necesita)
-    if (action === 'approve') {
       await this.orphanFileCleaner.deleteIfOrphan(
         submission.photoUrl,
-        () => Promise.resolve(false), // La foto de una corrección aprobada nunca está referenciada
+        () => Promise.resolve(false), // an approved submission's photo is referenced nowhere else
       );
     }
 
-    // 7. Notificar a la alumna
-    const studentEmail = submission.student?.email;
-    const lessonTitle = submission.lesson?.title ?? 'la lección';
-    const isApproved = action === 'approve';
+    await this.notifyStudent(submission, decision);
+    return review;
+  }
 
-    if (studentEmail) {
-      await this.notificationGateway.sendEmail({
-        to: studentEmail,
-        subject: isApproved
+  private async audioExpiresAt(
+    submission: AssignmentSubmission,
+    reviewedAt: Date,
+  ): Promise<Date> {
+    const enrollment = await this.enrollments.findByUserAndCourse(
+      submission.studentId,
+      submission.lesson.courseId,
+    );
+    return audioExpiry(reviewedAt, enrollment?.expiresAt ?? null);
+  }
+
+  private async notifyStudent(
+    submission: AssignmentSubmission,
+    decision: ReviewDecision,
+  ): Promise<void> {
+    const to = submission.student?.email;
+    if (!to) return;
+    const lessonTitle = submission.lesson?.title ?? 'la lección';
+    const action = {
+      label: 'Escuchar a mi profesora',
+      path: `/courses/${submission.lesson.courseId}/learn`,
+    };
+
+    await this.notificationGateway.sendEmail({
+      to,
+      subject:
+        decision === 'approved'
           ? `¡Tu trabajo fue aprobado! — ${lessonTitle}`
-          : `Tu trabajo necesita correcciones — ${lessonTitle}`,
-        content: isApproved
+          : `Tu trabajo necesita algunos ajustes — ${lessonTitle}`,
+      content:
+        decision === 'approved'
           ? {
               heading: '¡Tu trabajo fue aprobado!',
               body: html`<p>
-                  ¡Felicidades! Tu entrega para
-                  <strong>${lessonTitle}</strong> fue aprobada.
-                </p>
-                <p>
-                  <strong>Comentario de tu profesora:</strong> ${feedback}
-                </p>`,
-              action: { label: 'Seguir con mi curso', path: '/mis-cursos' },
+                ¡Felicidades! Tu profesora revisó tu entrega para
+                <strong>${lessonTitle}</strong> y te dejó un audio con sus
+                comentarios.
+              </p>`,
+              action,
             }
           : {
               heading: 'Tu trabajo necesita algunos ajustes',
               body: html`<p>
-                  Tu entrega para <strong>${lessonTitle}</strong> necesita
-                  correcciones.
+                  Tu profesora revisó tu entrega para
+                  <strong>${lessonTitle}</strong> y te dejó un audio
+                  explicándote qué mejorar.
                 </p>
-                <p><strong>Comentario de tu profesora:</strong> ${feedback}</p>
                 <p>
-                  Revisa el comentario y envía tu trabajo de nuevo cuando estés
-                  lista.
+                  Escúchalo y envía tu trabajo de nuevo cuando estés lista.
                 </p>`,
-              action: { label: 'Volver a mi curso', path: '/mis-cursos' },
+              action,
             },
-      });
-    }
-
-    return updated;
+    });
   }
 }

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import type { CorrectionGateway, AssignmentSubmission } from '../gateways/CorrectionGateway';
 import { API_URL } from '../config';
+import { ReviewAudioPlayer } from './ReviewAudioPlayer';
+import { ReviewHistory } from './ReviewHistory';
+import { useSubmissionStatus } from '../hooks/useSubmissionStatus';
 
 /**
  * SubmissionPlayer — Interfaz de la alumna para lecciones tipo corrección.
@@ -14,7 +17,7 @@ import { API_URL } from '../config';
  *   ┌──────────────────────────────────────────┐
  *   │ [foto ref]  │  Instrucciones             │  ← fila 1: la tarea
  *   ├──────────────────────────────────────────┤
- *   │ [foto entr] │  Estado / feedback / acción│  ← fila 2: tu entrega
+ *   │ [foto entr] │  Estado / audio / acción   │  ← fila 2: tu entrega
  *   └──────────────────────────────────────────┘
  *
  * Cada fila usa grid con columna fija de 220px para la foto → altura
@@ -25,8 +28,10 @@ import { API_URL } from '../config';
  * Estados posibles (derivados de submission.status):
  *   1. null (sin entrega)  → Uploader activo en fila 2
  *   2. 'pending'           → Foto + badge "En revisión"
- *   3. 'rejected'          → Foto + feedback + botón re-enviar
- *   4. 'approved'          → Foto + feedback + badge "Aprobada"
+ *   3. 'rejected'          → Foto + audio de la profesora + botón re-enviar
+ *   4. 'approved'          → Audio de la profesora + badge "Aprobada"
+ *
+ * El audio de la revisión actual va primero; las anteriores, plegadas debajo.
  *
  * ¿Por qué no recibe onComplete como QuizPlayer?
  *   Porque la alumna NO controla cuándo se completa la lección.
@@ -66,20 +71,12 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
     instructions,
     gateway,
 }) => {
-    const [submission, setSubmission] = useState<AssignmentSubmission | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { submission, setSubmission, isLoading, loadError } = useSubmissionStatus(gateway, lessonId);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [isResubmitting, setIsResubmitting] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        gateway.getMyStatus(lessonId)
-            .then(setSubmission)
-            .catch(() => setError('Error al cargar el estado de tu entrega.'))
-            .finally(() => setIsLoading(false));
-    }, [gateway, lessonId]);
 
     useEffect(() => {
         return () => { if (preview) URL.revokeObjectURL(preview); };
@@ -134,6 +131,11 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
     const refImgSrc = referenceImageUrl ? `${API_URL}${referenceImageUrl}` : null;
     const photoSrc = submission ? `${API_URL}${submission.photoUrl}` : null;
     const showUploader = !submission || isResubmitting;
+    // Una entrega reenviada (pending) todavía no tiene revisión propia: todas
+    // las que trae son de intentos anteriores.
+    const reviews = submission?.reviews ?? [];
+    const latestReview = submission?.status === 'pending' ? undefined : reviews[0];
+    const olderReviews = latestReview ? reviews.slice(1) : reviews;
 
     return (
         <div className="submission-player">
@@ -162,7 +164,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                 ya borró la foto (review-correction.use-case.ts libera el
                 storage). Mostrar un <img> sobre un 404 sería mala UX, así
                 que approved tiene layout propio sin foto — un bloque
-                verde celebratorio con el feedback. */}
+                verde celebratorio con el audio de la profesora. */}
             {submission?.status === 'approved' && !isResubmitting ? (
                 <div className="submission-row submission-row--approved">
                     <span className="submission-approved__icon" aria-hidden="true">✅</span>
@@ -170,12 +172,13 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                     <p className="submission-cell-text submission-cell-text--success">
                         Tu entrega fue aprobada. Esta lección quedó completada.
                     </p>
-                    {submission.feedback && (
+                    {latestReview && (
                         <div className="submission-feedback">
-                            <strong>Feedback de la profesora</strong>
-                            <p>{submission.feedback}</p>
+                            <strong>Mensaje de tu profesora</strong>
+                            <ReviewAudioPlayer review={latestReview} gateway={gateway} />
                         </div>
                     )}
+                    <ReviewHistory reviews={olderReviews} gateway={gateway} />
                 </div>
             ) : (
                 <div className="submission-row">
@@ -216,9 +219,9 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                             <>
                                 <h3>{submission ? 'Nueva entrega' : 'Envía tu trabajo'}</h3>
                                 <p className="submission-cell-text">
-                                    Toma una foto de tu trabajo con buena iluminación. La profesora te dará feedback.
+                                    Toma una foto de tu trabajo con buena iluminación. La profesora te responderá con un audio.
                                 </p>
-                                {error && <p className="submission-error">{error}</p>}
+                                {(error ?? loadError) && <p className="submission-error">{error ?? loadError}</p>}
                                 <div className="submission-cell-actions">
                                     <button
                                         className="btn-primary submission-entry-btn"
@@ -245,7 +248,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                             </>
                         )}
 
-                        {/* Badge del estado arriba del mensaje/feedback —
+                        {/* Badge del estado arriba del mensaje de la profesora —
                             solo en pending/rejected (approved tiene su layout). */}
                         {!showUploader && submission && (
                             <StatusBadge status={submission.status} />
@@ -253,20 +256,25 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
 
                         {!showUploader && submission?.status === 'pending' && (
                             <p className="submission-cell-text">
-                                Tu entrega está en manos de la profesora. Te notificaremos por email cuando tenga feedback.
+                                Tu entrega está en manos de la profesora. Te avisaremos por correo cuando te deje su audio.
                             </p>
+                        )}
+
+                        {!showUploader && submission?.status === 'pending' && (
+                            <ReviewHistory reviews={olderReviews} gateway={gateway} />
                         )}
 
                         {!showUploader && submission?.status === 'rejected' && (
                             <>
-                                {submission.feedback ? (
+                                {latestReview ? (
                                     <div className="submission-feedback">
-                                        <strong>Feedback de la profesora</strong>
-                                        <p>{submission.feedback}</p>
+                                        <strong>Mensaje de tu profesora</strong>
+                                        <ReviewAudioPlayer review={latestReview} gateway={gateway} />
                                     </div>
                                 ) : (
                                     <p className="submission-cell-text">La profesora pidió que re-envíes tu entrega.</p>
                                 )}
+                                <ReviewHistory reviews={olderReviews} gateway={gateway} />
                                 <div className="submission-cell-actions">
                                     <button
                                         className="btn-primary submission-entry-btn"

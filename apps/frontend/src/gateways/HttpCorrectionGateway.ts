@@ -1,10 +1,12 @@
 import type {
     CorrectionGateway,
     AssignmentSubmission,
+    CorrectionReview,
     CorrectionFilters,
     PaginatedSubmissions,
 } from './CorrectionGateway';
 import type { HttpClient } from '../http/HttpClient';
+import { recordingFileName } from '../lib/audio-recording';
 
 /**
  * HttpCorrectionGateway — Implementación HTTP del contrato de correcciones.
@@ -12,7 +14,8 @@ import type { HttpClient } from '../http/HttpClient';
  * Endpoints del backend:
  *   GET    /corrections/pending      → listPending()
  *   GET    /corrections/history      → listHistory(filters)
- *   PATCH  /corrections/:id/review   → review(id, action, feedback)
+ *   PATCH  /corrections/:id/review   → review(id, action, audio)
+ *   GET    /corrections/reviews/:id/audio → getReviewAudio(id)
  *
  * Mismo patrón que HttpCertificateGateway:
  *   - credentials: 'include' → envía la cookie JWT
@@ -100,18 +103,37 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     async review(
         submissionId: string,
         action: 'approve' | 'reject',
-        feedback: string,
-    ): Promise<AssignmentSubmission> {
+        audio: Blob,
+    ): Promise<CorrectionReview> {
+        const body = new FormData();
+        body.append('action', action);
+        body.append('audio', audio, recordingFileName(audio.type));
+
         const res = await this.http.fetch(`${this.baseUrl}/corrections/${submissionId}/review`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ action, feedback }),
+            body,
         });
         if (!res.ok) {
             const errBody = await res.json().catch(() => ({})) as { message?: string };
-            throw new Error(errBody.message ?? `Error al revisar entrega: ${res.statusText}`);
+            throw new Error(errBody.message ?? `Error al enviar la revisión: ${res.statusText}`);
         }
-        return res.json() as Promise<AssignmentSubmission>;
+        return res.json() as Promise<CorrectionReview>;
+    }
+
+    // Se descarga como Blob a través del HttpClient (que renueva la sesión si
+    // venció) en vez de poner la URL en <audio src>, que no puede renovarla.
+    async getReviewAudio(reviewId: string): Promise<Blob> {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/reviews/${reviewId}/audio`, {
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            throw new Error(
+                res.status === 403
+                    ? 'Este audio ya no está disponible.'
+                    : 'No pudimos cargar el audio.',
+            );
+        }
+        return res.blob();
     }
 }
