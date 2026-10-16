@@ -3178,6 +3178,27 @@ input.filter-control[type="search"] {
   line-height: 1.3;
 }
 
+.submission-file-dropzone {
+  gap: 0.6rem;
+  cursor: default;
+}
+
+.submission-file-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  width: min(100%, 15rem);
+  cursor: pointer;
+}
+
+/* Sin pantalla táctil, capture no abre cámara: "Tomar foto" sobra. */
+@media (pointer: fine) {
+  .submission-file-option--camera {
+    display: none;
+  }
+}
+
 /* Botón "Cambiar" superpuesto sobre la preview — no agrega altura. */
 .submission-file-label--overlay {
   position: absolute;
