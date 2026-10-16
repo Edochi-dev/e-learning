@@ -21,6 +21,7 @@ import { ScheduleModule } from './schedule/schedule.module';
 import { PushModule } from './push/push.module';
 import { OrdersModule } from './orders/orders.module';
 import { VideoAssetsModule } from './video-assets/video-assets.module';
+import { LiveClassRemindersModule } from './live-class-reminders/live-class-reminders.module';
 import { BlockVideoStaticMiddleware } from './videos/block-video-static.middleware';
 import { CrossOriginResourcePolicyMiddleware } from './common/middleware/cross-origin-resource-policy.middleware';
 import { buildTypeOrmOptions } from './database/typeorm.config';
@@ -134,6 +135,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     ScheduleModule,
     PushModule,
     VideoAssetsModule,
+    LiveClassRemindersModule,
   ],
 })
 export class AppModule implements NestModule {

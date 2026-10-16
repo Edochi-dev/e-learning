@@ -424,8 +424,6 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     <div className="course-learn__video">
                         <LiveLessonGate
                             lesson={activeLesson}
-                            courseTitle={course.title}
-                            courseUrl={`${window.location.origin}/courses/${courseId}/learn`}
                         >
                             <VideoPlayer
                                 title={activeLesson.title}

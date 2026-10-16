@@ -65,6 +65,7 @@ packages/shared/  Shared domain interfaces and enums (@maris-nails/shared)
 | `certificates` | PDF certificate generation with QR verification, templates and ZIP export |
 | `schedule` | Admin calendar and live-class scheduling with overlap detection |
 | `push` | Web push subscriptions and reminder delivery |
+| `live-class-reminders` | Email reminder to every enrolled student one hour before each live class |
 | `name-change-requests` | Student-requested legal name changes with admin approval |
 
 ---
