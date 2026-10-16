@@ -3178,6 +3178,27 @@ input.filter-control[type="search"] {
   line-height: 1.3;
 }
 
+.submission-file-dropzone {
+  gap: 0.6rem;
+  cursor: default;
+}
+
+.submission-file-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  width: min(100%, 15rem);
+  cursor: pointer;
+}
+
+/* Sin pantalla táctil, capture no abre cámara: "Tomar foto" sobra. */
+@media (pointer: fine) {
+  .submission-file-option--camera {
+    display: none;
+  }
+}
+
 /* Botón "Cambiar" superpuesto sobre la preview — no agrega altura. */
 .submission-file-label--overlay {
   position: absolute;
@@ -5827,23 +5848,9 @@ button.admin-course-students:disabled {
   max-width: 42rem;
 }
 
-/* Botón "Marcar como completada".
-   Integra el progreso de visualización como un "fill" interno que crece
-   con la CSS custom property --watch-fill (seteada desde JSX con el
-   porcentaje visto). Así el botón es simultáneamente CTA + indicador
-   de progreso, sin necesitar una barra separada debajo del video. */
-
-.course-learn__complete-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.35rem;
-  flex-shrink: 0;
-}
-
+/* Botón "Marcar como completada": solo donde el avance no se puede medir
+   (YouTube, clases en vivo). Los videos medibles muestran WatchProgress. */
 .course-learn__complete-btn {
-  position: relative;
-  overflow: hidden;
   padding: 0.6rem 1.25rem;
   border-radius: var(--radius-full);
   border: 2px solid var(--primary);
@@ -5854,27 +5861,6 @@ button.admin-course-students:disabled {
   cursor: pointer;
   transition: color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
   white-space: nowrap;
-}
-
-/* Fill interno que refleja --watch-fill. z-index: 0 lo deja detrás del
-   texto (que tiene z-index: 1 vía .course-learn__complete-btn-label).
-   Se tiñe con el primary — da la sensación de "se está llenando". */
-.course-learn__complete-btn--progress::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: var(--watch-fill, 0%);
-  background: rgba(232, 67, 147, 0.18);
-  transition: width 0.4s ease;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.course-learn__complete-btn-label {
-  position: relative;
-  z-index: 1;
 }
 
 .course-learn__complete-btn:hover:not(:disabled) {
@@ -5895,10 +5881,44 @@ button.admin-course-students:disabled {
   cursor: not-allowed;
 }
 
-.course-learn__complete-hint {
-  font-size: 0.72rem;
+/* Avance del video, separado de cualquier botón: barra fina + texto. */
+.watch-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  width: min(100%, 15rem);
+}
+
+.watch-progress__bar {
+  width: 100%;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.watch-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary), var(--gold));
+  transition: width 0.4s var(--ease-out);
+}
+
+.watch-progress__label {
+  font-size: 0.75rem;
   color: var(--text-muted);
-  letter-spacing: 0.01em;
+  text-align: center;
+}
+
+.watch-progress--done {
+  width: auto;
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
 }
 
 /* Barra de controles de lección: prev | acción (completar) | next.

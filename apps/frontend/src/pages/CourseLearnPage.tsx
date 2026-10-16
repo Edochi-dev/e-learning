@@ -1,10 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-
-// Porcentaje mínimo del video que el alumno debe ver para poder
-// marcar la lección como completada.
-const WATCH_THRESHOLD = 80;
 import { useParams, useSearchParams, Link } from 'react-router-dom';
-import { AUTO_COMPLETE_WATCH_PERCENT, LessonType, VideoProvider } from '@maris-nails/shared';
+import { LessonType, VideoProvider } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import type { VideoGateway } from '../gateways/VideoGateway';
@@ -17,6 +13,8 @@ import { QuizPlayer } from '../components/QuizPlayer';
 import { SubmissionPlayer } from '../components/SubmissionPlayer';
 import { useToast } from '../components/Toast';
 import { enrollWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
+import { WatchProgress } from '../components/WatchProgress';
+import { liveClassPhase } from '../lib/live-class';
 
 /**
  * CourseLearnPage — Página de ESTUDIO del curso.
@@ -347,7 +345,11 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
     const isYoutubeLesson = activeLesson.videoData?.provider === VideoProvider.YOUTUBE;
     // A live stream has no fixed length to measure progress against.
     const isLiveLesson = !!activeLesson.videoData?.isLive;
-    const hasWatchedEnough = isExamLesson || isYoutubeLesson || isLiveLesson || watchProgress >= WATCH_THRESHOLD;
+    const isTrackedVideo = !isExamLesson && !isCorrectionLesson && !isYoutubeLesson && !isLiveLesson;
+    // Una clase en vivo no se puede dar por vista antes de que empiece.
+    const live = activeLesson.videoData;
+    const liveNotStarted = isLiveLesson && !!live?.liveStartsAt && !!live.liveEndsAt
+        && liveClassPhase(new Date(live.liveStartsAt), new Date(live.liveEndsAt), new Date()) === 'upcoming';
 
     // Navegación entre lecciones
     const prevLesson = activeLessonIndex > 0 ? course.lessons[activeLessonIndex - 1] : null;
@@ -460,35 +462,21 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     </div>
 
                     <div className="course-learn__nav-action">
-                        {/* Para exámenes y correcciones, la lección se completa automáticamente
-                            (al aprobar quiz / al aprobar la profesora). Solo botón manual para class.
-
-                            El botón muestra el progreso de visualización como un fill interno
-                            que crece con watchProgress (solo para videos locales no completados). */}
-                        {!isExamLesson && !isCorrectionLesson && (
-                            <div className="course-learn__complete-wrap">
-                                <button
-                                    className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''} ${!isCurrentCompleted && !isYoutubeLesson && !isLiveLesson ? 'course-learn__complete-btn--progress' : ''}`}
-                                    onClick={() => handleMarkComplete(activeLesson.id)}
-                                    disabled={isCurrentCompleted || markingComplete || !hasWatchedEnough}
-                                    style={
-                                        !isCurrentCompleted && !isYoutubeLesson && !isLiveLesson
-                                            ? ({ '--watch-fill': `${watchProgress}%` } as React.CSSProperties)
-                                            : undefined
-                                    }
-                                >
-                                    <span className="course-learn__complete-btn-label">
-                                        {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
-                                    </span>
-                                </button>
-                                {!isCurrentCompleted && !isYoutubeLesson && !isLiveLesson && (
-                                    <span className="course-learn__complete-hint">
-                                        {hasWatchedEnough
-                                            ? `Se completa sola al ver el ${AUTO_COMPLETE_WATCH_PERCENT}%`
-                                            : `Podrás marcarla al ver el ${WATCH_THRESHOLD}%`}
-                                    </span>
-                                )}
-                            </div>
+                        {/* Cada tipo se completa a su manera: un video medible se completa
+                            solo (aquí solo se informa el avance); YouTube y las clases en vivo
+                            no se pueden medir, así que se marcan a mano; quiz y práctica, al
+                            aprobarse. */}
+                        {isTrackedVideo && (
+                            <WatchProgress percent={watchProgress} completed={isCurrentCompleted} />
+                        )}
+                        {!isExamLesson && !isCorrectionLesson && !isTrackedVideo && !liveNotStarted && (
+                            <button
+                                className={`course-learn__complete-btn ${isCurrentCompleted ? 'course-learn__complete-btn--done' : ''}`}
+                                onClick={() => handleMarkComplete(activeLesson.id)}
+                                disabled={isCurrentCompleted || markingComplete}
+                            >
+                                {isCurrentCompleted ? 'Completada' : 'Marcar como completada'}
+                            </button>
                         )}
                         {isExamLesson && isCurrentCompleted && (
                             <span className="course-learn__complete-btn course-learn__complete-btn--done">

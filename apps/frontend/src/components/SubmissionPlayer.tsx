@@ -82,6 +82,11 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
     const [photo, setPhoto] = useState<File | null>(null);
     const [isPreparing, setIsPreparing] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
+    const cameraRef = useRef<HTMLInputElement>(null);
+    const clearInputs = () => {
+        if (fileRef.current) fileRef.current.value = '';
+        if (cameraRef.current) cameraRef.current.value = '';
+    };
 
     useEffect(() => {
         return () => { if (preview) URL.revokeObjectURL(preview); };
@@ -124,7 +129,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
             setPreview(null);
             setPhoto(null);
             setIsResubmitting(false);
-            if (fileRef.current) fileRef.current.value = '';
+            clearInputs();
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error al enviar tu entrega.');
         } finally {
@@ -201,10 +206,20 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                 <input
                                     ref={fileRef}
                                     type="file"
-                                    accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+                                    accept="image/*"
                                     onChange={handleFileSelect}
                                     className="submission-file-input"
                                     id="submission-file"
+                                />
+                                {/* capture abre directo la cámara trasera en el teléfono. */}
+                                <input
+                                    ref={cameraRef}
+                                    type="file"
+                                    accept="image/*"
+                                    capture="environment"
+                                    onChange={handleFileSelect}
+                                    className="submission-file-input"
+                                    id="submission-camera"
                                 />
                                 {preview ? (
                                     <>
@@ -214,11 +229,16 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                         </label>
                                     </>
                                 ) : (
-                                    <label htmlFor="submission-file" className="submission-file-dropzone">
+                                    <div className="submission-file-dropzone">
                                         <span className="submission-file-dropzone-icon" aria-hidden="true">📷</span>
-                                        <span>Seleccionar foto</span>
+                                        <label htmlFor="submission-camera" className="btn-primary submission-file-option submission-file-option--camera">
+                                            Tomar foto
+                                        </label>
+                                        <label htmlFor="submission-file" className="btn-secondary submission-file-option">
+                                            Elegir de la galería
+                                        </label>
                                         <span className="submission-file-dropzone-hint">JPG · PNG · WebP · HEIC</span>
-                                    </label>
+                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -251,7 +271,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                                 setPreview(null);
                                                 setPhoto(null);
                                                 setError(null);
-                                                if (fileRef.current) fileRef.current.value = '';
+                                                clearInputs();
                                             }}
                                         >
                                             Cancelar
