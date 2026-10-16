@@ -48,6 +48,7 @@ import { OptionalLiveLessonVideo1784600000000 } from './migrations/1784600000000
 import { AddEmailOutbox1784700000000 } from './migrations/1784700000000-AddEmailOutbox';
 import { AddUserAlertTopics1784800000000 } from './migrations/1784800000000-AddUserAlertTopics';
 import { AddCorrectionReviews1784900000000 } from './migrations/1784900000000-AddCorrectionReviews';
+import { AddWatchedSegments1785000000000 } from './migrations/1785000000000-AddWatchedSegments';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -117,4 +118,5 @@ export const MIGRATIONS = [
   AddEmailOutbox1784700000000,
   AddUserAlertTopics1784800000000,
   AddCorrectionReviews1784900000000,
+  AddWatchedSegments1785000000000,
 ];

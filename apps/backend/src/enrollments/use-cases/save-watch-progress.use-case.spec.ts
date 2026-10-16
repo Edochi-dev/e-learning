@@ -1,48 +1,91 @@
 import { Test } from '@nestjs/testing';
+import { LessonType } from '@maris-nails/shared';
 import { SaveWatchProgressUseCase } from './save-watch-progress.use-case';
 import { WatchProgressGateway } from '../../progress/gateways/watch-progress.gateway';
+import { LessonProgressGateway } from '../../progress/gateways/lesson-progress.gateway';
+import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 
-/**
- * Tests para SaveWatchProgressUseCase — guardar porcentaje de video visto.
- *
- * Mismo patrón de ownership check que MarkLessonCompleteUseCase:
- * verificar matrícula antes de guardar cualquier dato de progreso.
- *
- * Sin este check, un usuario podría:
- *   1. Averiguar lessonIds de cursos premium (por inspección de red)
- *   2. Guardar progreso falso sin haber comprado el curso
- */
 describe('SaveWatchProgressUseCase', () => {
   let useCase: SaveWatchProgressUseCase;
-  let watchProgressGateway: jest.Mocked<WatchProgressGateway>;
+  let watchProgress: jest.Mocked<WatchProgressGateway>;
+  let lessonProgress: jest.Mocked<LessonProgressGateway>;
+  let lessons: jest.Mocked<LessonGateway>;
 
   const userId = 'user-uuid-123';
   const lessonId = 'lesson-uuid-456';
 
   beforeEach(async () => {
-    jest.clearAllMocks();
-
     const module = await Test.createTestingModule({
       providers: [
         SaveWatchProgressUseCase,
         {
           provide: WatchProgressGateway,
-          useValue: { saveWatchProgress: jest.fn() },
+          useValue: { recordWatchedSegments: jest.fn() },
         },
+        {
+          provide: LessonProgressGateway,
+          useValue: { markLessonComplete: jest.fn() },
+        },
+        { provide: LessonGateway, useValue: { findLesson: jest.fn() } },
       ],
     }).compile();
 
     useCase = module.get(SaveWatchProgressUseCase);
-    watchProgressGateway = module.get(WatchProgressGateway);
+    watchProgress = module.get(WatchProgressGateway);
+    lessonProgress = module.get(LessonProgressGateway);
+    lessons = module.get(LessonGateway);
   });
 
-  it('guarda el progreso de video cuando el usuario está matriculado', async () => {
-    await useCase.execute(userId, lessonId, 75);
+  it('suma los segmentos de la sesión y devuelve el acumulado del servidor', async () => {
+    watchProgress.recordWatchedSegments.mockResolvedValue(42);
 
-    expect(watchProgressGateway.saveWatchProgress).toHaveBeenCalledWith(
+    await expect(useCase.execute(userId, lessonId, [0, 1, 2])).resolves.toEqual(
+      {
+        watchedPercent: 42,
+        lessonCompleted: false,
+      },
+    );
+    expect(watchProgress.recordWatchedSegments).toHaveBeenCalledWith(
       userId,
       lessonId,
-      75,
+      [0, 1, 2],
+    );
+    expect(lessonProgress.markLessonComplete).not.toHaveBeenCalled();
+  });
+
+  it('completa una clase al llegar al 95% acumulado', async () => {
+    watchProgress.recordWatchedSegments.mockResolvedValue(95);
+    lessons.findLesson.mockResolvedValue({ type: LessonType.CLASS } as never);
+
+    await expect(useCase.execute(userId, lessonId, [94])).resolves.toEqual({
+      watchedPercent: 95,
+      lessonCompleted: true,
+    });
+    expect(lessonProgress.markLessonComplete).toHaveBeenCalledWith(
+      userId,
+      lessonId,
     );
   });
+
+  it('no completa por debajo del umbral aunque falte un solo segmento', async () => {
+    watchProgress.recordWatchedSegments.mockResolvedValue(94);
+
+    const result = await useCase.execute(userId, lessonId, [93]);
+
+    expect(result.lessonCompleted).toBe(false);
+    expect(lessons.findLesson).not.toHaveBeenCalled();
+  });
+
+  it.each([LessonType.EXAM, LessonType.CORRECTION])(
+    'nunca completa una lección de tipo %s por ver video',
+    async (type) => {
+      watchProgress.recordWatchedSegments.mockResolvedValue(100);
+      lessons.findLesson.mockResolvedValue({ type } as never);
+
+      const result = await useCase.execute(userId, lessonId, [99]);
+
+      expect(result.lessonCompleted).toBe(false);
+      expect(lessonProgress.markLessonComplete).not.toHaveBeenCalled();
+    },
+  );
 });

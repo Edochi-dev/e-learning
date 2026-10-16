@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WatchProgressGateway } from '../gateways/watch-progress.gateway';
 import { LessonProgress } from '../entities/lesson-progress.entity';
+import { toSegmentBits } from '../domain/watched-segments';
 
 /**
  * WatchProgressRepository -- Implementación concreta de WatchProgressGateway.
@@ -24,27 +25,31 @@ export class WatchProgressRepository implements WatchProgressGateway {
   ) {}
 
   /**
-   * INSERT ... ON CONFLICT con condición especial:
-   *   - Crea el registro si no existe (primer avance del alumno).
-   *   - Si ya existe: actualiza SOLO si el nuevo percent > el guardado
-   *     Y la lección no está completada (no pisamos la compleción).
+   * Upsert atómico: OR de bits con lo guardado y el porcentaje recalculado en
+   * la misma sentencia, así dos pestañas a la vez no se pisan. Una lección ya
+   * completada conserva su porcentaje (pudo completarse a mano antes del 100%).
    *
-   * Usa SQL directo porque TypeORM no soporta WHERE en ON CONFLICT nativamente.
+   * SQL directo: TypeORM no expresa el OR de bits ni el CASE en ON CONFLICT.
    */
-  async saveWatchProgress(
+  async recordWatchedSegments(
     userId: string,
     lessonId: string,
-    percent: number,
-  ): Promise<void> {
-    await this.lessonProgressRepository.query(
-      `INSERT INTO lesson_progress ("userId", "lessonId", "watchedPercent")
-       VALUES ($1, $2, $3)
-       ON CONFLICT ("userId", "lessonId")
-       DO UPDATE SET "watchedPercent" = EXCLUDED."watchedPercent"
-       WHERE EXCLUDED."watchedPercent" > lesson_progress."watchedPercent"
-         AND lesson_progress."completedAt" IS NULL`,
-      [userId, lessonId, percent],
-    );
+    segments: number[],
+  ): Promise<number> {
+    const rows: { watchedPercent: number }[] =
+      await this.lessonProgressRepository.query(
+        `INSERT INTO lesson_progress ("userId", "lessonId", "watchedSegments", "watchedPercent")
+         VALUES ($1, $2, $3::bit(100), bit_count($3::bit(100)))
+         ON CONFLICT ("userId", "lessonId")
+         DO UPDATE SET
+           "watchedSegments" = lesson_progress."watchedSegments" | EXCLUDED."watchedSegments",
+           "watchedPercent" = CASE WHEN lesson_progress."completedAt" IS NULL
+             THEN bit_count(lesson_progress."watchedSegments" | EXCLUDED."watchedSegments")
+             ELSE lesson_progress."watchedPercent" END
+         RETURNING "watchedPercent"`,
+        [userId, lessonId, toSegmentBits(segments)],
+      );
+    return Number(rows[0].watchedPercent);
   }
 
   /**

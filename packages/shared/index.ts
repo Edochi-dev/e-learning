@@ -476,6 +476,24 @@ export interface QuizResultDetail {
 }
 
 /**
+ * Un video se divide en WATCH_SEGMENTS partes iguales (cada una, 1%). El
+ * progreso es la unión de las partes vistas en todas las sesiones.
+ */
+export const WATCH_SEGMENTS = 100;
+
+/** Con este porcentaje acumulado visto, una clase se completa sola. */
+export const AUTO_COMPLETE_WATCH_PERCENT = 95;
+
+/**
+ * WatchProgressResult — Respuesta al guardar segmentos vistos: el porcentaje
+ * acumulado de todas las sesiones y si con él la lección quedó completada.
+ */
+export interface WatchProgressResult {
+    watchedPercent: number;
+    lessonCompleted: boolean;
+}
+
+/**
  * QuizResult — Respuesta del backend tras evaluar un quiz.
  */
 export interface QuizResult {
