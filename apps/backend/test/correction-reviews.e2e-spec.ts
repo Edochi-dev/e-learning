@@ -344,6 +344,30 @@ describe('Revisiones de corrección con audio (e2e)', () => {
       expect(byId[b].transcriptStatus).toBe('failed');
     });
 
+    it('al encender la transcripción encola lo grabado sin ella, si el audio sigue', async () => {
+      const withAudio = await recordReview(await insertSubmission(), {
+        transcriptStatus: TranscriptStatus.UNAVAILABLE,
+      });
+      lessonId = await newLesson();
+      const audioGone = await recordReview(await insertSubmission(), {
+        transcriptStatus: TranscriptStatus.UNAVAILABLE,
+        withAudio: false,
+      });
+
+      await queue().queueUntranscribed();
+
+      const rows: { id: string; transcriptStatus: string }[] =
+        await dataSource.query(
+          `SELECT "id", "transcriptStatus" FROM "correction_reviews" WHERE "id" = ANY($1)`,
+          [[withAudio, audioGone]],
+        );
+      const status = Object.fromEntries(
+        rows.map((r) => [r.id, r.transcriptStatus]),
+      );
+      expect(status[withAudio]).toBe('pending');
+      expect(status[audioGone]).toBe('unavailable');
+    });
+
     it('encuentra solo los audios vencidos y conserva la revisión al limpiarlos', async () => {
       const now = new Date('2030-06-01T00:00:00Z');
       const due = await recordReview(await insertSubmission(), {

@@ -86,6 +86,17 @@ export class CorrectionReviewsRepository
     return result.affected ?? 0;
   }
 
+  async queueUntranscribed(): Promise<number> {
+    const result = await this.repo.update(
+      {
+        transcriptStatus: TranscriptStatus.UNAVAILABLE,
+        audioFile: Not(IsNull()),
+      },
+      { transcriptStatus: TranscriptStatus.PENDING },
+    );
+    return result.affected ?? 0;
+  }
+
   async findExpired(now: Date, limit: number): Promise<ExpiredAudio[]> {
     const rows = await this.repo.find({
       select: { id: true, audioFile: true },

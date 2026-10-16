@@ -14,4 +14,10 @@ export abstract class ReviewTranscriptionQueue {
 
   /** Puts back to pending the reviews a crash or restart left half-done. */
   abstract requeueInterrupted(): Promise<number>;
+
+  /**
+   * Queues the reviews recorded while transcription was off, as long as their
+   * audio still exists.
+   */
+  abstract queueUntranscribed(): Promise<number>;
 }

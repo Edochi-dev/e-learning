@@ -28,6 +28,12 @@ export class ReviewTranscriptionWorker implements OnApplicationBootstrap {
         `${requeued} transcripción(es) interrumpida(s) vuelven a la cola`,
       );
     }
+    const backlog = await this.queue.queueUntranscribed();
+    if (backlog > 0) {
+      this.logger.log(
+        `${backlog} audio(s) grabado(s) sin transcripción entran a la cola`,
+      );
+    }
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)
