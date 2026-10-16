@@ -7,6 +7,7 @@ import type {
 } from './CorrectionGateway';
 import type { HttpClient } from '../http/HttpClient';
 import { recordingFileName } from '../lib/audio-recording';
+import { readOptionalJson } from '../http/read-optional-json';
 
 /**
  * HttpCorrectionGateway — Implementación HTTP del contrato de correcciones.
@@ -93,9 +94,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
             if (res.status === 404) return null;
             throw new Error(`Error al consultar estado: ${res.statusText}`);
         }
-        const data = await res.json();
-        // El backend retorna null si no hay submission
-        return data ?? null;
+        return readOptionalJson<AssignmentSubmission>(res);
     }
 
     // ── Métodos de admin ───────────────────────────────────────────────
