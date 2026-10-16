@@ -1,20 +1,11 @@
 import React from 'react';
 import { LIVE_JOIN_LEAD_MINUTES, type PublicLesson } from '@maris-nails/shared';
-import {
-    ACADEMY_TIME_ZONE,
-    buildIcs,
-    formatCountdown,
-    googleCalendarUrl,
-    liveClassPhase,
-    openClassLabel,
-    type CalendarEvent,
-} from '../lib/live-class';
+import { ACADEMY_TIME_ZONE, formatCountdown, liveClassPhase, openClassLabel } from '../lib/live-class';
 import { useNow } from '../hooks/useNow';
+import { LiveReminderButton } from './LiveReminderButton';
 
 interface Props {
     lesson: PublicLesson;
-    courseTitle: string;
-    courseUrl: string;
     /** The stream player, rendered once the class opens. */
     children: React.ReactNode;
 }
@@ -36,21 +27,11 @@ const academyTime = new Intl.DateTimeFormat('es', {
     timeZone: ACADEMY_TIME_ZONE,
 });
 
-function downloadIcs(event: CalendarEvent): void {
-    const blob = new Blob([buildIcs(event)], { type: 'text/calendar;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'clase-en-vivo.ics';
-    link.click();
-    URL.revokeObjectURL(url);
-}
-
 /**
  * Shows a live lesson's countdown until its stream opens, then the player.
  * Recorded lessons pass straight through to the player.
  */
-export const LiveLessonGate: React.FC<Props> = ({ lesson, courseTitle, courseUrl, children }) => {
+export const LiveLessonGate: React.FC<Props> = ({ lesson, children }) => {
     const now = useNow(1000);
     const video = lesson.videoData;
 
@@ -79,15 +60,6 @@ export const LiveLessonGate: React.FC<Props> = ({ lesson, courseTitle, courseUrl
         );
     }
 
-    const event: CalendarEvent = {
-        id: lesson.id,
-        title: `${lesson.title} — ${courseTitle}`,
-        description: `Clase en vivo de ${courseTitle} en Maris Nails Academy.`,
-        url: courseUrl,
-        startsAt,
-        endsAt,
-    };
-
     return (
         <section className="live-card" aria-labelledby={`live-card-${lesson.id}`}>
             <p className="live-card__eyebrow">Clase en vivo</p>
@@ -102,12 +74,7 @@ export const LiveLessonGate: React.FC<Props> = ({ lesson, courseTitle, courseUrl
             <p className="live-card__hint">La transmisión aparecerá aquí {LIVE_JOIN_LEAD_MINUTES} minutos antes de empezar.</p>
 
             <div className="live-card__actions">
-                <a className="btn-secondary" href={googleCalendarUrl(event)} target="_blank" rel="noopener noreferrer">
-                    Agregar a Google Calendar
-                </a>
-                <button type="button" className="btn-secondary" onClick={() => downloadIcs(event)}>
-                    Agregar al calendario del teléfono
-                </button>
+                <LiveReminderButton key={lesson.id} lessonId={lesson.id} />
             </div>
         </section>
     );

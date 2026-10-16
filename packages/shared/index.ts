@@ -54,6 +54,9 @@ export type VideoProvider = typeof VideoProvider[keyof typeof VideoProvider];
  */
 export const LIVE_JOIN_LEAD_MINUTES = 15;
 
+/** How long before a live class every enrolled student is emailed a reminder. */
+export const LIVE_REMINDER_LEAD_MINUTES = 60;
+
 /** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
 export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
     /** Absent while there is nothing to play yet (a live class before its recording). */
