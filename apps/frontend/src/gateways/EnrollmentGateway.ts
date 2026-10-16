@@ -44,7 +44,7 @@ export interface CourseStudent {
     daysRemaining: number | null;
 }
 
-import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass, WatchProgressResult, CourseOverview } from '@maris-nails/shared';
 
 /**
  * EnrollmentGateway (Frontend) — Contrato para las operaciones de matrículas.
@@ -76,8 +76,14 @@ export interface EnrollmentGateway {
         watchProgress: Record<string, number>;
     }>;
 
-    /** Guarda el porcentaje de video visto para una lección */
-    saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void>;
+    /**
+     * Suma los segmentos de video vistos en la sesión. Devuelve el porcentaje
+     * acumulado (todas las sesiones) y si la lección quedó completada.
+     */
+    saveWatchedSegments(lessonId: string, courseId: string, segments: number[]): Promise<WatchProgressResult>;
+
+    /** Estado de cada lección del curso, para su portada. */
+    getCourseOverview(courseId: string): Promise<CourseOverview>;
 
     /** Envía las respuestas de un quiz y devuelve el resultado con feedback */
     submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult>;

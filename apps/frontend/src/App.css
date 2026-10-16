@@ -8352,3 +8352,316 @@ button.admin-course-students:disabled {
     padding: 1.25rem 1rem;
   }
 }
+
+/* === PORTADA DEL CURSO (/mis-cursos/:id) === */
+.course-home {
+  max-width: 960px;
+  padding-top: clamp(1.25rem, 4vw, 2.5rem);
+  padding-bottom: clamp(2rem, 6vw, 4rem);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.course-home--empty {
+  align-items: flex-start;
+}
+
+.course-home__muted {
+  color: var(--text-muted);
+}
+
+.course-home__back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  align-self: flex-start;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.course-home__back:hover {
+  color: var(--primary);
+}
+
+/* Imagen y resumen lado a lado cuando ambos caben (≈ 2 × 300px). */
+.course-home__hero {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  gap: clamp(1.25rem, 4vw, 2.5rem);
+  align-items: start;
+}
+
+.course-home__visual {
+  aspect-ratio: 16 / 10;
+  max-height: min(40svh, 360px);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.course-home__visual .course-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.course-home__fallback {
+  font-size: 3rem;
+}
+
+.course-home__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.course-home__eyebrow {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.course-home__title {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
+  color: var(--text-primary);
+}
+
+.course-home__desc {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+
+.course-home__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.course-home__access {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.course-home__actions {
+  margin-top: 0.25rem;
+}
+
+.course-home__cta {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  max-width: 100%;
+  padding: 0.75rem 1.5rem;
+  text-decoration: none;
+}
+
+.course-home__cta-next {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.9;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.course-home__done {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.course-home__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.course-home__heading {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-primary);
+}
+
+.course-home__live,
+.course-home__lessons {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.course-home__live-item {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.course-home__live-when {
+  font-weight: 700;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.course-home__live-when::first-letter {
+  text-transform: uppercase;
+}
+
+.course-home__lesson {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+a.course-home__lesson:hover {
+  border-color: var(--primary);
+}
+
+.course-home__lesson--next {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.course-home__lesson--locked {
+  opacity: 0.7;
+}
+
+.course-home__lesson-index {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.course-home__lesson-index--done {
+  background: var(--success);
+  color: white;
+}
+
+.course-home__lesson-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.course-home__lesson-title {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.course-home__lesson-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.course-home__lesson-meta::first-letter {
+  text-transform: uppercase;
+}
+
+.course-home__badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  color: var(--text-muted);
+  background: var(--surface);
+}
+
+.course-home__badge--done {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+}
+
+.course-home__badge--active {
+  color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.course-home__badge--waiting {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--gold) 20%, transparent);
+}
+
+.course-home__badge--attention {
+  color: var(--danger);
+  background: var(--danger-soft);
+}
+
+.course-home__certificate p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Fila angosta: la etiqueta de estado baja bajo el título. */
+@media (max-width: 420px) {
+  .course-home__lesson {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .course-home__badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+
+/* El llamado de la ficha puede ser enlace (Ir al curso, WhatsApp) o botón. */
+.cd-purchase-card__cta {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.cd-purchase-card__enrolled {
+  margin: 0.5rem 0 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}

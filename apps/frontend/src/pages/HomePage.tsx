@@ -7,9 +7,13 @@ import { API_URL as BACKEND_URL } from '../config';
 import { smoothScrollToElement, getHeaderOffset } from '../lib/smoothScroll';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { FaqSection } from '../components/FaqSection';
+import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
+import { useEnrolledCourseIds } from '../hooks/useEnrolledCourseIds';
+import { CourseCardLink } from '../components/CourseCardLink';
 
 interface HomePageProps {
     gateway: CourseGateway;
+    enrollmentGateway: EnrollmentGateway;
 }
 
 const PREVIEW_COUNT = 3;
@@ -53,8 +57,9 @@ const STATIC_PREVIEWS = [
     },
 ];
 
-export const HomePage = ({ gateway }: HomePageProps) => {
+export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
     const { courses, loading } = useCourses(gateway);
+    const enrolledIds = useEnrolledCourseIds(enrollmentGateway);
     const previewCourses = courses.slice(0, PREVIEW_COUNT);
     const location = useLocation();
 
@@ -244,9 +249,9 @@ export const HomePage = ({ gateway }: HomePageProps) => {
                                             <p className="preview-card__desc">
                                                 {course.description || 'Domina esta técnica con nuestra metodología paso a paso.'}
                                             </p>
-                                            <Link to={`/courses/${course.id}`} className="preview-card__cta">
+                                            <CourseCardLink courseId={course.id} enrolledIds={enrolledIds} className="preview-card__cta">
                                                 Descubrir técnica →
-                                            </Link>
+                                            </CourseCardLink>
                                         </div>
                                     </article>
                                 ))}

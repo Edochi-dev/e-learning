@@ -4,23 +4,10 @@ import { useCountUp } from '../hooks/useCountUp';
 import { useAnyVisible } from '../hooks/useAnyVisible';
 import { SALES_LANDING, type SalesLandingStat, type SalesLandingPlan, type SalesLandingTestimonial } from '../content/salesLanding';
 import './SalesLandingPage.css';
+import { buildWhatsappUrl } from '../lib/whatsapp';
 
 const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
 
-/**
- * Construye el enlace de WhatsApp según la forma del destino.
- *
- * El enlace corto de WhatsApp Business (wa.me/message/XXXX) IGNORA el parámetro
- * `text`: el saludo lo fija el perfil de la empresa. Se devuelve tal cual, y se
- * pierde el prellenado — las dos tarjetas acaban mandando el mismo mensaje.
- * Con un número, en cambio, cada tarjeta puede anunciar de qué grupo viene.
- */
-function buildWhatsappUrl(target: string, message: string): string {
-    if (target.includes('wa.me/message/')) return target;
-
-    const number = target.replace(/\D/g, '');
-    return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
-}
 
 /**
  * Pinta **lo marcado entre dobles asteriscos** con el color de énfasis.

@@ -1,4 +1,4 @@
-import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass, WatchProgressResult, CourseOverview } from '@maris-nails/shared';
 import type { EnrollmentGateway, EnrollmentWithProgress, CourseStudent } from './EnrollmentGateway';
 import type { HttpClient } from '../http/HttpClient';
 
@@ -93,15 +93,26 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         return response.json();
     }
 
-    async saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void> {
-        // Fire-and-forget: si falla (error de red, etc.) no interrumpimos la experiencia.
-        // El progreso se reintentará en el siguiente umbral del 5%.
-        this.http.fetch(`${this.baseUrl}/enrollments/me/watch-progress`, {
+    async saveWatchedSegments(lessonId: string, courseId: string, segments: number[]): Promise<WatchProgressResult> {
+        // keepalive: el último envío (al cerrar la pestaña o cambiar de lección)
+        // llega aunque la página ya no exista.
+        const res = await this.http.fetch(`${this.baseUrl}/enrollments/me/watch-progress`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ lessonId, courseId, percent }),
-        }).catch(() => { /* silencioso */ });
+            keepalive: true,
+            body: JSON.stringify({ lessonId, courseId, segments }),
+        });
+        if (!res.ok) throw new Error('No se pudo guardar el progreso del video');
+        return res.json();
+    }
+
+    async getCourseOverview(courseId: string): Promise<CourseOverview> {
+        const res = await this.http.fetch(`${this.baseUrl}/enrollments/me/courses/${courseId}/overview`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error('No se pudo cargar tu avance en el curso');
+        return res.json();
     }
 
     async submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult> {
