@@ -49,6 +49,7 @@ import { AddEmailOutbox1784700000000 } from './migrations/1784700000000-AddEmail
 import { AddUserAlertTopics1784800000000 } from './migrations/1784800000000-AddUserAlertTopics';
 import { AddCorrectionReviews1784900000000 } from './migrations/1784900000000-AddCorrectionReviews';
 import { AddWatchedSegments1785000000000 } from './migrations/1785000000000-AddWatchedSegments';
+import { SubmissionDatesAsInstants1785100000000 } from './migrations/1785100000000-SubmissionDatesAsInstants';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -119,4 +120,5 @@ export const MIGRATIONS = [
   AddUserAlertTopics1784800000000,
   AddCorrectionReviews1784900000000,
   AddWatchedSegments1785000000000,
+  SubmissionDatesAsInstants1785100000000,
 ];

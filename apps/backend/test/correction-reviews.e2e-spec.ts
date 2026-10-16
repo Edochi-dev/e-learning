@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { randomUUID } from 'crypto';
@@ -21,6 +21,7 @@ import { ExpiredReviewAudioGateway } from '../src/corrections/gateways/expired-r
 import { CorrectionAudioStore } from '../src/corrections/gateways/correction-audio-store.gateway';
 import { TranscriptStatus } from '../src/corrections/domain/transcript-status';
 import { AddCorrectionReviews1784900000000 } from '../src/database/migrations/1784900000000-AddCorrectionReviews';
+import { SubmissionDatesAsInstants1785100000000 } from '../src/database/migrations/1785100000000-SubmissionDatesAsInstants';
 
 /**
  * Review history against real Postgres: the legacy-feedback migration (time
@@ -159,15 +160,27 @@ describe('Revisiones de corrección con audio (e2e)', () => {
 
   describe('migración de los comentarios escritos', () => {
     const migration = new AddCorrectionReviews1784900000000();
+    // Later migrations change the same columns: undo them first so the
+    // scenario runs on the schema this migration was written for.
+    const later = new SubmissionDatesAsInstants1785100000000();
 
-    async function run(direction: 'up' | 'down'): Promise<void> {
+    async function run(
+      direction: 'up' | 'down',
+      target: {
+        up(r: QueryRunner): Promise<void>;
+        down(r: QueryRunner): Promise<void>;
+      } = migration,
+    ): Promise<void> {
       const runner = dataSource.createQueryRunner();
       try {
-        await migration[direction](runner);
+        await target[direction](runner);
       } finally {
         await runner.release();
       }
     }
+
+    beforeAll(() => run('down', later));
+    afterAll(() => run('up', later));
 
     it('convierte cada comentario en una revisión sin audio, en hora de Chile', async () => {
       await run('down');
