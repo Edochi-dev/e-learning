@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom';
 import type { CertificateGateway } from '../gateways/CertificateGateway';
 import { useCertificate } from '../hooks/useCertificate';
 import { parseCalendarDate } from '../lib/calendar-date';
+import { saveBlob } from '../lib/save-blob';
+import { PdfPagePreview } from '../components/PdfPagePreview';
 
 interface Props {
     gateway: CertificateGateway;
@@ -16,7 +18,7 @@ interface Props {
  *  - Nombre del titular
  *  - ID único del certificado (ej. MR-00001)
  *  - Fecha de otorgación
- *  - El PDF generado (embed para visualizar)
+ *  - La primera página del PDF generado
  *  - Botón de descarga
  *  - Mensaje de validez de la academia
  *
@@ -26,31 +28,24 @@ interface Props {
 export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();
     const { certificate, loading, error } = useCertificate(gateway, id!);
-    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [pdf, setPdf] = useState<Blob | null>(null);
 
-    // Descargamos el PDF como Blob via gateway para:
-    //   1. Evitar que la página conozca la URL del backend (Clean Architecture)
-    //   2. Evitar bloqueos CSP de frame-ancestors en el iframe
+    // El PDF se baja como Blob vía gateway para que la página no conozca la URL
+    // del backend; el mismo Blob sirve para la vista previa y para la descarga.
     useEffect(() => {
         if (!certificate) return;
         const controller = new AbortController();
-        let url: string | null = null;
 
         gateway.downloadCertificatePdf(certificate.filePath)
             .then(blob => {
-                if (controller.signal.aborted) return;
-                url = URL.createObjectURL(blob);
-                setBlobUrl(url);
+                if (!controller.signal.aborted) setPdf(blob);
             })
             .catch((err: unknown) => {
                 if ((err as Error).name === 'AbortError') return;
-                setBlobUrl(null);
+                setPdf(null);
             });
 
-        return () => {
-            controller.abort();
-            if (url) URL.revokeObjectURL(url);
-        };
+        return () => controller.abort();
     }, [certificate, gateway]);
 
     if (loading) {
@@ -65,7 +60,7 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
         return (
             <div className="container" style={{ padding: '4rem 1rem', textAlign: 'center' }}>
                 <div style={{
-                    background: 'var(--bg-card)',
+                    background: 'var(--bg-elevated)',
                     border: '1px solid var(--border)',
                     borderRadius: '12px',
                     padding: '2.5rem',
@@ -84,13 +79,8 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
     }
 
     const handleDownload = async () => {
-        const blob = await gateway.downloadCertificatePdf(certificate.filePath);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        const blob = pdf ?? await gateway.downloadCertificatePdf(certificate.filePath);
+        saveBlob(blob, `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`);
     };
 
     const issuedDate = parseCalendarDate(certificate.certificateDate).toLocaleDateString('es-MX', {
@@ -100,99 +90,46 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
     });
 
     return (
-        <div className="container" style={{ padding: '3rem 1rem', maxWidth: '860px', margin: '0 auto' }}>
+        <div className="container cert-verify">
+            <header className="cert-verify__hero">
+                <div className="cert-verify__hero-icon" aria-hidden="true">🎓</div>
+                <h1 className="cert-verify__title">Certificado Verificado</h1>
+                <p className="cert-verify__academy">Mari's Nails Academy</p>
+            </header>
 
-            {/* Encabezado de verificación */}
-            <div style={{
-                background: 'linear-gradient(135deg, var(--primary), var(--gold))',
-                borderRadius: '16px',
-                padding: '2rem',
-                color: 'white',
-                marginBottom: '2rem',
-                textAlign: 'center',
-            }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎓</div>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontFamily: 'var(--font-heading)' }}>
-                    Certificado Verificado
-                </h1>
-                <p style={{ margin: '0.25rem 0 0', opacity: 0.9 }}>
-                    Mari's Nails Academy
-                </p>
-            </div>
-
-            {/* Datos del certificado */}
-            <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '1.75rem',
-                marginBottom: '1.5rem',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '1.25rem',
-            }}>
+            <dl className="cert-verify__facts">
                 <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Titular</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.recipientName}</p>
+                    <dt>Titular</dt>
+                    <dd>{certificate.recipientName}</dd>
                 </div>
                 <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ID de Certificado</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>{certificate.certificateNumber}</p>
+                    <dt>ID de Certificado</dt>
+                    <dd className="cert-verify__number">{certificate.certificateNumber}</dd>
                 </div>
                 <div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de otorgación</p>
-                    <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
+                    <dt>Fecha de otorgación</dt>
+                    <dd>{issuedDate}</dd>
                 </div>
-            </div>
+            </dl>
 
-            {/* Mensaje de validez */}
-            <div style={{
-                background: 'var(--bg-secondary, #f9f9f9)',
-                border: '1px solid var(--border)',
-                borderLeft: '4px solid var(--primary)',
-                borderRadius: '8px',
-                padding: '1.25rem 1.5rem',
-                marginBottom: '1.5rem',
-                fontSize: '0.9rem',
-                lineHeight: 1.6,
-                color: 'var(--text)',
-            }}>
+            <p className="cert-verify__validity">
                 Este certificado fue <strong>otorgado oficialmente por Mari's Nails Academy</strong> y acredita la participación
                 y aprobación del curso correspondiente. La validez del certificado puede verificarse
                 mediante el código QR incluido en el documento físico o a través de esta página.
-            </div>
+            </p>
 
-            {/* Botón de descarga */}
-            <div style={{ marginBottom: '1.5rem' }}>
-                <button className="btn-primary" onClick={handleDownload} style={{ padding: '0.75rem 2rem', fontSize: '1rem' }}>
-                    Descargar Certificado (PDF)
-                </button>
-            </div>
+            <button className="btn-primary cert-verify__download" onClick={handleDownload}>
+                Descargar Certificado (PDF)
+            </button>
 
-            {/* Preview del PDF */}
-            <div style={{
-                background: 'var(--bg-card)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                overflow: 'hidden',
-            }}>
-                {blobUrl ? (
-                    <>
-                        <p style={{ padding: '1rem 1.5rem 0', color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
-                            Vista previa del certificado
-                        </p>
-                        <iframe
-                            src={blobUrl}
-                            title="Certificado digital"
-                            style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                        />
-                    </>
+            <section className="cert-verify__preview" aria-label="Vista previa del certificado">
+                <p className="cert-verify__preview-label">Vista previa del certificado</p>
+                {pdf ? (
+                    <PdfPagePreview pdf={pdf} label={`Certificado ${certificate.certificateNumber} de ${certificate.recipientName}`} />
                 ) : (
-                    <p style={{ padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                        Cargando vista previa...
-                    </p>
+                    <p className="pdf-preview__fallback">Cargando vista previa...</p>
                 )}
-            </div>
+            </section>
         </div>
     );
 };

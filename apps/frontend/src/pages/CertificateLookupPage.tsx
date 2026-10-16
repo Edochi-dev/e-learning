@@ -33,13 +33,13 @@ export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
                 </h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
                     Ingresa el número y el nombre tal como aparecen en el documento.
-                    Por ejemplo: <span style={{ fontFamily: 'monospace', color: 'var(--primary)' }}>MR-00001</span>
+                    Por ejemplo: <span style={{ fontFamily: 'monospace', color: 'var(--primary)', whiteSpace: 'nowrap' }}>MR-00001</span>
                 </p>
             </div>
 
             {/* Formulario */}
             <div style={{
-                background: 'var(--bg-card)',
+                background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
                 padding: '2rem',
@@ -79,12 +79,12 @@ export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
 
                     {error && (
                         <div style={{
-                            background: 'var(--error-bg, #fff0f0)',
-                            border: '1px solid var(--error-border, #f5c6cb)',
+                            background: 'var(--danger-soft)',
+                            border: '1px solid var(--danger)',
                             borderRadius: '8px',
                             padding: '0.75rem 1rem',
                             marginBottom: '1.25rem',
-                            color: 'var(--error-text, #721c24)',
+                            color: 'var(--danger)',
                             fontSize: '0.9rem',
                         }}>
                             {error}

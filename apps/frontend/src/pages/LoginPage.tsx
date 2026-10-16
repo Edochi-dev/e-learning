@@ -53,13 +53,13 @@ export const LoginPage = () => {
         >
             {error && (
                 <div style={{
-                    background: 'linear-gradient(135deg, #fff0f0, #ffe8e8)',
-                    color: '#c0392b',
+                    background: 'var(--danger-soft)',
+                    color: 'var(--danger)',
                     padding: '0.85rem 1rem',
                     borderRadius: 'var(--radius-md)',
                     marginBottom: '1.25rem',
                     fontSize: '0.85rem',
-                    border: '1px solid rgba(192, 57, 43, 0.12)',
+                    border: '1px solid var(--danger-soft)',
                     fontWeight: 500,
                 }}>
                     ⚠️ {error}

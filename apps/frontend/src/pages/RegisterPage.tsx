@@ -90,13 +90,13 @@ export const RegisterPage = () => {
                 {/* Error genérico (todo lo que no sea email duplicado) */}
                 {error && (
                     <div style={{
-                        background: 'linear-gradient(135deg, #fff0f0, #ffe8e8)',
-                        color: '#c0392b',
+                        background: 'var(--danger-soft)',
+                        color: 'var(--danger)',
                         padding: '0.85rem 1rem',
                         borderRadius: 'var(--radius-md)',
                         marginBottom: '1.25rem',
                         fontSize: '0.85rem',
-                        border: '1px solid rgba(192, 57, 43, 0.12)',
+                        border: '1px solid var(--danger-soft)',
                         fontWeight: 500,
                     }}>
                         ⚠️ {error}
@@ -178,8 +178,12 @@ export const RegisterPage = () => {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
-                            placeholder="Mínimo 8 caracteres con letras y números"
+                            placeholder="Mínimo 8 caracteres"
+                            aria-describedby="password-hint"
                         />
+                        <p id="password-hint" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0.4rem 0 0' }}>
+                            Con letras y números.
+                        </p>
                     </div>
 
                     {/* Campo: Confirmar contraseña — solo validación visual, nunca se envía */}
@@ -202,7 +206,7 @@ export const RegisterPage = () => {
                         {passwordError && (
                             <p style={{
                                 fontSize: '0.8rem',
-                                color: '#c0392b',
+                                color: 'var(--danger)',
                                 marginTop: '0.35rem',
                                 marginBottom: 0,
                             }}>
