@@ -3,6 +3,7 @@ import type { CorrectionGateway, AssignmentSubmission } from '../gateways/Correc
 import { API_URL } from '../config';
 import { ReviewAudioPlayer } from './ReviewAudioPlayer';
 import { ReviewHistory } from './ReviewHistory';
+import { useSubmissionStatus } from '../hooks/useSubmissionStatus';
 
 /**
  * SubmissionPlayer — Interfaz de la alumna para lecciones tipo corrección.
@@ -70,20 +71,12 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
     instructions,
     gateway,
 }) => {
-    const [submission, setSubmission] = useState<AssignmentSubmission | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { submission, setSubmission, isLoading, loadError } = useSubmissionStatus(gateway, lessonId);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
     const [isResubmitting, setIsResubmitting] = useState(false);
     const fileRef = useRef<HTMLInputElement>(null);
-
-    useEffect(() => {
-        gateway.getMyStatus(lessonId)
-            .then(setSubmission)
-            .catch(() => setError('Error al cargar el estado de tu entrega.'))
-            .finally(() => setIsLoading(false));
-    }, [gateway, lessonId]);
 
     useEffect(() => {
         return () => { if (preview) URL.revokeObjectURL(preview); };
@@ -228,7 +221,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                 <p className="submission-cell-text">
                                     Toma una foto de tu trabajo con buena iluminación. La profesora te responderá con un audio.
                                 </p>
-                                {error && <p className="submission-error">{error}</p>}
+                                {(error ?? loadError) && <p className="submission-error">{error ?? loadError}</p>}
                                 <div className="submission-cell-actions">
                                     <button
                                         className="btn-primary submission-entry-btn"

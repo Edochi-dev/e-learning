@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import type { CorrectionGateway, CorrectionReview } from '../gateways/CorrectionGateway';
 import { formatSeconds } from '../lib/audio-recording';
+import { isTranscriptInProgress } from '../lib/transcript';
 
 interface ReviewAudioPlayerProps {
     review: CorrectionReview;
@@ -79,6 +80,17 @@ export const ReviewAudioPlayer: React.FC<ReviewAudioPlayerProps> = ({ review, ga
                     Disponible hasta el{' '}
                     {new Date(review.audioExpiresAt).toLocaleDateString('es', expiryFormat)}
                 </p>
+            )}
+
+            {isTranscriptInProgress(review) && (
+                <p className="review-audio__transcribing" role="status">
+                    <span className="review-audio__spinner" aria-hidden="true" />
+                    Preparando la transcripción…
+                </p>
+            )}
+
+            {review.transcriptStatus === 'failed' && (
+                <p className="review-audio__note">No pudimos generar la transcripción de este audio.</p>
             )}
 
             {hasTranscript && (
