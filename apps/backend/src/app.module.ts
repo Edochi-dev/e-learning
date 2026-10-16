@@ -15,6 +15,7 @@ import { InvitationsModule } from './invitations/invitations.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { CorrectionsModule } from './corrections/corrections.module';
+import { CourseOverviewModule } from './course-overview/course-overview.module';
 import { NameChangeRequestsModule } from './name-change-requests/name-change-requests.module';
 import { ScheduleModule } from './schedule/schedule.module';
 import { PushModule } from './push/push.module';
@@ -128,6 +129,7 @@ import { buildTypeOrmOptions } from './database/typeorm.config';
     CertificatesModule,
     NotificationsModule,
     CorrectionsModule,
+    CourseOverviewModule,
     NameChangeRequestsModule,
     ScheduleModule,
     PushModule,

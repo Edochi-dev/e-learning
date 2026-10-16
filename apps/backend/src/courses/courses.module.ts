@@ -35,6 +35,8 @@ import { StorageModule } from '../storage/storage.module';
 import { EnrollmentAccessModule } from '../enrollments/enrollment-access.module';
 import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { ScheduleModule } from '../schedule/schedule.module';
+import { CourseOutlineGateway } from './gateways/course-outline.gateway';
+import { CourseOutlineRepository } from './course-outline.repository';
 
 /**
  * CoursesModule — El "pegamento" del módulo de cursos
@@ -65,6 +67,7 @@ import { ScheduleModule } from '../schedule/schedule.module';
   ],
   controllers: [CoursesController],
   providers: [
+    { provide: CourseOutlineGateway, useClass: CourseOutlineRepository },
     EnrollmentGuard,
     FindPublicCoursesUseCase,
     FindCoursesForAdminUseCase,
@@ -94,6 +97,6 @@ import { ScheduleModule } from '../schedule/schedule.module';
       useClass: CoursesRepository,
     },
   ],
-  exports: [CourseGateway, LessonGateway],
+  exports: [CourseGateway, LessonGateway, CourseOutlineGateway],
 })
 export class CoursesModule {}
