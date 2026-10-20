@@ -8213,6 +8213,17 @@ button.admin-course-students:disabled {
   gap: 1.5rem;
 }
 
+/* La misma ficha dentro del admin: respeta el marco (alineada al logo) y la
+   columna angosta de admin-page--medium, en vez de centrarse a 860px. */
+.admin-page.cert-verify {
+  max-width: var(--page-max);
+  padding-top: 2.5rem;
+}
+
+.admin-page.cert-verify > .back-link {
+  align-self: flex-start;
+}
+
 .cert-verify__hero {
   background: var(--btn-primary);
   border-radius: var(--radius-lg);
