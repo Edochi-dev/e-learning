@@ -51,9 +51,6 @@ import { UpdatePrompt } from './components/UpdatePrompt';
  *
  * Las páginas exportan con nombre y lazy() espera `default`, de ahí el .then.
  */
-const LessonPage = lazy(() =>
-  import('./pages/LessonPage').then((m) => ({ default: m.LessonPage })),
-);
 const CourseLearnPage = lazy(() =>
   import('./pages/CourseLearnPage').then((m) => ({ default: m.CourseLearnPage })),
 );
@@ -158,7 +155,6 @@ function AppContent({ http }: { http: HttpClient }) {
             <Route path="/" element={<ComingSoonGuard><HomePage gateway={courseGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
             <Route path="/cursos" element={<ComingSoonGuard><CatalogPage gateway={courseGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
             <Route path="/courses/:id" element={<ComingSoonGuard><CourseDetailsPage gateway={courseGateway} orderGateway={orderGateway} enrollmentGateway={enrollmentGateway} /></ComingSoonGuard>} />
-            <Route path="/courses/:courseId/lessons/:lessonId" element={<ComingSoonGuard><LessonPage gateway={courseGateway} videoGateway={videoGateway} /></ComingSoonGuard>} />
 
             {/* Rutas protegidas — cualquier usuario autenticado */}
             <Route element={<ProtectedRoute />}>
