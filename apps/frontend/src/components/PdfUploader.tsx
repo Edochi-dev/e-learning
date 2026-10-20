@@ -90,7 +90,7 @@ export const PdfUploader = ({ file, onFileChange, error, label, hint }: PdfUploa
                 type="file"
                 accept="application/pdf"
                 onChange={(e) => onFileChange(e.target.files?.[0] ?? null)}
-                style={{ display: 'none' }}
+                hidden
             />
         </div>
     );

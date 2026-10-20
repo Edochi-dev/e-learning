@@ -237,7 +237,7 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
                     const file = e.target.files?.[0];
                     if (file) handleFile(file);
                 }}
-                style={{ display: 'none' }}
+                hidden
             />
         </div>
     );

@@ -8095,25 +8095,8 @@ button.admin-course-students:disabled {
   font-size: 0.8rem;
 }
 
-.cert-search__badge {
-  padding: 0.1rem 0.55rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--gold);
-  color: var(--gold-text);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
 .cert-search__view {
   margin-left: auto;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--accent-text);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
 }
 
 .confirm-dialog__overlay {
