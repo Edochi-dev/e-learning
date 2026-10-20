@@ -590,7 +590,6 @@ a {
   font-weight: 400;
 }
 
-
 /* === SHARED: animated gradient sweep (used by .preview-card hover) === */
 @keyframes gradientSlide {
   0% {
@@ -1751,7 +1750,6 @@ input:checked+.slider .icon-moon {
     font-size: 1rem;
   }
 
-
   /* Una sola fila (logo | controles): el header es sticky y cada píxel que
      ocupa se le quita al contenido durante todo el scroll. */
   .header {
@@ -1794,7 +1792,6 @@ input:checked+.slider .icon-moon {
   .hero__heading {
     font-size: 2.2rem;
   }
-
 
   /* Nombre en dos líneas: en una sola, logo + tema + "Ingresar" no caben
      en 360px y los controles bajaban a otra fila. */
@@ -1958,6 +1955,11 @@ a.admin-row__title:active {
   display: grid;
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+/* Contenido bajo una fila de pestañas del admin. */
+.admin-tab-panel {
+  margin-top: 1.5rem;
 }
 
 /* Bloque con título dentro de una página de admin ("Cursos existentes"…). */
@@ -2683,6 +2685,12 @@ a.admin-row__title:active {
   overflow: hidden;
 }
 
+/* Entregas del curso al desplegar el grupo. */
+.correction-group__items {
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+}
+
 .correction-group-header {
   display: flex;
   align-items: center;
@@ -2728,35 +2736,6 @@ a.admin-row__title:active {
   font-weight: 600;
 }
 
-.correction-preview-list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border);
-}
-
-.correction-preview-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.6rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.correction-preview-item:last-child {
-  border-bottom: none;
-}
-
-.correction-row-student {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.correction-row-lesson {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
 /* ── History: filtros y paginación ───────────────────────────────────── */
 
 .history-filters {
@@ -2764,6 +2743,7 @@ a.admin-row__title:active {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 /* Compact filter field shared by list screens (corrections history,
@@ -2800,26 +2780,6 @@ input.filter-control[type="search"] {
   }
 }
 
-.history-apply-btn {
-  padding: 0.5rem 1.2rem;
-  border-radius: var(--radius-md);
-  border: none;
-  background: var(--primary-strong);
-  color: var(--text-on-primary);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-
-@media (hover: hover) {
-  .history-apply-btn:hover {
-    opacity: 0.85;
-  }
-}
-
 .history-pagination {
   display: flex;
   align-items: center;
@@ -2830,31 +2790,6 @@ input.filter-control[type="search"] {
   border-top: 1px solid var(--border);
 }
 
-.history-page-btn {
-  padding: 0.4rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    opacity var(--dur-base) var(--ease-out);
-}
-
-@media (hover: hover) {
-  .history-page-btn:hover:not(:disabled) {
-    border-color: var(--primary-strong);
-    color: var(--accent-text);
-  }
-}
-
-.history-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .history-page-info {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -2862,28 +2797,9 @@ input.filter-control[type="search"] {
 
 /* ── Corrections: status badges ─────────────────────────────────────── */
 
-.correction-status {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
 .status-pending {
   background: color-mix(in srgb, var(--warning) 15%, transparent);
   color: var(--warning);
-}
-
-.status-approved {
-  background: color-mix(in srgb, var(--success) 15%, transparent);
-  color: var(--success);
-}
-
-.status-rejected {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  color: var(--danger);
 }
 
 /* ── Review Correction Page ──────────────────────────────────────────── */
@@ -2932,6 +2848,27 @@ input.filter-control[type="search"] {
   background: var(--primary-strong);
   border-radius: 3px;
   transition: width 0.4s ease;
+}
+
+.review-meta__lesson {
+  color: var(--text-muted);
+}
+
+.review-meta__date {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.review-image-missing {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.review-done__cta {
+  margin-top: 1rem;
 }
 
 .review-done {
@@ -3004,43 +2941,10 @@ input.filter-control[type="search"] {
   margin-top: 0.5rem;
 }
 
-.review-btn {
+/* Las dos decisiones se reparten el ancho: blancos grandes para el pulgar. */
+.review-actions__btn {
   flex: 1;
-  padding: 0.7rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
-}
-
-.review-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.review-btn--approve {
-  background: var(--success);
-  color: var(--text-on-status);
-}
-
-@media (hover: hover) {
-  .review-btn--approve:not(:disabled):hover {
-    background: var(--success);
-  }
-}
-
-.review-btn--reject {
-  background: var(--danger);
-  color: var(--text-on-status);
-}
-
-@media (hover: hover) {
-  .review-btn--reject:not(:disabled):hover {
-    background: var(--danger);
-  }
+  min-height: var(--touch-min);
 }
 
 .review-status-banner {
@@ -3066,7 +2970,7 @@ input.filter-control[type="search"] {
   background: var(--surface);
 }
 
-.voice-review--approve { border-left: 4px solid var(--gold); }
+.voice-review--approve { border-left: 4px solid var(--success); }
 .voice-review--reject { border-left: 4px solid var(--danger); }
 
 .voice-review__hint {
@@ -3154,10 +3058,6 @@ input.filter-control[type="search"] {
   font-size: 0.85rem;
   text-decoration: underline;
   cursor: pointer;
-  min-height: var(--touch-min);
-}
-
-.review-actions .review-btn {
   min-height: var(--touch-min);
 }
 
@@ -3778,7 +3678,6 @@ input.filter-control[type="search"] {
   position: relative;
   box-shadow: var(--shadow-lg), 0 0 0 8px color-mix(in srgb, var(--gold) 6%, transparent);
 }
-
 
 .home-about__content h2 {
   font-size: 2.75rem;
@@ -4500,7 +4399,6 @@ input.filter-control[type="search"] {
   .home-preview__header h2 {
     font-size: 2.1rem;
   }
-
 
   .social-buttons {
     flex-direction: column;

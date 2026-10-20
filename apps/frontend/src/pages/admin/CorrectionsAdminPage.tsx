@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { Badge, type BadgeTone } from '../../components/Badge';
 import type { Course } from '@maris-nails/shared';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type {
@@ -109,7 +110,7 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway, courseGateway }
                 >
                     Pendientes
                     {pending.length > 0 && (
-                        <span className="admin-badge" style={{ marginLeft: '0.5rem' }}>
+                        <span className="admin-badge">
                             {pending.length}
                         </span>
                     )}
@@ -124,7 +125,7 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway, courseGateway }
 
             {activeTab === 'pending' ? (
                 isLoading ? (
-                    <p style={{ color: 'var(--text-muted)', marginTop: '1.5rem' }}>Cargando...</p>
+                    <p className="admin-tab-panel admin-section__status">Cargando...</p>
                 ) : (
                     <PendingTab grouped={grouped} />
                 )
@@ -144,14 +145,14 @@ interface PendingTabProps {
 const PendingTab: React.FC<PendingTabProps> = ({ grouped }) => {
     if (grouped.size === 0) {
         return (
-            <div className="admin-empty" style={{ marginTop: '1.5rem' }}>
+            <div className="admin-empty admin-tab-panel">
                 No hay entregas pendientes de revisión.
             </div>
         );
     }
 
     return (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="admin-tab-panel">
             {Array.from(grouped.entries()).map(([courseId, group]) => (
                 <CourseGroup key={courseId} courseId={courseId} group={group} />
             ))}
@@ -185,22 +186,20 @@ const CourseGroup: React.FC<{
                         </span>
                     </div>
                 </button>
-                <Link
-                    to={`/admin/correcciones/curso/${courseId}`}
-                    className="btn-primary"
-                    style={{ padding: '0.5rem 1.2rem', fontSize: '0.9rem', whiteSpace: 'nowrap' }}
-                >
+                <Link to={`/admin/correcciones/curso/${courseId}`} className="btn-primary btn-sm">
                     Revisar
                 </Link>
             </div>
 
             {expanded && (
-                <div className="correction-preview-list">
+                <div className="admin-list correction-group__items">
                     {group.items.map((sub) => (
-                        <div key={sub.id} className="correction-preview-item">
-                            <span className="correction-row-student">{sub.student.name}</span>
-                            <span className="correction-row-lesson">{sub.lesson.title}</span>
-                            <span className="admin-course-link-meta">{formatDate(sub.submittedAt)}</span>
+                        <div key={sub.id} className="admin-row">
+                            <div className="admin-row__main">
+                                <span className="admin-row__title">{sub.student.fullName}</span>
+                                <span className="admin-row__meta">{sub.lesson.title}</span>
+                            </div>
+                            <span className="admin-row__meta">{formatDate(sub.submittedAt)}</span>
                         </div>
                     ))}
                 </div>
@@ -216,9 +215,9 @@ interface HistoryTabProps {
     courseGateway: CourseGateway;
 }
 
-const statusLabels: Record<string, { text: string; className: string }> = {
-    approved: { text: 'Aprobada', className: 'status-approved' },
-    rejected: { text: 'Rechazada', className: 'status-rejected' },
+const statusLabels: Record<string, { text: string; tone: BadgeTone }> = {
+    approved: { text: 'Aprobada', tone: 'success' },
+    rejected: { text: 'Rechazada', tone: 'danger' },
 };
 
 /**
@@ -290,7 +289,7 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
     const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
 
     return (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="admin-tab-panel">
             {/* Filtros */}
             <div className="history-filters">
                 <select
@@ -325,38 +324,33 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                     ))}
                 </select>
 
-                <button className="history-apply-btn" onClick={handleApply}>
+                <button type="button" className="btn-secondary btn-sm" onClick={handleApply}>
                     Aplicar
                 </button>
             </div>
 
             {/* Contenido */}
             {isLoading ? (
-                <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Cargando...</p>
+                <p className="admin-section__status">Cargando...</p>
             ) : submissions.length === 0 ? (
-                <div className="admin-empty" style={{ marginTop: '1rem' }}>
+                <div className="admin-empty">
                     No hay correcciones que coincidan con los filtros.
                 </div>
             ) : (
                 <>
-                    <div className="admin-course-links" style={{ marginTop: '1rem' }}>
+                    <div className="admin-list">
                         {submissions.map((sub) => {
                             const st = statusLabels[sub.status] ?? statusLabels.approved;
                             return (
-                                <div key={sub.id} className="correction-preview-item">
-                                    <span className="correction-row-student">{sub.student.name}</span>
-                                    <span className="correction-row-lesson">
-                                        {sub.lesson.title}
-                                        <span style={{ color: 'var(--text-muted)', marginLeft: '0.4rem' }}>
-                                            — {sub.lesson.course.title}
+                                <div key={sub.id} className="admin-row">
+                                    <div className="admin-row__main">
+                                        <span className="admin-row__title">{sub.student.fullName}</span>
+                                        <span className="admin-row__meta">
+                                            {sub.lesson.title} — {sub.lesson.course.title}
+                                            {' · '}{formatDate(sub.reviewedAt ?? sub.submittedAt)}
                                         </span>
-                                    </span>
-                                    <span className="admin-course-link-meta">
-                                        {formatDate(sub.reviewedAt ?? sub.submittedAt)}
-                                        <span className={`correction-status ${st.className}`}>
-                                            {st.text}
-                                        </span>
-                                    </span>
+                                    </div>
+                                    <Badge tone={st.tone}>{st.text}</Badge>
                                 </div>
                             );
                         })}
@@ -366,7 +360,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                     {totalPages > 1 && (
                         <div className="history-pagination">
                             <button
-                                className="history-page-btn"
+                                type="button"
+                                className="btn-secondary btn-sm"
                                 disabled={page <= 1}
                                 onClick={() => setPage((p) => p - 1)}
                             >
@@ -376,7 +371,8 @@ const HistoryTab: React.FC<HistoryTabProps> = ({ gateway, courseGateway }) => {
                                 Página {page} de {totalPages}
                             </span>
                             <button
-                                className="history-page-btn"
+                                type="button"
+                                className="btn-secondary btn-sm"
                                 disabled={page >= totalPages}
                                 onClick={() => setPage((p) => p + 1)}
                             >
