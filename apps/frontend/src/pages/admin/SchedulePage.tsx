@@ -298,7 +298,7 @@ export const SchedulePage: React.FC<Props> = ({ gateway, pushGateway }) => {
     };
 
     return (
-        <div className="admin-page agenda-page">
+        <div className="admin-page">
             <Link to="/admin" className="back-link">← Volver al Panel</Link>
             <div className="admin-header agenda-header">
                 <div className="agenda-header__text">

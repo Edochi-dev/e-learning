@@ -67,7 +67,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
     };
 
     return (
-        <div className="admin-page" style={{ maxWidth: '640px' }}>
+        <div className="admin-page admin-page--narrow">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
             <div className="admin-form">

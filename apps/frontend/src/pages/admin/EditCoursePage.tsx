@@ -688,7 +688,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     }
 
     return (
-        <div className="admin-page" style={{ maxWidth: '1100px' }}>
+        <div className="admin-page">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
 
