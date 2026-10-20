@@ -120,10 +120,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provi
                 position: 'relative',
                 paddingBottom: '56.25%', /* 16:9 Aspect Ratio */
                 height: 0,
-                backgroundColor: '#000',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 overflow: 'hidden',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                boxShadow: 'var(--shadow-md)'
             }}>
                 <iframe
                     src={videoSrc}
@@ -141,13 +141,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provi
         return (
             <div className="video-player-container" style={{
                 width: '100%',
-                backgroundColor: '#000',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 aspectRatio: '16/9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: 'var(--text-on-primary)',
                 fontSize: '1.1rem',
             }}>
                 Cargando video...
@@ -160,13 +160,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provi
         return (
             <div className="video-player-container" style={{
                 width: '100%',
-                backgroundColor: '#1a1a2e',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 aspectRatio: '16/9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#e74c3c',
+                color: 'var(--danger)',
                 fontSize: '1rem',
                 padding: '2rem',
                 textAlign: 'center',
@@ -181,10 +181,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provi
         <div className="video-player-container" style={{
             position: 'relative',
             width: '100%',
-            backgroundColor: '#000',
+            backgroundColor: 'var(--media-bg)',
             borderRadius: '16px',
             overflow: 'hidden',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-md)',
             aspectRatio: '16/9'
         }}>
             <video

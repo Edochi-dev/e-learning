@@ -131,7 +131,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                 <span className="admin-course-link-meta">
                                     {t.courseAbbreviation} · {t.paperFormat}
                                     {(t.certificateCount ?? 0) > 0 && (
-                                        <span style={{ marginLeft: '0.5rem', color: 'var(--gold, #d4a574)' }}>
+                                        <span style={{ marginLeft: '0.5rem', color: 'var(--gold-text)' }}>
                                             · {t.certificateCount} certificado(s)
                                         </span>
                                     )}
@@ -155,8 +155,8 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/diseno`)}
                                     style={{
                                         background: 'none',
-                                        border: '1px solid var(--gold, #d4a574)',
-                                        color: 'var(--gold, #d4a574)',
+                                        border: '1px solid var(--gold)',
+                                        color: 'var(--gold-text)',
                                         borderRadius: '6px',
                                         padding: '0.25rem 0.75rem',
                                         cursor: 'pointer',
@@ -169,8 +169,8 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     onClick={() => handleDeleteClick(t)}
                                     style={{
                                         background: 'none',
-                                        border: '1px solid var(--error, #e53e3e)',
-                                        color: 'var(--error, #e53e3e)',
+                                        border: '1px solid var(--danger)',
+                                        color: 'var(--danger)',
                                         borderRadius: '6px',
                                         padding: '0.25rem 0.75rem',
                                         cursor: 'pointer',
@@ -190,7 +190,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                 <div
                     style={{
                         position: 'fixed', inset: 0,
-                        background: 'rgba(0,0,0,0.5)',
+                        background: 'var(--overlay)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         zIndex: 1000,
                     }}
@@ -209,7 +209,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     Esta acción no se puede deshacer.
                                 </p>
                                 {deleteError && (
-                                    <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
+                                    <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
                                 )}
                                 <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                                     <button
@@ -222,7 +222,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     <button
                                         onClick={handleConfirm}
                                         disabled={deleting}
-                                        style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: 'var(--error, #e53e3e)', color: '#fff', cursor: 'pointer' }}
+                                        style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: 'var(--danger)', color: 'var(--bg-elevated)', cursor: 'pointer' }}
                                     >
                                         {deleting ? 'Eliminando...' : 'Sí, eliminar'}
                                     </button>
@@ -238,13 +238,13 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     ¿Qué deseas hacer con ellos?
                                 </p>
                                 {deleteError && (
-                                    <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
+                                    <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
                                 )}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                     <button
                                         onClick={() => executeDelete('delete')}
                                         disabled={deleting}
-                                        style={{ padding: '0.6rem 1rem', borderRadius: '6px', border: 'none', background: 'var(--error, #e53e3e)', color: '#fff', cursor: 'pointer', textAlign: 'left' }}
+                                        style={{ padding: '0.6rem 1rem', borderRadius: '6px', border: 'none', background: 'var(--danger)', color: 'var(--bg-elevated)', cursor: 'pointer', textAlign: 'left' }}
                                     >
                                         <strong>Eliminar también</strong>
                                         <br />

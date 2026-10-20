@@ -201,7 +201,7 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
                                         ? '...'
                                         : confirmingId === course.id
                                             ? '¿Eliminar?'
-                                            : <Trash2 size={15} strokeWidth={2} color="#1a1a1a" />}
+                                            : <Trash2 size={15} strokeWidth={2} />}
                                 </button>
                             </div>
                         ))}

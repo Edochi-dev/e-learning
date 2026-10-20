@@ -20,22 +20,27 @@ const PREVIEW_COUNT = 3;
 
 // Fotos de galería — reemplaza `src` con rutas reales cuando Maria las entregue.
 // Por ahora cada item tiene un gradiente de placeholder y una etiqueta descriptiva.
+const PLACEHOLDER_TONES = {
+    wine: 'linear-gradient(135deg, var(--rose-900), var(--rose-700))',
+    gold: 'linear-gradient(135deg, var(--gold-800), var(--gold-600))',
+    blend: 'linear-gradient(135deg, var(--rose-800), var(--gold-700))',
+};
 const GALLERY_ROW_1 = [
-    { id: 1,  label: 'Certificación masiva · Santiago 2024',   gradient: 'linear-gradient(135deg,#3D0A1C,#9E1048)' },
-    { id: 2,  label: 'Workshop acrílico escultórico',           gradient: 'linear-gradient(135deg,#1A0A2E,#6B1A6B)' },
-    { id: 3,  label: 'Clausura promoción 2023',                 gradient: 'linear-gradient(135deg,#0A1A2D,#1A4A6B)' },
-    { id: 4,  label: 'Técnica gel profesional',                 gradient: 'linear-gradient(135deg,#2A1A0A,#7A4A1A)' },
-    { id: 5,  label: 'Certificación masiva · 80 alumnas',       gradient: 'linear-gradient(135deg,#1A2A0A,#3A6A2A)' },
-    { id: 6,  label: 'Entrega de diplomas · Stgo',              gradient: 'linear-gradient(135deg,#2D0A1A,#8B1A3F)' },
+    { id: 1,  label: 'Certificación masiva · Santiago 2024',   gradient: PLACEHOLDER_TONES.wine },
+    { id: 2,  label: 'Workshop acrílico escultórico',           gradient: PLACEHOLDER_TONES.gold },
+    { id: 3,  label: 'Clausura promoción 2023',                 gradient: PLACEHOLDER_TONES.blend },
+    { id: 4,  label: 'Técnica gel profesional',                 gradient: PLACEHOLDER_TONES.wine },
+    { id: 5,  label: 'Certificación masiva · 80 alumnas',       gradient: PLACEHOLDER_TONES.gold },
+    { id: 6,  label: 'Entrega de diplomas · Stgo',              gradient: PLACEHOLDER_TONES.blend },
 ];
 
 const GALLERY_ROW_2 = [
-    { id: 7,  label: 'Clínica presencial · Nail Art',           gradient: 'linear-gradient(135deg,#0A1A2E,#1A3A6B)' },
-    { id: 8,  label: 'Masterclass Chrome & Mirror',             gradient: 'linear-gradient(135deg,#1A0A1A,#5C1A5C)' },
-    { id: 9,  label: 'Práctica guiada semipermanente',          gradient: 'linear-gradient(135deg,#2A0A0A,#7A1A1A)' },
-    { id: 10, label: 'Workshop express nail art',               gradient: 'linear-gradient(135deg,#0A2A1A,#1A6B4A)' },
-    { id: 11, label: 'Certificación internacional',             gradient: 'linear-gradient(135deg,#2A1A0A,#8B5A0A)' },
-    { id: 12, label: 'Talleres presenciales 2024',              gradient: 'linear-gradient(135deg,#1A0A2E,#3F0A6B)' },
+    { id: 7,  label: 'Clínica presencial · Nail Art',           gradient: PLACEHOLDER_TONES.wine },
+    { id: 8,  label: 'Masterclass Chrome & Mirror',             gradient: PLACEHOLDER_TONES.gold },
+    { id: 9,  label: 'Práctica guiada semipermanente',          gradient: PLACEHOLDER_TONES.blend },
+    { id: 10, label: 'Workshop express nail art',               gradient: PLACEHOLDER_TONES.wine },
+    { id: 11, label: 'Certificación internacional',             gradient: PLACEHOLDER_TONES.gold },
+    { id: 12, label: 'Talleres presenciales 2024',              gradient: PLACEHOLDER_TONES.blend },
 ];
 
 // Placeholders para cuando aún no hay cursos en la BD

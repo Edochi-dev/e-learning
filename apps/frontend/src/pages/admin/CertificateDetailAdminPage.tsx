@@ -51,7 +51,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
             <div className="admin-page">
                 <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
                 <div style={{
-                    background: 'var(--bg-card)',
+                    background: 'var(--bg-elevated)',
                     border: '1px solid var(--border)',
                     borderRadius: '12px',
                     padding: '2.5rem',
@@ -91,10 +91,10 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
 
             {/* 1. Encabezado con gradiente de la academia */}
             <div style={{
-                background: 'linear-gradient(135deg, var(--primary), var(--gold))',
+                background: 'var(--btn-primary)',
                 borderRadius: '16px',
                 padding: '2rem',
-                color: 'white',
+                color: 'var(--text-on-primary)',
                 marginBottom: '1.5rem',
                 textAlign: 'center',
             }}>
@@ -109,7 +109,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
 
             {/* 2. Vista previa del PDF — justo debajo del badge */}
             <div style={{
-                background: 'var(--bg-card)',
+                background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
                 overflow: 'hidden',
@@ -130,7 +130,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
 
             {/* 3. Datos del certificado + botón de descarga */}
             <div style={{
-                background: 'var(--bg-card)',
+                background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
                 borderRadius: '12px',
                 padding: '1.75rem',
@@ -174,7 +174,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
 
             {/* 4. Sello de autenticidad */}
             <div style={{
-                background: 'var(--bg-card)',
+                background: 'var(--bg-elevated)',
                 border: '1px solid var(--border)',
                 borderLeft: '4px solid var(--gold)',
                 borderRadius: '8px',
@@ -185,8 +185,8 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
                 alignItems: 'flex-start',
             }}>
                 <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>✅</span>
-                <div style={{ fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text)' }}>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--text)' }}>
+                <div style={{ fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-primary)' }}>
+                    <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
                         Documento Original — Emitido por Mari's Nails Academy
                     </strong>
                     Este certificado acredita la participación y aprobación del curso correspondiente.

@@ -169,14 +169,14 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                 {enrollment.isActive ? (
                                     <Link
                                         to={`/mis-cursos/${enrollment.course.id}`}
-                                        className="enrollment-card__cta"
+                                        className="btn-primary enrollment-card__cta"
                                     >
                                         Ir al curso →
                                     </Link>
                                 ) : (
                                     <a
                                         href={renewWhatsappUrl(enrollment.course.title)}
-                                        className="enrollment-card__cta enrollment-card__cta--renew"
+                                        className="btn-gold enrollment-card__cta"
                                         target="_blank"
                                         rel="noopener noreferrer"
                                     >

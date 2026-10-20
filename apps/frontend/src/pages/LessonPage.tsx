@@ -42,13 +42,13 @@ export const LessonPage = ({ gateway, videoGateway }: LessonPageProps) => {
                 </div>
 
                 <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '2rem', marginBottom: '0.5rem' }}>{currentLesson.title}</h1>
-                <p style={{ color: 'var(--text-light)', lineHeight: '1.6' }}>{currentLesson.description}</p>
+                <p style={{ color: 'var(--text-muted)', lineHeight: '1.6' }}>{currentLesson.description}</p>
             </div>
 
             {/* 30% Sidebar */}
             <div style={{ flex: '3', minWidth: '250px' }}>
                 <div className="course-details-card" style={{ padding: '1.5rem', position: 'sticky', top: '100px' }}>
-                    <h3 style={{ marginTop: 0, fontFamily: 'var(--font-heading)', borderBottom: '1px solid var(--text-light)', paddingBottom: '0.5rem', opacity: 0.5 }}>Temario</h3>
+                    <h3 style={{ marginTop: 0, fontFamily: 'var(--font-heading)', borderBottom: '1px solid var(--text-muted)', paddingBottom: '0.5rem', opacity: 0.5 }}>Temario</h3>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                         {course.lessons.map((lesson) => (
@@ -59,8 +59,8 @@ export const LessonPage = ({ gateway, videoGateway }: LessonPageProps) => {
                                     padding: '1rem',
                                     borderRadius: '8px',
                                     cursor: 'pointer',
-                                    backgroundColor: lesson.id === lessonId ? 'var(--primary-color)' : 'transparent',
-                                    color: lesson.id === lessonId ? 'white' : 'var(--text-dark)',
+                                    backgroundColor: lesson.id === lessonId ? 'var(--primary-strong)' : 'transparent',
+                                    color: lesson.id === lessonId ? 'var(--text-on-primary)' : 'var(--text-primary)',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '0.5rem',

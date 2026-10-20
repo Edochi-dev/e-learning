@@ -169,7 +169,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         />
                     </div>
 
-                    {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem' }}>{error}</p>}
+                    {error && <p style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</p>}
 
                     <button className="btn-primary" onClick={handleUpload}
                         disabled={uploading || !formName || !formAbbr || !file || !!fileError}>

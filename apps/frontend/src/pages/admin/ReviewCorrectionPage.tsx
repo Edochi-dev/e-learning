@@ -135,7 +135,7 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
             </div>
 
             {error && (
-                <div style={{ color: '#ef4444', marginBottom: '1rem', fontWeight: 500 }}>
+                <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontWeight: 500 }}>
                     {error}
                 </div>
             )}

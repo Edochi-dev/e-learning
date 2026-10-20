@@ -146,7 +146,7 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChange
     const statusLabel = (s: OrderStatus) =>
         s === OrderStatus.COMPLETED ? 'Pagada' : s === OrderStatus.PENDING ? 'Pendiente' : 'Fallida';
     const statusColor = (s: OrderStatus) =>
-        s === OrderStatus.COMPLETED ? '#1a7f5a' : s === OrderStatus.PENDING ? '#a86b00' : '#c0392b';
+        s === OrderStatus.COMPLETED ? 'var(--success)' : s === OrderStatus.PENDING ? 'var(--warning)' : 'var(--danger)';
 
     return (
         <div className="account-page">
@@ -154,8 +154,8 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChange
             <div
                 className="account-banner"
                 style={{
-                    background: `linear-gradient(135deg, ${avatarColor}33 0%, ${avatarColor}11 50%, var(--bg) 100%)`,
-                    borderBottom: `1px solid ${avatarColor}33`,
+                    background: `linear-gradient(135deg, color-mix(in srgb, ${avatarColor} 20%, transparent) 0%, color-mix(in srgb, ${avatarColor} 7%, transparent) 50%, var(--bg) 100%)`,
+                    borderBottom: `1px solid color-mix(in srgb, ${avatarColor} 20%, transparent)`,
                 }}
             >
                 <div className="account-banner__avatar">
