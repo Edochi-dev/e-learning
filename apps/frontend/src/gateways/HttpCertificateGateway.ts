@@ -19,6 +19,12 @@ export class HttpCertificateGateway implements CertificateGateway {
         this.http = http;
     }
 
+    // Con base relativa (/api, en el modo teléfono del túnel) new URL(texto)
+    // lanza: la base del sitio la completa, y una URL absoluta la ignora.
+    private url(path: string): URL {
+        return new URL(`${this.baseUrl}${path}`, window.location.origin);
+    }
+
     async uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> {
         const body = new FormData();
         body.append('name', name);
@@ -108,7 +114,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]> {
-        const url = new URL(`${this.baseUrl}/admin/certificates`);
+        const url = this.url('/admin/certificates');
         for (const [key, value] of Object.entries(filters)) {
             if (value) url.searchParams.set(key, value);
         }
@@ -139,7 +145,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void> {
-        const url = new URL(`${this.baseUrl}/admin/certificate-templates/${id}`);
+        const url = this.url(`/admin/certificate-templates/${id}`);
         if (certAction) url.searchParams.set('certAction', certAction);
         const res = await this.http.fetch(url.toString(), {
             method: 'DELETE',
@@ -168,7 +174,7 @@ export class HttpCertificateGateway implements CertificateGateway {
     }
 
     async lookupByNumber(certificateNumber: string, recipientName: string): Promise<{ id: string }> {
-        const url = new URL(`${this.baseUrl}/certificates/lookup`);
+        const url = this.url('/certificates/lookup');
         url.searchParams.set('number', certificateNumber);
         url.searchParams.set('name', recipientName);
         const res = await this.http.fetch(url.toString());
