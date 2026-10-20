@@ -1,11 +1,14 @@
-import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Link, Outlet } from 'react-router-dom';
 import { UserRole } from '@maris-nails/shared';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../hooks/useTheme';
 import { LocalStorageThemeGateway } from '../gateways/LocalStorageThemeGateway';
 import { ThemeSwitch } from './ThemeSwitch';
 import { UserMenu } from './UserMenu';
-import { smoothScrollToElement, getHeaderOffset } from '../lib/smoothScroll';
+import { StudentHeaderLinks } from './StudentNav';
+import { SiteMenu, SiteSectionLinks } from './SiteSections';
+import { useSiteSections } from '../hooks/useSiteSections';
+import { useLogout } from '../hooks/useLogout';
 
 /**
  * SiteLayout — cabecera y pie comunes del sitio.
@@ -17,20 +20,11 @@ import { smoothScrollToElement, getHeaderOffset } from '../lib/smoothScroll';
 export const SiteLayout = () => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme(new LocalStorageThemeGateway());
-    const navigate = useNavigate();
-    const location = useLocation();
-
-    // Enlace del header a una sección de la landing (Contacto, Preguntas, etc.).
-    // Si ya estamos en la home, hace scroll suave; si no, navega a la home y deja
-    // en el state qué sección abrir (la home lo lee y hace el scroll al montar).
-    function handleSectionLink(e: React.MouseEvent, sectionId: string) {
-        e.preventDefault();
-        if (location.pathname === '/') {
-            smoothScrollToElement(sectionId, { offset: getHeaderOffset() });
-        } else {
-            navigate('/', { state: { scrollTo: sectionId } });
-        }
-    }
+    const sections = useSiteSections();
+    // Las secciones del sitio público siguen el mismo criterio que ComingSoonGuard.
+    const showSections = user?.role === UserRole.ADMIN;
+    const logout = useLogout();
+    const isStudent = user?.role === UserRole.STUDENT;
 
     return (
         <div className="site-shell">
@@ -40,15 +34,16 @@ export const SiteLayout = () => {
                         <img src="/images/logo.png" alt="" className="logo__img" />
                         <span className="logo__name"><em>Mari's Nails Academy</em></span>
                     </Link>
-                    {user?.role === UserRole.ADMIN && (
-                        <nav className="nav-links nav-links--sections" aria-label="Secciones">
-                            <Link to="/cursos">Cursos</Link>
-                            <a href="#preguntas" onClick={(e) => handleSectionLink(e, 'preguntas')}>Preguntas frecuentes</a>
-                            <a href="#contacto" onClick={(e) => handleSectionLink(e, 'contacto')}>Contacto</a>
-                        </nav>
-                    )}
+                    {showSections && <SiteSectionLinks sections={sections} />}
+                    <StudentHeaderLinks />
                     <div className="nav-links">
                         <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
+                        {(showSections || isStudent) && (
+                            <SiteMenu
+                                sections={showSections ? sections : []}
+                                onLogout={isStudent ? logout : undefined}
+                            />
+                        )}
                         {user ? (
                             <UserMenu />
                         ) : (

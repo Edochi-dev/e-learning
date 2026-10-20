@@ -1,23 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLogout } from '../hooks/useLogout';
 import { UserAvatar, getColorFromName } from '../components/UserAvatar';
 import { useToast } from '../components/Toast';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import type { AuthGateway } from '../gateways/AuthGateway';
 import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
-import type { CertificateGateway, Certificate } from '../gateways/CertificateGateway';
 import type { StudentNameChangeGateway } from '../gateways/NameChangeGateway';
 import { OrderStatus, NameChangeRequestStatus, type NameChangeRequest } from '@maris-nails/shared';
-import { parseCalendarDate } from '../lib/calendar-date';
 
 interface Props {
     gateway: AuthGateway;
     orderGateway: OrderGateway;
-    certificateGateway: CertificateGateway;
     nameChangeGateway: StudentNameChangeGateway;
 }
 
-type Tab = 'cuenta' | 'certificados' | 'facturacion';
+type Tab = 'cuenta' | 'facturacion';
 
 /**
  * AccountPage — Página "Mi Cuenta" con 2 tabs.
@@ -32,8 +30,9 @@ type Tab = 'cuenta' | 'certificados' | 'facturacion';
  * Recibe el AuthGateway como prop (patrón del frontend: pages reciben
  * gateways como props, nunca los importan directamente).
  */
-export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificateGateway, nameChangeGateway }) => {
+export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChangeGateway }) => {
     const { user, logoutEverywhere } = useAuth();
+    const handleLogout = useLogout();
 
     // ── Tab activa ──────────────────────────────────────────────────────
     const [activeTab, setActiveTab] = useState<Tab>('cuenta');
@@ -85,18 +84,6 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
             .catch(() => setOrdersError(true))
             .finally(() => setOrdersLoading(false));
     }, [orderGateway]);
-
-    // ── Mis certificados ────────────────────────────────────────────────
-    const [certificates, setCertificates] = useState<Certificate[]>([]);
-    const [certsLoading, setCertsLoading] = useState(true);
-    const [certsError, setCertsError] = useState(false);
-
-    useEffect(() => {
-        certificateGateway.getMyCertificates()
-            .then(setCertificates)
-            .catch(() => setCertsError(true))
-            .finally(() => setCertsLoading(false));
-    }, [certificateGateway]);
 
     if (!user) return null;
 
@@ -161,21 +148,6 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
     const statusColor = (s: OrderStatus) =>
         s === OrderStatus.COMPLETED ? '#1a7f5a' : s === OrderStatus.PENDING ? '#a86b00' : '#c0392b';
 
-    // Descarga el PDF del certificado (el gateway resuelve la URL del archivo).
-    const downloadCertificate = async (cert: Certificate) => {
-        try {
-            const blob = await certificateGateway.downloadCertificatePdf(cert.filePath);
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${cert.certificateNumber}.pdf`;
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch {
-            toast.error('No se pudo descargar el certificado.');
-        }
-    };
-
     return (
         <div className="account-page">
             {/* ── Banner dinámico con degradado derivado del nombre ── */}
@@ -207,12 +179,6 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
                         onClick={() => setActiveTab('cuenta')}
                     >
                         Mi Cuenta
-                    </button>
-                    <button
-                        className={`account-tabs__btn ${activeTab === 'certificados' ? 'account-tabs__btn--active' : ''}`}
-                        onClick={() => setActiveTab('certificados')}
-                    >
-                        Certificados
                     </button>
                     <button
                         className={`account-tabs__btn ${activeTab === 'facturacion' ? 'account-tabs__btn--active' : ''}`}
@@ -392,71 +358,6 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
                     </div>
                 )}
 
-                {/* ── Tab: Certificados ── */}
-                {activeTab === 'certificados' && (
-                    <div className="account-tab-content">
-                        <section className="account-card">
-                            <h2 className="account-card__title">Mis Certificados</h2>
-
-                            {certsLoading && (
-                                <div className="account-card__empty"><p>Cargando…</p></div>
-                            )}
-
-                            {!certsLoading && certsError && (
-                                <div className="account-card__empty">
-                                    <p>No se pudieron cargar tus certificados.</p>
-                                </div>
-                            )}
-
-                            {!certsLoading && !certsError && certificates.length === 0 && (
-                                <div className="account-card__empty">
-                                    <p>🎓</p>
-                                    <p>Aún no tienes certificados.</p>
-                                </div>
-                            )}
-
-                            {!certsLoading && !certsError && certificates.length > 0 && (
-                                <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    {certificates.map(cert => (
-                                        <li
-                                            key={cert.id}
-                                            style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'center',
-                                                gap: '1rem',
-                                                padding: '0.9rem 1rem',
-                                                border: '1px solid var(--border)',
-                                                borderRadius: 'var(--radius-md)',
-                                                flexWrap: 'wrap',
-                                            }}
-                                        >
-                                            <div>
-                                                <p style={{ margin: 0, fontWeight: 600 }}>
-                                                    {cert.templateSnapshot?.name ?? 'Certificado'}
-                                                </p>
-                                                <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                                    {cert.certificateNumber} · {parseCalendarDate(cert.certificateDate).toLocaleDateString('es', {
-                                                        day: '2-digit', month: 'long', year: 'numeric',
-                                                    })}
-                                                </p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className="btn-secondary"
-                                                onClick={() => downloadCertificate(cert)}
-                                                style={{ padding: '0.4rem 1rem', fontSize: '0.85rem' }}
-                                            >
-                                                Descargar PDF
-                                            </button>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </section>
-                    </div>
-                )}
-
                 {/* ── Tab: Facturación ── */}
                 {activeTab === 'facturacion' && (
                     <div className="account-tab-content">
@@ -537,6 +438,10 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, certificat
                         </section>
                     </div>
                 )}
+
+                <button type="button" className="btn-secondary account-logout" onClick={handleLogout}>
+                    Cerrar sesión
+                </button>
             </div>
         </div>
     );
