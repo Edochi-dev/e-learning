@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import type { EnrollmentGateway, CourseStudent } from '../../gateways/EnrollmentGateway';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import { useToast } from '../../components/Toast';
+import { Badge, type BadgeTone } from '../../components/Badge';
 
 interface CourseStudentsPageProps {
     gateway: EnrollmentGateway;
@@ -36,6 +37,13 @@ const formatDate = (iso: string | null): string => {
         month: 'short',
         year: 'numeric',
     });
+};
+
+/** Vencido en rosa vino, por vencer (7 días o menos) en dorado, el resto en verde. */
+const accessTone = (student: CourseStudent): BadgeTone => {
+    if (!student.isActive) return 'danger';
+    if (student.expiresAt && (student.daysRemaining ?? 0) <= 7) return 'warning';
+    return 'success';
 };
 
 const accessSummary = (student: CourseStudent): string => {
@@ -111,7 +119,7 @@ export const CourseStudentsPage = ({ gateway, courseGateway }: CourseStudentsPag
         return (
             <div className="admin-page">
                 <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
-                <p>{error}</p>
+                <div className="alert alert-error" role="alert">{error}</div>
             </div>
         );
     }
@@ -120,9 +128,9 @@ export const CourseStudentsPage = ({ gateway, courseGateway }: CourseStudentsPag
         <div className="admin-page">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
-            <div className="admin-page__header">
+            <div className="admin-header">
                 <h1>Alumnas de {courseTitle}</h1>
-                <p className="admin-page__subtitle">
+                <p>
                     {students.length === 0
                         ? 'Todavía no hay alumnas matriculadas en este curso'
                         : `${students.length} matriculada${students.length === 1 ? '' : 's'}`}
@@ -130,65 +138,47 @@ export const CourseStudentsPage = ({ gateway, courseGateway }: CourseStudentsPag
             </div>
 
             {students.length > 0 && (
-                <div className="students-table">
+                <div className="admin-list">
                     {students.map((student) => (
-                        <article
-                            key={student.enrollmentId}
-                            className={`student-row${student.isActive ? '' : ' student-row--expired'}`}
-                        >
-                            <div className="student-row__identity">
-                                <strong>{student.student.fullName}</strong>
-                                <span className="student-row__email">{student.student.email}</span>
-                            </div>
-
-                            <div className="student-row__access">
-                                <span
-                                    className={`student-row__badge student-row__badge--${student.isActive ? 'active' : 'expired'}`}
-                                >
-                                    {accessSummary(student)}
-                                </span>
-                                <span className="student-row__dates">
+                        <article key={student.enrollmentId} className="admin-row">
+                            <div className="admin-row__main">
+                                <span className="admin-row__title">{student.student.fullName}</span>
+                                <span className="admin-row__meta">{student.student.email}</span>
+                                <span className="admin-row__meta">
                                     Matriculada el {formatDate(student.enrolledAt)}
                                 </span>
                             </div>
 
-                            <div className="student-row__actions">
-                                {EXTENSION_PRESETS.map((days) => (
+                            <Badge tone={accessTone(student)}>{accessSummary(student)}</Badge>
+
+                            {/* Sumar días a un acceso permanente lo recortaría: sin botones, no deshabilitados. */}
+                            {student.expiresAt !== null && (
+                                <div className="admin-row__actions">
+                                    {EXTENSION_PRESETS.map((days) => (
+                                        <button
+                                            key={days}
+                                            type="button"
+                                            className="btn-secondary btn-sm"
+                                            disabled={savingId === student.enrollmentId}
+                                            title={`Nuevo vencimiento: ${formatDate(extendedExpiry(student, days))}`}
+                                            onClick={() =>
+                                                void updateExpiry(student, extendedExpiry(student, days))
+                                            }
+                                        >
+                                            +{days}d
+                                        </button>
+                                    ))}
                                     <button
-                                        key={days}
                                         type="button"
                                         className="btn-secondary btn-sm"
-                                        // Sumar días a un acceso permanente lo convertiría
-                                        // en temporal, que es recortarlo, no extenderlo.
-                                        disabled={
-                                            savingId === student.enrollmentId ||
-                                            student.expiresAt === null
-                                        }
-                                        title={
-                                            student.expiresAt === null
-                                                ? 'Ya tiene acceso permanente'
-                                                : `Nuevo vencimiento: ${formatDate(extendedExpiry(student, days))}`
-                                        }
-                                        onClick={() =>
-                                            void updateExpiry(student, extendedExpiry(student, days))
-                                        }
+                                        disabled={savingId === student.enrollmentId}
+                                        onClick={() => void updateExpiry(student, null)}
+                                        title="Acceso sin fecha de vencimiento"
                                     >
-                                        +{days}d
+                                        Permanente
                                     </button>
-                                ))}
-                                <button
-                                    type="button"
-                                    className="btn-secondary btn-sm"
-                                    disabled={
-                                        savingId === student.enrollmentId ||
-                                        student.expiresAt === null
-                                    }
-                                    onClick={() => void updateExpiry(student, null)}
-                                    title="Acceso sin fecha de vencimiento"
-                                >
-                                    Permanente
-                                </button>
-                            </div>
+                                </div>
+                            )}
                         </article>
                     ))}
                 </div>
