@@ -49,7 +49,7 @@ export const RegisterPage = () => {
             // Solo enviamos { fullName, email, password }.
             // confirmPassword es un campo de UI — nunca sale del componente.
             await register({ fullName, email, password });
-            navigate('/');
+            navigate('/mis-cursos');
         } catch (err: any) {
             const message: string = err.message || '';
 

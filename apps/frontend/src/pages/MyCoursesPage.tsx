@@ -159,9 +159,7 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                 {/* Aviso de vencimiento: explica y ofrece salida. */}
                                 {!enrollment.isActive && (
                                     <p className="enrollment-card__notice">
-                                        Tu acceso a este curso terminó. Tu progreso y tus
-                                        certificados se conservan: al renovar, sigues donde
-                                        lo dejaste.
+                                        Tu acceso terminó. Al renovar, sigues donde lo dejaste.
                                     </p>
                                 )}
 

@@ -20,6 +20,7 @@ import { CertificateVerificationPage } from './pages/CertificateVerificationPage
 import { CertificateLookupPage } from './pages/CertificateLookupPage';
 import { AccountPage } from './pages/AccountPage';
 import { MyCoursesPage } from './pages/MyCoursesPage';
+import { MyCertificatesPage } from './pages/MyCertificatesPage';
 import { HttpEnrollmentGateway } from './gateways/HttpEnrollmentGateway';
 import { HttpOrderGateway } from './gateways/HttpOrderGateway';
 import { HttpCorrectionGateway } from './gateways/HttpCorrectionGateway';
@@ -29,6 +30,7 @@ import { HttpInvitationGateway } from './gateways/HttpInvitationGateway';
 import { HttpPushGateway } from './gateways/HttpPushGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SiteLayout } from './components/SiteLayout';
+import { StudentTabBarLayout } from './components/StudentNav';
 import { SalesLandingPage } from './pages/SalesLandingPage';
 import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
@@ -140,6 +142,7 @@ function AppContent({ http }: { http: HttpClient }) {
         <Route path="/oferta" element={<ComingSoonGuard><SalesLandingPage /></ComingSoonGuard>} />
 
         <Route element={<SiteLayout />}>
+          <Route element={<StudentTabBarLayout />}>
             {/* Rutas siempre públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registro" element={<RegisterPage />} />
@@ -159,10 +162,10 @@ function AppContent({ http }: { http: HttpClient }) {
 
             {/* Rutas protegidas — cualquier usuario autenticado */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} certificateGateway={certificateGateway} nameChangeGateway={nameChangeGateway} />} />
+              <Route path="/cuenta" element={<AccountPage gateway={authGateway} orderGateway={orderGateway} nameChangeGateway={nameChangeGateway} />} />
               <Route path="/mis-cursos" element={<MyCoursesPage gateway={enrollmentGateway} />} />
               <Route path="/mis-cursos/:courseId" element={<CourseHomePage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} />} />
-              <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
+              <Route path="/mis-certificados" element={<MyCertificatesPage gateway={certificateGateway} />} />
             </Route>
 
             {/* Rutas de Administración — solo accesibles con rol ADMIN */}
@@ -188,6 +191,12 @@ function AppContent({ http }: { http: HttpClient }) {
 
             {/* Cualquier otra URL → página de próximamente */}
             <Route path="*" element={<ComingSoonPage />} />
+          </Route>
+
+          {/* Sin barra inferior: en el reproductor la pantalla es del video. */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/courses/:courseId/learn" element={<CourseLearnPage courseGateway={courseGateway} enrollmentGateway={enrollmentGateway} videoGateway={videoGateway} correctionGateway={correctionGateway} />} />
+          </Route>
         </Route>
         </Routes>
       </Suspense>

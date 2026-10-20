@@ -164,9 +164,12 @@ export const CourseHomePage = ({ courseGateway, enrollmentGateway }: CourseHomeP
                 <h2 className="course-home__heading">Certificado</h2>
                 <p>
                     {completedAll
-                        ? 'Completaste todas las lecciones. Tu certificado aparecerá en Mi cuenta → Certificados cuando la profesora lo emita.'
-                        : 'Al completar todas las lecciones, la profesora emite tu certificado. Lo verás en Mi cuenta → Certificados.'}
+                        ? 'Completaste todas las lecciones. Tu certificado aparecerá en Mis certificados cuando la profesora lo emita.'
+                        : 'Al completar todas las lecciones, la profesora emite tu certificado y lo verás en Mis certificados.'}
                 </p>
+                <Link to="/mis-certificados" className="btn-secondary course-home__certificate-link">
+                    Ver mis certificados
+                </Link>
             </section>
         </div>
     );

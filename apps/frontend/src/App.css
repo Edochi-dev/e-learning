@@ -87,6 +87,7 @@
      Uso en los componentes: `@media (max-width: 768px) { ... }`
   */
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
+  --tab-bar-height: 56px;  /* barra inferior de la alumna, sin el margen del iPhone */
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
   --input-font-size: 0.95rem; /* 16px en mobile: menos hace que iOS haga zoom al enfocar */
 }
@@ -315,6 +316,21 @@ a {
 .nav-links--sections {
   margin-left: auto;
   margin-right: 1.5rem;
+}
+
+/* Los destinos de la alumna van junto a los controles; si también están las
+   secciones públicas, las siguen. */
+.nav-links--student {
+  margin-left: auto;
+  margin-right: 1.5rem;
+}
+
+.nav-links--sections + .nav-links--student {
+  margin-left: 0;
+}
+
+.nav-links--student a.active {
+  color: var(--primary);
 }
 
 /* El pie queda abajo aunque la página sea más corta que la pantalla. */
@@ -1516,7 +1532,13 @@ input:checked+.slider .icon-moon {
     gap: 0.75rem;
   }
 
+  /* En el teléfono las secciones van tras el botón "Menú". */
   .nav-links--sections {
+    display: none;
+  }
+
+  /* Solo se ve si no cabe la barra inferior (teléfono acostado). */
+  .nav-links--student {
     grid-column: 1 / -1;
     grid-row: 2;
     margin: 0;
@@ -3915,10 +3937,10 @@ input.filter-control[type="search"] {
 }
 
 /* ── Grid de cursos ── */
-/* Hasta 2 columnas, ninguna bajo 240px. */
+/* Hasta 3 columnas, ninguna bajo 260px: con 2 en escritorio quedaban de ~590px. */
 .catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(240px, (100% - 2rem) / 2)), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(260px, (100% - 4rem) / 3)), 1fr));
   gap: 2rem;
 }
 
@@ -3990,7 +4012,7 @@ input.filter-control[type="search"] {
 
 .catalog-card__title {
   font-family: var(--font-body);
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   margin-bottom: 0.65rem;
   color: var(--text-primary);
@@ -4642,11 +4664,11 @@ input.filter-control[type="search"] {
 }
 
 /* Grid de tarjetas */
-/* Hasta 3 columnas, ninguna bajo 260px (antes 320px: a 600px ya no cabían dos). */
+/* Hasta 4 columnas, ninguna bajo 250px: con 3 en escritorio quedaban de ~390px. */
 .enrollment-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(260px, (100% - 3.5rem) / 3)), 1fr));
-  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(250px, (100% - 4.5rem) / 4)), 1fr));
+  gap: 1.5rem;
 }
 
 /* Tarjeta de curso matriculado */
@@ -4667,7 +4689,7 @@ input.filter-control[type="search"] {
 }
 
 .enrollment-card__visual {
-  height: 160px;
+  aspect-ratio: 16 / 9;
   background: linear-gradient(135deg, var(--surface), var(--border));
   overflow: hidden;
   display: flex;
@@ -5285,6 +5307,12 @@ button.admin-course-students:disabled {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+}
+
+/* Los botones conservan su ancho: la columna flex los estiraría a toda la tarjeta. */
+.account-card > .btn-secondary,
+.account-field > .btn-secondary {
+  align-self: flex-start;
 }
 
 .account-field__label {
@@ -8724,4 +8752,255 @@ a.course-home__lesson:hover {
   margin: 0.5rem 0 1rem;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+/* === BARRA INFERIOR DE LA ALUMNA ===
+   Solo en pantallas angostas con altura suficiente: acostado, cada píxel
+   vertical es del contenido y los destinos vuelven a la cabecera.
+   Fija y no sticky: sticky la dejaba a media pantalla en páginas cortas. */
+.tab-bar {
+  display: none;
+}
+
+@media (max-width: 768px) and (min-height: 501px) {
+  .tab-bar {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 90;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Reserva el alto de la barra para que no tape el final ni el pie. */
+  .site-shell:has(.tab-bar) {
+    padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .nav-links--student {
+    display: none;
+  }
+
+  /* Repetiría los destinos de la barra; "Cerrar sesión" vive en Cuenta.
+     En el reproductor, que no tiene barra, sigue. */
+  .site-shell:has(.tab-bar) .user-menu--student {
+    display: none;
+  }
+}
+
+.tab-bar__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: var(--tab-bar-height);
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.tab-bar__item.active {
+  color: var(--primary);
+}
+
+.tab-bar__icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* === MIS CERTIFICADOS === */
+.my-certificates-page {
+  padding-top: 3rem;
+  padding-bottom: 5rem;
+  max-width: 760px;
+}
+
+.my-certificates-page__status {
+  color: var(--text-muted);
+}
+
+.my-certificates-page__empty-icon {
+  width: 48px;
+  height: 48px;
+  color: var(--gold);
+}
+
+.certificate-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.certificate-list__item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.certificate-list__icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  color: var(--gold);
+}
+
+.certificate-list__info {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.certificate-list__name {
+  margin: 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.certificate-list__meta {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+/* Si la fila se parte, el botón ocupa todo el ancho en vez de quedar suelto. */
+.certificate-list__download {
+  flex: 1 0 auto;
+  max-width: 100%;
+  min-height: var(--touch-min);
+}
+
+@media (min-width: 641px) {
+  .certificate-list__download {
+    flex: 0 0 auto;
+  }
+}
+
+/* === MENÚ DEL SITIO (teléfono) ===
+   El panel se posiciona respecto a la cabecera sticky, a todo su ancho.
+   Los selectores dobles ganan a `.nav-links a`, que también lo alcanza. */
+.site-menu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .site-menu {
+    display: block;
+  }
+}
+
+.site-menu__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  padding: 0 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.site-menu__toggle[aria-expanded='true'] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.site-menu__toggle-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.site-menu__panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  animation: site-menu-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes site-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.site-menu__panel .site-menu__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+  padding: 0 var(--mobile-pad-x);
+  border-top: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.site-menu__panel .site-menu__item::after {
+  content: none;
+}
+
+.site-menu__panel .site-menu__item--logout {
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid var(--border);
+  color: var(--danger);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.site-menu__item--logout .site-menu__chevron {
+  color: var(--danger);
+}
+
+.site-menu__panel .site-menu__item:active {
+  background: var(--surface);
+}
+
+.site-menu__chevron {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+}
+
+.account-logout {
+  display: block;
+  margin: 2rem auto 0;
+  min-height: var(--touch-min);
+  color: var(--danger);
+}
+
+.course-home__certificate-link {
+  align-self: flex-start;
+  margin-top: 0.75rem;
 }
