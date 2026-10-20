@@ -9,6 +9,7 @@ import { StudentHeaderLinks } from './StudentNav';
 import { SiteMenu, SiteSectionLinks } from './SiteSections';
 import { useSiteSections } from '../hooks/useSiteSections';
 import { useLogout } from '../hooks/useLogout';
+import { canSeePublicSite, homePathFor } from '../lib/public-site';
 
 /**
  * SiteLayout — cabecera y pie comunes del sitio.
@@ -21,8 +22,7 @@ export const SiteLayout = () => {
     const { user } = useAuth();
     const { theme, toggleTheme } = useTheme(new LocalStorageThemeGateway());
     const sections = useSiteSections();
-    // Las secciones del sitio público siguen el mismo criterio que ComingSoonGuard.
-    const showSections = user?.role === UserRole.ADMIN;
+    const showSections = canSeePublicSite(user);
     const logout = useLogout();
     const isStudent = user?.role === UserRole.STUDENT;
 
@@ -30,7 +30,7 @@ export const SiteLayout = () => {
         <div className="site-shell">
             <header className="header">
                 <div className="container nav">
-                    <Link to="/" className="logo">
+                    <Link to={homePathFor(user)} className="logo">
                         <img src="/images/logo.png" alt="" className="logo__img" />
                         <span className="logo__name"><em>Mari's Nails Academy</em></span>
                     </Link>

@@ -5,7 +5,9 @@ import { useEnrollments } from '../hooks/useEnrollments';
 import { API_URL as BACKEND_URL } from '../config';
 import { SkeletonCourseCard } from '../components/Skeleton';
 import { UpcomingLiveClasses } from '../components/UpcomingLiveClasses';
-import { renewWhatsappUrl } from '../lib/whatsapp';
+import { coursesInfoWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
+import { canSeePublicSite } from '../lib/public-site';
+import { useAuth } from '../context/AuthContext';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
@@ -36,6 +38,7 @@ const accessLabel = (daysRemaining: number | null): string => {
  */
 export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
     const { enrollments, loading, error } = useEnrollments(gateway);
+    const { user } = useAuth();
 
     if (loading) {
         return (
@@ -86,10 +89,21 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                 <div className="my-courses-page__empty">
                     <p className="my-courses-page__empty-icon">📚</p>
                     <h2>Empieza tu formación</h2>
-                    <p>Explora los cursos disponibles y encuentra el perfecto para ti.</p>
-                    <Link to="/cursos" className="btn-primary">
-                        Ver cursos
-                    </Link>
+                    {canSeePublicSite(user) ? (
+                        <>
+                            <p>Explora los cursos disponibles y encuentra el perfecto para ti.</p>
+                            <Link to="/cursos" className="btn-primary">
+                                Ver cursos
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <p>Escríbenos y te contamos qué cursos hay y cómo inscribirte.</p>
+                            <a href={coursesInfoWhatsappUrl()} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                                Escribir por WhatsApp
+                            </a>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="enrollment-grid">
