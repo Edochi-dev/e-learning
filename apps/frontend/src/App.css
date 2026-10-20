@@ -9232,3 +9232,250 @@ a.course-home__lesson:active,
   align-self: flex-start;
   margin-top: 0.75rem;
 }
+
+/* === DISEÑADOR DE PLANTILLAS (TemplateDesignPicker) ===
+   Solo presentación: el ancho del visor, el zoom y la posición de cada
+   marcador se calculan en el componente y se convierten a coordenadas del
+   PDF; no moverlos aquí. Cada elemento tiene su color: nombre rosa, QR
+   dorado, fecha verde. */
+.design-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Angosto: el PDF arriba a todo el ancho, las opciones debajo. */
+@media (max-width: 900px) {
+  .design-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.design-picker__canvas-col {
+  min-width: 0;
+}
+
+.design-canvas {
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.design-canvas__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.design-canvas__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.design-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.design-zoom__label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.design-zoom__range {
+  width: 100px;
+  accent-color: var(--primary);
+}
+
+.design-zoom__value {
+  min-width: 3ch;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.design-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 1.5px dashed var(--marker-accent);
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--marker-accent) 10%, transparent);
+  white-space: nowrap;
+  line-height: normal;
+  cursor: grab;
+  user-select: none;
+}
+
+.design-marker--name {
+  --marker-accent: var(--primary);
+}
+
+.design-marker--date {
+  --marker-accent: var(--success);
+}
+
+.design-marker--qr {
+  --marker-accent: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Centrado: una guía punteada marca el eje donde cae el centro del texto. */
+.design-marker--centered {
+  background-image: linear-gradient(var(--marker-accent) 1px, transparent 1px);
+  background-size: 1px 4px;
+  background-position: 50% 0;
+  background-repeat: repeat-y;
+}
+
+.design-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.design-legend__mark {
+  font-weight: 700;
+}
+
+.design-legend__mark--name { color: var(--primary); }
+.design-legend__mark--qr { color: var(--gold); }
+.design-legend__mark--date { color: var(--success); }
+
+.design-panel {
+  padding: 1.5rem;
+}
+
+.design-panel__title {
+  margin-bottom: 1.25rem;
+}
+
+.design-panel__font-preview {
+  margin: -0.75rem 0 1.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.design-panel__hint {
+  margin: -0.75rem 0 1.25rem;
+}
+
+.design-panel__divider {
+  margin: 0 0 1.25rem;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.design-panel__save {
+  width: 100%;
+}
+
+.design-panel__specs {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.design-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.design-range input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.design-range--name input[type='range'] { accent-color: var(--primary); }
+.design-range--qr input[type='range'] { accent-color: var(--gold); }
+.design-range--date input[type='range'] { accent-color: var(--success); }
+
+.design-range .design-range__number {
+  width: 4.5rem;
+  padding: 0.35rem;
+  font-family: monospace;
+  text-align: center;
+}
+
+.design-range__unit {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.design-color {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.design-color .design-color__swatch {
+  flex-shrink: 0;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.design-color .design-color__hex {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+}
+
+/* Segmentado Izquierda / Centrado con el color del elemento. */
+.design-align {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.design-align--name { --marker-accent: var(--primary); --marker-soft: var(--surface-rose); --marker-text: var(--accent-text); }
+.design-align--date { --marker-accent: var(--success); --marker-soft: var(--success-soft); --marker-text: var(--success); }
+
+.design-align button {
+  flex: 1;
+  min-height: 40px;
+  padding: 0.4rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-fast), background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.design-align button[aria-pressed='true'] {
+  border-color: var(--marker-accent);
+  background: var(--marker-soft);
+  color: var(--marker-text);
+  font-weight: 700;
+}
+
+.design-align button:active {
+  background: var(--marker-soft);
+}
+

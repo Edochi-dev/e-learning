@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import * as pdfjsLib from 'pdfjs-dist';
+// Build legacy: el moderno usa Uint8Array.toHex, que navegadores no actualizados no tienen.
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { TemplateDesignPicker } from '../../components/TemplateDesignPicker';
 import { PdfUploader } from '../../components/PdfUploader';
@@ -13,7 +14,7 @@ import {
 } from '../../lib/pdf-units';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
+    'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
     import.meta.url,
 ).toString();
 

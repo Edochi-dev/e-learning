@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import Draggable from 'react-draggable';
 import { QRCodeSVG } from 'qrcode.react';
-import * as pdfjsLib from 'pdfjs-dist';
+// Build legacy: el moderno usa Uint8Array.toHex, que navegadores no actualizados no tienen.
+import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import type { CertificateGateway, CertificateTemplate, NameStyle, QrStyle, DateStyle } from '../gateways/CertificateGateway';
 import { ptsToMm, ptsToPx } from '../lib/pdf-units';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.min.mjs',
+    'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
     import.meta.url,
 ).toString();
 
@@ -56,6 +57,75 @@ const FONT_OPTIONS: FontOption[] = [
 ];
 
 const FONT_GROUPS = [...new Set(FONT_OPTIONS.map(f => f.group))];
+
+type MarkerTone = 'name' | 'qr' | 'date';
+
+/** Deslizador + número + "pt", con el color del elemento al que afecta. */
+const RangeField = ({ label, min, max, step, value, onChange, tone }: {
+    label: string; min: number; max: number; step: number; value: number;
+    onChange: (value: number) => void; tone: MarkerTone;
+}) => (
+    <div className="form-group">
+        <label>{label}</label>
+        <div className={`design-range design-range--${tone}`}>
+            <input type="range" min={min} max={max} step={step} value={value}
+                onChange={e => onChange(Number(e.target.value))} aria-label={label} />
+            <input type="number" min={min} max={max} value={value}
+                onChange={e => onChange(Math.min(max, Math.max(min, Number(e.target.value))))}
+                className="design-range__number" aria-label={`${label} (pt)`} />
+            <span className="design-range__unit">pt</span>
+        </div>
+    </div>
+);
+
+/** Selector de color + código hex editable. */
+const ColorField = ({ label, value, onChange }: {
+    label: string; value: string; onChange: (value: string) => void;
+}) => (
+    <div className="form-group">
+        <label>{label}</label>
+        <div className="design-color">
+            <input type="color" value={value} onChange={e => onChange(e.target.value)}
+                className="design-color__swatch" aria-label={label} />
+            <input type="text" value={value} onChange={e => onChange(e.target.value)}
+                className="design-color__hex" aria-label={`${label} (hex)`} />
+        </div>
+    </div>
+);
+
+/** Izquierda / Centrado como botones segmentados. */
+const AlignToggle = ({ label, value, onChange, tone }: {
+    label: string; value: 'left' | 'center'; onChange: (value: 'left' | 'center') => void; tone: MarkerTone;
+}) => (
+    <div className="form-group">
+        <label>{label}</label>
+        <div className={`design-align design-align--${tone}`} role="group" aria-label={label}>
+            {(['left', 'center'] as const).map(opt => (
+                <button key={opt} type="button" onClick={() => onChange(opt)} aria-pressed={value === opt}>
+                    {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
+                </button>
+            ))}
+        </div>
+    </div>
+);
+
+/** Tipo de letra agrupado por familia. */
+const FontSelect = ({ label, value, onChange }: {
+    label: string; value: string; onChange: (value: string) => void;
+}) => (
+    <div className="form-group">
+        <label>{label}</label>
+        <select value={value} onChange={e => onChange(e.target.value)}>
+            {FONT_GROUPS.map(group => (
+                <optgroup key={group} label={group}>
+                    {FONT_OPTIONS.filter(f => f.group === group).map(f => (
+                        <option key={f.value} value={f.value}>{f.label}</option>
+                    ))}
+                </optgroup>
+            ))}
+        </select>
+    </div>
+);
 
 // Posiciones iniciales por defecto (modo creación) — proporcionales al canvas.
 const INITIAL_NAME_PCT = { x: 0.50, y: 0.35 };
@@ -213,6 +283,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     const [canvasRendered, setCanvasRendered] = useState(0);
 
     const selectedFont = FONT_OPTIONS.find(f => f.value === fontFamily) ?? FONT_OPTIONS[0];
+    const selectedDateFont = FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0];
     const pdfDims = { w: template.pageWidth, h: template.pageHeight };
 
     // ── Renderizar PDF ────────────────────────────────────────────────────────
@@ -350,31 +421,28 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
 
     // ─────────────────────────────────────────────────────────────────────────
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', alignItems: 'start' }}>
-            <div style={{ minWidth: 0 }}>
-                <div style={{
-                    background: 'var(--bg-elevated)', border: '2px solid var(--border)',
-                    borderRadius: '8px', padding: '0.75rem', marginBottom: '0.5rem',
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
-                        <p style={{ fontWeight: 600, fontSize: '0.9rem', margin: 0 }}>
+        <div className="design-picker">
+            <div className="design-picker__canvas-col">
+                <div className="design-canvas">
+                    <div className="design-canvas__toolbar">
+                        <p className="design-canvas__title">
                             {draggablesReady ? 'Arrastra cada elemento a su posición' : 'Cargando PDF…'}
                         </p>
-                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>Zoom</span>
+                        <div className="design-zoom">
+                            <span className="design-zoom__label">Zoom</span>
                             <input
                                 type="range" min={0.5} max={2.5} step={0.1} value={zoomLevel}
                                 onChange={e => setZoomLevel(Number(e.target.value))}
-                                style={{ width: '100px', accentColor: 'var(--primary)' }}
+                                className="design-zoom__range"
+                                aria-label="Zoom"
                             />
-                            <span style={{ fontSize: '0.75rem', fontFamily: 'monospace', minWidth: '36px' }}>
-                                {Math.round(zoomLevel * 100)}%
-                            </span>
+                            <span className="design-zoom__value">{Math.round(zoomLevel * 100)}%</span>
                             <button
                                 type="button"
                                 onClick={() => setZoomLevel(1)}
                                 title="Restablecer zoom"
-                                style={{ fontSize: '0.75rem', background: 'none', border: '1px solid var(--border)', borderRadius: '4px', cursor: 'pointer', padding: '0.1rem 0.4rem', color: 'var(--text-muted)' }}
+                                aria-label="Restablecer zoom"
+                                className="btn-ghost btn-sm btn-icon"
                             >↺</button>
                         </div>
                     </div>
@@ -415,30 +483,17 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                 onStop={onNameStop}
                                                 scale={zoomLevel}
                                             >
-                                                <div ref={nameNodeRef} style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    cursor: 'grab',
-                                                    userSelect: 'none',
-                                                    padding: 0,
-                                                    background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
-                                                    border: '1.5px dashed var(--primary)',
-                                                    borderRadius: '3px',
-                                                    fontFamily: selectedFont.css,
-                                                    fontWeight: selectedFont.weight,
-                                                    fontStyle: selectedFont.style,
-                                                    fontSize: `${displayFontSize()}px`,
-                                                    color: nameColor,
-                                                    whiteSpace: 'nowrap',
-                                                    lineHeight: 'normal',
-                                                    ...(nameAlign === 'center' && {
-                                                        backgroundImage: 'linear-gradient(var(--primary) 1px, transparent 1px)',
-                                                        backgroundSize: '1px 4px',
-                                                        backgroundPosition: '50% 0',
-                                                        backgroundRepeat: 'repeat-y',
-                                                    }),
-                                                }}>
+                                                <div
+                                                    ref={nameNodeRef}
+                                                    className={`design-marker design-marker--name${nameAlign === 'center' ? ' design-marker--centered' : ''}`}
+                                                    style={{
+                                                        fontFamily: selectedFont.css,
+                                                        fontWeight: selectedFont.weight,
+                                                        fontStyle: selectedFont.style,
+                                                        fontSize: `${displayFontSize()}px`,
+                                                        color: nameColor,
+                                                    }}
+                                                >
                                                     Ana García
                                                 </div>
                                             </Draggable>
@@ -450,21 +505,11 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                 onStop={onQrStop}
                                                 scale={zoomLevel}
                                             >
-                                                <div ref={qrNodeRef} style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    cursor: 'grab',
-                                                    userSelect: 'none',
-                                                    border: '1.5px dashed var(--gold)',
-                                                    background: 'color-mix(in srgb, var(--gold) 8%, transparent)',
-                                                    width:  `${displayQrSize()}px`,
-                                                    height: `${displayQrSize()}px`,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    overflow: 'hidden',
-                                                }}>
+                                                <div
+                                                    ref={qrNodeRef}
+                                                    className="design-marker design-marker--qr"
+                                                    style={{ width: `${displayQrSize()}px`, height: `${displayQrSize()}px` }}
+                                                >
                                                     <QRCodeSVG value="https://marsnailsacademy.com/certificados/ejemplo" size={displayQrSize()} fgColor={qrFgColor} bgColor={qrBgColor} />
                                                 </div>
                                             </Draggable>
@@ -476,30 +521,17 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                 onStop={onDateStop}
                                                 scale={zoomLevel}
                                             >
-                                                <div ref={dateNodeRef} style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    cursor: 'grab',
-                                                    userSelect: 'none',
-                                                    padding: 0,
-                                                    background: 'color-mix(in srgb, var(--success) 10%, transparent)',
-                                                    border: '1.5px dashed var(--success)',
-                                                    borderRadius: '3px',
-                                                    fontFamily: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).css,
-                                                    fontWeight: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).weight,
-                                                    fontStyle:  (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).style,
-                                                    fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
-                                                    color: dateColor,
-                                                    whiteSpace: 'nowrap',
-                                                    lineHeight: 'normal',
-                                                    ...(dateAlign === 'center' && {
-                                                        backgroundImage: 'linear-gradient(var(--success) 1px, transparent 1px)',
-                                                        backgroundSize: '1px 4px',
-                                                        backgroundPosition: '50% 0',
-                                                        backgroundRepeat: 'repeat-y',
-                                                    }),
-                                                }}>
+                                                <div
+                                                    ref={dateNodeRef}
+                                                    className={`design-marker design-marker--date${dateAlign === 'center' ? ' design-marker--centered' : ''}`}
+                                                    style={{
+                                                        fontFamily: selectedDateFont.css,
+                                                        fontWeight: selectedDateFont.weight,
+                                                        fontStyle: selectedDateFont.style,
+                                                        fontSize: `${Math.max(8, Math.round(dateFontSize * getDisplayScale()))}px`,
+                                                        color: dateColor,
+                                                    }}
+                                                >
                                                     11/03/2026
                                                 </div>
                                             </Draggable>
@@ -511,207 +543,63 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
-                    <span><span style={{ color: 'var(--primary)', fontWeight: 700 }}>━ ━</span> Nombre del alumno</span>
-                    <span><span style={{ color: 'var(--gold)', fontWeight: 700 }}>━ ━</span> Código QR</span>
-                    <span><span style={{ color: 'var(--success)', fontWeight: 700 }}>━ ━</span> Fecha</span>
+                <div className="design-legend">
+                    <span><span className="design-legend__mark design-legend__mark--name">━ ━</span> Nombre del alumno</span>
+                    <span><span className="design-legend__mark design-legend__mark--qr">━ ━</span> Código QR</span>
+                    <span><span className="design-legend__mark design-legend__mark--date">━ ━</span> Fecha</span>
                 </div>
             </div>
 
             {/* Panel de opciones */}
-            <div className="admin-card">
-                <h3 style={{ marginBottom: '1.25rem' }}>Opciones de estilo</h3>
+            <div className="admin-card design-panel">
+                <h3 className="design-panel__title">Opciones de estilo</h3>
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Tipo de letra</label>
-                    <select className="form-input" value={fontFamily} onChange={e => setFontFamily(e.target.value)}>
-                        {FONT_GROUPS.map(group => (
-                            <optgroup key={group} label={group}>
-                                {FONT_OPTIONS.filter(f => f.group === group).map(f => (
-                                    <option key={f.value} value={f.value}>{f.label}</option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
-                    <p style={{
+                <FontSelect label="Tipo de letra" value={fontFamily} onChange={setFontFamily} />
+                <p
+                    className="design-panel__font-preview"
+                    style={{
                         fontFamily: selectedFont.css, fontWeight: selectedFont.weight,
-                        fontStyle: selectedFont.style, fontSize: '1.3rem',
-                        marginTop: '0.5rem', color: nameColor,
-                        background: 'var(--surface)',
-                        padding: '0.4rem 0.75rem', borderRadius: '4px', textAlign: 'center',
-                    }}>
-                        Ana García
+                        fontStyle: selectedFont.style, color: nameColor,
+                    }}
+                >
+                    Ana García
+                </p>
+
+                <AlignToggle label="Posición del nombre" value={nameAlign} onChange={setNameAlign} tone="name" />
+                {nameAlign === 'center' && (
+                    <p className="form-hint design-panel__hint">
+                        El punto donde sueltes el elemento será el centro del nombre, sin importar su longitud.
                     </p>
-                </div>
+                )}
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Posición del nombre</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {(['left', 'center'] as const).map(opt => (
-                            <button
-                                key={opt}
-                                type="button"
-                                onClick={() => setNameAlign(opt)}
-                                style={{
-                                    flex: 1,
-                                    padding: '0.4rem',
-                                    border: `2px solid ${nameAlign === opt ? 'var(--primary)' : 'var(--border)'}`,
-                                    borderRadius: '6px',
-                                    background: nameAlign === opt ? 'var(--surface-rose)' : 'transparent',
-                                    color: nameAlign === opt ? 'var(--primary)' : 'var(--text-muted)',
-                                    fontWeight: nameAlign === opt ? 700 : 400,
-                                    fontSize: '0.8rem',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
-                            </button>
-                        ))}
-                    </div>
-                    {nameAlign === 'center' && (
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                            El punto donde sueltes el elemento será el centro del nombre, sin importar su longitud.
-                        </p>
-                    )}
-                </div>
+                <RangeField label="Tamaño de fuente" min={8} max={120} step={1} value={fontSize} onChange={setFontSize} tone="name" />
+                <ColorField label="Color del nombre" value={nameColor} onChange={setNameColor} />
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Tamaño de fuente</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="range" min={8} max={120} step={1} value={fontSize}
-                            onChange={e => setFontSize(Number(e.target.value))}
-                            style={{ flex: 1, accentColor: 'var(--primary)' }} />
-                        <input type="number" min={8} max={120} value={fontSize}
-                            onChange={e => setFontSize(Math.min(120, Math.max(8, Number(e.target.value))))}
-                            style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
-                    </div>
-                </div>
+                <hr className="design-panel__divider" />
 
-                <div style={{ marginBottom: '1.25rem' }}>
-                    <label className="form-label">Color del nombre</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="color" value={nameColor} onChange={e => setNameColor(e.target.value)}
-                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
-                        <input type="text" className="form-input" value={nameColor}
-                            onChange={e => setNameColor(e.target.value)}
-                            style={{ fontFamily: 'monospace', flex: 1 }} />
-                    </div>
-                </div>
+                <RangeField label="Tamaño del QR" min={30} max={250} step={5} value={qrSize} onChange={setQrSize} tone="qr" />
+                <ColorField label="Color del QR (módulos)" value={qrFgColor} onChange={setQrFgColor} />
+                <ColorField label="Color de fondo del QR" value={qrBgColor} onChange={setQrBgColor} />
 
-                <hr style={{ marginBottom: '1.25rem', borderColor: 'var(--border)' }} />
+                <hr className="design-panel__divider" />
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Tamaño del QR</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="range" min={30} max={250} step={5} value={qrSize}
-                            onChange={e => setQrSize(Number(e.target.value))}
-                            style={{ flex: 1, accentColor: 'var(--gold)' }} />
-                        <input type="number" min={30} max={250} value={qrSize}
-                            onChange={e => setQrSize(Math.min(250, Math.max(30, Number(e.target.value))))}
-                            style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
-                    </div>
-                </div>
+                <FontSelect label="Tipo de letra (fecha)" value={dateFontFamily} onChange={setDateFontFamily} />
+                <AlignToggle label="Posición de la fecha" value={dateAlign} onChange={setDateAlign} tone="date" />
+                <RangeField label="Tamaño de fuente (fecha)" min={6} max={80} step={1} value={dateFontSize} onChange={setDateFontSize} tone="date" />
+                <ColorField label="Color de la fecha" value={dateColor} onChange={setDateColor} />
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Color del QR (módulos)</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="color" value={qrFgColor} onChange={e => setQrFgColor(e.target.value)}
-                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
-                        <input type="text" className="form-input" value={qrFgColor}
-                            onChange={e => setQrFgColor(e.target.value)}
-                            style={{ fontFamily: 'monospace', flex: 1 }} />
-                    </div>
-                </div>
+                {error && <p className="confirm-dialog__error">{error}</p>}
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Color de fondo del QR</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="color" value={qrBgColor} onChange={e => setQrBgColor(e.target.value)}
-                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
-                        <input type="text" className="form-input" value={qrBgColor}
-                            onChange={e => setQrBgColor(e.target.value)}
-                            style={{ fontFamily: 'monospace', flex: 1 }} />
-                    </div>
-                </div>
-
-                <hr style={{ marginBottom: '1.25rem', borderColor: 'var(--border)' }} />
-
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Tipo de letra (fecha)</label>
-                    <select className="form-input" value={dateFontFamily} onChange={e => setDateFontFamily(e.target.value)}>
-                        {FONT_GROUPS.map(group => (
-                            <optgroup key={group} label={group}>
-                                {FONT_OPTIONS.filter(f => f.group === group).map(f => (
-                                    <option key={f.value} value={f.value}>{f.label}</option>
-                                ))}
-                            </optgroup>
-                        ))}
-                    </select>
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Posición de la fecha</label>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {(['left', 'center'] as const).map(opt => (
-                            <button
-                                key={opt}
-                                type="button"
-                                onClick={() => setDateAlign(opt)}
-                                style={{
-                                    flex: 1,
-                                    padding: '0.4rem',
-                                    border: `2px solid ${dateAlign === opt ? 'var(--success)' : 'var(--border)'}`,
-                                    borderRadius: '6px',
-                                    background: dateAlign === opt ? 'var(--success-soft)' : 'transparent',
-                                    color: dateAlign === opt ? 'var(--success)' : 'var(--text-muted)',
-                                    fontWeight: dateAlign === opt ? 700 : 400,
-                                    fontSize: '0.8rem',
-                                    cursor: 'pointer',
-                                }}
-                            >
-                                {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                <div style={{ marginBottom: '1rem' }}>
-                    <label className="form-label">Tamaño de fuente (fecha)</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="range" min={6} max={80} step={1} value={dateFontSize}
-                            onChange={e => setDateFontSize(Number(e.target.value))}
-                            style={{ flex: 1, accentColor: 'var(--success)' }} />
-                        <input type="number" min={6} max={80} value={dateFontSize}
-                            onChange={e => setDateFontSize(Math.min(80, Math.max(6, Number(e.target.value))))}
-                            style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>pt</span>
-                    </div>
-                </div>
-
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Color de la fecha</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <input type="color" value={dateColor} onChange={e => setDateColor(e.target.value)}
-                            style={{ width: '44px', height: '36px', border: 'none', cursor: 'pointer', padding: 0, borderRadius: '4px' }} />
-                        <input type="text" className="form-input" value={dateColor}
-                            onChange={e => setDateColor(e.target.value)}
-                            style={{ fontFamily: 'monospace', flex: 1 }} />
-                    </div>
-                </div>
-
-                {error && <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
-
-                <button className="btn-primary" onClick={handleSave}
-                    disabled={saving || !draggablesReady} style={{ width: '100%' }}>
+                <button type="button" className="btn-primary design-panel__save" onClick={handleSave}
+                    disabled={saving || !draggablesReady}>
                     {saving ? 'Guardando…' : 'Guardar diseño'}
                 </button>
 
-                <div style={{ marginTop: '0.75rem', fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-                    <span>PDF: {ptsToMm(pdfDims.w)}×{ptsToMm(pdfDims.h)} mm ({ptsToPx(pdfDims.w)}×{ptsToPx(pdfDims.h)} px a 300 DPI)</span><br />
-                    <span>Formato: {template.paperFormat} · Calidad de impresión</span>
-                </div>
+                <p className="design-panel__specs">
+                    PDF: {ptsToMm(pdfDims.w)}×{ptsToMm(pdfDims.h)} mm ({ptsToPx(pdfDims.w)}×{ptsToPx(pdfDims.h)} px a 300 DPI)
+                    <br />
+                    Formato: {template.paperFormat} · Calidad de impresión
+                </p>
             </div>
         </div>
     );
