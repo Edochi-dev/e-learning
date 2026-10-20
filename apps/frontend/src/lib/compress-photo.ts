@@ -30,7 +30,7 @@ export async function compressPhoto(file: File): Promise<File> {
         return file;
     }
     // JPEG no tiene transparencia: sin fondo, un PNG transparente quedaría negro.
-    ctx.fillStyle = '#fff';
+    ctx.fillStyle = '#fff'; // design-tokens: allow — fondo del JPEG, no de la interfaz
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(bitmap, 0, 0, width, height);
     bitmap.close();

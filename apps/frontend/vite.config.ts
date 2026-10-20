@@ -39,7 +39,7 @@ export default defineConfig(({ mode }) => ({
         short_name: "Mari's Nails",
         description: 'Formación profesional en uñas.',
         theme_color: '#e84393',
-        background_color: '#fdf8f5',
+        background_color: '#f8ede6',
         display: 'standalone',
         start_url: '/',
         icons: [

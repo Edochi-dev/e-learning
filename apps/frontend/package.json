@@ -10,6 +10,7 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "check:tokens": "node scripts/check-design-tokens.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

@@ -11,14 +11,14 @@
  *   verá el mismo color — consistente en todos los dispositivos y sesiones.
  */
 
-// Paleta de colores en armonía con el design system (rose pink + champagne gold + complementarios)
+// Solo tonos de la marca, profundos para que las iniciales blancas se lean.
 const PALETTE = [
-    '#e84393', // rose pink (--primary)
-    '#d4a574', // champagne gold (--gold)
-    '#8b5e83', // mauve
-    '#5c7cfa', // indigo
-    '#20c997', // teal
-    '#f76707', // orange
+    'var(--rose-600)',
+    'var(--rose-800)',
+    'var(--gold-600)',
+    'var(--rose-700)',
+    'var(--gold-700)',
+    'var(--rose-900)',
 ];
 
 /**
@@ -70,7 +70,6 @@ export const UserAvatar = ({ name, size = 'md' }: UserAvatarProps) => {
     const color = getColorFromName(name);
     const initials = getInitials(name);
 
-    // Círculo de color con iniciales blancas.
     return (
         <div
             className="user-avatar"
@@ -79,9 +78,7 @@ export const UserAvatar = ({ name, size = 'md' }: UserAvatarProps) => {
                 width,
                 height,
                 fontSize,
-                backgroundColor: color,
-                // Un degradado sutil hacia más oscuro en la parte inferior
-                background: `linear-gradient(135deg, ${color}dd, ${color})`,
+                background: `linear-gradient(135deg, color-mix(in srgb, ${color} 85%, transparent), ${color})`,
             }}
         >
             {initials}

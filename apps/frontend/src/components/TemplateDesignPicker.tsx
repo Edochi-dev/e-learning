@@ -187,13 +187,13 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
     // ── Estilos ───────────────────────────────────────────────────────────────
     const [fontFamily,     setFontFamily]     = useState(initialStyles?.nameStyle.fontFamily ?? 'GreatVibes-Regular');
     const [fontSize,       setFontSize]       = useState(initialStyles?.nameStyle.fontSize   ?? 36);
-    const [nameColor,      setNameColor]      = useState(initialStyles?.nameStyle.color      ?? '#1a1a1a');
+    const [nameColor,      setNameColor]      = useState(initialStyles?.nameStyle.color      ?? '#1a1a1a'); // design-tokens: allow — se imprime en el PDF
     const [nameAlign,      setNameAlign]      = useState<'left' | 'center'>(initialStyles?.nameStyle.align ?? 'left');
     const [qrSize,         setQrSize]         = useState(initialStyles?.qrStyle.size         ?? 90);
-    const [qrFgColor,     setQrFgColor]     = useState(initialStyles?.qrStyle.foregroundColor ?? '#000000');
-    const [qrBgColor,     setQrBgColor]     = useState(initialStyles?.qrStyle.backgroundColor ?? '#ffffff');
+    const [qrFgColor,     setQrFgColor]     = useState(initialStyles?.qrStyle.foregroundColor ?? '#000000'); // design-tokens: allow — se imprime en el PDF
+    const [qrBgColor,     setQrBgColor]     = useState(initialStyles?.qrStyle.backgroundColor ?? '#ffffff'); // design-tokens: allow — se imprime en el PDF
     const [dateFontSize,   setDateFontSize]   = useState(initialStyles?.dateStyle.fontSize   ?? 18);
-    const [dateColor,      setDateColor]      = useState(initialStyles?.dateStyle.color      ?? '#1a1a1a');
+    const [dateColor,      setDateColor]      = useState(initialStyles?.dateStyle.color      ?? '#1a1a1a'); // design-tokens: allow — se imprime en el PDF
     const [dateFontFamily, setDateFontFamily] = useState(initialStyles?.dateStyle.fontFamily ?? 'Helvetica');
     const [dateAlign,      setDateAlign]      = useState<'left' | 'center'>(initialStyles?.dateStyle.align ?? 'left');
 
@@ -353,7 +353,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '1.5rem', alignItems: 'start' }}>
             <div style={{ minWidth: 0 }}>
                 <div style={{
-                    background: 'var(--bg-card)', border: '2px solid var(--border)',
+                    background: 'var(--bg-elevated)', border: '2px solid var(--border)',
                     borderRadius: '8px', padding: '0.75rem', marginBottom: '0.5rem',
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.6rem' }}>
@@ -404,7 +404,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                 transformOrigin: 'top left',
                             }}>
                                 <div ref={containerRef} style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-                                    <canvas ref={canvasRef} style={{ display: 'block', width: '100%', boxShadow: '0 2px 8px rgba(0,0,0,0.15)', pointerEvents: 'none' }} />
+                                    <canvas ref={canvasRef} style={{ display: 'block', width: '100%', boxShadow: 'var(--shadow-md)', pointerEvents: 'none' }} />
 
                                     {draggablesReady && (
                                         <>
@@ -422,8 +422,8 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     cursor: 'grab',
                                                     userSelect: 'none',
                                                     padding: 0,
-                                                    background: 'rgba(232, 67, 147, 0.10)',
-                                                    border: '1.5px dashed #e84393',
+                                                    background: 'color-mix(in srgb, var(--primary) 10%, transparent)',
+                                                    border: '1.5px dashed var(--primary)',
                                                     borderRadius: '3px',
                                                     fontFamily: selectedFont.css,
                                                     fontWeight: selectedFont.weight,
@@ -433,7 +433,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     whiteSpace: 'nowrap',
                                                     lineHeight: 'normal',
                                                     ...(nameAlign === 'center' && {
-                                                        backgroundImage: 'linear-gradient(#e84393 1px, transparent 1px)',
+                                                        backgroundImage: 'linear-gradient(var(--primary) 1px, transparent 1px)',
                                                         backgroundSize: '1px 4px',
                                                         backgroundPosition: '50% 0',
                                                         backgroundRepeat: 'repeat-y',
@@ -456,8 +456,8 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     left: 0,
                                                     cursor: 'grab',
                                                     userSelect: 'none',
-                                                    border: '1.5px dashed #d4a574',
-                                                    background: 'rgba(212, 165, 116, 0.08)',
+                                                    border: '1.5px dashed var(--gold)',
+                                                    background: 'color-mix(in srgb, var(--gold) 8%, transparent)',
                                                     width:  `${displayQrSize()}px`,
                                                     height: `${displayQrSize()}px`,
                                                     display: 'flex',
@@ -483,8 +483,8 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     cursor: 'grab',
                                                     userSelect: 'none',
                                                     padding: 0,
-                                                    background: 'rgba(100, 180, 100, 0.10)',
-                                                    border: '1.5px dashed #4caf50',
+                                                    background: 'color-mix(in srgb, var(--success) 10%, transparent)',
+                                                    border: '1.5px dashed var(--success)',
                                                     borderRadius: '3px',
                                                     fontFamily: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).css,
                                                     fontWeight: (FONT_OPTIONS.find(f => f.value === dateFontFamily) ?? FONT_OPTIONS[0]).weight,
@@ -494,7 +494,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                                     whiteSpace: 'nowrap',
                                                     lineHeight: 'normal',
                                                     ...(dateAlign === 'center' && {
-                                                        backgroundImage: 'linear-gradient(#4caf50 1px, transparent 1px)',
+                                                        backgroundImage: 'linear-gradient(var(--success) 1px, transparent 1px)',
                                                         backgroundSize: '1px 4px',
                                                         backgroundPosition: '50% 0',
                                                         backgroundRepeat: 'repeat-y',
@@ -512,9 +512,9 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                 </div>
 
                 <div style={{ display: 'flex', gap: '1.25rem', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '0 0.25rem' }}>
-                    <span><span style={{ color: '#e84393', fontWeight: 700 }}>━ ━</span> Nombre del alumno</span>
-                    <span><span style={{ color: '#d4a574', fontWeight: 700 }}>━ ━</span> Código QR</span>
-                    <span><span style={{ color: '#4caf50', fontWeight: 700 }}>━ ━</span> Fecha</span>
+                    <span><span style={{ color: 'var(--primary)', fontWeight: 700 }}>━ ━</span> Nombre del alumno</span>
+                    <span><span style={{ color: 'var(--gold)', fontWeight: 700 }}>━ ━</span> Código QR</span>
+                    <span><span style={{ color: 'var(--success)', fontWeight: 700 }}>━ ━</span> Fecha</span>
                 </div>
             </div>
 
@@ -537,7 +537,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                         fontFamily: selectedFont.css, fontWeight: selectedFont.weight,
                         fontStyle: selectedFont.style, fontSize: '1.3rem',
                         marginTop: '0.5rem', color: nameColor,
-                        background: 'var(--bg-secondary, #f5f5f5)',
+                        background: 'var(--surface)',
                         padding: '0.4rem 0.75rem', borderRadius: '4px', textAlign: 'center',
                     }}>
                         Ana García
@@ -557,7 +557,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                     padding: '0.4rem',
                                     border: `2px solid ${nameAlign === opt ? 'var(--primary)' : 'var(--border)'}`,
                                     borderRadius: '6px',
-                                    background: nameAlign === opt ? 'rgba(232,67,147,0.08)' : 'transparent',
+                                    background: nameAlign === opt ? 'var(--surface-rose)' : 'transparent',
                                     color: nameAlign === opt ? 'var(--primary)' : 'var(--text-muted)',
                                     fontWeight: nameAlign === opt ? 700 : 400,
                                     fontSize: '0.8rem',
@@ -606,7 +606,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <input type="range" min={30} max={250} step={5} value={qrSize}
                             onChange={e => setQrSize(Number(e.target.value))}
-                            style={{ flex: 1, accentColor: 'var(--gold, #d4a574)' }} />
+                            style={{ flex: 1, accentColor: 'var(--gold)' }} />
                         <input type="number" min={30} max={250} value={qrSize}
                             onChange={e => setQrSize(Math.min(250, Math.max(30, Number(e.target.value))))}
                             style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
@@ -662,10 +662,10 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                                 style={{
                                     flex: 1,
                                     padding: '0.4rem',
-                                    border: `2px solid ${dateAlign === opt ? '#4caf50' : 'var(--border)'}`,
+                                    border: `2px solid ${dateAlign === opt ? 'var(--success)' : 'var(--border)'}`,
                                     borderRadius: '6px',
-                                    background: dateAlign === opt ? 'rgba(76,175,80,0.08)' : 'transparent',
-                                    color: dateAlign === opt ? '#4caf50' : 'var(--text-muted)',
+                                    background: dateAlign === opt ? 'var(--success-soft)' : 'transparent',
+                                    color: dateAlign === opt ? 'var(--success)' : 'var(--text-muted)',
                                     fontWeight: dateAlign === opt ? 700 : 400,
                                     fontSize: '0.8rem',
                                     cursor: 'pointer',
@@ -682,7 +682,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                         <input type="range" min={6} max={80} step={1} value={dateFontSize}
                             onChange={e => setDateFontSize(Number(e.target.value))}
-                            style={{ flex: 1, accentColor: '#4caf50' }} />
+                            style={{ flex: 1, accentColor: 'var(--success)' }} />
                         <input type="number" min={6} max={80} value={dateFontSize}
                             onChange={e => setDateFontSize(Math.min(80, Math.max(6, Number(e.target.value))))}
                             style={{ width: '54px', textAlign: 'center', padding: '0.25rem', border: '1px solid var(--border)', borderRadius: '4px', fontFamily: 'monospace', fontSize: '0.85rem' }} />
@@ -701,7 +701,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     </div>
                 </div>
 
-                {error && <p style={{ color: 'var(--error, #e53e3e)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
+                {error && <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</p>}
 
                 <button className="btn-primary" onClick={handleSave}
                     disabled={saving || !draggablesReady} style={{ width: '100%' }}>
