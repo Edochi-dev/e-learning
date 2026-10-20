@@ -3,80 +3,63 @@ import { Link, useParams } from 'react-router-dom';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificate } from '../../hooks/useCertificate';
 import { parseCalendarDate } from '../../lib/calendar-date';
+import { saveBlob } from '../../lib/save-blob';
+import { PdfPagePreview } from '../../components/PdfPagePreview';
 
 interface Props {
     gateway: CertificateGateway;
 }
 
+/**
+ * Ficha de un certificado para la admin. Misma estructura y clases que la
+ * verificación pública (cert-verify), más el curso y la vuelta a la búsqueda.
+ */
 export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     const { id } = useParams<{ id: string }>();
     const { certificate, loading, error } = useCertificate(gateway, id!);
-    const [blobUrl, setBlobUrl] = useState<string | null>(null);
+    const [pdf, setPdf] = useState<Blob | null>(null);
 
-    // Descargamos el PDF como Blob via gateway para:
-    //   1. Evitar que la página conozca la URL del backend (Clean Architecture)
-    //   2. Evitar bloqueos CSP de frame-ancestors en el iframe
+    // Un solo Blob para la vista previa (canvas, sin iframe: Android no muestra
+    // PDFs embebidos) y para la descarga.
     useEffect(() => {
         if (!certificate) return;
         const controller = new AbortController();
-        let url: string | null = null;
 
         gateway.downloadCertificatePdf(certificate.filePath)
             .then(blob => {
-                if (controller.signal.aborted) return;
-                url = URL.createObjectURL(blob);
-                setBlobUrl(url);
+                if (!controller.signal.aborted) setPdf(blob);
             })
             .catch((err: unknown) => {
                 if ((err as Error).name === 'AbortError') return;
-                setBlobUrl(null);
+                setPdf(null);
             });
 
-        return () => {
-            controller.abort();
-            if (url) URL.revokeObjectURL(url);
-        };
+        return () => controller.abort();
     }, [certificate, gateway]);
 
     if (loading) {
         return (
-            <div className="admin-page">
-                <p style={{ color: 'var(--text-muted)' }}>Cargando certificado...</p>
+            <div className="admin-page admin-page--medium">
+                <p className="admin-section__status">Cargando certificado...</p>
             </div>
         );
     }
 
     if (error || !certificate) {
         return (
-            <div className="admin-page">
+            <div className="admin-page admin-page--medium">
                 <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
-                <div style={{
-                    background: 'var(--bg-elevated)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px',
-                    padding: '2.5rem',
-                    maxWidth: '480px',
-                    textAlign: 'center',
-                    marginTop: '2rem',
-                }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>⚠️</div>
-                    <h2 style={{ marginBottom: '0.5rem' }}>Certificado no encontrado</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>
-                        El certificado solicitado no existe o fue eliminado del sistema.
-                    </p>
+                <div className="admin-empty">
+                    <h2>Certificado no encontrado</h2>
+                    <p>El certificado solicitado no existe o fue eliminado del sistema.</p>
                 </div>
             </div>
         );
     }
 
     const handleDownload = async () => {
-        const blob = await gateway.downloadCertificatePdf(certificate.filePath);
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const blob = pdf ?? await gateway.downloadCertificatePdf(certificate.filePath);
+        saveBlob(blob, `${certificate.certificateNumber} - ${certificate.recipientName}.pdf`);
     };
 
     const issuedDate = parseCalendarDate(certificate.certificateDate).toLocaleDateString('es-MX', {
@@ -86,114 +69,52 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     });
 
     return (
-        <div className="admin-page admin-page--medium">
+        <div className="admin-page admin-page--medium cert-verify">
             <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
 
-            {/* 1. Encabezado con gradiente de la academia */}
-            <div style={{
-                background: 'var(--btn-primary)',
-                borderRadius: '16px',
-                padding: '2rem',
-                color: 'var(--text-on-primary)',
-                marginBottom: '1.5rem',
-                textAlign: 'center',
-            }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🎓</div>
-                <h1 style={{ margin: 0, fontSize: '1.6rem', fontFamily: 'var(--font-heading)' }}>
-                    Certificado Oficial
-                </h1>
-                <p style={{ margin: '0.25rem 0 0', opacity: 0.9, fontSize: '1rem' }}>
-                    Mari's Nails Academy
-                </p>
-            </div>
+            <header className="cert-verify__hero">
+                <div className="cert-verify__hero-icon" aria-hidden="true">🎓</div>
+                <h1 className="cert-verify__title">Certificado Oficial</h1>
+                <p className="cert-verify__academy">Mari's Nails Academy</p>
+            </header>
 
-            {/* 2. Vista previa del PDF — justo debajo del badge */}
-            <div style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                marginBottom: '1.5rem',
-            }}>
-                {blobUrl ? (
-                    <iframe
-                        src={`${blobUrl}#zoom=page-width&navpanes=0&toolbar=1`}
-                        title={`Certificado ${certificate.certificateNumber}`}
-                        style={{ width: '100%', height: '600px', border: 'none', display: 'block' }}
-                    />
+            <dl className="cert-verify__facts">
+                <div>
+                    <dt>Titular</dt>
+                    <dd>{certificate.recipientName}</dd>
+                </div>
+                <div>
+                    <dt>Número de certificado</dt>
+                    <dd className="cert-verify__number">{certificate.certificateNumber}</dd>
+                </div>
+                <div>
+                    <dt>Fecha de emisión</dt>
+                    <dd>{issuedDate}</dd>
+                </div>
+                <div>
+                    <dt>Curso</dt>
+                    <dd>{certificate.templateSnapshot.name}</dd>
+                </div>
+            </dl>
+
+            <p className="cert-verify__validity">
+                <strong>Documento original emitido por Mari's Nails Academy.</strong> Su autenticidad
+                puede verificarse públicamente con el código QR del documento o en el portal de
+                verificación de la academia.
+            </p>
+
+            <button type="button" className="btn-primary cert-verify__download" onClick={handleDownload}>
+                Descargar PDF
+            </button>
+
+            <section className="cert-verify__preview" aria-label="Vista previa del certificado">
+                <p className="cert-verify__preview-label">Vista previa del certificado</p>
+                {pdf ? (
+                    <PdfPagePreview pdf={pdf} label={`Certificado ${certificate.certificateNumber} de ${certificate.recipientName}`} />
                 ) : (
-                    <p style={{ padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                        Cargando vista previa...
-                    </p>
+                    <p className="pdf-preview__fallback">Cargando vista previa...</p>
                 )}
-            </div>
-
-            {/* 3. Datos del certificado + botón de descarga */}
-            <div style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '1.75rem',
-                marginBottom: '1.5rem',
-            }}>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                    gap: '1.25rem',
-                    marginBottom: '1.5rem',
-                }}>
-                    <div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Titular</p>
-                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.recipientName}</p>
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Número de Certificado</p>
-                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0, fontFamily: 'monospace', color: 'var(--primary)' }}>{certificate.certificateNumber}</p>
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Fecha de Emisión</p>
-                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{issuedDate}</p>
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Curso</p>
-                        <p style={{ fontWeight: 700, fontSize: '1.1rem', margin: 0 }}>{certificate.templateSnapshot.name}</p>
-                    </div>
-                </div>
-
-                {/* Botón de descarga — esquina inferior derecha del bloque de info */}
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    <button
-                        className="btn-primary"
-                        onClick={handleDownload}
-                        style={{ padding: '0.65rem 1.75rem', fontSize: '0.95rem' }}
-                    >
-                        Descargar PDF
-                    </button>
-                </div>
-            </div>
-
-            {/* 4. Sello de autenticidad */}
-            <div style={{
-                background: 'var(--bg-elevated)',
-                border: '1px solid var(--border)',
-                borderLeft: '4px solid var(--gold)',
-                borderRadius: '8px',
-                padding: '1.25rem 1.5rem',
-                marginBottom: '1.5rem',
-                display: 'flex',
-                gap: '1rem',
-                alignItems: 'flex-start',
-            }}>
-                <span style={{ fontSize: '1.5rem', flexShrink: 0 }}>✅</span>
-                <div style={{ fontSize: '0.9rem', lineHeight: 1.7, color: 'var(--text-primary)' }}>
-                    <strong style={{ display: 'block', marginBottom: '0.25rem', color: 'var(--text-primary)' }}>
-                        Documento Original — Emitido por Mari's Nails Academy
-                    </strong>
-                    Este certificado acredita la participación y aprobación del curso correspondiente.
-                    Su autenticidad puede verificarse públicamente mediante el código QR incluido en el
-                    documento o a través del portal de verificación de la academia.
-                </div>
-            </div>
+            </section>
         </div>
     );
 };

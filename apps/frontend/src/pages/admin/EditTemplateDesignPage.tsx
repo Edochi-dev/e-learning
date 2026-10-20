@@ -78,7 +78,7 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
     if (loading) {
         return (
             <div className="admin-page">
-                <p style={{ color: 'var(--text-muted)' }}>Cargando plantilla...</p>
+                <p className="admin-section__status">Cargando plantilla...</p>
             </div>
         );
     }
@@ -98,20 +98,9 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                 el diseño de la plantilla solo afecta a certificados generados a
                 partir de ahora. Los certificados ya emitidos conservan intacto
                 su PDF rasterizado original y su templateSnapshot inmutable. */}
-            <div
-                role="alert"
-                style={{
-                    border: '1px solid var(--gold)',
-                    background: 'var(--surface-gold)',
-                    borderRadius: '8px',
-                    padding: '1rem 1.25rem',
-                    marginBottom: '1.5rem',
-                }}
-            >
-                <p style={{ margin: 0, fontWeight: 700, color: 'var(--gold-text)' }}>
-                    ⚠ Edición no destructiva
-                </p>
-                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-muted)', lineHeight: 1.5, fontSize: '0.9rem' }}>
+            <div className="admin-notice" role="note">
+                <p className="admin-notice__title">⚠ Edición no destructiva</p>
+                <p className="admin-notice__text">
                     Cambiar el diseño de la plantilla <strong>solo afecta a los certificados que generes a partir de ahora</strong>.
                     Los certificados ya emitidos con esta plantilla <strong>conservarán intacto su diseño original</strong>,
                     porque se almacenan como archivos PDF independientes en el momento de su emisión. No es posible — ni

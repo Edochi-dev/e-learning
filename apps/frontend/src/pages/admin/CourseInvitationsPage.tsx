@@ -8,17 +8,19 @@ import type {
 } from '../../gateways/InvitationGateway';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import { useToast } from '../../components/Toast';
+import { Badge, type BadgeTone } from '../../components/Badge';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
 
 interface CourseInvitationsPageProps {
     gateway: AdminInvitationGateway;
     courseGateway: CourseGateway;
 }
 
-const STATUS_LABELS: Record<string, string> = {
-    [InvitationStatus.VALID]: 'Sin usar',
-    [InvitationStatus.REDEEMED]: 'Canjeada',
-    [InvitationStatus.EXPIRED]: 'Caducada',
-    [InvitationStatus.REVOKED]: 'Anulada',
+const STATUS: Record<InvitationStatus, { label: string; tone: BadgeTone }> = {
+    [InvitationStatus.VALID]: { label: 'Sin usar', tone: 'rose' },
+    [InvitationStatus.REDEEMED]: { label: 'Canjeada', tone: 'success' },
+    [InvitationStatus.EXPIRED]: { label: 'Caducada', tone: 'neutral' },
+    [InvitationStatus.REVOKED]: { label: 'Anulada', tone: 'neutral' },
 };
 
 const formatDate = (iso: string): string =>
@@ -127,13 +129,22 @@ export const CourseInvitationsPage = ({
         }
     };
 
-    const handleRevoke = async (id: string) => {
+    // Anular no se deshace: si la alumna aún no lo usó, se queda sin enlace.
+    const [revokingId, setRevokingId] = useState<string | null>(null);
+    const [isRevoking, setIsRevoking] = useState(false);
+
+    const confirmRevoke = async () => {
+        if (!revokingId) return;
+        setIsRevoking(true);
         try {
-            await gateway.revoke(id);
+            await gateway.revoke(revokingId);
+            setRevokingId(null);
             await load();
             toast.success('Invitación anulada');
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'No se pudo anular');
+        } finally {
+            setIsRevoking(false);
         }
     };
 
@@ -149,9 +160,9 @@ export const CourseInvitationsPage = ({
         <div className="admin-page">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
-            <div className="admin-page__header">
+            <div className="admin-header">
                 <h1>Invitaciones de {courseTitle}</h1>
-                <p className="admin-page__subtitle">
+                <p>
                     Cada enlace sirve una sola vez. Quien lo abre crea su cuenta y
                     entra al curso.
                 </p>
@@ -256,57 +267,62 @@ export const CourseInvitationsPage = ({
                 </div>
             )}
 
-            <h2 className="invitation-list__title">
-                Historial ({rows.length})
-            </h2>
+            <section className="admin-section">
+                <h2 className="admin-section__title">Historial ({rows.length})</h2>
 
-            {rows.length === 0 ? (
-                <p className="admin-page__subtitle">
-                    Todavía no has generado invitaciones para este curso.
-                </p>
-            ) : (
-                <div className="students-table">
-                    {rows.map((row) => (
-                        <article key={row.id} className="student-row">
-                            <div className="student-row__identity">
-                                <strong>{row.label ?? 'Sin nota'}</strong>
-                                <span className="student-row__email">
-                                    Creada el {formatDate(row.createdAt)} · caduca el{' '}
-                                    {formatDate(row.expiresAt)}
-                                </span>
-                            </div>
-
-                            <div className="student-row__access">
-                                <span
-                                    className={`student-row__badge student-row__badge--${
-                                        row.status === InvitationStatus.VALID
-                                            ? 'active'
-                                            : 'expired'
-                                    }`}
-                                >
-                                    {STATUS_LABELS[row.status]}
-                                </span>
-                                {row.redeemedBy && (
-                                    <span className="student-row__dates">
-                                        {row.redeemedBy.fullName} ({row.redeemedBy.email})
+                {rows.length === 0 ? (
+                    <p className="admin-section__status">
+                        Todavía no has generado invitaciones para este curso.
+                    </p>
+                ) : (
+                    <div className="admin-list">
+                        {rows.map((row) => (
+                            <article key={row.id} className="admin-row">
+                                <div className="admin-row__main">
+                                    <span className="admin-row__title">{row.label ?? 'Sin nota'}</span>
+                                    <span className="admin-row__meta">
+                                        Creada el {formatDate(row.createdAt)} · caduca el{' '}
+                                        {formatDate(row.expiresAt)}
                                     </span>
-                                )}
-                            </div>
+                                    {row.redeemedBy && (
+                                        <span className="admin-row__meta">
+                                            {row.redeemedBy.fullName} ({row.redeemedBy.email})
+                                        </span>
+                                    )}
+                                </div>
 
-                            <div className="student-row__actions">
-                                {row.status === InvitationStatus.VALID && (
-                                    <button
-                                        type="button"
-                                        className="btn-secondary btn-sm"
-                                        onClick={() => void handleRevoke(row.id)}
-                                    >
-                                        Anular
-                                    </button>
-                                )}
-                            </div>
-                        </article>
-                    ))}
-                </div>
+                                <Badge tone={STATUS[row.status].tone}>{STATUS[row.status].label}</Badge>
+
+                                <div className="admin-row__actions">
+                                    {row.status === InvitationStatus.VALID && (
+                                        <button
+                                            type="button"
+                                            className="btn-danger btn-sm"
+                                            onClick={() => setRevokingId(row.id)}
+                                        >
+                                            Anular
+                                        </button>
+                                    )}
+                                </div>
+                            </article>
+                        ))}
+                    </div>
+                )}
+            </section>
+            {revokingId && (
+                <ConfirmDialog
+                    title="¿Anular la invitación?"
+                    confirmLabel="Anular"
+                    busyLabel="Anulando…"
+                    busy={isRevoking}
+                    onConfirm={confirmRevoke}
+                    onCancel={() => setRevokingId(null)}
+                >
+                    <p className="confirm-dialog__text">
+                        El enlace <strong>{rows.find((r) => r.id === revokingId)?.label ?? 'sin nota'}</strong> dejará
+                        de funcionar. Si ya se lo enviaste a alguien, no podrá entrar con él.
+                    </p>
+                </ConfirmDialog>
             )}
         </div>
     );

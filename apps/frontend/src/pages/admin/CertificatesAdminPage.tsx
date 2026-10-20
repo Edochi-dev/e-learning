@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
+import { Dialog } from '../../components/Dialog';
 
 interface Props {
     gateway: CertificateGateway;
@@ -93,7 +95,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                     <div className="admin-card-icon">📄</div>
                     <h3>Nueva Plantilla</h3>
                     <p>Sube un PDF en blanco y configura visualmente dónde irá el nombre y el código QR.</p>
-                    <Link to="/admin/certificados/plantillas/nueva" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/certificados/plantillas/nueva" className="btn-primary card-action-btn">
                         Subir Plantilla
                     </Link>
                 </div>
@@ -102,7 +104,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                     <div className="admin-card-icon">🎓</div>
                     <h3>Generar Certificados</h3>
                     <p>Selecciona una plantilla, ingresa los nombres y genera los certificados en lote.</p>
-                    <Link to="/admin/certificados/generar" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/certificados/generar" className="btn-primary card-action-btn">
                         Generar
                     </Link>
                 </div>
@@ -111,169 +113,123 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                     <div className="admin-card-icon">🔍</div>
                     <h3>Buscar Certificado</h3>
                     <p>Busca certificados emitidos por nombre o número y visualiza o descarga el documento.</p>
-                    <Link to="/admin/certificados/buscar" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/certificados/buscar" className="btn-primary card-action-btn">
                         Buscar
                     </Link>
                 </div>
             </div>
 
-            <div style={{ marginTop: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>Plantillas</h2>
+            <section className="admin-section">
+                <h2 className="admin-section__title">Plantillas</h2>
                 {loading ? (
-                    <p style={{ color: 'var(--text-muted)' }}>Cargando...</p>
+                    <p className="admin-section__status">Cargando...</p>
                 ) : templates.length === 0 ? (
                     <div className="admin-empty">No hay plantillas aún.</div>
                 ) : (
-                    <div className="admin-course-links">
+                    <div className="admin-list">
                         {templates.map(t => (
-                            <div key={t.id} className="admin-course-row">
-                                <span className="admin-course-link-title">{t.name}</span>
-                                <span className="admin-course-link-meta">
-                                    {t.courseAbbreviation} · {t.paperFormat}
-                                    {(t.certificateCount ?? 0) > 0 && (
-                                        <span style={{ marginLeft: '0.5rem', color: 'var(--gold-text)' }}>
-                                            · {t.certificateCount} certificado(s)
-                                        </span>
-                                    )}
-                                </span>
-                                <button
-                                    onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/editar`)}
-                                    style={{
-                                        marginLeft: 'auto',
-                                        background: 'none',
-                                        border: '1px solid var(--primary)',
-                                        color: 'var(--primary)',
-                                        borderRadius: '6px',
-                                        padding: '0.25rem 0.75rem',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                    }}
-                                >
-                                    Editar
-                                </button>
-                                <button
-                                    onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/diseno`)}
-                                    style={{
-                                        background: 'none',
-                                        border: '1px solid var(--gold)',
-                                        color: 'var(--gold-text)',
-                                        borderRadius: '6px',
-                                        padding: '0.25rem 0.75rem',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                    }}
-                                >
-                                    Diseño
-                                </button>
-                                <button
-                                    onClick={() => handleDeleteClick(t)}
-                                    style={{
-                                        background: 'none',
-                                        border: '1px solid var(--danger)',
-                                        color: 'var(--danger)',
-                                        borderRadius: '6px',
-                                        padding: '0.25rem 0.75rem',
-                                        cursor: 'pointer',
-                                        fontSize: '0.85rem',
-                                    }}
-                                >
-                                    Eliminar
-                                </button>
+                            <div key={t.id} className="admin-row">
+                                <div className="admin-row__main">
+                                    <span className="admin-row__title">{t.name}</span>
+                                    <span className="admin-row__meta">
+                                        {t.courseAbbreviation} · {t.paperFormat}
+                                        {(t.certificateCount ?? 0) > 0 && ` · ${t.certificateCount} certificado(s)`}
+                                    </span>
+                                </div>
+                                <div className="admin-row__actions">
+                                    <button
+                                        type="button"
+                                        className="btn-secondary btn-sm"
+                                        onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/editar`)}
+                                    >
+                                        Editar
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-secondary btn-sm"
+                                        onClick={() => navigate(`/admin/certificados/plantillas/${t.id}/diseno`)}
+                                    >
+                                        Diseño
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn-danger btn-sm btn-icon"
+                                        onClick={() => handleDeleteClick(t)}
+                                        aria-label={`Eliminar plantilla ${t.name}`}
+                                    >
+                                        <Trash2 size={15} strokeWidth={2} aria-hidden />
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
 
-            {/* ── Modal de confirmación ─────────────────────────────────── */}
             {deleteState && (
-                <div
-                    style={{
-                        position: 'fixed', inset: 0,
-                        background: 'var(--overlay)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        zIndex: 1000,
-                    }}
-                    onClick={closeModal}
+                <Dialog
+                    title={deleteState.step === 'confirm' ? '¿Eliminar plantilla?' : 'Certificados asociados'}
+                    onClose={closeModal}
+                    closable={!deleting}
                 >
-                    <div
-                        className="admin-card"
-                        style={{ maxWidth: '440px', width: '90%', margin: 0 }}
-                        onClick={e => e.stopPropagation()}
-                    >
-                        {deleteState.step === 'confirm' && (
-                            <>
-                                <h3 style={{ marginBottom: '0.75rem' }}>¿Eliminar plantilla?</h3>
-                                <p style={{ marginBottom: '1.25rem', color: 'var(--text-muted)' }}>
-                                    Estás a punto de eliminar la plantilla <strong>"{deleteState.template.name}"</strong>.
-                                    Esta acción no se puede deshacer.
-                                </p>
-                                {deleteError && (
-                                    <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
-                                )}
-                                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                                    <button
-                                        onClick={closeModal}
-                                        disabled={deleting}
-                                        style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleConfirm}
-                                        disabled={deleting}
-                                        style={{ padding: '0.5rem 1.25rem', borderRadius: '6px', border: 'none', background: 'var(--danger)', color: 'var(--bg-elevated)', cursor: 'pointer' }}
-                                    >
-                                        {deleting ? 'Eliminando...' : 'Sí, eliminar'}
-                                    </button>
-                                </div>
-                            </>
-                        )}
+                    {deleteState.step === 'confirm' && (
+                        <>
+                            <p className="confirm-dialog__text">
+                                Estás a punto de eliminar la plantilla <strong>"{deleteState.template.name}"</strong>.
+                                Esta acción no se puede deshacer.
+                            </p>
+                            {deleteError && <p className="confirm-dialog__error">{deleteError}</p>}
+                            <div className="confirm-dialog__actions">
+                                <button type="button" className="btn-secondary" onClick={closeModal} disabled={deleting} autoFocus>
+                                    Cancelar
+                                </button>
+                                <button type="button" className="btn-danger btn-danger--solid" onClick={handleConfirm} disabled={deleting}>
+                                    {deleting ? 'Eliminando...' : 'Sí, eliminar'}
+                                </button>
+                            </div>
+                        </>
+                    )}
 
-                        {deleteState.step === 'choose-certs' && (
-                            <>
-                                <h3 style={{ marginBottom: '0.75rem' }}>Certificados asociados</h3>
-                                <p style={{ marginBottom: '1.25rem', color: 'var(--text-muted)' }}>
-                                    Esta plantilla tiene <strong>{certCount} certificado(s) emitido(s)</strong>.
-                                    ¿Qué deseas hacer con ellos?
-                                </p>
-                                {deleteError && (
-                                    <p style={{ color: 'var(--danger)', marginBottom: '1rem', fontSize: '0.9rem' }}>{deleteError}</p>
-                                )}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                    <button
-                                        onClick={() => executeDelete('delete')}
-                                        disabled={deleting}
-                                        style={{ padding: '0.6rem 1rem', borderRadius: '6px', border: 'none', background: 'var(--danger)', color: 'var(--bg-elevated)', cursor: 'pointer', textAlign: 'left' }}
-                                    >
-                                        <strong>Eliminar también</strong>
-                                        <br />
-                                        <span style={{ fontSize: '0.8rem', opacity: 0.85 }}>Borra la plantilla y todos sus certificados emitidos.</span>
-                                    </button>
-                                    <button
-                                        onClick={() => executeDelete('keep')}
-                                        disabled={deleting}
-                                        style={{ padding: '0.6rem 1rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer', textAlign: 'left' }}
-                                    >
-                                        <strong>Mantener certificados</strong>
-                                        <br />
-                                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                            Los certificados conservan su PDF y número de folio. Quedarán
-                                            desvinculados de la plantilla pero seguirán siendo válidos y descargables.
-                                        </span>
-                                    </button>
-                                    <button
-                                        onClick={closeModal}
-                                        disabled={deleting}
-                                        style={{ padding: '0.5rem 1rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}
-                                    >
-                                        Cancelar
-                                    </button>
-                                </div>
-                            </>
-                        )}
-                    </div>
-                </div>
+                    {deleteState.step === 'choose-certs' && (
+                        <>
+                            <p className="confirm-dialog__text">
+                                Esta plantilla tiene <strong>{certCount} certificado(s) emitido(s)</strong>.
+                                ¿Qué deseas hacer con ellos?
+                            </p>
+                            {deleteError && <p className="confirm-dialog__error">{deleteError}</p>}
+                            <div className="dialog-options">
+                                {/* Mantener va primero y recibe el foco: es la opción que no destruye nada. */}
+                                <button
+                                    type="button"
+                                    className="dialog-option"
+                                    onClick={() => executeDelete('keep')}
+                                    disabled={deleting}
+                                    autoFocus
+                                >
+                                    <strong>Mantener certificados</strong>
+                                    <span>
+                                        Los certificados conservan su PDF y número de folio. Quedarán
+                                        desvinculados de la plantilla pero seguirán siendo válidos y descargables.
+                                    </span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className="dialog-option dialog-option--danger"
+                                    onClick={() => executeDelete('delete')}
+                                    disabled={deleting}
+                                >
+                                    <strong>Eliminar también</strong>
+                                    <span>Borra la plantilla y todos sus certificados emitidos.</span>
+                                </button>
+                            </div>
+                            <div className="confirm-dialog__actions">
+                                <button type="button" className="btn-secondary" onClick={closeModal} disabled={deleting}>
+                                    Cancelar
+                                </button>
+                            </div>
+                        </>
+                    )}
+                </Dialog>
             )}
         </div>
     );

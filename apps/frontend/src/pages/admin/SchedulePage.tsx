@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Dialog } from '../../components/Dialog';
 import FullCalendar from '@fullcalendar/react';
 import type {
     EventInput,
@@ -373,129 +374,123 @@ export const SchedulePage: React.FC<Props> = ({ gateway, pushGateway }) => {
             </div>
 
             {modal.open && (
-                <div className="agenda-modal__overlay" onClick={() => !saving && setModal(CLOSED)}>
-                    <div className="agenda-modal" onClick={(e) => e.stopPropagation()}>
-                        <h2 className="agenda-modal__title">
-                            {modal.readOnly
-                                ? 'Clase en vivo'
-                                : modal.mode === 'create'
-                                    ? 'Nuevo evento'
-                                    : 'Editar evento'}
-                        </h2>
+                <Dialog
+                    title={modal.readOnly ? 'Clase en vivo' : modal.mode === 'create' ? 'Nuevo evento' : 'Editar evento'}
+                    onClose={() => setModal(CLOSED)}
+                    closable={!saving}
+                    className="agenda-modal"
+                >
+                    {modal.readOnly && (
+                        <p className="agenda-modal__hint">
+                            Esta es una clase en vivo de un curso. Su horario se edita desde el curso.
+                        </p>
+                    )}
 
-                        {modal.readOnly && (
-                            <p className="agenda-modal__hint">
-                                Esta es una clase en vivo de un curso. Su horario se edita desde el curso.
-                            </p>
-                        )}
+                    <label className="account-field__label">Nombre</label>
+                    <input
+                        type="text"
+                        className="form-input"
+                        maxLength={80}
+                        value={modal.title}
+                        disabled={modal.readOnly}
+                        onChange={(e) => setModal((m) => ({ ...m, title: e.target.value }))}
+                        placeholder="Ej: Corrección dual"
+                    />
 
-                        <label className="account-field__label">Nombre</label>
-                        <input
-                            type="text"
-                            className="form-input"
-                            maxLength={80}
-                            value={modal.title}
-                            disabled={modal.readOnly}
-                            onChange={(e) => setModal((m) => ({ ...m, title: e.target.value }))}
-                            placeholder="Ej: Corrección dual"
-                        />
-
-                        <div className="agenda-modal__row">
-                            <div>
-                                <label className="account-field__label">Inicio</label>
-                                <input
-                                    type="datetime-local"
-                                    className="form-input"
-                                    value={modal.start}
-                                    disabled={modal.readOnly}
-                                    onChange={(e) => setModal((m) => ({ ...m, start: e.target.value }))}
-                                />
-                            </div>
-                            <div>
-                                <label className="account-field__label">Fin</label>
-                                <input
-                                    type="datetime-local"
-                                    className="form-input"
-                                    value={modal.end}
-                                    disabled={modal.readOnly}
-                                    onChange={(e) => setModal((m) => ({ ...m, end: e.target.value }))}
-                                />
-                            </div>
-                        </div>
-
-                        <label className="agenda-modal__check">
+                    <div className="agenda-modal__row">
+                        <div>
+                            <label className="account-field__label">Inicio</label>
                             <input
-                                type="checkbox"
-                                checked={modal.allDay}
+                                type="datetime-local"
+                                className="form-input"
+                                value={modal.start}
                                 disabled={modal.readOnly}
-                                onChange={(e) => setModal((m) => ({ ...m, allDay: e.target.checked }))}
+                                onChange={(e) => setModal((m) => ({ ...m, start: e.target.value }))}
                             />
-                            Todo el día / varios días (no bloquea otras horas)
-                        </label>
-
-                        <label className="account-field__label">Notas (opcional)</label>
-                        <textarea
-                            className="form-input"
-                            rows={2}
-                            maxLength={500}
-                            value={modal.notes}
-                            disabled={modal.readOnly}
-                            onChange={(e) => setModal((m) => ({ ...m, notes: e.target.value }))}
-                        />
-
-                        <label className="account-field__label">Recordarme</label>
-                        <select
-                            className="form-input"
-                            value={modal.reminderMinutesBefore ?? ''}
-                            disabled={modal.readOnly}
-                            onChange={(e) =>
-                                setModal((m) => ({
-                                    ...m,
-                                    reminderMinutesBefore:
-                                        e.target.value === '' ? null : Number(e.target.value),
-                                }))
-                            }
-                        >
-                            <option value="">Sin recordatorio</option>
-                            <option value="15">15 minutos antes</option>
-                            <option value="30">30 minutos antes</option>
-                            <option value="60">1 hora antes</option>
-                            <option value="1440">1 día antes</option>
-                        </select>
-
-                        <div className="agenda-modal__actions">
-                            {modal.mode === 'edit' && !modal.readOnly && (
-                                <button
-                                    type="button"
-                                    className="btn-secondary agenda-modal__delete"
-                                    onClick={handleDelete}
-                                    disabled={saving}
-                                >
-                                    Eliminar
-                                </button>
-                            )}
-                            <span style={{ flex: 1 }} />
-                            <button
-                                type="button"
-                                className="btn-secondary"
-                                onClick={() => setModal(CLOSED)}
-                                disabled={saving}
-                            >
-                                {modal.readOnly ? 'Cerrar' : 'Cancelar'}
-                            </button>
-                            {!modal.readOnly && (
-                                <button
-                                    type="button"
-                                    className="btn-primary"
-                                    onClick={handleSave}
-                                    disabled={saving}
-                                >
-                                    {saving ? 'Guardando…' : 'Guardar'}
-                                </button>
-                            )}
+                        </div>
+                        <div>
+                            <label className="account-field__label">Fin</label>
+                            <input
+                                type="datetime-local"
+                                className="form-input"
+                                value={modal.end}
+                                disabled={modal.readOnly}
+                                onChange={(e) => setModal((m) => ({ ...m, end: e.target.value }))}
+                            />
                         </div>
                     </div>
-                </div>
+
+                    <label className="agenda-modal__check">
+                        <input
+                            type="checkbox"
+                            checked={modal.allDay}
+                            disabled={modal.readOnly}
+                            onChange={(e) => setModal((m) => ({ ...m, allDay: e.target.checked }))}
+                        />
+                        Todo el día / varios días (no bloquea otras horas)
+                    </label>
+
+                    <label className="account-field__label">Notas (opcional)</label>
+                    <textarea
+                        className="form-input"
+                        rows={2}
+                        maxLength={500}
+                        value={modal.notes}
+                        disabled={modal.readOnly}
+                        onChange={(e) => setModal((m) => ({ ...m, notes: e.target.value }))}
+                    />
+
+                    <label className="account-field__label">Recordarme</label>
+                    <select
+                        className="form-input"
+                        value={modal.reminderMinutesBefore ?? ''}
+                        disabled={modal.readOnly}
+                        onChange={(e) =>
+                            setModal((m) => ({
+                                ...m,
+                                reminderMinutesBefore:
+                                    e.target.value === '' ? null : Number(e.target.value),
+                            }))
+                        }
+                    >
+                        <option value="">Sin recordatorio</option>
+                        <option value="15">15 minutos antes</option>
+                        <option value="30">30 minutos antes</option>
+                        <option value="60">1 hora antes</option>
+                        <option value="1440">1 día antes</option>
+                    </select>
+
+                    <div className="agenda-modal__actions">
+                        {modal.mode === 'edit' && !modal.readOnly && (
+                            <button
+                                type="button"
+                                className="btn-danger agenda-modal__delete"
+                                onClick={handleDelete}
+                                disabled={saving}
+                            >
+                                Eliminar
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setModal(CLOSED)}
+                            disabled={saving}
+                        >
+                            {modal.readOnly ? 'Cerrar' : 'Cancelar'}
+                        </button>
+                        {!modal.readOnly && (
+                            <button
+                                type="button"
+                                className="btn-primary"
+                                onClick={handleSave}
+                                disabled={saving}
+                            >
+                                {saving ? 'Guardando…' : 'Guardar'}
+                            </button>
+                        )}
+                    </div>
+                </Dialog>
             )}
         </div>
     );

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { CertificateGateway, CertificateSearchFilters } from '../../gateways/CertificateGateway';
 import { useCertificateSearch } from '../../hooks/useCertificateSearch';
 import { useSelection } from '../../hooks/useSelection';
+import { Badge } from '../../components/Badge';
 import { useToast } from '../../components/Toast';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
 import { CertificateSearchFiltersForm } from '../../components/CertificateSearchFiltersForm';
@@ -150,10 +151,10 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
                                 {parseCalendarDate(cert.certificateDate).toLocaleDateString('es-MX')}
                             </span>
                             <span className="cert-search__meta">{cert.templateSnapshot.name}</span>
-                            {cert.userId && <span className="cert-search__badge">Con cuenta</span>}
+                            {cert.userId && <Badge tone="gold">Con cuenta</Badge>}
                             <button
                                 type="button"
-                                className="cert-search__view"
+                                className="btn-secondary btn-sm cert-search__view"
                                 onClick={() => navigate(`/admin/certificados/ver/${cert.id}`)}
                             >
                                 Ver

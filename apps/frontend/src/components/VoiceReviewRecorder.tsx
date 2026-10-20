@@ -62,10 +62,10 @@ export const VoiceReviewRecorder: React.FC<VoiceReviewRecorderProps> = ({ onSubm
                 </p>
                 {recorder.error && <p className="voice-review__error">{recorder.error}</p>}
                 <div className="review-actions">
-                    <button type="button" className="review-btn review-btn--reject" onClick={() => begin('reject')}>
+                    <button type="button" className="btn-danger review-actions__btn" onClick={() => begin('reject')}>
                         🎙 Rechazar
                     </button>
-                    <button type="button" className="review-btn review-btn--approve" onClick={() => begin('approve')}>
+                    <button type="button" className="btn-success review-actions__btn" onClick={() => begin('approve')}>
                         🎙 Aprobar
                     </button>
                 </div>

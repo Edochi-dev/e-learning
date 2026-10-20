@@ -13,7 +13,7 @@
 
 export interface SubmissionStudent {
     id: string;
-    name: string;
+    fullName: string;
     email: string;
 }
 

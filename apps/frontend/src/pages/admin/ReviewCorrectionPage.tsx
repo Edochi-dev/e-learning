@@ -84,7 +84,7 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
         return (
             <div className="admin-page">
                 <Link to="/admin/correcciones" className="back-link">← Volver a Correcciones</Link>
-                <p style={{ color: 'var(--text-muted)', marginTop: '2rem' }}>Cargando entregas...</p>
+                <p className="admin-section admin-section__status">Cargando entregas...</p>
             </div>
         );
     }
@@ -102,7 +102,7 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
                             ? `Revisaste ${totalCount} entrega${totalCount !== 1 ? 's' : ''} de ${courseTitle}.`
                             : 'No hay entregas pendientes en este curso.'}
                     </p>
-                    <Link to="/admin/correcciones" className="btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+                    <Link to="/admin/correcciones" className="btn-primary review-done__cta">
                         Volver a Correcciones
                     </Link>
                 </div>
@@ -135,16 +135,16 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
             </div>
 
             {error && (
-                <div style={{ color: 'var(--danger)', marginBottom: '1rem', fontWeight: 500 }}>
+                <div className="alert alert-error" role="alert">
                     {error}
                 </div>
             )}
 
             {/* Info de la alumna y lección */}
             <div className="review-meta">
-                <strong>{current.student.name}</strong>
-                <span style={{ color: 'var(--text-muted)' }}> — {current.lesson.title}</span>
-                <span className="admin-course-link-meta" style={{ display: 'block', marginTop: '0.25rem' }}>
+                <strong>{current.student.fullName}</strong>
+                <span className="review-meta__lesson"> — {current.lesson.title}</span>
+                <span className="review-meta__date">
                     Enviado el {formatDate(current.submittedAt)}
                 </span>
             </div>
@@ -166,13 +166,13 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
                     <div className="review-image-block">
                         <h3>Entrega de la alumna</h3>
                         {photoFailed ? (
-                            <p style={{ color: 'var(--text-muted)', padding: '2rem', textAlign: 'center' }}>
+                            <p className="review-image-missing">
                                 Foto no disponible
                             </p>
                         ) : (
                             <img
                                 src={studentPhotoUrl}
-                                alt={`Entrega de ${current.student.name}`}
+                                alt={`Entrega de ${current.student.fullName}`}
                                 className="review-image"
                                 onError={() => setFailedPhotoId(current.id)}
                             />

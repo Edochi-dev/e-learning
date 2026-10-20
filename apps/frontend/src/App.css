@@ -260,7 +260,12 @@
    hacer clic). Sin especificidad (:where) para que cualquier componente
    pueda afinarlo. El hover de todo el archivo va dentro de
    @media (hover: hover): en pantallas táctiles quedaba "pegado". */
-:where(a, button, input, select, textarea, summary, [role='button'], [tabindex]):focus-visible {
+/* Los campos de texto no van: tienen su propio foco (borde + brillo). */
+:where(
+  a, button, summary, [role='button'], [tabindex],
+  input[type='checkbox'], input[type='radio'], input[type='range'],
+  input[type='color'], input[type='file']
+):focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -296,10 +301,7 @@ img, video, picture {
   }
 
   .btn-primary,
-  .btn-secondary,
-  .btn-cancel,
-  .btn-delete,
-  .btn-edit {
+.btn-secondary {
     min-height: var(--touch-min);
   }
 }
@@ -590,7 +592,6 @@ a {
   font-weight: 400;
 }
 
-
 /* === SHARED: animated gradient sweep (used by .preview-card hover) === */
 @keyframes gradientSlide {
   0% {
@@ -602,26 +603,56 @@ a {
   }
 }
 
-/* === BADGES === */
+/* === ETIQUETAS (badge) ===
+   Una sola etiqueta para estados y tipos, con un tono por significado. La
+   usa el componente <Badge tone="…">; no se crean etiquetas por pantalla. */
 .badge {
-  padding: 0.3rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
   border-radius: var(--radius-full);
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.badge-live {
-  background: var(--danger-soft);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 15%, transparent);
-}
-
-.badge-recorded {
-  background: var(--success-soft);
+.badge--success {
   color: var(--success);
-  border: 1px solid color-mix(in srgb, var(--success) 15%, transparent);
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.badge--warning {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: color-mix(in srgb, var(--warning) 25%, transparent);
+}
+
+.badge--danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.badge--neutral {
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+}
+
+.badge--rose {
+  color: var(--accent-text);
+  background: var(--surface-rose);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.badge--gold {
+  color: var(--gold-text);
+  background: var(--surface-gold);
+  border-color: color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 /* === BOTONES ===
@@ -753,6 +784,72 @@ a {
   box-shadow: none;
 }
 
+/* Sexto tipo, solo para aprobar (correcciones): verde = sí, de un vistazo. */
+.btn-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.6rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--success);
+  color: var(--text-on-status);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-fast), filter var(--dur-base);
+}
+
+@media (hover: hover) {
+  .btn-success:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.btn-success:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tamaño chico para acciones de lista; vale para cualquiera de los tipos. */
+:is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-sm {
+  min-height: 36px;
+  padding: 0.4rem 0.95rem;
+  font-size: 0.82rem;
+  letter-spacing: normal;
+}
+
+/* Solo ícono (eliminar, mover): cuadrado y con nombre accesible en aria-label. */
+.btn-icon svg {
+  display: block;
+}
+
+:is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-icon {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  :is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-sm {
+    min-height: var(--touch-min);
+  }
+
+  :is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-icon {
+    width: var(--touch-min);
+    min-width: var(--touch-min);
+    height: var(--touch-min);
+  }
+}
+
 /* ─── Paginación del catálogo ────────────────────────────── */
 .catalog-pagination {
   display: flex;
@@ -786,12 +883,17 @@ a {
   text-align: center;
 }
 
+/* Tarjetas del panel: el botón conserva su tamaño y queda al pie, a la misma
+   altura en toda la fila aunque los textos tengan distinto largo. */
+.admin-grid > .admin-card {
+  display: flex;
+  flex-direction: column;
+}
+
 .card-action-btn {
-  display: block;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 1.25rem;
+  align-self: flex-start;
+  margin-top: auto;
+  white-space: nowrap;
 }
 
 /* === COURSE DETAILS PAGE (cd-*) === */
@@ -1351,20 +1453,23 @@ a {
 }
 
 /* Global input styles — every text-like and date/time type, or the ones
-   left out render with the browser's default look. */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-input[type="url"],
-input[type="tel"],
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-textarea,
-select {
+   left out render with the browser's default look. Wrapped in :where() so
+   they are a default: any component class overrides them without tricks. */
+:where(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  textarea,
+  select
+) {
   font-family: var(--font-body);
   font-size: var(--input-font-size);
   background: var(--surface);
@@ -1650,7 +1755,6 @@ input:checked+.slider .icon-moon {
     font-size: 1rem;
   }
 
-
   /* Una sola fila (logo | controles): el header es sticky y cada píxel que
      ocupa se le quita al contenido durante todo el scroll. */
   .header {
@@ -1694,7 +1798,6 @@ input:checked+.slider .icon-moon {
     font-size: 2.2rem;
   }
 
-
   /* Nombre en dos líneas: en una sola, logo + tema + "Ingresar" no caben
      en 360px y los controles bajaban a otra fila. */
   .logo {
@@ -1737,6 +1840,173 @@ input:checked+.slider .icon-moon {
   animation: fadeInUp 0.5s var(--ease-out);
 }
 
+/* === LISTAS DEL ADMIN ===
+   Una sola fila para cursos, plantillas, lecciones, alumnas…: datos a la
+   izquierda, estado y acciones a la derecha, todo centrado en vertical.
+   Cuando la LISTA (no la pantalla) es angosta, las acciones bajan a su
+   propia línea: funciona igual en un teléfono que en una columna estrecha. */
+.admin-list {
+  container: admin-list / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .admin-row:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.admin-row__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.admin-row__title {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.admin-row__title:active {
+  color: var(--accent-text);
+}
+
+@media (hover: hover) {
+  a.admin-row__title:hover {
+    color: var(--accent-text);
+  }
+}
+
+.admin-row__meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.admin-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+/* Sin estado, la fila tiene dos columnas. */
+.admin-row:not(:has(> .badge)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@container admin-list (max-width: 44rem) {
+  .admin-row,
+  .admin-row:not(:has(> .badge)) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-row__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+/* Tarjeta de formulario angosta dentro de una página ancha (p. ej. la fase
+   de subida de una plantilla, antes del diseñador a todo el ancho). */
+.admin-card--narrow {
+  max-width: var(--content-narrow);
+}
+
+/* Aviso fijo y destacado de una página ("Edición no destructiva"…). */
+.admin-notice {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--surface-gold);
+}
+
+.admin-notice__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--gold-text);
+}
+
+.admin-notice__text {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Cabecera de sección con una acción a la derecha (título + "Descargar"). */
+.admin-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-section__head .admin-section__title {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Fila que se marca entera: es un <label> que envuelve su checkbox. */
+.admin-row--selectable {
+  cursor: pointer;
+}
+
+.admin-row--selectable:has(input:checked) {
+  border-color: var(--primary-light);
+  background: var(--surface-rose);
+}
+
+.admin-row__main--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-row__meta--code {
+  font-family: monospace;
+}
+
+/* Botones al pie de un formulario: secundario y primario, a la derecha. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Campos de códigos (abreviaturas, listas de nombres): monoespaciados. */
+.input-code {
+  font-family: monospace;
+}
+
+input.input-code {
+  text-transform: uppercase;
+}
+
 /* Páginas de formulario: el contenido no se estira a todo el marco, pero
    arranca en el mismo borde que el resto (no se centra). */
 .admin-page--narrow > * {
@@ -1767,10 +2037,85 @@ input:checked+.slider .icon-moon {
 }
 
 /* Dashboard grid of cards */
+/* auto-fill y no auto-fit: una tarjeta sola conserva el ancho de columna en
+   vez de estirarse a toda la fila. */
 .admin-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+/* Solicitudes que la admin aprueba o rechaza (cambios de nombre). */
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.request-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.admin-card .request-card__names {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.request-card__arrow {
+  margin: 0 0.5rem;
+  color: var(--text-muted);
+}
+
+.request-card__new {
+  color: var(--accent-text);
+}
+
+.request-card__feedback {
+  width: 100%;
+  resize: vertical;
+}
+
+/* Mismo orden que en correcciones: rechazar a la izquierda, aprobar a la derecha. */
+.request-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+/* Contenido bajo una fila de pestañas del admin. */
+.admin-tab-panel {
+  margin-top: 1.5rem;
+}
+
+/* Bloque con título dentro de una página de admin ("Cursos existentes"…). */
+.admin-section {
+  margin-top: 2.5rem;
+}
+
+.admin-section__title {
+  margin: 0 0 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.3rem;
+  color: var(--text-primary);
+}
+
+.admin-section__status {
+  color: var(--text-muted);
 }
 
 /* Admin card module */
@@ -1984,6 +2329,65 @@ input:checked+.slider .icon-moon {
   color: var(--text-primary);
 }
 
+.admin-form__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+}
+
+/* Botón de envío de un formulario: de su tamaño, al pie, alineado a la izquierda.
+   align-self: dentro de una tarjeta en columna flex no se estira. */
+.form-submit {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}
+
+.add-lesson-form {
+  margin-top: 1rem;
+}
+
+/* Edición de una lección en su fila: campos más juntos que en un formulario suelto. */
+.lesson-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lesson-edit-form .form-group,
+.lesson-edit-form .checkbox-group {
+  margin-bottom: 0;
+}
+
+.feature-hint {
+  margin: 0 0 0.75rem;
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.thumb-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.thumb-current__img {
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-md);
+}
+
 .admin-form-subtitle {
   color: var(--text-muted);
   margin-bottom: 2rem;
@@ -2194,22 +2598,6 @@ input:checked+.slider .icon-moon {
 }
 
 /* Badge de modalidad en la vista admin de lección */
-.lesson-mode-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.lesson-mode-badge.live {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
-}
-.lesson-mode-badge.recorded {
-  background: var(--surface-sunken);
-  color: var(--text-muted);
-}
 
 /* ── Panel colapsable "Agregar Nueva Lección" ── */
 
@@ -2273,6 +2661,10 @@ input:checked+.slider .icon-moon {
 }
 
 .admin-lesson-info h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
@@ -2290,8 +2682,13 @@ input:checked+.slider .icon-moon {
   font-size: 0.8rem;
   color: var(--text-muted);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem 0.75rem;
+}
+
+.admin-lesson-meta__url {
+  overflow-wrap: anywhere;
 }
 
 /* Action buttons */
@@ -2299,90 +2696,6 @@ input:checked+.slider .icon-moon {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.btn-edit {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
-  color: var(--accent-text);
-  border: 1px solid var(--border);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-full);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-edit:hover {
-    background: var(--primary-strong);
-    color: var(--text-on-primary);
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px var(--primary-glow);
-  }
-}
-
-.btn-edit:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
-}
-
-.btn-delete {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-full);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-delete:hover {
-    background: var(--danger);
-    color: var(--text-on-status);
-    border-color: var(--danger);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 30%, transparent);
-  }
-}
-
-.btn-delete:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
-}
-
-.btn-cancel {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1.5px solid var(--border-strong);
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-cancel:hover {
-    border-color: var(--text-secondary);
-    color: var(--text-primary);
-  }
-}
-
-.btn-cancel:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
 }
 
 /* Back link */
@@ -2426,19 +2739,6 @@ input:checked+.slider .icon-moon {
   border: 1px dashed var(--border-strong);
 }
 
-/* Section divider for admin pages */
-.admin-section {
-  margin-bottom: 2.5rem;
-}
-
-.admin-section h2 {
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
-}
-
 /* ── Admin Tabs ─────────────────────────────────────────────────────── */
 
 .admin-tabs {
@@ -2480,6 +2780,12 @@ input:checked+.slider .icon-moon {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   overflow: hidden;
+}
+
+/* Entregas del curso al desplegar el grupo. */
+.correction-group__items {
+  padding: 0.75rem;
+  background: var(--bg-elevated);
 }
 
 .correction-group-header {
@@ -2527,35 +2833,6 @@ input:checked+.slider .icon-moon {
   font-weight: 600;
 }
 
-.correction-preview-list {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--border);
-}
-
-.correction-preview-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  padding: 0.6rem 1.25rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.correction-preview-item:last-child {
-  border-bottom: none;
-}
-
-.correction-row-student {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.correction-row-lesson {
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
 /* ── History: filtros y paginación ───────────────────────────────────── */
 
 .history-filters {
@@ -2563,6 +2840,7 @@ input:checked+.slider .icon-moon {
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  margin-bottom: 1rem;
 }
 
 /* Compact filter field shared by list screens (corrections history,
@@ -2599,26 +2877,6 @@ input.filter-control[type="search"] {
   }
 }
 
-.history-apply-btn {
-  padding: 0.5rem 1.2rem;
-  border-radius: var(--radius-md);
-  border: none;
-  background: var(--primary-strong);
-  color: var(--text-on-primary);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.2s ease;
-}
-
-@media (hover: hover) {
-  .history-apply-btn:hover {
-    opacity: 0.85;
-  }
-}
-
 .history-pagination {
   display: flex;
   align-items: center;
@@ -2629,31 +2887,6 @@ input.filter-control[type="search"] {
   border-top: 1px solid var(--border);
 }
 
-.history-page-btn {
-  padding: 0.4rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-primary);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    opacity var(--dur-base) var(--ease-out);
-}
-
-@media (hover: hover) {
-  .history-page-btn:hover:not(:disabled) {
-    border-color: var(--primary-strong);
-    color: var(--accent-text);
-  }
-}
-
-.history-page-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
 .history-page-info {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -2661,28 +2894,9 @@ input.filter-control[type="search"] {
 
 /* ── Corrections: status badges ─────────────────────────────────────── */
 
-.correction-status {
-  display: inline-block;
-  margin-left: 0.5rem;
-  padding: 0.1rem 0.5rem;
-  border-radius: 8px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
 .status-pending {
   background: color-mix(in srgb, var(--warning) 15%, transparent);
   color: var(--warning);
-}
-
-.status-approved {
-  background: color-mix(in srgb, var(--success) 15%, transparent);
-  color: var(--success);
-}
-
-.status-rejected {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-  color: var(--danger);
 }
 
 /* ── Review Correction Page ──────────────────────────────────────────── */
@@ -2731,6 +2945,27 @@ input.filter-control[type="search"] {
   background: var(--primary-strong);
   border-radius: 3px;
   transition: width 0.4s ease;
+}
+
+.review-meta__lesson {
+  color: var(--text-muted);
+}
+
+.review-meta__date {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.review-image-missing {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.review-done__cta {
+  margin-top: 1rem;
 }
 
 .review-done {
@@ -2803,43 +3038,10 @@ input.filter-control[type="search"] {
   margin-top: 0.5rem;
 }
 
-.review-btn {
+/* Las dos decisiones se reparten el ancho: blancos grandes para el pulgar. */
+.review-actions__btn {
   flex: 1;
-  padding: 0.7rem 1.5rem;
-  border: none;
-  border-radius: var(--radius-md);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
-}
-
-.review-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.review-btn--approve {
-  background: var(--success);
-  color: var(--text-on-status);
-}
-
-@media (hover: hover) {
-  .review-btn--approve:not(:disabled):hover {
-    background: var(--success);
-  }
-}
-
-.review-btn--reject {
-  background: var(--danger);
-  color: var(--text-on-status);
-}
-
-@media (hover: hover) {
-  .review-btn--reject:not(:disabled):hover {
-    background: var(--danger);
-  }
+  min-height: var(--touch-min);
 }
 
 .review-status-banner {
@@ -2865,7 +3067,7 @@ input.filter-control[type="search"] {
   background: var(--surface);
 }
 
-.voice-review--approve { border-left: 4px solid var(--gold); }
+.voice-review--approve { border-left: 4px solid var(--success); }
 .voice-review--reject { border-left: 4px solid var(--danger); }
 
 .voice-review__hint {
@@ -2953,10 +3155,6 @@ input.filter-control[type="search"] {
   font-size: 0.85rem;
   text-decoration: underline;
   cursor: pointer;
-  min-height: var(--touch-min);
-}
-
-.review-actions .review-btn {
   min-height: var(--touch-min);
 }
 
@@ -3577,7 +3775,6 @@ input.filter-control[type="search"] {
   position: relative;
   box-shadow: var(--shadow-lg), 0 0 0 8px color-mix(in srgb, var(--gold) 6%, transparent);
 }
-
 
 .home-about__content h2 {
   font-size: 2.75rem;
@@ -4300,7 +4497,6 @@ input.filter-control[type="search"] {
     font-size: 2.1rem;
   }
 
-
   .social-buttons {
     flex-direction: column;
     align-items: center;
@@ -4952,82 +5148,6 @@ input.filter-control[type="search"] {
    ALUMNAS DEL CURSO (admin) — control del acceso temporal
    ========================================================================== */
 
-.students-table {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: var(--space-5);
-}
-
-.student-row {
-  display: grid;
-  /* minmax(0,...) evita que un email largo desborde la fila. */
-  grid-template-columns: minmax(0, 2fr) minmax(0, 1.4fr) auto;
-  gap: var(--space-4);
-  align-items: center;
-  padding: 0.9rem 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
-
-.student-row--expired {
-  border-color: color-mix(in srgb, var(--danger) 35%, transparent);
-}
-
-.student-row__identity {
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-  min-width: 0;
-}
-
-.student-row__email {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  overflow-wrap: anywhere;
-}
-
-.student-row__access {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  align-items: flex-start;
-}
-
-.student-row__badge {
-  padding: 0.25rem 0.6rem;
-  border-radius: var(--radius-full);
-  font-size: 0.76rem;
-  font-weight: 600;
-  line-height: 1;
-}
-
-.student-row__badge--active {
-  background: color-mix(in srgb, var(--success) 15%, transparent);
-  color: var(--success);
-  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
-}
-
-.student-row__badge--expired {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
-}
-
-.student-row__dates {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-}
-
-.student-row__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem;
-  justify-content: flex-end;
-}
-
 .btn-sm {
   padding: 0.35rem 0.6rem;
   font-size: 0.78rem;
@@ -5080,17 +5200,6 @@ button.admin-course-students:disabled {
 .admin-course-status--published {
   background: var(--primary-strong);
   color: var(--text-on-primary);
-}
-
-@media (max-width: 720px) {
-  .student-row {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .student-row__actions {
-    justify-content: flex-start;
-  }
 }
 
 /* ==========================================================================
@@ -5242,11 +5351,6 @@ button.admin-course-students:disabled {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
-}
-
-.invitation-list__title {
-  margin-top: var(--space-8);
-  font-size: 1.1rem;
 }
 
 /* Texto de ayuda bajo un campo de formulario admin. */
@@ -6603,27 +6707,6 @@ button.admin-course-students:disabled {
   box-shadow: 0 2px 8px var(--primary-glow);
 }
 
-.lesson-type-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-full);
-  margin-left: 0.5rem;
-  vertical-align: middle;
-  letter-spacing: 0.02em;
-}
-
-.lesson-type-badge.class {
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  color: var(--accent-text);
-}
-
-.lesson-type-badge.exam {
-  background: color-mix(in srgb, var(--gold) 15%, transparent);
-  color: var(--gold-text);
-}
-
 /* ================================================================
    QUIZ QUESTION BUILDER (Admin)
    Interfaz del admin para crear/editar preguntas de un examen.
@@ -7737,36 +7820,10 @@ button.admin-course-students:disabled {
   }
 }
 
-/* ── Modal de crear/editar ── */
-.agenda-modal__overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.agenda-modal {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  width: 100%;
+/* ── Modal de crear/editar (marco: Dialog) ── */
+.confirm-dialog.agenda-modal {
   max-width: 460px;
-  box-shadow: var(--shadow-xl);
-  display: flex;
-  flex-direction: column;
   gap: 0.35rem;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.agenda-modal__title {
-  margin: 0 0 0.25rem;
-  font-size: 1.3rem;
 }
 
 .agenda-modal__hint {
@@ -7805,9 +7862,9 @@ button.admin-course-students:disabled {
   margin-top: 1rem;
 }
 
+/* Eliminar queda a la izquierda, lejos de Guardar. */
 .agenda-modal__delete {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  margin-right: auto;
 }
 
 /* Inputs del modal (incluye datetime-local, que el selector global no cubre) */
@@ -8038,25 +8095,8 @@ button.admin-course-students:disabled {
   font-size: 0.8rem;
 }
 
-.cert-search__badge {
-  padding: 0.1rem 0.55rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--gold);
-  color: var(--gold-text);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
 .cert-search__view {
   margin-left: auto;
-  padding: 0.25rem 0.75rem;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-sm);
-  background: none;
-  color: var(--accent-text);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
 }
 
 .confirm-dialog__overlay {
@@ -8114,6 +8154,70 @@ button.admin-course-students:disabled {
   display: flex;
   gap: 0.75rem;
   padding: 0.25rem 0;
+}
+
+.confirm-dialog__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
+/* Opciones con explicación dentro de un diálogo ("Mantener" / "Eliminar"). */
+.dialog-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dialog-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-base), background-color var(--dur-fast), transform var(--dur-fast);
+}
+
+.dialog-option span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.dialog-option:active:not(:disabled) {
+  transform: scale(0.99);
+  background: var(--surface-rose);
+}
+
+.dialog-option--danger {
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: var(--danger-soft);
+}
+
+.dialog-option--danger strong {
+  color: var(--danger);
+}
+
+@media (hover: hover) {
+  .dialog-option:hover:not(:disabled) {
+    border-color: var(--primary);
+  }
+
+  .dialog-option--danger:hover:not(:disabled) {
+    border-color: var(--danger);
+  }
+}
+
+.dialog-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .confirm-dialog__actions {
@@ -8181,6 +8285,17 @@ button.admin-course-students:disabled {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+}
+
+/* La misma ficha dentro del admin: respeta el marco (alineada al logo) y la
+   columna angosta de admin-page--medium, en vez de centrarse a 860px. */
+.admin-page.cert-verify {
+  max-width: var(--page-max);
+  padding-top: 2.5rem;
+}
+
+.admin-page.cert-verify > .back-link {
+  align-self: flex-start;
 }
 
 .cert-verify__hero {
@@ -9202,3 +9317,250 @@ a.course-home__lesson:active,
   align-self: flex-start;
   margin-top: 0.75rem;
 }
+
+/* === DISEÑADOR DE PLANTILLAS (TemplateDesignPicker) ===
+   Solo presentación: el ancho del visor, el zoom y la posición de cada
+   marcador se calculan en el componente y se convierten a coordenadas del
+   PDF; no moverlos aquí. Cada elemento tiene su color: nombre rosa, QR
+   dorado, fecha verde. */
+.design-picker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* Angosto: el PDF arriba a todo el ancho, las opciones debajo. */
+@media (max-width: 900px) {
+  .design-picker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.design-picker__canvas-col {
+  min-width: 0;
+}
+
+.design-canvas {
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+}
+
+.design-canvas__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+
+.design-canvas__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.design-zoom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.design-zoom__label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.design-zoom__range {
+  width: 100px;
+  accent-color: var(--primary);
+}
+
+.design-zoom__value {
+  min-width: 3ch;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+
+.design-marker {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0;
+  border: 1.5px dashed var(--marker-accent);
+  border-radius: 3px;
+  background-color: color-mix(in srgb, var(--marker-accent) 10%, transparent);
+  white-space: nowrap;
+  line-height: normal;
+  cursor: grab;
+  user-select: none;
+}
+
+.design-marker--name {
+  --marker-accent: var(--primary);
+}
+
+.design-marker--date {
+  --marker-accent: var(--success);
+}
+
+.design-marker--qr {
+  --marker-accent: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Centrado: una guía punteada marca el eje donde cae el centro del texto. */
+.design-marker--centered {
+  background-image: linear-gradient(var(--marker-accent) 1px, transparent 1px);
+  background-size: 1px 4px;
+  background-position: 50% 0;
+  background-repeat: repeat-y;
+}
+
+.design-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  padding: 0 0.25rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.design-legend__mark {
+  font-weight: 700;
+}
+
+.design-legend__mark--name { color: var(--primary); }
+.design-legend__mark--qr { color: var(--gold); }
+.design-legend__mark--date { color: var(--success); }
+
+.design-panel {
+  padding: 1.5rem;
+}
+
+.design-panel__title {
+  margin-bottom: 1.25rem;
+}
+
+.design-panel__font-preview {
+  margin: -0.75rem 0 1.25rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 1.3rem;
+  text-align: center;
+}
+
+.design-panel__hint {
+  margin: -0.75rem 0 1.25rem;
+}
+
+.design-panel__divider {
+  margin: 0 0 1.25rem;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+.design-panel__save {
+  width: 100%;
+}
+
+.design-panel__specs {
+  margin: 0.75rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.design-range {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.design-range input[type='range'] {
+  flex: 1;
+  min-width: 0;
+}
+
+.design-range--name input[type='range'] { accent-color: var(--primary); }
+.design-range--qr input[type='range'] { accent-color: var(--gold); }
+.design-range--date input[type='range'] { accent-color: var(--success); }
+
+.design-range .design-range__number {
+  width: 4.5rem;
+  padding: 0.35rem;
+  font-family: monospace;
+  text-align: center;
+}
+
+.design-range__unit {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.design-color {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.design-color .design-color__swatch {
+  flex-shrink: 0;
+  width: 44px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.design-color .design-color__hex {
+  flex: 1;
+  min-width: 0;
+  font-family: monospace;
+}
+
+/* Segmentado Izquierda / Centrado con el color del elemento. */
+.design-align {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.design-align--name { --marker-accent: var(--primary); --marker-soft: var(--surface-rose); --marker-text: var(--accent-text); }
+.design-align--date { --marker-accent: var(--success); --marker-soft: var(--success-soft); --marker-text: var(--success); }
+
+.design-align button {
+  flex: 1;
+  min-height: 40px;
+  padding: 0.4rem;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-fast), background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.design-align button[aria-pressed='true'] {
+  border-color: var(--marker-accent);
+  background: var(--marker-soft);
+  color: var(--marker-text);
+  font-weight: 700;
+}
+
+.design-align button:active {
+  background: var(--marker-soft);
+}
+
