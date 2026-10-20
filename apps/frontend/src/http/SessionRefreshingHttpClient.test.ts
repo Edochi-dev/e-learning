@@ -4,6 +4,12 @@ import { SessionRefreshingHttpClient } from './SessionRefreshingHttpClient';
 const API = 'http://api.test';
 const res = (status: number) => ({ status, ok: status >= 200 && status < 300 }) as Response;
 
+function deferred<T>() {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((r) => (resolve = r));
+    return { promise, resolve };
+}
+
 describe('SessionRefreshingHttpClient', () => {
     let fetchMock: ReturnType<typeof vi.fn>;
     let client: SessionRefreshingHttpClient;
@@ -113,5 +119,60 @@ describe('SessionRefreshingHttpClient', () => {
 
         await client.fetch(`${API}/users/me`);
         expect(expired).not.toHaveBeenCalled();
+    });
+
+    describe('un 401 que llega después de un cambio de sesión', () => {
+        it('tras un login: reintenta con la sesión nueva sin renovar ni avisar', async () => {
+            const expired = vi.fn();
+            client.onSessionExpired(expired);
+            const lateMe = deferred<Response>();
+            fetchMock
+                .mockReturnValueOnce(lateMe.promise)
+                .mockResolvedValueOnce(res(200))
+                .mockResolvedValueOnce(res(200));
+
+            const me = client.fetch(`${API}/users/me`);
+            await client.fetch(`${API}/users/login`, { method: 'POST' });
+            lateMe.resolve(res(401));
+
+            expect((await me).status).toBe(200);
+            expect(calls()).toEqual([`${API}/users/me`, `${API}/users/login`, `${API}/users/me`]);
+            expect(expired).not.toHaveBeenCalled();
+        });
+
+        it('tras la renovación de otra petición: reintenta sin renovar por segunda vez', async () => {
+            const late = deferred<Response>();
+            fetchMock
+                .mockReturnValueOnce(late.promise)
+                .mockResolvedValueOnce(res(401))
+                .mockResolvedValueOnce(res(204))
+                .mockResolvedValueOnce(res(200))
+                .mockResolvedValueOnce(res(200));
+
+            const slow = client.fetch(`${API}/a`);
+            await client.fetch(`${API}/b`);
+            late.resolve(res(401));
+
+            expect((await slow).status).toBe(200);
+            expect(calls().filter((url) => url.endsWith('/users/refresh'))).toHaveLength(1);
+        });
+
+        it('un login fallido no cambia la sesión: el 401 sigue el camino normal', async () => {
+            const expired = vi.fn();
+            client.onSessionExpired(expired);
+            const lateMe = deferred<Response>();
+            fetchMock
+                .mockReturnValueOnce(lateMe.promise)
+                .mockResolvedValueOnce(res(401))
+                .mockResolvedValueOnce(res(401));
+
+            const me = client.fetch(`${API}/users/me`);
+            await client.fetch(`${API}/users/login`, { method: 'POST' });
+            lateMe.resolve(res(401));
+
+            expect((await me).status).toBe(401);
+            expect(calls()).toEqual([`${API}/users/me`, `${API}/users/login`, `${API}/users/refresh`]);
+            expect(expired).toHaveBeenCalledTimes(1);
+        });
     });
 });

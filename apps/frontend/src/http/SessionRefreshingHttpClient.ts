@@ -12,14 +12,26 @@ export class SessionRefreshingHttpClient implements HttpClient, SessionExpiryNot
     private readonly refreshUrl: string;
     private readonly listeners = new Set<() => void>();
     private pendingRefresh: Promise<boolean> | null = null;
+    // Avanza con cada login, logout o renovación exitosos.
+    private sessionEpoch = 0;
 
     constructor(baseUrl: string) {
         this.refreshUrl = `${baseUrl}/users/refresh`;
     }
 
     async fetch(input: string | URL, init?: RequestInit): Promise<Response> {
+        const sentInEpoch = this.sessionEpoch;
         const response = await this.send(input, init);
-        if (response.status !== 401 || this.isAuthRequest(input)) return response;
+        if (this.isAuthRequest(input)) {
+            if (response.ok) this.sessionEpoch++;
+            return response;
+        }
+        if (response.status !== 401) return response;
+
+        // La sesión cambió mientras esta petición viajaba: su 401 habla de la
+        // sesión anterior. Renovar aquí haría que el servidor borre las cookies
+        // que un login acaba de dejar; se reintenta con la sesión actual.
+        if (sentInEpoch !== this.sessionEpoch) return this.fetch(input, init);
 
         if (!(await this.refreshOnce())) {
             this.listeners.forEach((listener) => listener());
@@ -42,7 +54,13 @@ export class SessionRefreshingHttpClient implements HttpClient, SessionExpiryNot
     private refreshOnce(): Promise<boolean> {
         this.pendingRefresh ??= window
             .fetch(this.refreshUrl, { method: 'POST', credentials: 'include' })
-            .then((res) => res.ok, () => false)
+            .then(
+                (res) => {
+                    if (res.ok) this.sessionEpoch++;
+                    return res.ok;
+                },
+                () => false,
+            )
             .finally(() => {
                 this.pendingRefresh = null;
             });
