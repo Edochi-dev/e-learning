@@ -19,5 +19,9 @@ export function buildWhatsappUrl(target: string, message: string): string {
 export const enrollWhatsappUrl = (courseTitle: string): string =>
     buildWhatsappUrl(ACADEMY_WHATSAPP, `Hola Maria, quiero inscribirme en el curso "${courseTitle}".`);
 
+/** Para quien aún no tiene cursos y el catálogo sigue oculto. */
+export const coursesInfoWhatsappUrl = (): string =>
+    buildWhatsappUrl(ACADEMY_WHATSAPP, 'Hola Maria, quiero información sobre los cursos.');
+
 export const renewWhatsappUrl = (courseTitle: string): string =>
     buildWhatsappUrl(ACADEMY_WHATSAPP, `Hola Maria, quiero renovar mi acceso al curso "${courseTitle}".`);
