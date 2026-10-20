@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
+import { Badge } from '../../components/Badge';
 
 interface Props {
     gateway: CourseGateway;
@@ -130,84 +131,82 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
                     <div className="admin-card-icon">✨</div>
                     <h3>Nuevo Curso</h3>
                     <p>Agrega un nuevo curso a la plataforma con título, descripción, precio y lecciones.</p>
-                    <Link to="/admin/courses/new" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/courses/new" className="btn-primary card-action-btn">
                         Crear Nuevo Curso
                     </Link>
                 </div>
             </div>
 
             {/* Listado de cursos existentes */}
-            <div style={{ marginTop: '2rem' }}>
-                <h2 style={{ marginBottom: '1rem' }}>Cursos existentes</h2>
+            <section className="admin-section">
+                <h2 className="admin-section__title">Cursos existentes</h2>
                 {isLoading ? (
-                    <p style={{ color: 'var(--text-muted)' }}>Cargando cursos...</p>
+                    <p className="admin-section__status">Cargando cursos...</p>
                 ) : courses.length === 0 ? (
                     <div className="admin-empty">No hay cursos aún.</div>
                 ) : (
-                    <div className="admin-course-links">
+                    <div className="admin-list">
                         {courses.map(course => (
-                            /*
-                             * Cada fila tiene dos acciones: Editar (link prominente) y Eliminar
-                             * (botón discreto con confirmación de doble clic).
-                             * Mismo patrón que tenía AdminDashboardPage antes del refactor —
-                             * lo preservamos tal cual para no introducir cambios de UX en este commit.
-                             */
-                            <div key={course.id} className="admin-course-row">
-                                <Link
-                                    to={`/admin/courses/${course.id}/edit`}
-                                    className="admin-course-link"
-                                >
-                                    <span className="admin-course-link-title">{course.title}</span>
-                                    <span className="admin-course-link-meta">
+                            <div key={course.id} className="admin-row">
+                                <div className="admin-row__main">
+                                    <Link to={`/admin/courses/${course.id}/edit`} className="admin-row__title">
+                                        {course.title}
+                                    </Link>
+                                    <span className="admin-row__meta">
                                         {course.lessons?.length || 0} lecciones
                                     </span>
-                                    <span className={`admin-course-status admin-course-status--${course.publishedAt ? 'published' : 'draft'}`}>
-                                        {course.publishedAt ? 'Publicado' : 'Borrador'}
-                                    </span>
-                                </Link>
+                                </div>
 
-                                <button
-                                    type="button"
-                                    className="admin-course-students"
-                                    onClick={() => togglePublished(course)}
-                                    disabled={togglingId === course.id}
-                                >
-                                    {togglingId === course.id ? '…' : course.publishedAt ? 'Despublicar' : 'Publicar'}
-                                </button>
+                                <Badge tone={course.publishedAt ? 'success' : 'neutral'}>
+                                    {course.publishedAt ? 'Publicado' : 'Borrador'}
+                                </Badge>
 
-                                <Link
-                                    to={`/admin/cursos/${course.id}/alumnas`}
-                                    className="admin-course-students"
-                                    aria-label={`Ver alumnas de ${course.title}`}
-                                >
-                                    Alumnas
-                                </Link>
+                                <div className="admin-row__actions">
+                                    <button
+                                        type="button"
+                                        className="btn-secondary btn-sm"
+                                        onClick={() => togglePublished(course)}
+                                        disabled={togglingId === course.id}
+                                    >
+                                        {togglingId === course.id ? '…' : course.publishedAt ? 'Despublicar' : 'Publicar'}
+                                    </button>
 
-                                <Link
-                                    to={`/admin/cursos/${course.id}/invitaciones`}
-                                    className="admin-course-students"
-                                    aria-label={`Invitaciones de ${course.title}`}
-                                >
-                                    Invitaciones
-                                </Link>
+                                    <Link
+                                        to={`/admin/cursos/${course.id}/alumnas`}
+                                        className="btn-secondary btn-sm"
+                                        aria-label={`Ver alumnas de ${course.title}`}
+                                    >
+                                        Alumnas
+                                    </Link>
 
-                                <button
-                                    className={`admin-course-delete ${confirmingId === course.id ? 'admin-course-delete--confirm' : ''}`}
-                                    onClick={() => handleDeleteClick(course.id)}
-                                    disabled={deletingId === course.id}
-                                    aria-label={confirmingId === course.id ? 'Confirmar eliminación' : `Eliminar ${course.title}`}
-                                >
-                                    {deletingId === course.id
-                                        ? '...'
-                                        : confirmingId === course.id
-                                            ? '¿Eliminar?'
-                                            : <Trash2 size={15} strokeWidth={2} />}
-                                </button>
+                                    <Link
+                                        to={`/admin/cursos/${course.id}/invitaciones`}
+                                        className="btn-secondary btn-sm"
+                                        aria-label={`Invitaciones de ${course.title}`}
+                                    >
+                                        Invitaciones
+                                    </Link>
+
+                                    {/* Doble toque para borrar: el primero pide confirmación. */}
+                                    <button
+                                        type="button"
+                                        className={`btn-danger btn-sm${confirmingId === course.id ? ' btn-danger--solid' : ' btn-icon'}`}
+                                        onClick={() => handleDeleteClick(course.id)}
+                                        disabled={deletingId === course.id}
+                                        aria-label={confirmingId === course.id ? 'Confirmar eliminación' : `Eliminar ${course.title}`}
+                                    >
+                                        {deletingId === course.id
+                                            ? '…'
+                                            : confirmingId === course.id
+                                                ? '¿Eliminar?'
+                                                : <Trash2 size={15} strokeWidth={2} aria-hidden />}
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>
                 )}
-            </div>
+            </section>
         </div>
     );
 };

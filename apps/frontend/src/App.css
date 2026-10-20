@@ -602,26 +602,56 @@ a {
   }
 }
 
-/* === BADGES === */
+/* === ETIQUETAS (badge) ===
+   Una sola etiqueta para estados y tipos, con un tono por significado. La
+   usa el componente <Badge tone="…">; no se crean etiquetas por pantalla. */
 .badge {
-  padding: 0.3rem 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.7rem;
   border-radius: var(--radius-full);
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  border: 1px solid transparent;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
 }
 
-.badge-live {
-  background: var(--danger-soft);
-  color: var(--danger);
-  border: 1px solid color-mix(in srgb, var(--danger) 15%, transparent);
-}
-
-.badge-recorded {
-  background: var(--success-soft);
+.badge--success {
   color: var(--success);
-  border: 1px solid color-mix(in srgb, var(--success) 15%, transparent);
+  background: var(--success-soft);
+  border-color: color-mix(in srgb, var(--success) 25%, transparent);
+}
+
+.badge--warning {
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: color-mix(in srgb, var(--warning) 25%, transparent);
+}
+
+.badge--danger {
+  color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 25%, transparent);
+}
+
+.badge--neutral {
+  color: var(--text-secondary);
+  background: var(--surface-sunken);
+  border-color: var(--border-strong);
+}
+
+.badge--rose {
+  color: var(--accent-text);
+  background: var(--surface-rose);
+  border-color: color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+.badge--gold {
+  color: var(--gold-text);
+  background: var(--surface-gold);
+  border-color: color-mix(in srgb, var(--gold) 35%, transparent);
 }
 
 /* === BOTONES ===
@@ -753,6 +783,72 @@ a {
   box-shadow: none;
 }
 
+/* Sexto tipo, solo para aprobar (correcciones): verde = sí, de un vistazo. */
+.btn-success {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.6rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--success);
+  color: var(--text-on-status);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--dur-fast), filter var(--dur-base);
+}
+
+@media (hover: hover) {
+  .btn-success:hover:not(:disabled) {
+    filter: brightness(1.08);
+  }
+}
+
+.btn-success:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tamaño chico para acciones de lista; vale para cualquiera de los tipos. */
+:is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-sm {
+  min-height: 36px;
+  padding: 0.4rem 0.95rem;
+  font-size: 0.82rem;
+  letter-spacing: normal;
+}
+
+/* Solo ícono (eliminar, mover): cuadrado y con nombre accesible en aria-label. */
+.btn-icon svg {
+  display: block;
+}
+
+:is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-icon {
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  :is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-sm {
+    min-height: var(--touch-min);
+  }
+
+  :is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost, .btn-danger, .btn-success).btn-icon {
+    width: var(--touch-min);
+    min-width: var(--touch-min);
+    height: var(--touch-min);
+  }
+}
+
 /* ─── Paginación del catálogo ────────────────────────────── */
 .catalog-pagination {
   display: flex;
@@ -786,12 +882,17 @@ a {
   text-align: center;
 }
 
+/* Tarjetas del panel: el botón conserva su tamaño y queda al pie, a la misma
+   altura en toda la fila aunque los textos tengan distinto largo. */
+.admin-grid > .admin-card {
+  display: flex;
+  flex-direction: column;
+}
+
 .card-action-btn {
-  display: block;
-  text-align: center;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 1.25rem;
+  align-self: flex-start;
+  margin-top: auto;
+  white-space: nowrap;
 }
 
 /* === COURSE DETAILS PAGE (cd-*) === */
@@ -1737,6 +1838,90 @@ input:checked+.slider .icon-moon {
   animation: fadeInUp 0.5s var(--ease-out);
 }
 
+/* === LISTAS DEL ADMIN ===
+   Una sola fila para cursos, plantillas, lecciones, alumnas…: datos a la
+   izquierda, estado y acciones a la derecha, todo centrado en vertical.
+   Cuando la LISTA (no la pantalla) es angosta, las acciones bajan a su
+   propia línea: funciona igual en un teléfono que en una columna estrecha. */
+.admin-list {
+  container: admin-list / inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.admin-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .admin-row:hover {
+    border-color: var(--border-strong);
+  }
+}
+
+.admin-row__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.admin-row__title {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+a.admin-row__title:active {
+  color: var(--accent-text);
+}
+
+@media (hover: hover) {
+  a.admin-row__title:hover {
+    color: var(--accent-text);
+  }
+}
+
+.admin-row__meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.admin-row__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+/* Sin estado, la fila tiene dos columnas. */
+.admin-row:not(:has(> .badge)) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+@container admin-list (max-width: 44rem) {
+  .admin-row,
+  .admin-row:not(:has(> .badge)) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-row__actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
 /* Páginas de formulario: el contenido no se estira a todo el marco, pero
    arranca en el mismo borde que el resto (no se centra). */
 .admin-page--narrow > * {
@@ -1767,10 +1952,26 @@ input:checked+.slider .icon-moon {
 }
 
 /* Dashboard grid of cards */
+/* auto-fill y no auto-fit: una tarjeta sola conserva el ancho de columna en
+   vez de estirarse a toda la fila. */
 .admin-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+}
+
+/* Bloque con título dentro de una página de admin ("Cursos existentes"…). */
+.admin-section {
+  margin-top: 2.5rem;
+}
+
+.admin-section__title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.admin-section__status {
+  color: var(--text-muted);
 }
 
 /* Admin card module */
@@ -8114,6 +8315,70 @@ button.admin-course-students:disabled {
   display: flex;
   gap: 0.75rem;
   padding: 0.25rem 0;
+}
+
+.confirm-dialog__error {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--danger);
+}
+
+/* Opciones con explicación dentro de un diálogo ("Mantener" / "Eliminar"). */
+.dialog-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dialog-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--dur-base), background-color var(--dur-fast), transform var(--dur-fast);
+}
+
+.dialog-option span {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.dialog-option:active:not(:disabled) {
+  transform: scale(0.99);
+  background: var(--surface-rose);
+}
+
+.dialog-option--danger {
+  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  background: var(--danger-soft);
+}
+
+.dialog-option--danger strong {
+  color: var(--danger);
+}
+
+@media (hover: hover) {
+  .dialog-option:hover:not(:disabled) {
+    border-color: var(--primary);
+  }
+
+  .dialog-option--danger:hover:not(:disabled) {
+    border-color: var(--danger);
+  }
+}
+
+.dialog-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .confirm-dialog__actions {

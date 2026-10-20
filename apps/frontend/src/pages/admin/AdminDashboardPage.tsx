@@ -53,7 +53,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                     <div className="admin-card-icon">📚</div>
                     <h3>Cursos</h3>
                     <p>Crea nuevos cursos o edita los existentes con sus lecciones, videos y exámenes.</p>
-                    <Link to="/admin/cursos" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/cursos" className="btn-primary card-action-btn">
                         Gestionar Cursos
                     </Link>
                 </div>
@@ -63,7 +63,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                     <div className="admin-card-icon">🎓</div>
                     <h3>Certificados</h3>
                     <p>Sube plantillas y genera certificados con QR para tus alumnas presenciales.</p>
-                    <Link to="/admin/certificados" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/certificados" className="btn-primary card-action-btn">
                         Gestionar Certificados
                     </Link>
                 </div>
@@ -78,7 +78,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                         )}
                     </h3>
                     <p>Revisa las entregas de tus alumnas, aprueba o pide correcciones con un audio.</p>
-                    <Link to="/admin/correcciones" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/correcciones" className="btn-primary card-action-btn">
                         Revisar Correcciones
                     </Link>
                 </div>
@@ -93,7 +93,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                         )}
                     </h3>
                     <p>Revisa y aprueba las solicitudes de cambio de nombre de los alumnos.</p>
-                    <Link to="/admin/cambios-nombre" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/cambios-nombre" className="btn-primary card-action-btn">
                         Revisar Solicitudes
                     </Link>
                 </div>
@@ -103,7 +103,7 @@ export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameCha
                     <div className="admin-card-icon">📅</div>
                     <h3>Agenda</h3>
                     <p>Organiza tus clases, correcciones y eventos en un calendario, sin que se solapen.</p>
-                    <Link to="/admin/agenda" className="btn-primary" style={{ width: '100%', textAlign: 'center', display: 'block' }}>
+                    <Link to="/admin/agenda" className="btn-primary card-action-btn">
                         Abrir Agenda
                     </Link>
                 </div>
