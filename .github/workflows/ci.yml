@@ -89,6 +89,11 @@ jobs:
       - name: Test backend (e2e)
         run: npm run test:e2e -w apps/backend
 
+      # Falla con cualquier color escrito a mano fuera de los tokens de App.css:
+      # un color suelto no sigue al tema ni a la paleta (#30).
+      - name: Check design tokens (frontend)
+        run: npm run check:tokens -w apps/frontend
+
       - name: Build frontend
         run: npm run build -w apps/frontend
 
