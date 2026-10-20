@@ -260,7 +260,12 @@
    hacer clic). Sin especificidad (:where) para que cualquier componente
    pueda afinarlo. El hover de todo el archivo va dentro de
    @media (hover: hover): en pantallas táctiles quedaba "pegado". */
-:where(a, button, input, select, textarea, summary, [role='button'], [tabindex]):focus-visible {
+/* Los campos de texto no van: tienen su propio foco (borde + brillo). */
+:where(
+  a, button, summary, [role='button'], [tabindex],
+  input[type='checkbox'], input[type='radio'], input[type='range'],
+  input[type='color'], input[type='file']
+):focus-visible {
   outline: 3px solid var(--focus-ring);
   outline-offset: 2px;
 }
@@ -1448,20 +1453,23 @@ a {
 }
 
 /* Global input styles — every text-like and date/time type, or the ones
-   left out render with the browser's default look. */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="number"],
-input[type="search"],
-input[type="url"],
-input[type="tel"],
-input[type="date"],
-input[type="time"],
-input[type="datetime-local"],
-input[type="month"],
-textarea,
-select {
+   left out render with the browser's default look. Wrapped in :where() so
+   they are a default: any component class overrides them without tricks. */
+:where(
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"],
+  textarea,
+  select
+) {
   font-family: var(--font-body);
   font-size: var(--input-font-size);
   background: var(--surface);
@@ -1914,6 +1922,89 @@ a.admin-row__title:active {
     grid-column: 1 / -1;
     justify-content: flex-start;
   }
+}
+
+/* Tarjeta de formulario angosta dentro de una página ancha (p. ej. la fase
+   de subida de una plantilla, antes del diseñador a todo el ancho). */
+.admin-card--narrow {
+  max-width: var(--content-narrow);
+}
+
+/* Aviso fijo y destacado de una página ("Edición no destructiva"…). */
+.admin-notice {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+  border-radius: var(--radius-md);
+  background: var(--surface-gold);
+}
+
+.admin-notice__title {
+  margin: 0;
+  font-weight: 700;
+  color: var(--gold-text);
+}
+
+.admin-notice__text {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* Cabecera de sección con una acción a la derecha (título + "Descargar"). */
+.admin-section__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-section__head .admin-section__title {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+/* Fila que se marca entera: es un <label> que envuelve su checkbox. */
+.admin-row--selectable {
+  cursor: pointer;
+}
+
+.admin-row--selectable:has(input:checked) {
+  border-color: var(--primary-light);
+  background: var(--surface-rose);
+}
+
+.admin-row__main--check {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.admin-row__meta--code {
+  font-family: monospace;
+}
+
+/* Botones al pie de un formulario: secundario y primario, a la derecha. */
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* Campos de códigos (abreviaturas, listas de nombres): monoespaciados. */
+.input-code {
+  font-family: monospace;
+}
+
+input.input-code {
+  text-transform: uppercase;
 }
 
 /* Páginas de formulario: el contenido no se estira a todo el marco, pero

@@ -134,11 +134,11 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 <p>Selecciona una plantilla, ingresa los nombres y genera los PDFs.</p>
             </div>
 
-            <div className="admin-card" style={{ maxWidth: '640px' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Plantilla</label>
+            <div className="admin-card admin-card--narrow">
+                <div className="form-group">
+                    <label htmlFor="gen-template">Plantilla</label>
                     <select
-                        className="form-input"
+                        id="gen-template"
                         value={selectedTemplateId}
                         onChange={e => setSelectedTemplateId(e.target.value)}
                     >
@@ -150,42 +150,39 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                         ))}
                     </select>
                     {templates.length === 0 && (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                            No hay plantillas. <a href="/admin/certificados/plantillas/nueva">Sube una primero.</a>
+                        <p className="form-hint">
+                            No hay plantillas. <Link to="/admin/certificados/plantillas/nueva">Sube una primero.</Link>
                         </p>
                     )}
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label" htmlFor="certificate-date">Fecha del certificado</label>
+                <div className="form-group">
+                    <label htmlFor="certificate-date">Fecha del certificado</label>
                     <input
                         id="certificate-date"
                         type="date"
-                        className="form-input"
                         value={certificateDate}
                         onChange={e => setCertificateDate(e.target.value)}
                         required
                     />
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    <p className="form-hint">
                         {certificateDate
                             ? `Se imprimirá ${parseCalendarDate(certificateDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Cámbiala para certificados impresos por adelantado.`
                             : 'Elige la fecha que se imprimirá en los certificados.'}
                     </p>
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">
-                        Nombres libres (uno por línea)
-                    </label>
+                <div className="form-group">
+                    <label htmlFor="gen-names">Nombres libres (uno por línea)</label>
                     <textarea
-                        className="form-input"
+                        id="gen-names"
+                        className="input-code"
                         rows={6}
                         placeholder={"Ana García\nBeatriz López\nCarolina Martínez"}
                         value={namesText}
                         onChange={e => setNamesText(e.target.value)}
-                        style={{ fontFamily: 'monospace', resize: 'vertical' }}
                     />
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    <p className="form-hint">
                         {freeNames.length} nombre(s) sin cuenta · no aparecerán en "mis certificados"
                     </p>
                 </div>
@@ -193,8 +190,8 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 {/* Vinculación híbrida: buscar alumnos registrados para que el
                     certificado quede ligado a su cuenta. Solo buscador (typeahead):
                     con muchos alumnos, listar a todos no tendría sentido. */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Vincular a alumnos registrados (opcional)</label>
+                <div className="form-group">
+                    <label htmlFor="gen-user-search">Vincular a alumnos registrados (opcional)</label>
                     <div className="user-picker">
                         <div className="user-picker__search">
                             <svg
@@ -211,6 +208,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                             <input
+                                id="gen-user-search"
                                 type="search"
                                 className="user-picker__input"
                                 placeholder="Buscar alumno por nombre o email…"
@@ -258,7 +256,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                                     </span>
                                 ))}
                             </div>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                            <p className="form-hint">
                                 {pickedUsers.length} alumno(s) vinculado(s)
                             </p>
                         </>
@@ -266,6 +264,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 </div>
 
                 <button
+                    type="button"
                     className="btn-primary"
                     onClick={handleGenerate}
                     disabled={loading || !selectedTemplateId || recipientCount === 0 || !certificateDate}
@@ -275,11 +274,12 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
             </div>
 
             {generated.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h2>Certificados generados ({generated.length})</h2>
+                <section className="admin-section">
+                    <div className="admin-section__head">
+                        <h2 className="admin-section__title">Certificados generados ({generated.length})</h2>
                         <button
-                            className="btn-primary"
+                            type="button"
+                            className="btn-primary btn-sm"
                             onClick={handleDownload}
                             disabled={loading || selected.size === 0}
                         >
@@ -287,22 +287,22 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                         </button>
                     </div>
 
-                    <div className="admin-course-links">
+                    <div className="admin-list">
                         {generated.map(cert => (
-                            <div key={cert.id} className="admin-course-row" style={{ cursor: 'pointer' }} onClick={() => toggleSelect(cert.id)}>
-                                <input
-                                    type="checkbox"
-                                    checked={selected.has(cert.id)}
-                                    onChange={() => toggleSelect(cert.id)}
-                                    onClick={e => e.stopPropagation()}
-                                    style={{ marginRight: '0.75rem', accentColor: 'var(--primary)' }}
-                                />
-                                <span className="admin-course-link-title">{cert.recipientName}</span>
-                                <span className="admin-course-link-meta" style={{ fontFamily: 'monospace' }}>{cert.certificateNumber}</span>
-                            </div>
+                            <label key={cert.id} className="admin-row admin-row--selectable">
+                                <span className="admin-row__main admin-row__main--check">
+                                    <input
+                                        type="checkbox"
+                                        checked={selected.has(cert.id)}
+                                        onChange={() => toggleSelect(cert.id)}
+                                    />
+                                    <span className="admin-row__title">{cert.recipientName}</span>
+                                </span>
+                                <span className="admin-row__meta admin-row__meta--code">{cert.certificateNumber}</span>
+                            </label>
                         ))}
                     </div>
-                </div>
+                </section>
             )}
         </div>
     );

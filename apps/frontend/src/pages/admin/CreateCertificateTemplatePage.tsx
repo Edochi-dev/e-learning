@@ -128,25 +128,25 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
             {!template ? (
                 /* ── FASE 1: subir PDF + metadata ──────────────────────── */
-                <div className="admin-card" style={{ maxWidth: '680px' }}>
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label">Nombre de la plantilla</label>
-                        <input type="text" className="form-input" placeholder="Ej: Manicure Rusa"
+                <div className="admin-card admin-card--narrow">
+                    <div className="form-group">
+                        <label htmlFor="tpl-name">Nombre de la plantilla</label>
+                        <input id="tpl-name" type="text" placeholder="Ej: Manicure Rusa"
                             value={formName} onChange={e => setFormName(e.target.value)} />
                     </div>
 
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label">Abreviatura del certificado</label>
-                        <input type="text" className="form-input" placeholder="Ej: MR"
+                    <div className="form-group">
+                        <label htmlFor="tpl-abbr">Abreviatura del certificado</label>
+                        <input id="tpl-abbr" type="text" className="input-code" placeholder="Ej: MR"
                             value={formAbbr} onChange={e => setFormAbbr(e.target.value.toUpperCase())} maxLength={5} />
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        <p className="form-hint">
                             Los números serán: {formAbbr || 'XX'}-00001, {formAbbr || 'XX'}-00002…
                         </p>
                     </div>
 
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <label className="form-label">Formato de papel</label>
-                        <select className="form-input" value={formPaperFormat} onChange={e => setFormPaperFormat(e.target.value)}>
+                    <div className="form-group">
+                        <label htmlFor="tpl-format">Formato de papel</label>
+                        <select id="tpl-format" value={formPaperFormat} onChange={e => setFormPaperFormat(e.target.value)}>
                             {FORMAT_GROUPS.map(({ group, formats }) => (
                                 <optgroup key={group} label={group}>
                                     {formats.map(f => (
@@ -155,12 +155,12 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                                 </optgroup>
                             ))}
                         </select>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                        <p className="form-hint">
                             El PDF que subas debe coincidir con este formato para impresión correcta.
                         </p>
                     </div>
 
-                    <div style={{ marginBottom: '1.5rem' }}>
+                    <div className="form-group">
                         <PdfUploader
                             file={file}
                             onFileChange={handleFileChange}
@@ -170,9 +170,9 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         />
                     </div>
 
-                    {error && <p style={{ color: 'var(--danger)', marginBottom: '1rem' }}>{error}</p>}
+                    {error && <div className="alert alert-error" role="alert">{error}</div>}
 
-                    <button className="btn-primary" onClick={handleUpload}
+                    <button type="button" className="btn-primary" onClick={handleUpload}
                         disabled={uploading || !formName || !formAbbr || !file || !!fileError}>
                         {uploading ? 'Subiendo…' : 'Continuar →'}
                     </button>

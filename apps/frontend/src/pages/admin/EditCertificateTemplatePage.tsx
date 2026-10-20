@@ -140,7 +140,7 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     if (loading) {
         return (
             <div className="admin-page">
-                <p style={{ color: 'var(--text-muted)' }}>Cargando plantilla...</p>
+                <p className="admin-section__status">Cargando plantilla...</p>
             </div>
         );
     }
@@ -148,7 +148,7 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     if (!template) return null;
 
     return (
-        <div className="admin-page">
+        <div className="admin-page admin-page--narrow">
             <Link to="/admin/certificados" className="back-link">← Volver a Certificados</Link>
             <div className="admin-header">
                 <h1>Editar Plantilla</h1>
@@ -156,20 +156,9 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
             </div>
 
             {/* ── Banner de advertencia (siempre visible) ───────────────────── */}
-            <div
-                role="alert"
-                style={{
-                    border: '1px solid var(--gold)',
-                    background: 'var(--surface-gold)',
-                    borderRadius: '8px',
-                    padding: '1rem 1.25rem',
-                    marginBottom: '1.5rem',
-                }}
-            >
-                <p style={{ margin: 0, fontWeight: 700, color: 'var(--gold-text)' }}>
-                    ⚠ Edición no destructiva
-                </p>
-                <p style={{ margin: '0.5rem 0 0 0', color: 'var(--text-muted)', lineHeight: 1.5, fontSize: '0.9rem' }}>
+            <div className="admin-notice" role="note">
+                <p className="admin-notice__title">⚠ Edición no destructiva</p>
+                <p className="admin-notice__text">
                     La edición de la plantilla <strong>solo afecta a los certificados que generes a partir de ahora</strong>.
                     Los certificados ya emitidos con esta plantilla <strong>conservarán intacto su diseño original</strong>,
                     porque se almacenan como archivos PDF independientes en el momento de su emisión. No es posible — ni
@@ -177,9 +166,9 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                 </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="admin-card" style={{ maxWidth: '640px' }}>
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="edit-name" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600 }}>
+            <form onSubmit={handleSubmit} className="admin-card">
+                <div className="form-group">
+                    <label htmlFor="edit-name">
                         Nombre de la plantilla
                     </label>
                     <input
@@ -189,13 +178,11 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         onChange={e => setFormName(e.target.value)}
                         required
                         disabled={saving}
-                        className="form-input"
-                        style={{ width: '100%' }}
                     />
                 </div>
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="edit-abbr" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600 }}>
+                <div className="form-group">
+                    <label htmlFor="edit-abbr">
                         Abreviatura del curso
                     </label>
                     <input
@@ -206,17 +193,16 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         required
                         disabled={saving}
                         maxLength={10}
-                        className="form-input"
-                        style={{ width: '100%', textTransform: 'uppercase', fontFamily: 'monospace' }}
+                        className="input-code"
                     />
-                    <small style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                    <small className="form-hint">
                         Forma parte del número de certificado (ej. {formAbbr || 'XX'}-00001).
                         Cambiarla NO renombra los certificados ya emitidos.
                     </small>
                 </div>
 
-                <div style={{ marginBottom: '1rem' }}>
-                    <label htmlFor="edit-format" style={{ display: 'block', marginBottom: '0.4rem', fontWeight: 600 }}>
+                <div className="form-group">
+                    <label htmlFor="edit-format">
                         Formato de papel
                     </label>
                     <select
@@ -224,8 +210,6 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         value={formPaperFormat}
                         onChange={e => setFormPaperFormat(e.target.value)}
                         disabled={saving}
-                        className="form-input"
-                        style={{ width: '100%' }}
                     >
                         {PAPER_FORMAT_OPTIONS.map(opt => (
                             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -233,7 +217,7 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     </select>
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
+                <div className="form-group">
                     <PdfUploader
                         file={file}
                         onFileChange={handleFile}
@@ -242,21 +226,16 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <div className="form-actions">
                     <button
                         type="button"
                         onClick={() => navigate('/admin/certificados')}
                         disabled={saving}
-                        style={{ padding: '0.6rem 1.4rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}
+                        className="btn-secondary"
                     >
                         Cancelar
                     </button>
-                    <button
-                        type="submit"
-                        disabled={saving}
-                        className="btn-primary"
-                        style={{ padding: '0.6rem 1.6rem' }}
-                    >
+                    <button type="submit" disabled={saving} className="btn-primary">
                         {saving ? 'Guardando...' : 'Guardar cambios'}
                     </button>
                 </div>
