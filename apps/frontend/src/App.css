@@ -1957,6 +1957,57 @@ a.admin-row__title:active {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
 
+/* Solicitudes que la admin aprueba o rechaza (cambios de nombre). */
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.request-card__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.admin-card .request-card__names {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  overflow-wrap: anywhere;
+}
+
+.request-card__arrow {
+  margin: 0 0.5rem;
+  color: var(--text-muted);
+}
+
+.request-card__new {
+  color: var(--accent-text);
+}
+
+.request-card__feedback {
+  width: 100%;
+  resize: vertical;
+}
+
+/* Mismo orden que en correcciones: rechazar a la izquierda, aprobar a la derecha. */
+.request-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
 /* Contenido bajo una fila de pestañas del admin. */
 .admin-tab-panel {
   margin-top: 1.5rem;
@@ -7836,36 +7887,10 @@ button.admin-course-students:disabled {
   }
 }
 
-/* ── Modal de crear/editar ── */
-.agenda-modal__overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 1rem;
-}
-
-.agenda-modal {
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  width: 100%;
+/* ── Modal de crear/editar (marco: Dialog) ── */
+.confirm-dialog.agenda-modal {
   max-width: 460px;
-  box-shadow: var(--shadow-xl);
-  display: flex;
-  flex-direction: column;
   gap: 0.35rem;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.agenda-modal__title {
-  margin: 0 0 0.25rem;
-  font-size: 1.3rem;
 }
 
 .agenda-modal__hint {
@@ -7904,9 +7929,9 @@ button.admin-course-students:disabled {
   margin-top: 1rem;
 }
 
+/* Eliminar queda a la izquierda, lejos de Guardar. */
 .agenda-modal__delete {
-  color: var(--danger);
-  border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+  margin-right: auto;
 }
 
 /* Inputs del modal (incluye datetime-local, que el selector global no cubre) */

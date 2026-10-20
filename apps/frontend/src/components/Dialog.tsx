@@ -5,11 +5,13 @@ interface Props {
     onClose: () => void;
     /** false mientras corre una acción: ni Escape ni tocar afuera la cierran. */
     closable?: boolean;
+    /** Clase extra del panel, para el contenido propio de cada diálogo. */
+    className?: string;
     children: React.ReactNode;
 }
 
 /** Marco común de los diálogos: velo, panel, título y cierre con Escape. */
-export const Dialog: React.FC<Props> = ({ title, onClose, closable = true, children }) => {
+export const Dialog: React.FC<Props> = ({ title, onClose, closable = true, className, children }) => {
     const titleId = useId();
 
     useEffect(() => {
@@ -23,7 +25,7 @@ export const Dialog: React.FC<Props> = ({ title, onClose, closable = true, child
     return (
         <div className="confirm-dialog__overlay" onClick={() => closable && onClose()}>
             <div
-                className="confirm-dialog"
+                className={className ? `confirm-dialog ${className}` : 'confirm-dialog'}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby={titleId}
