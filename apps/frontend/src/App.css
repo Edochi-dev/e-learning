@@ -163,7 +163,21 @@
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
   --tab-bar-height: 56px;  /* barra inferior de la alumna, sin el margen del iPhone */
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
+  /* Marco de página: la cabecera y TODO el contenido arrancan en la misma
+     vertical que el logo. --page-pad-x se achica en móvil (más abajo). */
+  --page-max: 1280px;
+  --page-pad-x: 2rem;
+  /* Columnas angostas para formularios: se alinean a la izquierda del marco,
+     no se centran. */
+  --content-narrow: 42rem;
+  --content-medium: 56rem;
   --input-font-size: 0.95rem; /* 16px en mobile: menos hace que iOS haga zoom al enfocar */
+}
+
+@media (max-width: 768px) {
+  :root {
+    --page-pad-x: var(--mobile-pad-x);
+  }
 }
 
 /* === SKELETON LOADERS === */
@@ -330,9 +344,9 @@ a {
 }
 
 .container {
-  max-width: 1280px;
+  max-width: var(--page-max);
   margin: 0 auto;
-  padding: 0 2rem;
+  padding: 0 var(--page-pad-x);
 }
 
 /* === HEADER / NAVBAR — Frosted Glass === */
@@ -1673,9 +1687,6 @@ input:checked+.slider .icon-moon {
     padding: 1.5rem;
   }
 
-  .container {
-    padding: 0 1rem;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1720,10 +1731,20 @@ input:checked+.slider .icon-moon {
 
 /* Admin page wrapper */
 .admin-page {
-  padding: 2.5rem 2rem 4rem;
-  max-width: 960px;
+  padding: 2.5rem var(--page-pad-x) 4rem;
+  max-width: var(--page-max);
   margin: 0 auto;
   animation: fadeInUp 0.5s var(--ease-out);
+}
+
+/* Páginas de formulario: el contenido no se estira a todo el marco, pero
+   arranca en el mismo borde que el resto (no se centra). */
+.admin-page--narrow > * {
+  max-width: var(--content-narrow);
+}
+
+.admin-page--medium > * {
+  max-width: var(--content-medium);
 }
 
 /* Admin page header */
@@ -3462,7 +3483,8 @@ input.filter-control[type="search"] {
     grid-template-columns: 1fr;
   }
   .admin-page {
-    padding: 1.5rem 1rem 3rem;
+    padding-top: 1.5rem;
+    padding-bottom: 3rem;
   }
 
   .admin-grid {
@@ -7518,12 +7540,6 @@ button.admin-course-students:disabled {
 /* ============================================================================
    AGENDA (panel admin) — FullCalendar tematizado + modal
    ============================================================================ */
-/* La agenda necesita más ancho que el resto de páginas admin para que la
-   rejilla semanal respire. */
-.agenda-page {
-  max-width: 1180px;
-}
-
 /* Header: título a la izquierda, botón de recordatorios a la derecha; colapsa
    a columna en pantallas angostas. */
 .agenda-header {

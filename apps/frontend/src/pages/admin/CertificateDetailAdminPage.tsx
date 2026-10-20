@@ -86,7 +86,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
     });
 
     return (
-        <div className="admin-page" style={{ maxWidth: '860px' }}>
+        <div className="admin-page admin-page--medium">
             <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
 
             {/* 1. Encabezado con gradiente de la academia */}
