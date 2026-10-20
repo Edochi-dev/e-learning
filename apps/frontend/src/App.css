@@ -296,10 +296,7 @@ img, video, picture {
   }
 
   .btn-primary,
-  .btn-secondary,
-  .btn-cancel,
-  .btn-delete,
-  .btn-edit {
+.btn-secondary {
     min-height: var(--touch-min);
   }
 }
@@ -2020,7 +2017,10 @@ a.admin-row__title:active {
 
 .admin-section__title {
   margin: 0 0 1rem;
-  font-size: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 1.3rem;
+  color: var(--text-primary);
 }
 
 .admin-section__status {
@@ -2238,6 +2238,65 @@ a.admin-row__title:active {
   color: var(--text-primary);
 }
 
+.admin-form__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+}
+
+/* Botón de envío de un formulario: de su tamaño, al pie, alineado a la izquierda.
+   align-self: dentro de una tarjeta en columna flex no se estira. */
+.form-submit {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+}
+
+.add-lesson-form {
+  margin-top: 1rem;
+}
+
+/* Edición de una lección en su fila: campos más juntos que en un formulario suelto. */
+.lesson-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lesson-edit-form .form-group,
+.lesson-edit-form .checkbox-group {
+  margin-bottom: 0;
+}
+
+.feature-hint {
+  margin: 0 0 0.75rem;
+}
+
+.feature-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.feature-row input {
+  flex: 1;
+  min-width: 0;
+}
+
+.thumb-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+
+.thumb-current__img {
+  width: 100%;
+  max-width: 320px;
+  border-radius: var(--radius-md);
+}
+
 .admin-form-subtitle {
   color: var(--text-muted);
   margin-bottom: 2rem;
@@ -2448,22 +2507,6 @@ a.admin-row__title:active {
 }
 
 /* Badge de modalidad en la vista admin de lección */
-.lesson-mode-badge {
-  font-size: 0.7rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.lesson-mode-badge.live {
-  background: color-mix(in srgb, var(--danger) 12%, transparent);
-  color: var(--danger);
-}
-.lesson-mode-badge.recorded {
-  background: var(--surface-sunken);
-  color: var(--text-muted);
-}
 
 /* ── Panel colapsable "Agregar Nueva Lección" ── */
 
@@ -2527,6 +2570,10 @@ a.admin-row__title:active {
 }
 
 .admin-lesson-info h4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-body);
   font-size: 1rem;
   font-weight: 600;
@@ -2544,8 +2591,13 @@ a.admin-row__title:active {
   font-size: 0.8rem;
   color: var(--text-muted);
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem 0.75rem;
+}
+
+.admin-lesson-meta__url {
+  overflow-wrap: anywhere;
 }
 
 /* Action buttons */
@@ -2553,90 +2605,6 @@ a.admin-row__title:active {
   display: flex;
   gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.btn-edit {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
-  color: var(--accent-text);
-  border: 1px solid var(--border);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-full);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-edit:hover {
-    background: var(--primary-strong);
-    color: var(--text-on-primary);
-    border-color: var(--primary);
-    box-shadow: 0 4px 12px var(--primary-glow);
-  }
-}
-
-.btn-edit:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
-}
-
-.btn-delete {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1px solid var(--border);
-  padding: 0.45rem 1rem;
-  border-radius: var(--radius-full);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-delete:hover {
-    background: var(--danger);
-    color: var(--text-on-status);
-    border-color: var(--danger);
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--danger) 30%, transparent);
-  }
-}
-
-.btn-delete:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
-}
-
-.btn-cancel {
-  background: transparent;
-  color: var(--text-muted);
-  border: 1.5px solid var(--border-strong);
-  padding: 0.5rem 1.25rem;
-  border-radius: var(--radius-full);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
-    transform var(--dur-base) var(--ease-out);
-  font-family: var(--font-body);
-}
-
-@media (hover: hover) {
-  .btn-cancel:hover {
-    border-color: var(--text-secondary);
-    color: var(--text-primary);
-  }
-}
-
-.btn-cancel:active {
-  transform: scale(0.96);
-  transition-duration: var(--dur-fast);
 }
 
 /* Back link */
@@ -2678,19 +2646,6 @@ a.admin-row__title:active {
   background: var(--surface);
   border-radius: var(--radius-md);
   border: 1px dashed var(--border-strong);
-}
-
-/* Section divider for admin pages */
-.admin-section {
-  margin-bottom: 2.5rem;
-}
-
-.admin-section h2 {
-  font-size: 1.4rem;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--border);
 }
 
 /* ── Admin Tabs ─────────────────────────────────────────────────────── */
@@ -6751,27 +6706,6 @@ button.admin-course-students:disabled {
   background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
   color: var(--accent-text);
   box-shadow: 0 2px 8px var(--primary-glow);
-}
-
-.lesson-type-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 700;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--radius-full);
-  margin-left: 0.5rem;
-  vertical-align: middle;
-  letter-spacing: 0.02em;
-}
-
-.lesson-type-badge.class {
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
-  color: var(--accent-text);
-}
-
-.lesson-type-badge.exam {
-  background: color-mix(in srgb, var(--gold) 15%, transparent);
-  color: var(--gold-text);
 }
 
 /* ================================================================

@@ -164,7 +164,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
                         <ThumbnailUploader ref={thumbnailRef} />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '0.5rem' }}>
+                    <button type="submit" className="btn-primary form-submit" disabled={isLoading}>
                         {isLoading ? 'Creando...' : 'Crear Curso'}
                     </button>
                 </form>
