@@ -9364,11 +9364,11 @@ a.course-home__lesson:active,
   flex-direction: column;
   width: 100%;
   padding-top: 1rem;
-  padding-bottom: 3rem;
+  padding-bottom: 2rem;
 }
 
 .admin-page:has(.design-workspace--fill) .back-link {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .admin-page:has(.design-workspace--fill) .admin-header {
