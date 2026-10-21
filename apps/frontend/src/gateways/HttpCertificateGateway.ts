@@ -1,4 +1,4 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse, DesignSample } from './CertificateGateway';
 import type { HttpClient } from '../http/HttpClient';
 
 // NestJS validation errors carry `message` as an array of strings.
@@ -73,6 +73,21 @@ export class HttpCertificateGateway implements CertificateGateway {
         });
         if (!res.ok) throw new Error(`Error al actualizar el diseño: ${res.statusText}`);
         return res.json();
+    }
+
+    async previewTemplateDesign(id: string, design: TemplateDesign, sample: DesignSample): Promise<Blob> {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${id}/preview`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ ...design, ...sample }),
+        });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            const message = Array.isArray(err.message) ? err.message.join('. ') : err.message;
+            throw new Error(message || 'No se pudo generar la vista previa');
+        }
+        return res.blob();
     }
 
     async listTemplates(): Promise<CertificateTemplate[]> {

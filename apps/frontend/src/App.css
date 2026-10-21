@@ -1952,6 +1952,19 @@ a.admin-row__title:active {
   color: var(--text-secondary);
 }
 
+/* Variante de una sola línea, para páginas donde el espacio vertical manda. */
+.admin-notice--compact {
+  padding: 0.5rem 1rem;
+}
+
+.admin-notice--compact .admin-notice__text {
+  margin: 0;
+}
+
+.admin-notice--compact .admin-notice__text strong {
+  color: var(--gold-text);
+}
+
 /* Cabecera de sección con una acción a la derecha (título + "Descargar"). */
 .admin-section__head {
   display: flex;
@@ -9319,85 +9332,210 @@ a.course-home__lesson:active,
 }
 
 /* === DISEÑADOR DE PLANTILLAS (TemplateDesignPicker) ===
-   Solo presentación: el ancho del visor, el zoom y la posición de cada
-   marcador se calculan en el componente y se convierten a coordenadas del
-   PDF; no moverlos aquí. Cada elemento tiene su color: nombre rosa, QR
-   dorado, fecha verde. */
-.design-picker {
+   Solo presentación: las posiciones viven en puntos PDF dentro del
+   componente y la pantalla se deriva de ellas; no mover nada desde aquí.
+   En pantallas grandes es un espacio de trabajo sin scroll de página: el
+   certificado se ajusta al espacio y el panel cabe entero. Colores por
+   elemento: nombre rosa, fecha verde, QR dorado. */
+
+/* La página entera queda fija: ni scroll ni pie mientras se diseña. */
+.site-shell:has(.design-workspace--fill) {
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.site-shell:has(.design-workspace--fill) > .footer {
+  display: none;
+}
+
+/* Cadena flex hasta el espacio de trabajo: cada nivel ocupa el alto que
+   queda, así el diseñador llena la ventana sin medir nada desde JS. */
+.site-shell > main:has(.design-workspace--fill) {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.admin-page:has(.design-workspace--fill) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 1rem;
+  padding-bottom: 2rem;
+}
+
+.admin-page:has(.design-workspace--fill) .back-link {
+  margin-bottom: 0.75rem;
+}
+
+.admin-page:has(.design-workspace--fill) .admin-header {
+  margin-bottom: 0.5rem;
+}
+
+.admin-page:has(.design-workspace--fill) .admin-header h1 {
+  font-size: 1.6rem;
+  margin-bottom: 0;
+}
+
+/* La descripción repite lo que el panel ya dice; aquí cada línea es hoja. */
+.admin-page:has(.design-workspace--fill) .admin-header p {
+  display: none;
+}
+
+.admin-page:has(.design-workspace--fill) .admin-notice {
+  margin: 0.75rem 0 0;
+}
+
+.design-workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 1.5rem;
-  align-items: start;
+  gap: 1rem;
+  align-items: stretch;
 }
 
-/* Angosto: el PDF arriba a todo el ancho, las opciones debajo. */
-@media (max-width: 900px) {
-  .design-picker {
-    grid-template-columns: minmax(0, 1fr);
-  }
+.design-workspace--fill {
+  flex: 1;
+  min-height: 0;
 }
 
-.design-picker__canvas-col {
+.design-stage-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   min-width: 0;
+  min-height: 0;
 }
 
-.design-canvas {
-  margin-bottom: 0.5rem;
-  padding: 0.75rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md);
-}
-
-.design-canvas__toolbar {
+.design-toolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem 0.75rem;
-  margin-bottom: 0.6rem;
 }
 
-.design-canvas__title {
-  margin: 0;
-  font-size: 0.9rem;
-  font-weight: 600;
+.design-sample {
+  display: flex;
+  flex: 1 1 14rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.design-sample span {
+  white-space: nowrap;
+}
+
+.design-sample input {
+  min-width: 0;
+  padding: 0.45rem 0.75rem;
 }
 
 .design-zoom {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-left: auto;
+  gap: 0.35rem;
 }
 
-.design-zoom__label {
-  font-size: 0.75rem;
+/* El área donde vive la hoja: centra la hoja ajustada y se desplaza sola si
+   hay zoom, sin mover la página. */
+.design-stage {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  padding: 0.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+}
+
+.design-sheet {
+  position: relative;
+  flex-shrink: 0;
+  margin: auto;
+  box-shadow: var(--shadow-md);
+}
+
+.design-sheet__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* El display de arriba le ganaría al atributo hidden (fondo vs. vista previa). */
+.design-sheet__canvas[hidden] {
+  display: none;
+}
+
+.design-sheet__status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
   color: var(--text-muted);
 }
 
-.design-zoom__range {
-  width: 100px;
-  accent-color: var(--primary);
+.design-stage__foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.25rem 1rem;
 }
 
-.design-zoom__value {
-  min-width: 3ch;
-  font-family: monospace;
-  font-size: 0.75rem;
+.design-stage__hint,
+.design-stage__specs {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
+/* En táctil no hay flechas que usar. */
+@media (pointer: coarse) {
+  .design-stage__hint--keys {
+    display: none;
+  }
+}
+
+/* El contorno es outline y no border: un borde empujaría el texto hacia
+   adentro y la posición en pantalla dejaría de ser la impresa. */
 .design-marker {
   position: absolute;
   top: 0;
   left: 0;
   padding: 0;
-  border: 1.5px dashed var(--marker-accent);
-  border-radius: 3px;
+  outline: 1.5px dashed var(--marker-accent);
+  outline-offset: 0;
+  border-radius: 2px;
   background-color: color-mix(in srgb, var(--marker-accent) 10%, transparent);
   white-space: nowrap;
   line-height: normal;
   cursor: grab;
   user-select: none;
+  touch-action: none;
+}
+
+.design-marker:active {
+  cursor: grabbing;
+}
+
+.design-marker--selected {
+  outline-style: solid;
+  outline-width: 2px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--marker-accent) 25%, transparent);
+}
+
+.design-marker:focus-visible {
+  outline-style: solid;
+  outline-width: 2px;
+}
+
+.design-marker__text {
+  display: inline-block;
 }
 
 .design-marker--name {
@@ -9410,10 +9548,15 @@ a.course-home__lesson:active,
 
 .design-marker--qr {
   --marker-accent: var(--gold);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+.design-marker--qr svg {
+  display: block;
 }
 
 /* Centrado: una guía punteada marca el eje donde cae el centro del texto. */
@@ -9424,47 +9567,75 @@ a.course-home__lesson:active,
   background-repeat: repeat-y;
 }
 
-.design-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 1.25rem;
-  padding: 0 0.25rem;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.design-legend__mark {
-  font-weight: 700;
-}
-
-.design-legend__mark--name { color: var(--primary); }
-.design-legend__mark--qr { color: var(--gold); }
-.design-legend__mark--date { color: var(--success); }
-
+/* Panel: pestañas por elemento; cada una cabe sin bajar. Guardar al pie. */
 .design-panel {
-  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 1rem 1.25rem;
 }
 
-.design-panel__title {
-  margin-bottom: 1.25rem;
+.design-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
 }
 
-.design-panel__font-preview {
-  margin: -0.75rem 0 1.25rem;
-  padding: 0.4rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  font-size: 1.3rem;
-  text-align: center;
-}
-
-.design-panel__hint {
-  margin: -0.75rem 0 1.25rem;
-}
-
-.design-panel__divider {
-  margin: 0 0 1.25rem;
+.design-tabs__tab {
+  min-height: 38px;
   border: none;
+  border-radius: var(--radius-full);
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.design-tabs__tab[aria-selected='true'] {
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
+}
+
+.design-tabs__tab--name[aria-selected='true'] { color: var(--accent-text); }
+.design-tabs__tab--date[aria-selected='true'] { color: var(--success); }
+.design-tabs__tab--qr[aria-selected='true'] { color: var(--gold-text); }
+
+.design-panel__body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.design-panel__body .form-group {
+  margin-bottom: 0.6rem;
+}
+
+.design-panel__body label {
+  margin-bottom: 0.3rem;
+  font-size: 0.85rem;
+}
+
+/* Controles más bajos que los del resto del admin: el panel debe caber entero. */
+.design-panel__body select,
+.design-panel__body input[type='text'],
+.design-panel__body input[type='number'] {
+  min-height: 38px;
+  padding-block: 0.4rem;
+  font-size: 0.9rem;
+}
+
+.design-panel__footer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
   border-top: 1px solid var(--border);
 }
 
@@ -9472,13 +9643,6 @@ a.course-home__lesson:active,
   width: 100%;
 }
 
-.design-panel__specs {
-  margin: 0.75rem 0 0;
-  font-size: 0.72rem;
-  line-height: 1.4;
-  text-align: center;
-  color: var(--text-muted);
-}
 
 .design-range {
   display: flex;
@@ -9516,7 +9680,7 @@ a.course-home__lesson:active,
 .design-color .design-color__swatch {
   flex-shrink: 0;
   width: 44px;
-  height: 40px;
+  height: 38px;
   padding: 0;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
@@ -9529,7 +9693,16 @@ a.course-home__lesson:active,
   font-family: monospace;
 }
 
-/* Segmentado Izquierda / Centrado con el color del elemento. */
+.design-color .design-color__hex[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.design-color__error {
+  margin: 0.35rem 0 0;
+  font-size: 0.78rem;
+  color: var(--danger);
+}
+
 .design-align {
   display: flex;
   gap: 0.5rem;
@@ -9540,7 +9713,7 @@ a.course-home__lesson:active,
 
 .design-align button {
   flex: 1;
-  min-height: 40px;
+  min-height: 38px;
   padding: 0.4rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
@@ -9564,3 +9737,28 @@ a.course-home__lesson:active,
   background: var(--marker-soft);
 }
 
+/* Angosto (teléfono, tablet vertical): la hoja queda fija arriba mientras
+   se editan las opciones debajo, así lo que cambia siempre está a la vista. */
+@media (max-width: 899px), (max-height: 599px) {
+  /* Una pantalla exacta: arriba el certificado, abajo el panel con su propio
+     scroll. Así editar nunca desplaza la hoja fuera de la vista. */
+  .design-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    height: 100svh;
+    padding-block: 0.5rem;
+  }
+
+  .design-stage {
+    max-height: 42svh;
+  }
+
+  .design-stage__specs {
+    display: none;
+  }
+
+  /* La barra del sitio también es sticky y taparía el certificado fijo. */
+  .site-shell:has(.design-workspace) .header {
+    position: static;
+  }
+}

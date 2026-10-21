@@ -35,6 +35,8 @@ import { SearchCertificatesQueryDto } from './dto/search-certificates-query.dto'
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
+import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
+import { PreviewTemplateDesignDto } from './dto/preview-template-design.dto';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -55,6 +57,7 @@ export class CertificatesController {
     private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
     private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
     private readonly updateDesignUseCase: UpdateTemplateDesignUseCase,
+    private readonly previewDesignUseCase: PreviewTemplateDesignUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
     private readonly getTemplateUseCase: GetCertificateTemplateUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
@@ -112,6 +115,24 @@ export class CertificatesController {
     @Body() dto: UpdateTemplateDesignDto,
   ) {
     return this.updateDesignUseCase.execute(id, dto);
+  }
+
+  /**
+   * POST /admin/certificate-templates/:id/preview — PDF de muestra con el diseño
+   * aún sin guardar, dibujado igual que un certificado real. No persiste nada.
+   */
+  @Post('admin/certificate-templates/:id/preview')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async previewDesign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: PreviewTemplateDesignDto,
+    @Res() res: Response,
+  ) {
+    const pdf = await this.previewDesignUseCase.execute(id, dto);
+    res.set({ 'Content-Type': 'application/pdf', 'Cache-Control': 'no-store' });
+    res.send(pdf);
   }
 
   /**
