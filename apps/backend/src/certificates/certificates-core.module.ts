@@ -34,6 +34,8 @@ import { ListCertificateCoursesUseCase } from './use-cases/list-certificate-cour
 import { StampCertificateDatesUseCase } from './use-cases/stamp-certificate-dates.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
+import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
+import { CertificateRenderer } from './services/certificate-renderer';
 
 const USE_CASES = [
   UploadCertificateTemplateUseCase,
@@ -51,6 +53,7 @@ const USE_CASES = [
   StampCertificateDatesUseCase,
   LookupCertificateUseCase,
   GetMyCertificatesUseCase,
+  PreviewTemplateDesignUseCase,
 ];
 
 /**
@@ -78,6 +81,7 @@ const USE_CASES = [
   ],
   providers: [
     ...USE_CASES,
+    CertificateRenderer,
 
     // Wiring: abstracción → implementación concreta
     {

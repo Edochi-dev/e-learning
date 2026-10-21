@@ -2,6 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { GenerateCertificateBatchUseCase } from './generate-certificate-batch.use-case';
+import { CertificateRenderer } from '../services/certificate-renderer';
 import { CertificateGateway } from '../gateways/certificate.gateway';
 import { CertificateNumberSequenceGateway } from '../gateways/certificate-number-sequence.gateway';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
@@ -72,6 +73,8 @@ describe('GenerateCertificateBatchUseCase', () => {
     const module = await Test.createTestingModule({
       providers: [
         GenerateCertificateBatchUseCase,
+        // Real: solo combina los gateways de QR y PDF simulados abajo.
+        CertificateRenderer,
         {
           provide: CertificateTemplateGateway,
           useValue: { findOne: jest.fn() },
