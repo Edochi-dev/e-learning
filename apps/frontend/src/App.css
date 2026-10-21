@@ -9386,7 +9386,7 @@ a.course-home__lesson:active,
 }
 
 .admin-page:has(.design-workspace--fill) .admin-notice {
-  margin-bottom: 0.75rem;
+  margin: 0.75rem 0 0;
 }
 
 .design-workspace {

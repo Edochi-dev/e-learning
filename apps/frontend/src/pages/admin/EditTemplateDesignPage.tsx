@@ -93,15 +93,6 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                 <p>Edita la posición, tipografía, tamaño, color y alineación de los elementos sobre "{template.name}".</p>
             </div>
 
-            {/* Misma garantía que EditCertificateTemplatePage: los certificados ya
-                emitidos conservan su PDF y su templateSnapshot originales. */}
-            <div className="admin-notice admin-notice--compact" role="note">
-                <p className="admin-notice__text">
-                    <strong>⚠ Edición no destructiva:</strong> solo cambia los certificados que generes a partir
-                    de ahora; los ya emitidos conservan su diseño original.
-                </p>
-            </div>
-
             <TemplateDesignPicker
                 template={template}
                 pdfSource={pdfBlob}
@@ -116,6 +107,15 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                     navigate('/admin/certificados');
                 }}
             />
+
+            {/* Misma garantía que EditCertificateTemplatePage: los certificados ya
+                emitidos conservan su PDF y su templateSnapshot originales. */}
+            <div className="admin-notice admin-notice--compact" role="note">
+                <p className="admin-notice__text">
+                    <strong>⚠ Edición no destructiva:</strong> solo cambia los certificados que generes a partir
+                    de ahora; los ya emitidos conservan su diseño original.
+                </p>
+            </div>
         </div>
     );
 };
