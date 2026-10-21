@@ -121,6 +121,12 @@ export interface TemplateDesign {
     dateStyle: DateStyle;
 }
 
+/** Datos de muestra para la vista previa real (fecha ISO, YYYY-MM-DD). */
+export interface DesignSample {
+    sampleName: string;
+    sampleDate: string;
+}
+
 /**
  * EditTemplatePayload — campos editables de una plantilla.
  *
@@ -153,6 +159,8 @@ export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
     updateTemplateDesign(id: string, design: TemplateDesign): Promise<CertificateTemplate>;
+    /** PDF de muestra dibujado por el backend igual que un certificado real; no guarda nada. */
+    previewTemplateDesign(id: string, design: TemplateDesign, sample: DesignSample): Promise<Blob>;
     /**
      * Edita una plantilla existente (metadata y/u opcionalmente el PDF base).
      *
