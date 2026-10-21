@@ -195,26 +195,6 @@ const usePdfCanvas = (source: Blob | null, canvasRef: React.RefObject<HTMLCanvas
     return drawn.ok ? 'ready' : 'error';
 };
 
-/** Alto que deja libre la ventana bajo el elemento (modo "sin scroll de página"). */
-const useFillHeight = (ref: React.RefObject<HTMLElement | null>, enabled: boolean) => {
-    const [height, setHeight] = useState<number | null>(null);
-    useLayoutEffect(() => {
-        if (!enabled || !ref.current) return;
-        const update = () => {
-            if (!ref.current) return;
-            // offsetTop y no getBoundingClientRect: la página entra con una
-            // animación translateY y mediríamos 20px de más al montar.
-            let top = 0;
-            for (let el: HTMLElement | null = ref.current; el; el = el.offsetParent as HTMLElement | null) top += el.offsetTop;
-            setHeight(Math.max(360, window.innerHeight - top - 16));
-        };
-        update();
-        window.addEventListener('resize', update);
-        return () => window.removeEventListener('resize', update);
-    }, [ref, enabled]);
-    return enabled ? height : null;
-};
-
 const useMediaQuery = (query: string): boolean => {
     const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
     useEffect(() => {
@@ -285,8 +265,6 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
 
     // ── Pantalla ──────────────────────────────────────────────────────────────
     const fill = useMediaQuery('(min-width: 900px) and (min-height: 600px)');
-    const workspaceRef = useRef<HTMLDivElement>(null);
-    const workspaceHeight = useFillHeight(workspaceRef, fill);
     const stageRef = useRef<HTMLDivElement>(null);
     const [available, setAvailable] = useState({ width: 0, height: 0 });
     const [zoom, setZoom] = useState(1);
@@ -311,7 +289,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
         const observer = new ResizeObserver(measure);
         observer.observe(stage);
         return () => observer.disconnect();
-    }, [fill, workspaceHeight]);
+    }, [fill]);
 
     const k = fitScale(available, page, zoom); // px por pt
     const sheet = { width: page.width * k, height: page.height * k };
@@ -452,9 +430,7 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
 
     return (
         <div
-            ref={workspaceRef}
             className={`design-workspace${fill ? ' design-workspace--fill' : ''}`}
-            style={workspaceHeight ? { height: workspaceHeight } : undefined}
         >
             <section className="design-stage-col" aria-label="Certificado">
                 <div className="design-toolbar">

@@ -9348,9 +9348,23 @@ a.course-home__lesson:active,
   display: none;
 }
 
+/* Cadena flex hasta el espacio de trabajo: cada nivel ocupa el alto que
+   queda, así el diseñador llena la ventana sin medir nada desde JS. */
+.site-shell > main:has(.design-workspace--fill) {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .admin-page:has(.design-workspace--fill) {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   padding-top: 1rem;
-  padding-bottom: 0;
+  padding-bottom: 1rem;
 }
 
 .admin-page:has(.design-workspace--fill) .back-link {
@@ -9383,6 +9397,7 @@ a.course-home__lesson:active,
 }
 
 .design-workspace--fill {
+  flex: 1;
   min-height: 0;
 }
 
