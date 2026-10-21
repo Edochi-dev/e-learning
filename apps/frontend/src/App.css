@@ -9364,7 +9364,7 @@ a.course-home__lesson:active,
   flex-direction: column;
   width: 100%;
   padding-top: 1rem;
-  padding-bottom: 1rem;
+  padding-bottom: 3rem;
 }
 
 .admin-page:has(.design-workspace--fill) .back-link {
