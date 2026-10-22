@@ -1983,6 +1983,12 @@ a.admin-row__title:active {
   border: none;
 }
 
+.admin-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
 /* Fila que se marca entera: es un <label> que envuelve su checkbox. */
 .admin-row--selectable {
   cursor: pointer;

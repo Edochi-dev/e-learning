@@ -37,6 +37,8 @@ import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-tem
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
 import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
 import { PreviewTemplateDesignDto } from './dto/preview-template-design.dto';
+import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-certificates.use-case';
+import { GenerateBlankCertificatesDto } from './dto/generate-blank-certificates.dto';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -58,6 +60,7 @@ export class CertificatesController {
     private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
     private readonly updateDesignUseCase: UpdateTemplateDesignUseCase,
     private readonly previewDesignUseCase: PreviewTemplateDesignUseCase,
+    private readonly generateBlankUseCase: GenerateBlankCertificatesUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
     private readonly getTemplateUseCase: GetCertificateTemplateUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
@@ -132,6 +135,28 @@ export class CertificatesController {
   ) {
     const pdf = await this.previewDesignUseCase.execute(id, dto);
     res.set({ 'Content-Type': 'application/pdf', 'Cache-Control': 'no-store' });
+    res.send(pdf);
+  }
+
+  /**
+   * POST /admin/certificate-templates/:id/blank — copias de reserva con la
+   * fecha y sin nombre ni QR. No crea certificados ni consume números.
+   */
+  @Post('admin/certificate-templates/:id/blank')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async generateBlank(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: GenerateBlankCertificatesDto,
+    @Res() res: Response,
+  ) {
+    const { pdf, filename } = await this.generateBlankUseCase.execute(id, dto);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+      'Cache-Control': 'no-store',
+    });
     res.send(pdf);
   }
 
@@ -227,7 +252,7 @@ export class CertificatesController {
     @Body() dto: DownloadCertificateBatchDto,
     @Res() res: Response,
   ) {
-    const result = await this.downloadBatchUseCase.execute(dto.ids);
+    const result = await this.downloadBatchUseCase.execute(dto.ids, dto.layout);
 
     const contentType = result.isZip ? 'application/zip' : 'application/pdf';
     res.set({

@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary, CertificateRecipient } from '../../gateways/CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary, CertificateRecipient, BundleLayout } from '../../gateways/CertificateGateway';
 import type { AuthGateway } from '../../gateways/AuthGateway';
 import type { User } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
 import { parseCalendarDate, todayCalendarDate } from '../../lib/calendar-date';
+import { saveBlob } from '../../lib/save-blob';
 
 interface Props {
     gateway: CertificateGateway;
@@ -106,19 +107,17 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
         });
     };
 
-    const handleDownload = async () => {
+    // Unidos: presenciales, se imprimen de una vez. Separados: online, uno por alumna.
+    const handleDownload = async (layout: BundleLayout) => {
         if (selected.size === 0) return;
         setLoading(true);
         try {
             const ids = Array.from(selected);
-            const blob = await gateway.downloadBatch(ids);
-            const filename = ids.length === 1 ? 'certificado.pdf' : 'certificados.zip';
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+            const blob = await gateway.downloadBatch(ids, layout);
+            const filename = ids.length === 1
+                ? 'certificado.pdf'
+                : layout === 'merged' ? 'certificados.pdf' : 'certificados.zip';
+            saveBlob(blob, filename);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Error al descargar');
         } finally {
@@ -277,14 +276,35 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 <section className="admin-section">
                     <div className="admin-section__head">
                         <h2 className="admin-section__title">Certificados generados ({generated.length})</h2>
-                        <button
-                            type="button"
-                            className="btn-primary btn-sm"
-                            onClick={handleDownload}
-                            disabled={loading || selected.size === 0}
-                        >
-                            {loading ? 'Descargando...' : `Descargar ${selected.size > 1 ? `(${selected.size}) ZIP` : 'PDF'}`}
-                        </button>
+                        {selected.size > 1 ? (
+                            <div className="admin-section__actions">
+                                <button
+                                    type="button"
+                                    className="btn-primary btn-sm"
+                                    onClick={() => handleDownload('merged')}
+                                    disabled={loading}
+                                >
+                                    {`Un PDF para imprimir (${selected.size})`}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-secondary btn-sm"
+                                    onClick={() => handleDownload('separate')}
+                                    disabled={loading}
+                                >
+                                    {`Separados en ZIP (${selected.size})`}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn-primary btn-sm"
+                                onClick={() => handleDownload('separate')}
+                                disabled={loading || selected.size === 0}
+                            >
+                                {loading ? 'Descargando...' : 'Descargar PDF'}
+                            </button>
+                        )}
                     </div>
 
                     <div className="admin-list">

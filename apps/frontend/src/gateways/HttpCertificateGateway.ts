@@ -1,4 +1,4 @@
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse, DesignSample } from './CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, TemplateDesign, EditTemplatePayload, CertificateRecipient, CertificateSearchFilters, CertificateCourse, DesignSample, BundleLayout } from './CertificateGateway';
 import type { HttpClient } from '../http/HttpClient';
 
 // NestJS validation errors carry `message` as an array of strings.
@@ -148,14 +148,25 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.json();
     }
 
-    async downloadBatch(ids: string[]): Promise<Blob> {
+    async downloadBatch(ids: string[], layout: BundleLayout = 'separate'): Promise<Blob> {
         const res = await this.http.fetch(`${this.baseUrl}/admin/certificates/download`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ ids }),
+            body: JSON.stringify({ ids, layout }),
         });
         if (!res.ok) throw new Error(`Error al descargar certificados: ${res.statusText}`);
+        return res.blob();
+    }
+
+    async downloadBlankCertificates(templateId: string, certificateDate: string, copies: number): Promise<Blob> {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${templateId}/blank`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ certificateDate, copies }),
+        });
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al generar los certificados en blanco'));
         return res.blob();
     }
 

@@ -4,6 +4,7 @@ import type { CertificateGateway, CertificateTemplate } from '../../gateways/Cer
 import { Trash2 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { Dialog } from '../../components/Dialog';
+import { BlankCertificatesDialog } from '../../components/BlankCertificatesDialog';
 
 interface Props {
     gateway: CertificateGateway;
@@ -24,6 +25,7 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
     const [deleteState, setDeleteState] = useState<DeleteState | null>(null);
     const [deleting, setDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [blankTemplate, setBlankTemplate] = useState<CertificateTemplate | null>(null);
 
     const loadData = useCallback(() => {
         setLoading(true);
@@ -153,6 +155,13 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                                     </button>
                                     <button
                                         type="button"
+                                        className="btn-secondary btn-sm"
+                                        onClick={() => setBlankTemplate(t)}
+                                    >
+                                        En blanco
+                                    </button>
+                                    <button
+                                        type="button"
                                         className="btn-danger btn-sm btn-icon"
                                         onClick={() => handleDeleteClick(t)}
                                         aria-label={`Eliminar plantilla ${t.name}`}
@@ -165,6 +174,14 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
                     </div>
                 )}
             </section>
+
+            {blankTemplate && (
+                <BlankCertificatesDialog
+                    gateway={gateway}
+                    template={blankTemplate}
+                    onClose={() => setBlankTemplate(null)}
+                />
+            )}
 
             {deleteState && (
                 <Dialog
