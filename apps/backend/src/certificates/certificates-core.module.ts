@@ -13,12 +13,14 @@ import { CertificateDateStamperGateway } from './gateways/certificate-date-stamp
 import { CertificateGeneratorGateway } from './gateways/certificate-generator.gateway';
 import { QrCodeGateway } from './gateways/qr-code.gateway';
 import { CertificateArchiveGateway } from './gateways/certificate-archive.gateway';
+import { PdfMergerGateway } from './gateways/pdf-merger.gateway';
 import { CertificateTemplatesRepository } from './certificate-templates.repository';
 import { CertificatesRepository } from './certificates.repository';
 import { CertificateNumberSequenceRepository } from './certificate-number-sequence.repository';
 import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { QrCodeService } from './qr-code.service';
 import { ArchiverZipGateway } from './archiver-zip.gateway';
+import { PdfLibMerger } from './pdf-lib-merger';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
@@ -35,6 +37,7 @@ import { StampCertificateDatesUseCase } from './use-cases/stamp-certificate-date
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
+import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-certificates.use-case';
 import { CertificateRenderer } from './services/certificate-renderer';
 
 const USE_CASES = [
@@ -54,6 +57,7 @@ const USE_CASES = [
   LookupCertificateUseCase,
   GetMyCertificatesUseCase,
   PreviewTemplateDesignUseCase,
+  GenerateBlankCertificatesUseCase,
 ];
 
 /**
@@ -102,6 +106,7 @@ const USE_CASES = [
     },
     { provide: QrCodeGateway, useClass: QrCodeService },
     { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },
+    { provide: PdfMergerGateway, useClass: PdfLibMerger },
   ],
   exports: USE_CASES,
 })

@@ -20,4 +20,17 @@ describe('HttpCertificateGateway', () => {
         expect(url.searchParams.get('number')).toBe('MEP-00012');
         expect(url.searchParams.get('name')).toBe('Ana Pérez');
     });
+
+    it('downloadBlankCertificates muestra el mensaje de validación del backend', async () => {
+        const fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            statusText: 'Bad Request',
+            json: () => Promise.resolve({ message: ['No se pueden generar más de 50 copias a la vez'] }),
+        } as Response);
+        const gateway = new HttpCertificateGateway('http://api.test', { fetch });
+
+        await expect(gateway.downloadBlankCertificates('t1', '2026-11-07', 51))
+            .rejects.toThrow('No se pueden generar más de 50 copias a la vez');
+        expect(fetch.mock.calls[0][0]).toBe('http://api.test/admin/certificate-templates/t1/blank');
+    });
 });

@@ -159,6 +159,17 @@ export class HttpCertificateGateway implements CertificateGateway {
         return res.blob();
     }
 
+    async downloadBlankCertificates(templateId: string, certificateDate: string, copies: number): Promise<Blob> {
+        const res = await this.http.fetch(`${this.baseUrl}/admin/certificate-templates/${templateId}/blank`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ certificateDate, copies }),
+        });
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al generar los certificados en blanco'));
+        return res.blob();
+    }
+
     async deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void> {
         const url = this.url(`/admin/certificate-templates/${id}`);
         if (certAction) url.searchParams.set('certAction', certAction);

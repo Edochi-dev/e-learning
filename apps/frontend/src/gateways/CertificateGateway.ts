@@ -181,6 +181,8 @@ export interface CertificateGateway {
     searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]>;
     listCertificateCourses(): Promise<CertificateCourse[]>;
     downloadBatch(ids: string[]): Promise<Blob>;
+    /** Template + date, no name or QR, `copies` pages in one PDF. Issues nothing. */
+    downloadBlankCertificates(templateId: string, certificateDate: string, copies: number): Promise<Blob>;
 
     deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void>;
     /** All or nothing: if any id no longer exists, nothing is deleted. */
