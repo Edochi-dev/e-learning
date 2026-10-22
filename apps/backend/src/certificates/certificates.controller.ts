@@ -252,7 +252,7 @@ export class CertificatesController {
     @Body() dto: DownloadCertificateBatchDto,
     @Res() res: Response,
   ) {
-    const result = await this.downloadBatchUseCase.execute(dto.ids);
+    const result = await this.downloadBatchUseCase.execute(dto.ids, dto.layout);
 
     const contentType = result.isZip ? 'application/zip' : 'application/pdf';
     res.set({

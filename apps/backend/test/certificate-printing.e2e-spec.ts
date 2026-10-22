@@ -18,8 +18,8 @@ import { User } from '../src/users/entities/user.entity';
 import { CertificateTemplate } from '../src/certificates/entities/certificate-template.entity';
 
 /**
- * Blank spare certificates through the real HTTP stack: role guard, DTO
- * validation, and proof that nothing is issued (no rows, no numbers spent).
+ * Printing through the real HTTP stack: blank spare certificates (nothing
+ * issued, no numbers spent) and downloading issued ones merged or zipped.
  */
 
 function configureApp(app: INestApplication): void {
@@ -126,8 +126,11 @@ describe('Impresión de certificados (e2e)', () => {
     studentAgent = await loginAs(student);
   });
 
+  const generatedFiles: string[] = [];
+
   afterAll(async () => {
     fs.rmSync(path.join(templateDir, templateFile), { force: true });
+    for (const file of generatedFiles) fs.rmSync(file, { force: true });
     await app.close();
   });
 
@@ -185,5 +188,50 @@ describe('Impresión de certificados (e2e)', () => {
       certificateDate: '2026-11-07',
       copies: 1,
     }).expect(404);
+  });
+  describe('POST /admin/certificates/download', () => {
+    let ids: string[];
+
+    beforeAll(async () => {
+      const res = await adminAgent
+        .post('/admin/certificates/batch')
+        .send({
+          templateId,
+          recipients: [{ name: 'Ana Impresa' }, { name: 'Bea Impresa' }],
+          certificateDate: '2026-11-07',
+        })
+        .expect(201);
+      ids = (res.body as { id: string }[]).map((c) => c.id);
+      generatedFiles.push(
+        ...ids.map((id) =>
+          path.join(templateDir, '..', 'generated', `${id}.pdf`),
+        ),
+      );
+    });
+
+    const download = (body: object) =>
+      adminAgent
+        .post('/admin/certificates/download')
+        .send(body)
+        .buffer(true)
+        .parse(binaryParser);
+
+    it('sin layout siguen saliendo separados en un ZIP', async () => {
+      const res = await download({ ids }).expect(200);
+
+      expect(res.headers['content-type']).toBe('application/zip');
+    });
+
+    it('con layout "merged" sale un PDF con una página por certificado', async () => {
+      const res = await download({ ids, layout: 'merged' }).expect(200);
+
+      expect(res.headers['content-type']).toBe('application/pdf');
+      const pdf = await PDFDocument.load(res.body as Buffer);
+      expect(pdf.getPageCount()).toBe(2);
+    });
+
+    it('rechaza un layout desconocido', async () => {
+      await download({ ids, layout: 'stapled' }).expect(400);
+    });
   });
 });

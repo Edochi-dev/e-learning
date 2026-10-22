@@ -39,6 +39,8 @@ import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-ca
 import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
 import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-certificates.use-case';
 import { CertificateRenderer } from './services/certificate-renderer';
+import { ZipCertificateBundler } from './services/zip-certificate-bundler';
+import { MergedPdfCertificateBundler } from './services/merged-pdf-certificate-bundler';
 
 const USE_CASES = [
   UploadCertificateTemplateUseCase,
@@ -86,6 +88,8 @@ const USE_CASES = [
   providers: [
     ...USE_CASES,
     CertificateRenderer,
+    ZipCertificateBundler,
+    MergedPdfCertificateBundler,
 
     // Wiring: abstracción → implementación concreta
     {

@@ -155,6 +155,9 @@ export interface CertificateRecipient {
     userId?: string;
 }
 
+/** Several certificates: one PDF each inside a ZIP, or all as pages of one PDF for printing. */
+export type BundleLayout = 'separate' | 'merged';
+
 export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
@@ -180,7 +183,8 @@ export interface CertificateGateway {
     generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]>;
     searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]>;
     listCertificateCourses(): Promise<CertificateCourse[]>;
-    downloadBatch(ids: string[]): Promise<Blob>;
+    /** A single certificate always comes back as its own PDF; `layout` defaults to 'separate'. */
+    downloadBatch(ids: string[], layout?: BundleLayout): Promise<Blob>;
     /** Template + date, no name or QR, `copies` pages in one PDF. Issues nothing. */
     downloadBlankCertificates(templateId: string, certificateDate: string, copies: number): Promise<Blob>;
 
