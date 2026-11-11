@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { UpcomingLiveClass } from '@maris-nails/shared';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
-import { liveClassPhase, openClassLabel } from '../lib/live-class';
+import { liveClassPhase } from '../lib/live-class';
+import { OpenClassLabel } from './OpenClassLabel';
 
 const when = new Intl.DateTimeFormat('es', {
     weekday: 'short',
@@ -33,7 +34,7 @@ export const UpcomingLiveClasses: React.FC<{ gateway: EnrollmentGateway }> = ({ 
                         <li key={c.lessonId}>
                             <Link to={`/courses/${c.courseId}/learn`} className="upcoming-live__item">
                                 <span className="upcoming-live__when">
-                                    {isOpen ? openClassLabel(new Date(c.liveStartsAt), now) : when.format(new Date(c.liveStartsAt))}
+                                    {isOpen ? <OpenClassLabel startsAt={new Date(c.liveStartsAt)} now={now} /> : when.format(new Date(c.liveStartsAt))}
                                 </span>
                                 <span className="upcoming-live__lesson">{c.lessonTitle}</span>
                                 <span className="upcoming-live__course">{c.courseTitle}</span>

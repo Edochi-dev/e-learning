@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { GraduationCap, SearchX } from 'lucide-react';
 import type { CertificateGateway } from '../gateways/CertificateGateway';
 import { useCertificate } from '../hooks/useCertificate';
 import { parseCalendarDate } from '../lib/calendar-date';
@@ -67,7 +68,7 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
                     maxWidth: '480px',
                     margin: '0 auto',
                 }}>
-                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+                    <div style={{ marginBottom: '1rem' }}><SearchX size={48} strokeWidth={1.5} aria-hidden="true" /></div>
                     <h2 style={{ marginBottom: '0.5rem' }}>Certificado no encontrado</h2>
                     <p style={{ color: 'var(--text-muted)' }}>
                         El código QR que escaneaste no corresponde a ningún certificado en nuestro sistema,
@@ -92,8 +93,8 @@ export const CertificateVerificationPage: React.FC<Props> = ({ gateway }) => {
     return (
         <div className="container cert-verify">
             <header className="cert-verify__hero">
-                <div className="cert-verify__hero-icon" aria-hidden="true">🎓</div>
-                <h1 className="cert-verify__title">Certificado Verificado</h1>
+                <span className="cert-seal" aria-hidden="true"><GraduationCap size={30} strokeWidth={1.5} /></span>
+                <h1 className="cert-verify__title">Certificado <em>verificado</em></h1>
                 <p className="cert-verify__academy">Mari's Nails Academy</p>
             </header>
 

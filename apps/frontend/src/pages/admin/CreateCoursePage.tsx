@@ -68,10 +68,11 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
 
     return (
         <div className="admin-page admin-page--narrow">
-            <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
+            <Link to="/admin/cursos" className="back-link">← Volver a cursos</Link>
 
             <div className="admin-form">
-                <h1>Crear Nuevo Curso</h1>
+                <p className="section-eyebrow">Cursos</p>
+                <h1>Nuevo <em>curso</em></h1>
                 <p className="admin-form-subtitle">Completa los datos para agregar un curso a la plataforma.</p>
 
                 <form onSubmit={handleSubmit}>

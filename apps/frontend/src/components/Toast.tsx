@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react';
+import { CircleCheck, TriangleAlert } from 'lucide-react';
 
 /**
  * Toast — Sistema de notificaciones flotantes.
@@ -68,9 +69,9 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
 
     return (
         <div className={`toast toast--${toast.type} ${toast.exiting ? 'toast--exit' : ''}`}>
-            <span className="toast__icon">
-                {toast.type === 'success' ? '✅' : '⚠️'}
-            </span>
+            {toast.type === 'success'
+                ? <CircleCheck className="toast__icon" size={18} strokeWidth={1.75} aria-hidden="true" />
+                : <TriangleAlert className="toast__icon" size={18} strokeWidth={1.75} aria-hidden="true" />}
             <span className="toast__message">{toast.message}</span>
         </div>
     );

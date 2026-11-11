@@ -1,6 +1,7 @@
 import React from 'react';
 import { LIVE_JOIN_LEAD_MINUTES, type PublicLesson } from '@maris-nails/shared';
-import { ACADEMY_TIME_ZONE, formatCountdown, liveClassPhase, openClassLabel } from '../lib/live-class';
+import { ACADEMY_TIME_ZONE, formatCountdown, liveClassPhase } from '../lib/live-class';
+import { OpenClassLabel } from './OpenClassLabel';
 import { useNow } from '../hooks/useNow';
 import { LiveReminderButton } from './LiveReminderButton';
 
@@ -45,7 +46,7 @@ export const LiveLessonGate: React.FC<Props> = ({ lesson, children }) => {
         return (
             <div className="live-gate">
                 <p className={`live-gate__banner live-gate__banner--${phase}`}>
-                    {phase === 'open' ? openClassLabel(startsAt, now) : 'Clase en vivo finalizada'}
+                    {phase === 'open' ? <OpenClassLabel startsAt={startsAt} now={now} /> : 'Clase en vivo finalizada'}
                 </p>
                 {video.provider ? children : (
                     <div className="live-card">

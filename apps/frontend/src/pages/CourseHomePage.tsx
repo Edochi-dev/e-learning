@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
-import { LessonStatus, type LessonOverview, type PublicLesson } from '@maris-nails/shared';
+import { ArrowLeft, ArrowRight, Award, Check, PartyPopper } from 'lucide-react';
+import { LessonStatus, LessonType, type LessonOverview, type PublicLesson } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useCourse } from '../hooks/useCourse';
@@ -8,8 +9,11 @@ import { useCourseOverview } from '../hooks/useCourseOverview';
 import { useNow } from '../hooks/useNow';
 import { API_URL } from '../config';
 import { LESSON_TYPE_LABEL, lessonStatusBadge } from '../lib/lesson-status';
-import { liveClassPhase, openClassLabel } from '../lib/live-class';
+import { liveClassPhase } from '../lib/live-class';
 import { renewWhatsappUrl } from '../lib/whatsapp';
+import { BrandMark } from '../components/BrandMark';
+import { OpenClassLabel } from '../components/OpenClassLabel';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 interface CourseHomePageProps {
     courseGateway: CourseGateway;
@@ -59,13 +63,15 @@ export const CourseHomePage = ({ courseGateway, enrollmentGateway }: CourseHomeP
 
     return (
         <div className="container course-home">
-            <Link to="/mis-cursos" className="course-home__back">← Mis cursos</Link>
+            <Link to="/mis-cursos" className="course-home__back">
+                <ArrowLeft size={16} strokeWidth={1.75} aria-hidden="true" />Mis cursos
+            </Link>
 
             <header className="course-home__hero">
                 <div className="course-home__visual">
                     {course.thumbnailUrl
                         ? <img src={`${API_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
-                        : <span className="course-home__fallback" aria-hidden="true">💅</span>}
+                        : <BrandMark width="40%" className="course-home__fallback" />}
                 </div>
 
                 <div className="course-home__summary">
@@ -110,11 +116,14 @@ export const CourseHomePage = ({ courseGateway, enrollmentGateway }: CourseHomeP
                             </a>
                         ) : nextLesson ? (
                             <Link to={lessonUrl(course.id, nextLesson.id)} className="btn-primary course-home__cta">
-                                <span>{overview?.completedLessons ? 'Continuar' : 'Empezar el curso'} →</span>
+                                <span className="course-home__cta-label">
+                                    {overview?.completedLessons ? 'Continuar' : 'Empezar el curso'}
+                                    <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
+                                </span>
                                 <small className="course-home__cta-next">{nextLesson.title}</small>
                             </Link>
                         ) : completedAll ? (
-                            <p className="course-home__done">🎉 ¡Completaste el curso!</p>
+                            <p className="course-home__done"><PartyPopper size={18} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />¡Completaste el curso!</p>
                         ) : overview ? (
                             <p className="course-home__done">Tus prácticas están en revisión. Te avisaremos cuando la profesora responda.</p>
                         ) : null}
@@ -133,7 +142,7 @@ export const CourseHomePage = ({ courseGateway, enrollmentGateway }: CourseHomeP
                                 <li key={l.id}>
                                     <Link to={lessonUrl(course.id, l.id)} className="course-home__live-item">
                                         <span className="course-home__live-when">
-                                            {open ? openClassLabel(startsAt, now) : liveDate.format(startsAt)}
+                                            {open ? <OpenClassLabel startsAt={startsAt} now={now} /> : liveDate.format(startsAt)}
                                         </span>
                                         <span>{l.title}</span>
                                     </Link>
@@ -161,6 +170,7 @@ export const CourseHomePage = ({ courseGateway, enrollmentGateway }: CourseHomeP
             </section>
 
             <section className="course-home__section course-home__certificate">
+                <span className="course-home__seal" aria-hidden="true"><Award size={28} strokeWidth={1.5} /></span>
                 <h2 className="course-home__heading">Certificado</h2>
                 <p>
                     {completedAll
@@ -189,17 +199,20 @@ const LessonRow = ({ lesson, index, progress, href, isNext }: LessonRowProps) =>
     const meta = live
         ? `Clase en vivo · ${liveDate.format(new Date(lesson.videoData!.liveStartsAt!))}`
         : [LESSON_TYPE_LABEL[lesson.type], lesson.videoData?.duration].filter(Boolean).join(' · ');
+    // Un quiz o una práctica aprobados son un logro: se pintan en dorado, no como "vista".
+    const tone = badge.tone === 'done' && lesson.type !== LessonType.CLASS ? 'achieved' : badge.tone;
 
     const content = (
         <>
-            <span className={`course-home__lesson-index course-home__lesson-index--${badge.tone}`} aria-hidden="true">
-                {badge.tone === 'done' ? '✓' : index + 1}
+            <span className={`course-home__lesson-index course-home__lesson-index--${tone}`} aria-hidden="true">
+                {badge.tone === 'done' ? <Check size={16} strokeWidth={2.25} /> : index + 1}
             </span>
             <span className="course-home__lesson-text">
                 <span className="course-home__lesson-title">{lesson.title}</span>
                 <span className="course-home__lesson-meta">{meta}</span>
             </span>
-            <span className={`course-home__badge course-home__badge--${badge.tone}`}>
+            <span className={`course-home__badge course-home__badge--${tone}`}>
+                {tone === 'achieved' && !isNext && <Award size={13} strokeWidth={2} aria-hidden="true" />}
                 {isNext
                     ? `Sigue aquí${progress?.status === LessonStatus.IN_PROGRESS ? ` · ${Math.round(progress.watchedPercent)}%` : ''}`
                     : badge.label}

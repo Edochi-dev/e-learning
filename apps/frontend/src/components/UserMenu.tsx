@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { BookOpen, ChevronDown, GraduationCap, LogOut, Settings, ShieldCheck } from 'lucide-react';
 import { UserRole } from '@maris-nails/shared';
 import { useAuth } from '../context/AuthContext';
 import { useLogout } from '../hooks/useLogout';
@@ -15,12 +16,12 @@ import { UserAvatar } from './UserAvatar';
  *   │ Ana García        │  ← nombre del usuario
  *   │ ana@email.com     │  ← email
  *   ├──────────────────┤
- *   │ 📚 Mis Cursos     │
- *   │ 🎓 Mis Certificados│
- *   │ ⚙️  Mi Cuenta     │
- *   │ 🛡️ Panel Admin    │  ← solo si es ADMIN
+ *   │ Mis Cursos        │
+ *   │ Mis Certificados  │
+ *   │ Mi Cuenta         │
+ *   │ Panel Admin       │  ← solo si es ADMIN
  *   ├──────────────────┤
- *   │ 🚪 Cerrar Sesión  │
+ *   │ Cerrar Sesión     │
  *   └──────────────────┘
  *
  * ¿Cómo funciona el "cerrar al hacer clic fuera"?
@@ -78,8 +79,8 @@ export const UserMenu = () => {
             >
                 <UserAvatar name={user.fullName} size="sm" />
                 {/* La flecha rota 180° cuando el menú está abierto (controlado por CSS) */}
-                <span className={`user-menu__arrow ${isOpen ? 'user-menu__arrow--open' : ''}`}>
-                    ▾
+                <span className={`user-menu__arrow ${isOpen ? 'user-menu__arrow--open' : ''}`} aria-hidden="true">
+                    <ChevronDown size={14} strokeWidth={2} />
                 </span>
             </button>
 
@@ -101,7 +102,7 @@ export const UserMenu = () => {
                         role="menuitem"
                         onClick={handleNavigation}
                     >
-                        <span className="user-menu__item-icon">📚</span>
+                        <span className="user-menu__item-icon" aria-hidden="true"><BookOpen size={16} strokeWidth={1.75} /></span>
                         <span>Mis Cursos</span>
                     </Link>
 
@@ -111,7 +112,7 @@ export const UserMenu = () => {
                         role="menuitem"
                         onClick={handleNavigation}
                     >
-                        <span className="user-menu__item-icon">🎓</span>
+                        <span className="user-menu__item-icon" aria-hidden="true"><GraduationCap size={16} strokeWidth={1.75} /></span>
                         <span>Mis Certificados</span>
                     </Link>
 
@@ -121,7 +122,7 @@ export const UserMenu = () => {
                         role="menuitem"
                         onClick={handleNavigation}
                     >
-                        <span className="user-menu__item-icon">⚙️</span>
+                        <span className="user-menu__item-icon" aria-hidden="true"><Settings size={16} strokeWidth={1.75} /></span>
                         <span>Mi Cuenta</span>
                     </Link>
 
@@ -133,7 +134,7 @@ export const UserMenu = () => {
                             role="menuitem"
                             onClick={handleNavigation}
                         >
-                            <span className="user-menu__item-icon">🛡️</span>
+                            <span className="user-menu__item-icon" aria-hidden="true"><ShieldCheck size={16} strokeWidth={1.75} /></span>
                             <span>Panel Admin</span>
                         </Link>
                     )}
@@ -146,7 +147,7 @@ export const UserMenu = () => {
                         role="menuitem"
                         onClick={handleLogout}
                     >
-                        <span className="user-menu__item-icon">🚪</span>
+                        <span className="user-menu__item-icon" aria-hidden="true"><LogOut size={16} strokeWidth={1.75} /></span>
                         <span>Cerrar Sesión</span>
                     </button>
                 </div>

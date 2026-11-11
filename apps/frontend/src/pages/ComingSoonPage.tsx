@@ -1,4 +1,6 @@
 import { Link } from 'react-router-dom';
+import { GraduationCap, Sparkles } from 'lucide-react';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 /**
  * ComingSoonPage
@@ -12,7 +14,7 @@ export const ComingSoonPage = () => {
         <div className="coming-soon">
             <div className="coming-soon__card">
                 <img
-                    src="/images/logo.png"
+                    src="/images/logo-mark.png"
                     alt="Mari's Nails Academy"
                     className="coming-soon__badge"
                 />
@@ -29,7 +31,9 @@ export const ComingSoonPage = () => {
                 </p>
 
                 <div className="coming-soon__tagline">
-                    ✨ Próximamente disponible ✨
+                    <Sparkles size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                    Próximamente disponible
+                    <Sparkles size={16} strokeWidth={1.75} aria-hidden="true" style={{ ...inlineIconStyle, marginRight: 0, marginLeft: '0.4em' }} />
                 </div>
 
                 <Link to="/login" className="coming-soon__login">
@@ -39,7 +43,7 @@ export const ComingSoonPage = () => {
 
             {/* Card secundaria: búsqueda de certificado */}
             <div className="coming-soon__cert">
-                <span className="coming-soon__cert-icon" aria-hidden="true">🎓</span>
+                <GraduationCap className="coming-soon__cert-icon" size={28} strokeWidth={1.6} aria-hidden="true" />
                 <div className="coming-soon__cert-text">
                     <p className="coming-soon__cert-title">¿Ya tienes un certificado?</p>
                     <p className="coming-soon__cert-body">Búscalo con tu número de certificado</p>

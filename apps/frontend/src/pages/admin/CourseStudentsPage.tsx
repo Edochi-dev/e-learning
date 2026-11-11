@@ -118,7 +118,7 @@ export const CourseStudentsPage = ({ gateway, courseGateway }: CourseStudentsPag
     if (error) {
         return (
             <div className="admin-page">
-                <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
+                <Link to="/admin/cursos" className="back-link">← Volver a cursos</Link>
                 <div className="alert alert-error" role="alert">{error}</div>
             </div>
         );
@@ -126,10 +126,11 @@ export const CourseStudentsPage = ({ gateway, courseGateway }: CourseStudentsPag
 
     return (
         <div className="admin-page">
-            <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
+            <Link to="/admin/cursos" className="back-link">← Volver a cursos</Link>
 
             <div className="admin-header">
-                <h1>Alumnas de {courseTitle}</h1>
+                <p className="section-eyebrow">Cursos</p>
+                <h1>Alumnas de <em>{courseTitle}</em></h1>
                 <p>
                     {students.length === 0
                         ? 'Todavía no hay alumnas matriculadas en este curso'

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ChevronRight, LogOut, Menu, X } from 'lucide-react';
 import type { SiteSection } from '../hooks/useSiteSections';
 
@@ -8,13 +9,23 @@ const follow = (section: SiteSection) => (e: React.MouseEvent) => {
 };
 
 /** Las secciones en línea, para pantallas anchas. */
-export const SiteSectionLinks = ({ sections }: { sections: SiteSection[] }) => (
-    <nav className="nav-links nav-links--sections" aria-label="Secciones">
-        {sections.map((section) => (
-            <a key={section.href} href={section.href} onClick={follow(section)}>{section.label}</a>
-        ))}
-    </nav>
-);
+export const SiteSectionLinks = ({ sections }: { sections: SiteSection[] }) => {
+    const { pathname } = useLocation();
+    return (
+        <nav className="nav-links nav-links--sections" aria-label="Secciones">
+            {sections.map((section) => (
+                <a
+                    key={section.href}
+                    href={section.href}
+                    onClick={follow(section)}
+                    aria-current={section.href === pathname ? 'page' : undefined}
+                >
+                    {section.label}
+                </a>
+            ))}
+        </nav>
+    );
+};
 
 interface SiteMenuProps {
     sections: SiteSection[];

@@ -1,7 +1,8 @@
 /* ============================================================================
-   Mari's Nails Academy — sistema de diseño (#30)
-   Paleta: rosa + dorado. Claro "mixto" (crema con toque rosa, texto vino);
-   oscuro vino. Fuentes: Kaushan Script (títulos) + DM Sans (texto).
+   Mari's Nails Academy — sistema de diseño "Revista suave" (A2)
+   Paleta: fucsia del logo + dorado para logros. Claro plata satinada, tinta
+   casi negra; oscuro carbón. Fuentes: Bodoni Moda (títulos), Playfair Display
+   itálica (acentos), Montserrat (texto).
 
    Reglas — ningún color se escribe a mano fuera de este bloque de tokens
    (lo comprueba scripts/check-design-tokens.mjs en CI):
@@ -18,17 +19,18 @@
 /* --- DESIGN TOKENS --- */
 :root {
   /* Escalas de la marca (iguales en ambos temas). Los tonos 50–200 son las
-     superficies suaves; 500 es el color de marca; 600–900, los profundos. */
-  --rose-50: #fdf1f6;
-  --rose-100: #fcecf2;
-  --rose-200: #f7cadb;
-  --rose-300: #f19cbf;
-  --rose-400: #ea6aa1;
-  --rose-500: #e84393;
-  --rose-600: #d6337f;
-  --rose-700: #b0245f;
-  --rose-800: #8a1d52;
-  --rose-900: #5c1337;
+     superficies suaves; 500 es el fucsia neón del logo; 600–900, los profundos.
+     El 500 solo decora: texto blanco encima no llega a 4.5:1 (usar 600). */
+  --rose-50: #fff3fa;
+  --rose-100: #ffe3f4;
+  --rose-200: #ffc2e8;
+  --rose-300: #ff8fd6;
+  --rose-400: #ff4fc0;
+  --rose-500: #ff00aa;
+  --rose-600: #d1008b;
+  --rose-700: #b0007a;
+  --rose-800: #86005c;
+  --rose-900: #5a003e;
   --gold-50: #faf4ea;
   --gold-100: #f8efe0;
   --gold-200: #ecd8b0;
@@ -44,14 +46,19 @@
   --primary: var(--rose-500);
   --primary-light: var(--rose-300);
   --primary-dark: var(--rose-700);
-  --primary-glow: rgba(214, 51, 127, 0.28);
+  --primary-glow: rgba(255, 0, 170, 0.3);
   --accent-text: var(--rose-700);
   --btn-primary: linear-gradient(135deg, var(--rose-600), var(--rose-700));
   /* Rosa sólido que lleva texto encima (chips, ítem activo): el 500 no da contraste. */
   --primary-strong: var(--rose-600);
   --text-on-primary: #ffffff;
+  /* Degradado para TEXTO (títulos con acento): todos sus tonos pasan 4.5:1. */
+  --accent-paint: linear-gradient(100deg, var(--rose-800) 0%, var(--rose-700) 50%, var(--rose-800) 100%);
+  /* Versión animada para titulares grandes: un reflejo recorre la palabra
+     (background-size 200% + @keyframes accent-sheen). */
+  --accent-sheen: linear-gradient(100deg, var(--rose-800) 0%, var(--rose-600) 18%, var(--rose-500) 26%, var(--rose-600) 34%, var(--rose-800) 50%, var(--rose-600) 68%, var(--rose-500) 76%, var(--rose-600) 84%, var(--rose-800) 100%);
 
-  /* Dorado — anclado al del logo */
+  /* Dorado — se reserva para logros: certificados, aprobados, renovaciones. */
   --gold: var(--gold-500);
   --gold-light: var(--gold-300);
   --gold-dark: var(--gold-600);
@@ -62,41 +69,41 @@
      por eso este token NO se sobreescribe en dark: siempre es oscuro. */
   --text-on-gold: #2d1b14;
 
-  /* Superficies — tema claro "mixto": crema con un toque rosa. La marca va
-     en la base, no solo en los botones; el blanco puro no se usa. */
-  --bg: #f8ede6;
-  --bg-elevated: #fffbf7;
-  --surface: #f5e8e0;
-  --surface-sunken: #f0e0d6;
-  --surface-rose: #f9e0e8;
-  --surface-gold: #f5e7cf;
-  --border: #ead6c8;
-  --border-strong: #d9bda6;
+  /* Superficies — tema claro: plata fría (el satinado vive en --body-glow);
+     las tarjetas son blancas y se separan por sombra, no por color. */
+  --bg: #f4f3f5;
+  --bg-elevated: #ffffff;
+  --surface: #f8f7f9;
+  --surface-sunken: #ecebef;
+  --surface-rose: #fdeef7;
+  --surface-gold: #f6eedd;
+  --border: rgba(27, 18, 23, 0.1);
+  --border-strong: rgba(27, 18, 23, 0.2);
 
-  /* Texto: vino muy oscuro, el mismo vino que es fondo en el tema oscuro. */
-  --text-primary: #3a1a22;
-  --text-secondary: #634250;
-  --text-muted: #775962;
-  --title: #7a1c48;
+  /* Texto: tinta casi negra con un tinte vino. */
+  --text-primary: #1b1217;
+  --text-secondary: #4d434b;
+  --text-muted: #655a63;
+  --title: #1b1217;
 
-  /* Estados armonizados con la marca: error rosa vino, aviso dorado. */
+  /* Estados: error vino, aviso dorado. */
   --danger: #a8264f;
   --danger-soft: #fbe8ee;
-  --success: #2f7a4f;
+  --success: #286b45;
   --success-soft: #e7f3ec;
   --warning: #7f5e1f;
   --warning-soft: #f8eedb;
-  --focus-ring: rgba(214, 51, 127, 0.45);
+  --focus-ring: rgba(255, 0, 170, 0.45);
   /* Texto sobre un estado SÓLIDO (insignia "vencido", "aprobar"): en oscuro
      los estados son claros, así que el blanco no contrasta; esto sí. */
   --text-on-status: var(--bg-elevated);
 
   /* Velos sobre fotos y modales, y fondo de editores de imagen: oscuros en
      ambos temas a propósito, para que la imagen mande. */
-  --overlay: rgba(20, 8, 12, 0.55);
-  --overlay-strong: rgba(20, 8, 12, 0.8);
-  --media-bg: #120a0d;
-  --shadow-color: rgb(58, 26, 34);
+  --overlay: rgba(18, 12, 16, 0.55);
+  --overlay-strong: rgba(18, 12, 16, 0.8);
+  --media-bg: #121014;
+  --shadow-color: rgb(27, 18, 23);
 
   /* Marcas de terceros: no siguen nuestra paleta, pero quedan declaradas. */
   --brand-whatsapp: #25d366;
@@ -105,21 +112,28 @@
   --brand-instagram-gradient: linear-gradient(135deg, #f58529 0%, #dd2a7b 50%, #8134af 100%);
 
   /* Effects */
-  --shadow-sm: 0 1px 3px rgba(58, 26, 34, 0.05), 0 1px 2px rgba(58, 26, 34, 0.06);
-  --shadow-md: 0 4px 16px rgba(58, 26, 34, 0.07), 0 2px 4px rgba(58, 26, 34, 0.04);
-  --shadow-lg: 0 12px 40px rgba(58, 26, 34, 0.10), 0 4px 12px rgba(58, 26, 34, 0.05);
-  --shadow-xl: 0 24px 60px rgba(58, 26, 34, 0.14), 0 8px 20px rgba(58, 26, 34, 0.06);
-  --shadow-glow: 0 8px 24px var(--primary-glow);
+  --shadow-sm: 0 1px 3px rgba(27, 18, 23, 0.05), 0 1px 2px rgba(27, 18, 23, 0.05);
+  --shadow-md: 0 1px 2px rgba(27, 18, 23, 0.04), 0 14px 34px -20px rgba(27, 18, 23, 0.25);
+  --shadow-lg: 0 2px 4px rgba(27, 18, 23, 0.04), 0 24px 44px -20px rgba(27, 18, 23, 0.28);
+  --shadow-xl: 0 24px 60px rgba(27, 18, 23, 0.16), 0 8px 20px rgba(27, 18, 23, 0.06);
+  --shadow-glow: 0 10px 26px -12px rgba(255, 0, 170, 0.6);
   --shadow-gold: 0 8px 32px var(--gold-glow);
+  /* Destello que cruza el botón principal al pasar el mouse. */
+  --sheen: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  /* Banda oscura (pie de página): igual en ambos temas, como el de la revista. */
+  --band: linear-gradient(180deg, #2c292c 0%, #141214 100%);
+  --band-text: #f2eef1;
+  --band-muted: #b9adb6;
+  /* Satinado plata: bandas en diagonal + un reflejo fucsia en la esquina. */
   --body-glow:
-    radial-gradient(ellipse 70% 55% at 100% 0%, rgba(232, 67, 147, 0.18) 0%, transparent 60%),
-    radial-gradient(ellipse 65% 55% at 0% 100%, rgba(205, 158, 85, 0.24) 0%, transparent 58%),
-    radial-gradient(ellipse 45% 35% at 0% 0%, rgba(231, 198, 135, 0.18) 0%, transparent 55%);
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(255, 0, 170, 0.07) 0%, transparent 60%),
+    linear-gradient(118deg, #f8f7f9 0%, #efeef1 26%, #f9f8fa 44%, #ecebef 70%, #f5f4f6 100%);
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
-  --radius-lg: 1.25rem;
-  --radius-xl: 1.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.125rem;
+  --radius-btn: 0.75rem;
   --radius-full: 9999px;
 
   /* Spacing scale (base 0.25rem). Usar estos tokens en lugar de valores
@@ -135,8 +149,9 @@
   --space-12: 6rem;
 
   /* Typography */
-  --font-heading: 'Kaushan Script', cursive;
-  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Bodoni Moda', Georgia, serif;
+  --font-accent: 'Playfair Display', Georgia, serif;
+  --font-body: 'Montserrat', system-ui, -apple-system, sans-serif;
 
   /* Transitions */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -162,6 +177,8 @@
   */
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
   --tab-bar-height: 56px;  /* barra inferior de la alumna, sin el margen del iPhone */
+  /* Alto real de la barra: crece con letra grande (ícono 30px + 1.1rem de texto) y suma su borde. */
+  --tab-bar-space: calc(max(var(--tab-bar-height), 30px + 1.1rem) + 1px);
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
   /* Marco de página: la cabecera y TODO el contenido arrancan en la misma
      vertical que el logo. --page-pad-x se achica en móvil (más abajo). */
@@ -201,10 +218,12 @@
 /* === DARK MODE === */
 [data-theme='dark'] {
   --primary: var(--rose-500);
-  --primary-light: #f7b3cf;
+  --primary-light: var(--rose-300);
   --primary-dark: var(--rose-600);
-  --primary-glow: rgba(214, 51, 127, 0.35);
-  --accent-text: #f48fb8;
+  --primary-glow: rgba(255, 0, 170, 0.4);
+  --accent-text: #ff5cc8;
+  --accent-paint: linear-gradient(100deg, #ff5cc8 0%, var(--rose-300) 50%, #ff5cc8 100%);
+  --accent-sheen: linear-gradient(100deg, var(--rose-500) 0%, var(--rose-300) 18%, #ffd6f0 26%, var(--rose-300) 34%, var(--rose-500) 50%, var(--rose-300) 68%, #ffd6f0 76%, var(--rose-300) 84%, var(--rose-500) 100%);
 
   --gold: #D8AC63;
   --gold-light: #ECD094;
@@ -212,19 +231,19 @@
   --gold-glow: rgba(216, 172, 99, 0.2);
   --gold-text: #e2bd7c;
 
-  /* Vino de verdad: superficies que se distinguen entre sí. */
-  --bg: #150b0f;
-  --bg-elevated: #20121a;
-  --surface: #2a1822;
-  --surface-sunken: #1a0e14;
-  --surface-rose: #331826;
-  --surface-gold: #2b2117;
-  --border: rgba(226, 189, 124, 0.14);
-  --border-strong: rgba(226, 189, 124, 0.26);
+  /* Carbón: superficies que se distinguen entre sí; el neón del logo resalta. */
+  --bg: #121014;
+  --bg-elevated: #1e1b20;
+  --surface: #252128;
+  --surface-sunken: #161417;
+  --surface-rose: #2e1727;
+  --surface-gold: #2a2318;
+  --border: rgba(242, 238, 241, 0.1);
+  --border-strong: rgba(242, 238, 241, 0.2);
 
-  --text-primary: #f6ecee;
-  --text-secondary: #d0b9bf;
-  --text-muted: #a58b93;
+  --text-primary: #f2eef1;
+  --text-secondary: #cfc5cc;
+  --text-muted: #a89ea6;
   --title: var(--text-primary);
 
   --danger: #f5a3bd;
@@ -233,16 +252,32 @@
   --success-soft: #16271e;
   --warning: #ecc98a;
   --warning-soft: #2e2414;
-  --focus-ring: rgba(244, 143, 184, 0.5);
+  --focus-ring: rgba(255, 92, 200, 0.55);
   --shadow-color: rgb(0, 0, 0);
 
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+  --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 36px -20px rgba(0, 0, 0, 0.8);
+  --shadow-lg: 0 2px 4px rgba(0, 0, 0, 0.3), 0 26px 46px -20px rgba(0, 0, 0, 0.85);
   --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 10px 26px -12px rgba(255, 0, 170, 0.7);
+  --band: linear-gradient(180deg, #0b0a0b 0%, #000000 100%);
+  --band-muted: #a89ea6;
   --body-glow:
-    radial-gradient(ellipse 70% 50% at 100% 0%, rgba(214, 51, 127, 0.16) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 0% 100%, rgba(205, 158, 85, 0.10) 0%, transparent 55%);
+    radial-gradient(ellipse 60% 45% at 100% 0%, rgba(255, 0, 170, 0.1) 0%, transparent 60%),
+    linear-gradient(118deg, #131114 0%, #1d1a1f 24%, #141215 40%, #221e24 58%, #151316 76%, #1b181d 100%);
+}
+
+/* Solo para lectores de pantalla: presente en el texto, invisible en pantalla. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* === RESET UNIVERSAL ===
@@ -320,6 +355,10 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Bodoni Moda con tamaño óptico fijo (18): el automático afinaba los filetes de
+     los titulares grandes hasta casi borrarlos. Se hereda; las demás fuentes no
+     tienen eje opsz. */
+  font-variation-settings: 'opsz' 18;
   transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out);
 }
 
@@ -334,6 +373,16 @@ h6 {
   line-height: 1.2;
   margin-top: 0;
   font-weight: 700;
+}
+
+/* Los títulos llevan la letra de revista; h4–h6 quedan en la de texto
+   porque son rótulos chicos de interfaz. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.005em;
 }
 
 button {
@@ -353,7 +402,8 @@ a {
 
 /* === HEADER / NAVBAR — Frosted Glass === */
 .header {
-  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  background: color-mix(in srgb, var(--bg-elevated) 76%, transparent);
+  box-shadow: 0 8px 30px -24px var(--shadow-color);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
@@ -374,32 +424,63 @@ a {
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  letter-spacing: -0.01em;
-  transition: opacity 0.3s ease;
-}
-
-@media (hover: hover) {
-  .logo:hover {
-    opacity: 0.85;
-  }
+  gap: 0.75rem;
+  color: var(--text-primary);
 }
 
 .logo__img {
-  height: 48px;
-  width: auto;
+  width: 46px;
+  height: 46px;
+  flex: none;
+  filter: drop-shadow(0 0 6px var(--primary-glow));
+  transition: transform var(--dur-slow) var(--ease-out), filter var(--dur-slow) var(--ease-out);
+}
+
+@media (hover: hover) {
+  .logo:hover .logo__img {
+    transform: rotate(-6deg) scale(1.05);
+    filter: drop-shadow(0 0 12px var(--primary-glow));
+  }
 }
 
 .logo__name {
   font-family: var(--font-heading);
-  font-size: 1.3rem;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.logo__name em {
+  font-family: var(--font-accent);
   font-weight: 700;
-  background: linear-gradient(135deg, var(--gold) 0%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  padding-right: 0.2em;
-  overflow: visible;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--accent-text);
+}
+
+/* Hasta 1024px el nombre no cabe junto al menú en mayúsculas (choca en móvil
+   y tablet); queda solo el círculo, y el nombre sigue para lectores de pantalla. */
+@media (max-width: 768px) {
+  /* justify-self: sin él, el enlace ocupaba toda la celda del grid y un toque
+     en el hueco vacío de la cabecera llevaba al inicio. */
+  .logo {
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    justify-self: start;
+  }
+}
+
+@media (max-width: 1024px) {
+  .logo__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
 
 .nav-links {
@@ -457,6 +538,25 @@ a {
   transition: color 0.3s ease;
 }
 
+/* Destinos del menú: rótulo de revista (mayúsculas chicas y espaciadas). */
+:is(.nav-links--sections, .nav-links--student) a {
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.nav-links--student a.active::after,
+.nav-links--sections a[aria-current='page']::after {
+  width: 100%;
+}
+
+.nav-links--sections a[aria-current='page'] {
+  color: var(--accent-text);
+}
+
 .nav-links a::after {
   content: '';
   position: absolute;
@@ -464,7 +564,7 @@ a {
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
   border-radius: 2px;
   transition: width 0.3s var(--ease-out);
 }
@@ -492,7 +592,7 @@ a {
 /* Grid de dos columnas: texto | foto */
 .hero__inner {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 3rem;
   align-items: center;
 }
@@ -505,45 +605,33 @@ a {
 }
 
 /* ── Columna foto ── */
+/* Foto enmarcada como en la revista: paspartú blanco y filete fucsia. */
 .hero__photo {
   position: relative;
-  height: 540px;
-  /* El mask hace que la foto se difumine hacia la izquierda
-     donde se une con el texto, sin corte visible */
-  -webkit-mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 28%,
-    black 100%
-  );
-  mask-image: linear-gradient(
-    to right,
-    transparent 0%,
-    black 28%,
-    black 100%
-  );
+  width: 100%;
+  max-width: 460px;
+  aspect-ratio: 4 / 5;
+  justify-self: end;
+  padding: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
 }
 
-/* La imagen real — cuando Maria entregue la foto */
 .hero__photo-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 0 20px 20px 0;
+  border-radius: var(--radius-sm);
 }
 
-/* Placeholder hasta que llegue la foto real */
+/* Mientras no llegue la foto: banda oscura con el logo, no un recuadro vacío. */
 .hero__photo-placeholder {
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    135deg,
-    color-mix(in srgb, var(--primary) 8%, transparent) 0%,
-    color-mix(in srgb, var(--gold) 12%, transparent) 50%,
-    color-mix(in srgb, var(--primary) 6%, transparent) 100%
-  );
-  border: 2px dashed color-mix(in srgb, var(--primary) 25%, transparent);
-  border-radius: 20px;
+  background: var(--band);
+  border-radius: var(--radius-sm);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -552,34 +640,124 @@ a {
 }
 
 .hero__photo-emoji {
-  font-size: 4rem;
-  opacity: 0.4;
+  filter: drop-shadow(0 0 18px var(--primary-glow));
+  animation: neon-pulse 4s ease-in-out infinite;
+}
+
+[data-theme='dark'] .hero__photo-placeholder {
+  background: radial-gradient(ellipse at center, var(--surface-rose) 0%, var(--surface-sunken) 75%);
 }
 
 .hero__photo-label {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--band-muted);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
 /* ── Heading ── */
+/* Titular de portada de revista: mayúsculas de moda + itálica metálica. */
 .hero__heading {
-  font-size: clamp(3.2rem, 7vw, 6.5rem);
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.02em;
+  font-size: clamp(3rem, 7vw, 6rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: 0;
+  text-transform: uppercase;
   color: var(--text-primary);
   margin-bottom: 1.5rem;
-  font-family: var(--font-body);
   font-family: var(--font-heading);
 }
 
-/* La palabra en cursiva recibe el color primario */
 .hero__heading em {
+  font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
-  color: var(--accent-text);
+  font-size: 0.72em;
+  text-transform: none;
+  padding-right: 0.08em;
+}
+
+/* Itálica metálica con reflejo: usada en titulares grandes. */
+.hero__heading em,
+.section-title em,
+.home-about__name,
+.stat-value {
+  background: var(--accent-sheen);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: accent-sheen 7s linear infinite;
+}
+
+@keyframes accent-sheen {
+  from { background-position: 0% 50%; }
+  to { background-position: 200% 50%; }
+}
+
+/* Titular de sección de revista: MAYÚSCULAS + palabra en itálica metálica. */
+.section-title {
+  text-wrap: balance;
+  font-family: var(--font-heading);
+  font-size: clamp(2.2rem, 1.4rem + 3vw, 3.6rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  margin: 0 0 0.9rem;
+}
+
+.section-title em {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.72em;
+  text-transform: none;
+  padding-right: 0.08em;
+}
+
+.home-faq .section-title,
+.home-contact .section-title {
+  text-align: center;
+}
+
+/* Onda fucsia que cruza la portada; se dibuja sola al cargar. */
+.hero__wave {
+  position: absolute;
+  left: -10%;
+  top: 62%;
+  width: 120%;
+  height: 140px;
+  pointer-events: none;
+  fill: none;
+}
+
+.hero__wave path {
+  stroke-dasharray: 1400;
+  animation: hero-wave-draw 2.4s cubic-bezier(0.6, 0, 0.2, 1) 0.2s both;
+}
+
+.hero__wave path:first-child {
+  stroke: var(--primary);
+  stroke-width: 1.3;
+  opacity: 0.75;
+}
+
+.hero__wave path:last-child {
+  stroke: var(--text-primary);
+  stroke-width: 0.6;
+  opacity: 0.2;
+}
+
+@keyframes hero-wave-draw {
+  from { stroke-dashoffset: 1400; }
+  to { stroke-dashoffset: 0; }
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Descripción ── */
@@ -610,11 +788,11 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  padding: 0.25rem 0.7rem;
+  padding: 0.3rem 0.75rem;
   border-radius: var(--radius-full);
   border: 1px solid transparent;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
 }
@@ -669,7 +847,7 @@ a {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-btn);
   font: inherit;
   font-weight: 600;
   text-decoration: none;
@@ -682,15 +860,15 @@ a {
 .btn-primary {
   background: var(--btn-primary);
   color: var(--text-on-primary);
-  padding: 0.85rem 2rem;
+  padding: 0.85rem 1.6rem;
   font-size: 0.92rem;
-  letter-spacing: 0.02em;
-  box-shadow: 0 4px 20px var(--primary-glow);
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-glow);
   border: none;
   position: relative;
   overflow: hidden;
-  /* z-index: 0 crea un contexto de apilamiento para que el overlay dorado
-     (::before, z-index: -1) quede DETRÁS del texto y no lo tape. */
+  /* z-index: 0 crea un contexto de apilamiento para que el destello
+     (::before, z-index: -1) pase DETRÁS del texto y no lo tape. */
   z-index: 0;
 }
 
@@ -698,18 +876,18 @@ a {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--btn-gold);
-  opacity: 0;
-  transition: opacity 0.4s ease;
+  background: var(--sheen);
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
   z-index: -1;
 }
 
 .btn-secondary {
-  background: var(--bg-elevated);
+  background: transparent;
   color: var(--text-primary);
-  padding: 0.65rem 1.5rem;
+  padding: 0.65rem 1.4rem;
   font-size: 0.9rem;
-  border: 1.5px solid var(--border-strong);
+  border: 1.5px solid var(--text-primary);
 }
 
 .btn-gold {
@@ -723,27 +901,25 @@ a {
 
 .btn-ghost {
   background: none;
-  color: var(--accent-text);
+  color: var(--text-secondary);
   padding: 0.6rem 1.1rem;
   font-size: 0.9rem;
   border: none;
 }
 
 @media (hover: hover) {
-  /* El sello del primario: al pasar el mouse se revela el dorado; el texto
-     pasa a oscuro porque el blanco no se lee sobre dorado. */
+  /* El sello del primario: un destello lo cruza al pasar el mouse. */
   .btn-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 32px var(--primary-glow);
-    color: var(--text-on-gold);
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px -12px var(--primary);
   }
 
   .btn-primary:hover::before {
-    opacity: 1;
+    transform: translateX(120%);
   }
 
   .btn-secondary:hover {
-    border-color: var(--primary);
+    border-color: var(--accent-text);
     color: var(--accent-text);
     background: var(--surface-rose);
     transform: translateY(-2px);
@@ -756,6 +932,7 @@ a {
 
   .btn-ghost:hover {
     background: var(--surface-rose);
+    color: var(--accent-text);
   }
 }
 
@@ -792,7 +969,7 @@ a {
   gap: 0.5rem;
   padding: 0.75rem 1.6rem;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-btn);
   background: var(--success);
   color: var(--text-on-status);
   font: inherit;
@@ -928,11 +1105,14 @@ a {
   margin-bottom: 3.5rem;
 }
 
+/* Foto enmarcada: paspartú blanco y filete fucsia, como en la revista. */
 .cd-hero__visual {
   border-radius: var(--radius-xl);
   overflow: hidden;
   aspect-ratio: 16 / 10;
-  background: var(--surface);
+  padding: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--primary);
   box-shadow: var(--shadow-lg);
 }
 
@@ -941,6 +1121,7 @@ a {
   height: 100%;
   object-fit: cover;
   display: block;
+  border-radius: var(--radius-sm);
 }
 
 .cd-hero__placeholder {
@@ -950,7 +1131,8 @@ a {
   align-items: center;
   justify-content: center;
   font-size: 4rem;
-  background: linear-gradient(135deg, var(--surface), var(--bg-elevated));
+  border-radius: var(--radius-sm);
+  background: var(--band);
 }
 
 .cd-hero__content {
@@ -962,8 +1144,10 @@ a {
 
 .cd-hero__title {
   font-family: var(--font-heading);
-  font-size: 2.4rem;
-  line-height: 1.2;
+  font-size: clamp(2.2rem, 1.4rem + 2.6vw, 3.4rem);
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 1;
   color: var(--text-primary);
   margin: 0;
 }
@@ -986,12 +1170,12 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
   padding: 0.5rem 1rem;
   border-radius: var(--radius-full);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
 }
 
@@ -1017,25 +1201,27 @@ a {
 /* ── Sección: encabezado ── */
 .cd-section-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem 1rem;
   margin-bottom: 2rem;
 }
 
 .cd-section-title {
   font-family: var(--font-heading);
-  font-size: 1.6rem;
+  font-size: clamp(1.7rem, 1.3rem + 1.4vw, 2.3rem);
   color: var(--text-primary);
   margin: 0;
 }
 
 .cd-section-badge {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--primary) 8%, transparent));
   color: var(--accent-text);
   font-size: 0.8rem;
   font-weight: 600;
   padding: 0.3rem 0.9rem;
   border-radius: var(--radius-full);
+  white-space: nowrap;
 }
 
 /* ── Timeline de lecciones ── */
@@ -1048,15 +1234,7 @@ a {
 
 /* Línea conectora vertical */
 .cd-timeline::before {
-  content: '';
-  position: absolute;
-  left: 20px;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, var(--primary), var(--gold));
-  opacity: 0.25;
-  border-radius: 1px;
+  content: none;
 }
 
 .cd-timeline__item {
@@ -1080,18 +1258,21 @@ a {
   z-index: 1;
 }
 
+/* Número grande en la letra de revista, con la tinta metálica. */
 .cd-timeline__number {
-  width: 42px;
-  height: 42px;
+  min-width: 42px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--primary), var(--gold));
-  color: var(--text-on-primary);
-  font-weight: 700;
-  font-size: 0.9rem;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent);
+  padding-top: 0.9rem;
+  font-family: var(--font-heading);
+  font-weight: 500;
+  font-size: 2.2rem;
+  line-height: 1;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   flex-shrink: 0;
 }
 
@@ -1100,6 +1281,7 @@ a {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.5rem;
   transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     transform var(--dur-base) var(--ease-out);
@@ -1122,7 +1304,8 @@ a {
 }
 
 .cd-timeline__title {
-  font-size: 1.05rem;
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
   margin: 0;
@@ -1138,11 +1321,11 @@ a {
 .cd-timeline__duration {
   font-family: var(--font-body);
   font-variant-numeric: tabular-nums;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 10%, transparent), color-mix(in srgb, var(--primary) 5%, transparent));
+  background: var(--bg-elevated);
   padding: 0.3rem 0.8rem;
   border-radius: var(--radius-full);
   font-size: 0.78rem;
-  color: var(--gold-text);
+  color: var(--text-secondary);
   font-weight: 600;
   border: 1px solid var(--border);
 }
@@ -1165,8 +1348,8 @@ a {
 }
 
 .cd-timeline__badge--recorded {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 12%, transparent), color-mix(in srgb, var(--primary) 6%, transparent));
-  color: var(--gold-text);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
   border: 1px solid var(--border);
 }
 
@@ -1226,8 +1409,8 @@ a {
   top: 0;
   left: 0;
   right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  height: 3px;
+  background: var(--accent-paint);
 }
 
 .cd-purchase-card__price {
@@ -1247,7 +1430,7 @@ a {
 .cd-purchase-card__amount {
   font-family: var(--font-heading);
   font-size: 3rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary);
   line-height: 1;
 }
@@ -1259,12 +1442,9 @@ a {
   font-weight: 600;
   letter-spacing: 0.02em;
   border: none;
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, var(--primary), var(--gold));
-  /* Texto OSCURO en todos los estados: el degradado termina en dorado claro y
-     el blanco desaparecía en reposo/focus/disabled (no solo en hover). El tono
-     oscuro es legible sobre el rosa y sobre el dorado, en claro y oscuro. */
-  color: var(--text-on-gold);
+  border-radius: var(--radius-btn);
+  background: var(--btn-primary);
+  color: var(--text-on-primary);
   cursor: pointer;
   transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out);
@@ -1384,9 +1564,8 @@ a {
     gap: 0.75rem;
   }
   .cd-timeline__number {
-    width: 36px;
-    height: 36px;
-    font-size: 0.8rem;
+    min-width: 36px;
+    font-size: 1.6rem;
   }
   .cd-timeline::before {
     left: 17px;
@@ -1403,14 +1582,62 @@ a {
 
 /* === FOOTER — Elegant === */
 .footer {
-  background: var(--bg-elevated);
+  background: var(--band);
   padding: 3.5rem 0;
   margin-top: 6rem;
   text-align: center;
-  color: var(--text-muted);
-  border-top: 1px solid var(--border);
+  color: var(--band-muted);
   font-size: 0.9rem;
   position: relative;
+}
+
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 2rem;
+}
+
+.footer__inner p {
+  margin: 0;
+}
+
+.footer__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  max-width: 100%;
+  color: var(--band-text);
+}
+
+.footer__brand .logo__name {
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+  /* En 280-320px el nombre en mayúsculas no cabía junto al logo. */
+  font-size: clamp(0.95rem, 5.5vw, 1.25rem);
+  white-space: normal;
+}
+
+/* La banda es oscura en ambos temas: el acento va en el rosa claro. */
+.footer__brand .logo__name em {
+  color: var(--rose-300);
+}
+
+.footer__logo {
+  width: 44px;
+  height: 44px;
+  filter: drop-shadow(0 0 10px var(--primary-glow));
+}
+
+@media (max-width: 640px) {
+  .footer__inner {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 
 .footer::before {
@@ -1420,7 +1647,7 @@ a {
   left: 10%;
   right: 10%;
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold-light), var(--primary-light), var(--gold-light), transparent);
+  background: linear-gradient(90deg, transparent, var(--primary-light), var(--primary), var(--primary-light), transparent);
 }
 
 /* === VIDEO PLAYER === */
@@ -1436,7 +1663,7 @@ a {
   background: var(--bg-elevated);
   padding: 2.5rem;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
   position: relative;
   overflow: hidden;
@@ -1449,7 +1676,74 @@ a {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: var(--accent-paint);
+}
+
+/* Páginas de acceso (login, registro, recuperar contraseña). */
+.auth-layout {
+  max-width: 520px;
+  margin-top: 4rem;
+  margin-bottom: 3rem;
+}
+
+.auth-layout__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.auth-layout__logo {
+  width: 104px;
+  height: 104px;
+  margin-bottom: 1rem;
+  animation: neon-pulse 4s ease-in-out infinite;
+}
+
+/* Pulso neón lento del logo, como un letrero de salón. */
+@keyframes neon-pulse {
+  0%, 100% { filter: drop-shadow(0 0 12px var(--primary-glow)); }
+  50% { filter: drop-shadow(0 0 24px var(--primary-glow)); }
+}
+
+.auth-layout__title {
+  text-wrap: balance;
+  font-size: clamp(2rem, 1.6rem + 1.6vw, 2.6rem);
+  font-weight: 600;
+  margin: 0 0 0.35rem;
+}
+
+.auth-layout__title em {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em;
+}
+
+.auth-layout__subtitle {
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .auth-layout {
+    margin-top: 1.5rem;
+  }
+
+  /* Con los 2.5rem de la tarjeta, en 280px los campos quedaban de 160px. */
+  .auth-layout > .card {
+    padding: 2rem clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .auth-layout__logo {
+    width: 84px;
+    height: 84px;
+  }
 }
 
 /* Global input styles — every text-like and date/time type, or the ones
@@ -1472,10 +1766,10 @@ a {
 ) {
   font-family: var(--font-body);
   font-size: var(--input-font-size);
-  background: var(--surface);
+  background: var(--bg-elevated);
   color: var(--text-primary);
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-btn);
   padding: 0.8rem 1rem;
   width: 100%;
   box-sizing: border-box;
@@ -1487,7 +1781,7 @@ input:focus,
 textarea:focus,
 select:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px var(--primary-glow);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 15%, transparent);
 }
 
 /* Native date/time pickers and their calendar icon follow the theme. */
@@ -1598,11 +1892,11 @@ label {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, var(--gold-light), var(--surface-sunken));
+  background: var(--surface-sunken);
   transition: background var(--dur-slow) var(--ease-out), border-color var(--dur-slow) var(--ease-out),
     filter var(--dur-slow) var(--ease-out);
   border-radius: 34px;
-  border: 2px solid transparent;
+  border: 1px solid var(--border-strong);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1699,7 +1993,7 @@ input:checked+.slider .icon-moon {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--primary-light), var(--gold));
+  background: linear-gradient(180deg, var(--primary-light), var(--primary));
   border-radius: var(--radius-full);
   /* Los gradientes no se interpolan en una transición de 'background', así que
      el oscurecido al hover se anima con 'filter', que sí es transicionable. */
@@ -1736,15 +2030,14 @@ input:checked+.slider .icon-moon {
 
   /* En móvil: una sola columna, foto debajo del texto */
   .hero__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 2rem;
   }
 
   /* En móvil la foto se difumina de abajo hacia arriba en vez de izquierda a derecha */
   .hero__photo {
-    height: 280px;
-    -webkit-mask-image: linear-gradient(to top, transparent 0%, black 30%, black 100%);
-    mask-image: linear-gradient(to top, transparent 0%, black 30%, black 100%);
+    max-width: 340px;
+    justify-self: center;
   }
 
   .hero__heading {
@@ -1798,24 +2091,9 @@ input:checked+.slider .icon-moon {
     font-size: 2.2rem;
   }
 
-  /* Nombre en dos líneas: en una sola, logo + tema + "Ingresar" no caben
-     en 360px y los controles bajaban a otra fila. */
-  .logo {
-    gap: 0.4rem;
-  }
-
   .logo__img {
-    height: 34px;
-    width: auto;
-  }
-
-  /* El padding extra deja sitio a la cola de la cursiva: el texto con
-     degradado se recorta en el borde de la caja. */
-  .logo__name {
-    font-size: 1rem;
-    line-height: 1.05;
-    max-width: 7em;
-    padding-right: 0.5em;
+    width: 40px;
+    height: 40px;
   }
 
   .nav-links {
@@ -1857,11 +2135,11 @@ input:checked+.slider .icon-moon {
   grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
   gap: 0.6rem 1rem;
-  padding: 0.75rem 1rem;
+  padding: 0.9rem 1.25rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
   transition: border-color var(--dur-base) var(--ease-out);
 }
 
@@ -1879,8 +2157,11 @@ input:checked+.slider .icon-moon {
 }
 
 .admin-row__title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-primary);
+  line-height: 1.3;
+  color: var(--title);
   text-decoration: none;
   overflow-wrap: anywhere;
 }
@@ -1898,6 +2179,7 @@ a.admin-row__title:active {
 .admin-row__meta {
   font-size: 0.8rem;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 .admin-row__actions {
@@ -1912,6 +2194,38 @@ a.admin-row__title:active {
   grid-template-columns: minmax(0, 1fr) auto;
 }
 
+/* Estado de la fila con su punto: rosa con brillo si está activo, neutro si no. */
+.admin-row > .badge {
+  justify-self: start;
+}
+
+.admin-row > .badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.admin-row > .badge--rose {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+}
+
+.admin-row > .badge--rose::before {
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary-glow);
+}
+
+.admin-row > .badge--neutral {
+  background: transparent;
+  border-color: var(--border-strong);
+}
+
+.admin-row > .badge--neutral::before {
+  background: var(--text-muted);
+}
+
 @container admin-list (max-width: 44rem) {
   .admin-row,
   .admin-row:not(:has(> .badge)) {
@@ -1921,6 +2235,23 @@ a.admin-row__title:active {
   .admin-row__actions {
     grid-column: 1 / -1;
     justify-content: flex-start;
+  }
+}
+
+/* Lista de teléfono: el estado baja bajo los datos para que nombres y correos
+   no queden en una columna de pocos caracteres. */
+@container admin-list (max-width: 27rem) {
+  .admin-row,
+  .admin-row:not(:has(> .badge)) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* El título-enlace crece hacia arriba y abajo hasta el mínimo táctil sin mover la fila. */
+@media (max-width: 768px) {
+  a.admin-row__title {
+    padding-block: 0.7rem;
+    margin-block: -0.7rem;
   }
 }
 
@@ -2036,15 +2367,33 @@ input.input-code {
   max-width: var(--content-medium);
 }
 
-/* Admin page header */
+/* Cabecera de página: rótulo, título de revista con la palabra de acento en
+   itálica, y una línea de contexto. */
 .admin-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 2.25rem;
+}
+
+.admin-header .section-eyebrow {
+  margin-bottom: 0.6rem;
 }
 
 .admin-header h1 {
-  font-size: 2.4rem;
-  margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--primary) 60%, var(--gold) 100%);
+  font-size: clamp(2.1rem, 1.5rem + 2vw, 3.25rem);
+  margin-bottom: 0.6rem;
+  letter-spacing: -0.01em;
+  color: var(--title);
+  overflow-wrap: anywhere;
+}
+
+.admin-header h1 em,
+.admin-form h1 em {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.7em;
+  letter-spacing: 0;
+  padding-right: 0.08em;
+  background: var(--accent-paint);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -2055,12 +2404,31 @@ input.input-code {
   font-size: 1rem;
 }
 
+.admin-header p.section-eyebrow {
+  color: var(--accent-text);
+  font-size: 0.75rem;
+}
+
+/* Con la acción principal a la derecha ("Nuevo curso"); en teléfono baja. */
+.admin-header--action {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+}
+
+.admin-header__text {
+  flex: 1 1 22rem;
+  min-width: 0;
+}
+
 /* Dashboard grid of cards */
 /* auto-fill y no auto-fit: una tarjeta sola conserva el ancho de columna en
    vez de estirarse a toda la fila. */
 .admin-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: 1.25rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
 }
 
@@ -2137,55 +2505,42 @@ input.input-code {
   color: var(--text-muted);
 }
 
-/* Admin card module */
+/* Tarjeta blanca del admin (puertas del panel, formularios, calendario):
+   se separa del fondo por sombra, sin franja de color. */
 .admin-card {
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 1.75rem;
   border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out),
-    border-color var(--dur-slow) var(--ease-out);
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--dur-slow) var(--ease-out), transform var(--dur-slow) var(--ease-out);
   position: relative;
   overflow: hidden;
 }
 
-.admin-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
-  opacity: 0.6;
-  transition: opacity 0.3s ease;
-}
-
+/* Solo las puertas del panel se elevan: el resto de tarjetas no son clicables. */
 @media (hover: hover) {
-  .admin-card:hover {
-    box-shadow: var(--shadow-lg);
+  .admin-grid > .admin-card:hover {
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color) 4%, transparent), 0 24px 44px -20px var(--primary-glow);
     transform: translateY(-4px);
-    border-color: var(--border-strong);
-  }
-}
-
-@media (hover: hover) {
-  .admin-card:hover::before {
-    opacity: 1;
   }
 }
 
 .admin-card-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  color: var(--accent-text);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.1rem;
+}
+
+.admin-card-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .admin-card h3 {
@@ -2195,17 +2550,24 @@ input.input-code {
   color: var(--text-primary);
 }
 
+.admin-grid > .admin-card h3 {
+  font-size: 1.4rem;
+  color: var(--title);
+}
+
+/* Contador de pendientes: píldora fucsia con brillo. */
 .admin-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 6px;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
   margin-left: 0.5rem;
-  border-radius: 11px;
+  border-radius: var(--radius-full);
   background: var(--primary-strong);
   color: var(--text-on-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--primary) 50%, transparent);
   font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 700;
@@ -2325,27 +2687,22 @@ input.input-code {
 .admin-form {
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
-  padding: 2.5rem;
+  padding: 2.25rem;
   border: 1px solid var(--border);
   box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
 }
 
-.admin-form::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+.admin-form .section-eyebrow {
+  margin-bottom: 0.5rem;
 }
 
 .admin-form h1 {
-  font-size: 1.8rem;
-  margin-bottom: 0.25rem;
-  color: var(--text-primary);
+  font-size: clamp(1.9rem, 1.5rem + 1.2vw, 2.5rem);
+  margin-bottom: 0.35rem;
+  letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .admin-form__title {
@@ -2436,7 +2793,7 @@ input.input-code {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0 1rem;
   background: var(--surface);
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -2449,7 +2806,13 @@ input.input-code {
   cursor: pointer;
 }
 
+/* La etiqueta ocupa la fila y da el alto táctil: tocar el texto marca la casilla. */
 .checkbox-group label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-height: var(--touch-min);
+  padding-block: 0.4rem;
   margin: 0;
   cursor: pointer;
   font-weight: 500;
@@ -2491,6 +2854,7 @@ input.input-code {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   padding: 1.25rem 1.5rem;
   transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out),
     opacity var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out),
@@ -2500,7 +2864,6 @@ input.input-code {
 @media (hover: hover) {
   .admin-lesson-item:hover {
     border-color: var(--border-strong);
-    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -2532,6 +2895,16 @@ input.input-code {
   user-select: none; /* Evita que el texto se seleccione al arrastrar */
   touch-action: none; /* Necesario para que funcione en móvil con @dnd-kit */
   transition: color 0.15s ease;
+}
+
+@media (max-width: 768px) {
+  .drag-handle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+  }
 }
 
 @media (hover: hover) {
@@ -2573,7 +2946,7 @@ input.input-code {
   font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0 0 0.5rem;
 }
 
@@ -2585,7 +2958,7 @@ input.input-code {
 
 .certificate-preview__granted {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   margin: 0 0 0.35rem;
 }
 
@@ -2593,7 +2966,7 @@ input.input-code {
   font-family: var(--font-heading);
   font-size: 1.3rem;
   font-style: italic;
-  color: var(--gold-800);
+  color: var(--gold-text);
   margin: 0 0 0.75rem;
   line-height: 1.3;
 }
@@ -2601,7 +2974,7 @@ input.input-code {
 .certificate-preview__footer {
   font-size: 0.68rem;
   letter-spacing: 0.06em;
-  color: color-mix(in srgb, var(--gold) 70%, transparent);
+  color: var(--gold-text);
   margin: 0;
 }
 
@@ -2722,18 +3095,29 @@ input.input-code {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: var(--accent-text);
+  color: var(--text-muted);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   font-size: 0.9rem;
   margin-bottom: 1.5rem;
   transition: color var(--dur-base) var(--ease-out), transform var(--dur-base) var(--ease-out);
 }
 
+.back-link:active {
+  color: var(--accent-text);
+}
+
 @media (hover: hover) {
   .back-link:hover {
-    color: var(--gold-text);
+    color: var(--accent-text);
     transform: translateX(-3px);
+  }
+}
+
+@media (max-width: 768px) {
+  .back-link {
+    min-height: var(--touch-min);
+    margin-bottom: 0.75rem;
   }
 }
 
@@ -2795,28 +3179,35 @@ input.input-code {
 /* ── Corrections: agrupación por curso ──────────────────────────────── */
 
 .correction-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
 /* Entregas del curso al desplegar el grupo. */
 .correction-group__items {
   padding: 0.75rem;
-  background: var(--bg-elevated);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .correction-group-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.25rem;
-  background: var(--surface);
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
 }
 
 .correction-group-toggle {
   display: flex;
+  flex: 1 1 12rem;
+  min-width: 0;
+  min-height: var(--touch-min);
   align-items: center;
   gap: 0.6rem;
   background: none;
@@ -2843,12 +3234,18 @@ input.input-code {
   font-size: 1.1rem;
   color: var(--text-primary);
   margin: 0;
+  overflow-wrap: break-word;
 }
 
+.correction-group-header > .btn-primary {
+  flex-shrink: 0;
+}
+
+/* Pendiente = rosa; el dorado queda para lo aprobado. */
 .correction-group-count {
   font-family: var(--font-body);
   font-size: 0.8rem;
-  color: var(--gold-text);
+  color: var(--accent-text);
   font-weight: 600;
 }
 
@@ -2869,13 +3266,14 @@ input.filter-control,
 select.filter-control {
   flex: 1;
   min-width: 0;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border);
-  background: var(--surface);
+  min-height: 46px;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
   color: var(--text-primary);
   font-family: var(--font-body);
-  font-size: 0.85rem;
+  font-size: var(--input-font-size);
   cursor: pointer;
 }
 
@@ -2888,13 +3286,6 @@ input.filter-control[type="search"] {
   cursor: text;
 }
 
-/* Keep the 16px minimum on phones, or iOS zooms in when the field is tapped. */
-@media (max-width: 768px) {
-  input.filter-control,
-  select.filter-control {
-    font-size: 16px;
-  }
-}
 
 .history-pagination {
   display: flex;
@@ -2922,14 +3313,14 @@ input.filter-control[type="search"] {
 
 .review-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem;
   margin-top: 1.5rem;
 }
 
 @media (max-width: 768px) {
   .review-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 
@@ -2998,6 +3389,11 @@ input.filter-control[type="search"] {
   margin-bottom: 1rem;
 }
 
+.review-done-icon svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .review-done h2 {
   font-family: var(--font-heading);
   color: var(--text-primary);
@@ -3053,13 +3449,14 @@ input.filter-control[type="search"] {
 
 .review-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
   margin-top: 0.5rem;
 }
 
-/* Las dos decisiones se reparten el ancho: blancos grandes para el pulgar. */
+/* Las dos decisiones se reparten el ancho; en pantallas angostas se apilan. */
 .review-actions__btn {
-  flex: 1;
+  flex: 1 1 9rem;
   min-height: var(--touch-min);
 }
 
@@ -3190,6 +3587,8 @@ input.filter-control[type="search"] {
   align-items: center;
   gap: var(--space-2);
   align-self: flex-start;
+  max-width: 100%;
+  text-align: left;
   min-height: var(--touch-min);
   padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
   border: none;
@@ -3210,6 +3609,7 @@ input.filter-control[type="search"] {
 .review-audio__play-icon {
   display: grid;
   place-items: center;
+  flex: none;
   width: 32px;
   height: 32px;
   border-radius: var(--radius-full);
@@ -3218,6 +3618,7 @@ input.filter-control[type="search"] {
 }
 
 .review-audio__duration {
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
   opacity: 0.85;
   font-weight: 500;
@@ -3399,8 +3800,8 @@ input.filter-control[type="search"] {
   align-items: stretch;
   gap: 0.65rem;
   position: relative;
-  background: color-mix(in srgb, var(--success) 8%, transparent);
-  border-color: color-mix(in srgb, var(--success) 35%, transparent);
+  background: var(--surface-gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
 }
 
 .submission-approved__icon {
@@ -3416,7 +3817,7 @@ input.filter-control[type="search"] {
 .submission-row.submission-row--approved > h3 {
   font-family: var(--font-heading);
   font-size: 1.2rem;
-  color: var(--success);
+  color: var(--gold-text);
   margin: 0;
   line-height: 1.25;
 }
@@ -3499,8 +3900,12 @@ input.filter-control[type="search"] {
 }
 
 .submission-cell-text--success {
-  color: var(--success);
+  color: var(--gold-text);
   font-weight: 500;
+}
+
+.submission-approved__icon {
+  color: var(--gold);
 }
 
 .submission-cell-empty {
@@ -3677,7 +4082,7 @@ input.filter-control[type="search"] {
 /* Edit Course Page: top row (course data + thumbnail side by side on desktop) */
 .edit-course-top-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 2rem;
 }
 
@@ -3712,6 +4117,10 @@ input.filter-control[type="search"] {
     padding: 1.75rem;
   }
 
+  .edit-course-top-row > * {
+    min-width: 0;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
   }
@@ -3726,18 +4135,51 @@ input.filter-control[type="search"] {
   }
 }
 
+/* Teléfonos angostos: menos relleno para que el contenido no quede en una tira. */
+@media (max-width: 480px) {
+  .admin-card,
+  .admin-form {
+    padding: 1.25rem;
+  }
+}
+
+/* Selector de archivo nativo de los formularios del admin, con alto táctil. */
+.admin-form input[type="file"] {
+  max-width: 100%;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.admin-form input[type="file"]::file-selector-button {
+  min-height: var(--touch-min);
+  margin-right: 0.75rem;
+  padding: 0 1rem;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-btn);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 /* ============================================================================
    HOME PAGE — Hero actions, About, Preview, Social
    ============================================================================ */
 
 /* Eyebrow label (pequeño texto sobre los títulos) */
+/* Rótulo de sección (mayúsculas chicas y espaciadas) que va SOBRE el título. */
 .section-eyebrow {
-  font-size: 2rem;
-  font-weight: 700;
+  text-wrap: balance;
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
   color: var(--accent-text);
-  margin-bottom: 0.75rem;
+  margin: 0 0 0.75rem;
   display: block;
-  font-family: var(--font-heading);
 }
 
 /* Divisor entre secciones */
@@ -3788,27 +4230,32 @@ input.filter-control[type="search"] {
   height: 420px;
   object-fit: cover;
   object-position: top;
-  border-radius: 20px;
-  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
-  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  /* Enmarcada como en la revista: paspartú blanco y filete fucsia. */
+  padding: 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-xl);
   position: relative;
-  box-shadow: var(--shadow-lg), 0 0 0 8px color-mix(in srgb, var(--gold) 6%, transparent);
+  box-shadow: var(--shadow-lg);
 }
 
 .home-about__content h2 {
-  font-size: 2.75rem;
+  font-size: clamp(2.4rem, 1.6rem + 3vw, 3.6rem);
+  font-weight: 500;
+  text-transform: uppercase;
   margin-bottom: 0.25rem;
-  line-height: 1.5;
+  line-height: 1.3;
   font-family: var(--font-heading);
   padding: 0 0.2em 0.2em 0;
   overflow: visible;
 }
 
 .home-about__name {
-  background: linear-gradient(135deg, var(--primary), var(--gold));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  text-transform: none;
+  font-size: 0.8em;
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 700;
   display: inline-block;
   padding-right: 0.5em;
 }
@@ -3827,13 +4274,14 @@ input.filter-control[type="search"] {
   color: var(--text-secondary);
   line-height: 1.85;
   font-size: 1rem;
-  font-weight: 300;
+  font-weight: 400;
   margin-bottom: 1rem;
 }
 
 .home-stats {
   display: flex;
-  gap: 2.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem 2.5rem;
   margin-top: 2.25rem;
   padding-top: 2rem;
   border-top: 1px solid var(--border);
@@ -3846,13 +4294,9 @@ input.filter-control[type="search"] {
 }
 
 .stat-value {
-  font-family: var(--font-body);
-  font-size: 2.1rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, var(--primary), var(--gold));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  font-weight: 500;
   line-height: 1;
 }
 
@@ -3875,14 +4319,14 @@ input.filter-control[type="search"] {
 }
 
 .home-preview__header h2 {
-  font-size: 2.75rem;
+  font-size: clamp(2.2rem, 1.4rem + 3vw, 3.6rem);
   margin-bottom: 0.75rem;
 }
 
 .home-preview__subtitle {
   color: var(--text-muted);
   font-size: 1rem;
-  font-weight: 300;
+  font-weight: 400;
 }
 
 /* Columnas intrínsecas con tope: hasta 3, ninguna bajo 260px. Bajan de una
@@ -3898,6 +4342,7 @@ input.filter-control[type="search"] {
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
   transition: transform var(--dur-slow) var(--ease-bounce), box-shadow var(--dur-slow) var(--ease-bounce),
     border-color var(--dur-slow) var(--ease-bounce);
@@ -3913,7 +4358,7 @@ input.filter-control[type="search"] {
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, var(--primary), var(--gold), var(--primary));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary), var(--primary-strong));
   background-size: 200%;
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -3922,9 +4367,12 @@ input.filter-control[type="search"] {
 
 @media (hover: hover) {
   .preview-card:hover {
-    transform: translateY(-8px);
-    box-shadow: var(--shadow-xl);
-    border-color: var(--border-strong);
+    transform: translateY(-6px);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color) 4%, transparent), 0 24px 44px -20px var(--primary-glow);
+  }
+
+  .preview-card:hover .course-thumbnail {
+    transform: scale(1.04);
   }
 }
 
@@ -3939,7 +4387,7 @@ input.filter-control[type="search"] {
   aspect-ratio: 16 / 9;
   /* En una sola columna el 16:9 crecía con el ancho (hasta ~320px de alto). */
   max-height: 240px;
-  background: linear-gradient(135deg, var(--surface-rose) 0%, var(--surface-gold) 100%);
+  background: var(--band);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3969,9 +4417,9 @@ input.filter-control[type="search"] {
 }
 
 .preview-card__title {
-  font-family: var(--font-body);
-  font-size: 1.35rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 600;
   margin-bottom: 0.6rem;
   color: var(--text-primary);
 }
@@ -3981,7 +4429,7 @@ input.filter-control[type="search"] {
   font-size: 0.9rem;
   line-height: 1.75;
   flex-grow: 1;
-  font-weight: 300;
+  font-weight: 400;
   margin-bottom: 1.5rem;
   /* Una tarjeta de listado resume: la descripción completa vive en el
      detalle del curso. Completa, una tarjeta ocupaba ~75% de la pantalla. */
@@ -4033,7 +4481,7 @@ input.filter-control[type="search"] {
 
 .home-social p {
   color: var(--text-muted);
-  font-weight: 300;
+  font-weight: 400;
   margin-bottom: 2.5rem;
   font-size: 1rem;
   line-height: 1.7;
@@ -4105,21 +4553,25 @@ input.filter-control[type="search"] {
   display: block;
   width: 56px;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
   margin: clamp(1.25rem, 4vw, 2rem) auto 0;
   border-radius: 2px;
 }
 
 .catalog-hero h1 {
-  font-size: clamp(2.25rem, 1.5rem + 4vw, 3.75rem);
+  font-size: clamp(2.25rem, 1rem + 7vw, 4.75rem);
+  overflow-wrap: break-word;
+  font-weight: 500;
+  text-transform: uppercase;
+  line-height: 0.95;
   margin-bottom: 1rem;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .catalog-hero__subtitle {
   color: var(--text-muted);
   font-size: 1.05rem;
-  font-weight: 300;
+  font-weight: 400;
   max-width: 480px;
   margin: 0 auto;
   line-height: 1.8;
@@ -4151,7 +4603,7 @@ input.filter-control[type="search"] {
   display: flex;
   align-items: center;
   flex: 1 1 240px;
-  min-width: 200px;
+  min-width: min(200px, 100%);
 }
 
 .catalog-filters__search-icon {
@@ -4200,17 +4652,20 @@ input.filter-control[type="search"] {
   font-size: var(--input-font-size);
   color: var(--text-primary);
   background-color: var(--bg-elevated);
-  border: 1.5px solid var(--border-strong);
-  border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-btn);
   padding: 0.7rem 2.5rem 0.7rem 1.1rem; /* padding-right deja sitio al chevron */
   cursor: pointer;
   outline: none;
   appearance: none;
   -webkit-appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23CD9E55' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  /* Chevron dibujado con dos triángulos: toma el color de un token. */
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
+    linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
   background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 14px;
+  background-position: calc(100% - 21px) 50%, calc(100% - 16px) 50%;
+  background-size: 5px 5px;
   transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
@@ -4226,6 +4681,13 @@ input.filter-control[type="search"] {
   }
 }
 
+@media (max-width: 768px) {
+  .catalog-filters__search .catalog-filters__input,
+  .catalog-filters__select {
+    min-height: var(--touch-min);
+  }
+}
+
 /* ── Curso destacado — card horizontal grande ── */
 .catalog-featured {
   display: grid;
@@ -4233,23 +4695,25 @@ input.filter-control[type="search"] {
   gap: 3rem;
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
   margin-bottom: 2.5rem;
-  padding: 3rem 3rem 3rem 3.5rem;
+  padding: 3rem;
   position: relative;
   transition: box-shadow 0.4s ease;
   align-items: center;
 }
 
+/* Franja metálica de "destacado", arriba como en la revista. */
 .catalog-featured::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(180deg, var(--primary), var(--gold));
+  right: 0;
+  height: 3px;
+  background: var(--accent-paint);
 }
 
 @media (hover: hover) {
@@ -4262,8 +4726,8 @@ input.filter-control[type="search"] {
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--gold-text);
+  letter-spacing: 0.24em;
+  color: var(--accent-text);
   margin-bottom: 0.6rem;
   display: block;
 }
@@ -4290,7 +4754,7 @@ input.filter-control[type="search"] {
 
 .catalog-featured__desc {
   color: var(--text-secondary);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.85;
   margin-bottom: 2rem;
   max-width: 500px;
@@ -4305,7 +4769,7 @@ input.filter-control[type="search"] {
 .catalog-featured__visual {
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent) 0%, color-mix(in srgb, var(--gold) 12%, transparent) 100%);
+  background: var(--band);
   border-radius: var(--radius-xl);
   display: flex;
   align-items: center;
@@ -4327,6 +4791,7 @@ input.filter-control[type="search"] {
   background: var(--bg-elevated);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -4335,36 +4800,21 @@ input.filter-control[type="search"] {
   position: relative;
 }
 
-.catalog-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--primary), var(--gold));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
 @media (hover: hover) {
   .catalog-card:hover {
-    box-shadow: var(--shadow-lg);
-    border-color: var(--border-strong);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color) 4%, transparent), 0 24px 44px -20px var(--primary-glow);
     transform: translateY(-4px);
   }
-}
 
-@media (hover: hover) {
-  .catalog-card:hover::before {
-    opacity: 1;
+  .catalog-card:hover .course-thumbnail {
+    transform: scale(1.04);
   }
 }
 
 .catalog-card__visual {
   aspect-ratio: 16 / 9;
   max-height: 240px;
-  background: linear-gradient(135deg, var(--surface-rose) 0%, var(--surface-gold) 100%);
+  background: var(--band);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4390,9 +4840,9 @@ input.filter-control[type="search"] {
 }
 
 .catalog-card__title {
-  font-family: var(--font-body);
-  font-size: 1.25rem;
-  font-weight: 700;
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
   margin-bottom: 0.65rem;
   color: var(--text-primary);
 }
@@ -4402,7 +4852,7 @@ input.filter-control[type="search"] {
   font-size: 0.95rem;
   line-height: 1.8;
   flex-grow: 1;
-  font-weight: 300;
+  font-weight: 400;
   margin-bottom: 1.75rem;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -4411,13 +4861,20 @@ input.filter-control[type="search"] {
   overflow: hidden;
 }
 
+/* Si no caben lado a lado (≈300px), el botón baja entero en vez de partir
+   "Ver Programa" y "4 lecciones" en dos líneas. */
 .catalog-card__footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   padding-top: 1.25rem;
   border-top: 1px solid var(--border);
-  gap: 1rem;
+  gap: 0.75rem 1rem;
+}
+
+.catalog-card__footer > * {
+  white-space: nowrap;
 }
 
 .catalog-card__lessons {
@@ -4432,7 +4889,7 @@ input.filter-control[type="search"] {
   padding: 7rem 2rem;
   color: var(--text-muted);
   font-size: 1.1rem;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 2;
 }
 
@@ -4449,7 +4906,7 @@ input.filter-control[type="search"] {
 
 @media (max-width: 960px) {
   .home-about__inner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 3rem;
     text-align: center;
   }
@@ -4499,8 +4956,9 @@ input.filter-control[type="search"] {
 }
 
 @media (max-width: 600px) {
+  /* "TRANSFORMA" no parte: el tamaño baja con el ancho para caber en 280px. */
   .hero__heading {
-    font-size: 2.4rem;
+    font-size: clamp(1.75rem, 10.5vw, 2.4rem);
   }
 
   .hero-actions {
@@ -4812,6 +5270,7 @@ input.filter-control[type="search"] {
   height: 100%;
   object-fit: cover;  /* cubre el área sin deformar, recortando los bordes */
   display: block;     /* evita el espacio extra de inline que añaden los <img> */
+  transition: transform 0.6s var(--ease-out);
 }
 
 /* Mensaje de error */
@@ -4891,7 +5350,11 @@ input.filter-control[type="search"] {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-xl);
-  overflow: hidden;
+  /* En pantallas bajas (teléfono acostado) se desplaza por dentro. */
+  max-height: calc(100dvh - 5.5rem);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   animation: dropdown-appear 0.15s var(--ease-out);
   z-index: 200;
 }
@@ -4969,6 +5432,16 @@ input.filter-control[type="search"] {
   }
 }
 
+.user-menu__dropdown .user-menu__item:active {
+  background: var(--surface);
+}
+
+@media (max-width: 1024px), (pointer: coarse) {
+  .user-menu__dropdown .user-menu__item {
+    min-height: var(--touch-min);
+  }
+}
+
 /* Item de peligro (Cerrar Sesión) */
 .user-menu__dropdown .user-menu__item--danger {
   color: var(--danger);
@@ -5004,8 +5477,25 @@ input.filter-control[type="search"] {
   margin-bottom: 2.5rem;
 }
 
+/* Título de la app: Bodoni con una palabra en itálica metálica. */
 .my-courses-page__header h1 {
-  margin-bottom: 0.35rem;
+  margin: 0 0 0.6rem;
+  font-size: clamp(2.1rem, 1.4rem + 2.6vw, 3.25rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.my-courses-page__header h1 em {
+  font-family: var(--font-accent);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.9em;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em;
 }
 
 .my-courses-page__subtitle {
@@ -5018,14 +5508,21 @@ input.filter-control[type="search"] {
 .my-courses-page__empty {
   text-align: center;
   padding: 4rem 2rem;
-  background: var(--surface);
+  background: var(--bg-elevated);
   border-radius: var(--radius-xl);
   border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 .my-courses-page__empty-icon {
-  font-size: 3.5rem;
-  margin-bottom: 0.5rem;
+  margin: 0 0 0.5rem;
+  color: var(--accent-text);
+}
+
+.my-courses-page__empty-icon svg,
+.account-card__empty svg {
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .my-courses-page__empty h2 {
@@ -5065,30 +5562,39 @@ input.filter-control[type="search"] {
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+  box-shadow: var(--shadow-md);
+  transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out);
   display: flex;
   flex-direction: column;
 }
 
 @media (hover: hover) {
   .enrollment-card:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--shadow-lg);
+    transform: translateY(-4px);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color) 4%, transparent), 0 24px 44px -20px var(--primary-glow);
+  }
+
+  .enrollment-card:hover .course-thumbnail {
+    transform: scale(1.04);
   }
 }
 
+/* Sin foto: banda oscura con el logo encendido, como en la revista. */
 .enrollment-card__visual {
-  aspect-ratio: 16 / 9;
-  background: linear-gradient(135deg, var(--surface), var(--border));
+  aspect-ratio: 16 / 10;
+  background: var(--band);
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+.enrollment-card__visual .course-thumbnail {
+  transition: transform 0.6s var(--ease-out);
+}
+
 .enrollment-card__fallback {
-  font-size: 3rem;
+  filter: drop-shadow(0 0 18px var(--primary-glow));
 }
 
 .enrollment-card__body {
@@ -5100,15 +5606,16 @@ input.filter-control[type="search"] {
 }
 
 .enrollment-card__title {
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.3rem;
+  font-weight: 600;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.2;
 }
 
 .enrollment-card__desc {
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -5133,7 +5640,7 @@ input.filter-control[type="search"] {
 
 .progress-bar__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
   border-radius: var(--radius-full);
   /* Animación suave al cargar la página */
   transition: width 0.7s var(--ease-out);
@@ -5161,6 +5668,7 @@ input.filter-control[type="search"] {
   padding: 0.6rem 1.25rem;
   font-size: 0.85rem;
   align-self: flex-start;
+  margin-top: auto;
 }
 
 /* ==========================================================================
@@ -5249,18 +5757,20 @@ button.admin-course-students:disabled {
   gap: var(--space-4);
 }
 
-.invitation-card__eyebrow {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.invitation-card__course {
+  margin: 0 0 var(--space-4);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
-.invitation-card__course {
-  margin: var(--space-2) 0 var(--space-4);
-  font-family: var(--font-heading);
-  color: var(--accent-text);
+.invitation-card__course em {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em;
 }
 
 .invitation-card__thumb {
@@ -5390,15 +5900,15 @@ button.admin-course-students:disabled {
 
 .enrollment-card__access {
   position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  padding: 0.3rem 0.65rem;
+  top: 0.75rem;
+  left: 0.75rem;
+  padding: 0.4rem 0.75rem;
   border-radius: var(--radius-full);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
-  backdrop-filter: blur(4px);
+  box-shadow: var(--shadow-sm);
 }
 
 .enrollment-card__access--urgent {
@@ -5408,9 +5918,9 @@ button.admin-course-students:disabled {
 }
 
 .enrollment-card__access--expired {
-  background: var(--danger);
-  color: var(--text-on-status);
-  border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
+  background: var(--bg-elevated);
+  color: var(--danger);
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
 }
 
 /* Atenuar la miniatura, no la tarjeta entera: el texto debe seguir legible. */
@@ -5422,13 +5932,12 @@ button.admin-course-students:disabled {
 
 .enrollment-card__notice {
   margin: 0;
-  padding: 0.7rem 0.85rem;
-  border-radius: var(--radius-sm);
-  border-left: 3px solid color-mix(in srgb, var(--danger) 60%, transparent);
-  background: color-mix(in srgb, var(--danger) 8%, transparent);
-  color: var(--text-secondary);
+  padding: 0.75rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: var(--danger-soft);
+  color: var(--danger);
   font-size: 0.82rem;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 
 /* ==========================================================================
@@ -5471,8 +5980,15 @@ button.admin-course-students:disabled {
   gap: 0.5rem;
 }
 
+.account-profile__eyebrow {
+  margin: 0;
+}
+
 .account-profile__name {
-  font-size: 1.75rem;
+  font-size: clamp(2rem, 1.5rem + 1.6vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
   margin: 0;
 }
 
@@ -5549,6 +6065,7 @@ button.admin-course-students:disabled {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -5556,8 +6073,10 @@ button.admin-course-students:disabled {
 }
 
 .account-card__title {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--title);
   margin: 0;
   padding-bottom: 0.75rem;
   border-bottom: 1px solid var(--border);
@@ -5587,6 +6106,8 @@ button.admin-course-students:disabled {
   font-size: 0.95rem;
   color: var(--text-primary);
   margin: 0;
+  /* Correos y nombres largos parten en vez de salirse de la tarjeta. */
+  overflow-wrap: anywhere;
 }
 
 .account-card__action {
@@ -5715,7 +6236,7 @@ button.admin-course-students:disabled {
 .gallery-item {
   width: 300px;
   height: 210px;
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   flex-shrink: 0;
   position: relative;
   overflow: hidden;
@@ -5758,7 +6279,8 @@ button.admin-course-students:disabled {
   left: 0.9rem;
   right: 0.9rem;
   font-size: 0.75rem;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.04em;
   color: var(--text-on-primary);
   z-index: 2;
   line-height: 1.3;
@@ -5812,9 +6334,10 @@ button.admin-course-students:disabled {
      estrujarse lado a lado. */
   flex: 1 1 300px;
   text-align: left;
-  background: var(--surface);
+  background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   text-decoration: none;
   color: var(--text-primary);
   transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), border-color 0.2s var(--ease-out);
@@ -5867,19 +6390,14 @@ button.admin-course-students:disabled {
   overflow-wrap: anywhere;
 }
 
+/* El color de marca no da contraste como texto: queda solo en el aro de la
+   foto y el borde al pasar el mouse. */
 .contact-card__platform {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-}
-
-.contact-card__platform--whatsapp {
-  color: var(--brand-whatsapp);
-}
-
-.contact-card__platform--instagram {
-  color: var(--brand-instagram);
+  color: var(--accent-text);
 }
 
 .contact-card__name {
@@ -5904,14 +6422,8 @@ button.admin-course-students:disabled {
 }
 
 @media (hover: hover) {
-  .contact-card--whatsapp:hover .contact-card__cta {
-    color: var(--brand-whatsapp);
-  }
-}
-
-@media (hover: hover) {
-  .contact-card--instagram:hover .contact-card__cta {
-    color: var(--brand-instagram);
+  .contact-card:hover .contact-card__cta {
+    color: var(--accent-text);
   }
 }
 
@@ -6178,10 +6690,17 @@ button.admin-course-students:disabled {
   flex: 1;
 }
 
+.course-learn__eyebrow {
+  margin: 0.25rem 0 -0.35rem;
+}
+
 .course-learn__lesson-title {
   font-family: var(--font-heading);
-  font-size: clamp(1.35rem, 1rem + 1.5vw, 1.75rem);
-  color: var(--text-primary);
+  font-size: clamp(1.9rem, 1.3rem + 2vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  color: var(--title);
   margin: 0;
 }
 
@@ -6208,23 +6727,35 @@ button.admin-course-students:disabled {
 }
 
 @media (hover: hover) {
-  .course-learn__complete-btn:hover:not(:disabled) {
+  .course-learn__complete-btn:not(.course-learn__complete-btn--done):hover:not(:disabled) {
     background: var(--primary-strong);
     color: var(--text-on-primary);
     box-shadow: var(--shadow-glow);
   }
 }
 
+/* Completada = fucsia suave; quiz o práctica aprobados = dorado (logro). */
 .course-learn__complete-btn--done {
-  background: var(--success);
-  border-color: var(--success);
-  color: var(--text-on-status);
+  background: var(--surface-rose);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  color: var(--accent-text);
   cursor: default;
+}
+
+.course-learn__complete-btn--achieved {
+  background: var(--surface-gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+  color: var(--gold-text);
 }
 
 .course-learn__complete-btn:disabled {
   opacity: 0.85;
   cursor: not-allowed;
+}
+
+.course-learn__complete-btn--done:disabled {
+  opacity: 1;
+  cursor: default;
 }
 
 /* Avance del video, separado de cualquier botón: barra fina + texto. */
@@ -6247,7 +6778,7 @@ button.admin-course-students:disabled {
 
 .watch-progress__fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
   transition: width 0.4s var(--ease-out);
 }
 
@@ -6258,13 +6789,15 @@ button.admin-course-students:disabled {
 }
 
 .watch-progress--done {
+  flex-direction: row;
   width: auto;
   padding: 0.45rem 1rem;
   border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
   font-size: 0.85rem;
   font-weight: 600;
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--accent-text);
+  background: var(--surface-rose);
 }
 
 /* Barra de controles de lección: prev | acción (completar) | next.
@@ -6310,13 +6843,15 @@ button.admin-course-students:disabled {
 
 .course-learn__nav-btn {
   padding: 0.5rem 1rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-strong);
-  background: var(--bg-elevated);
-  color: var(--text-secondary);
+  border-radius: var(--radius-btn);
+  border: 1.5px solid var(--text-primary);
+  background: transparent;
+  color: var(--text-primary);
   font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    background-color var(--dur-fast);
   /* Flex: el título se recorta con "…" y la flecha queda siempre visible
      (con ellipsis en el botón entero, era la flecha la que se cortaba). */
   display: inline-flex;
@@ -6339,9 +6874,15 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .course-learn__nav-btn:hover {
-    border-color: var(--primary);
+    border-color: var(--accent-text);
     color: var(--accent-text);
+    background: var(--surface-rose);
   }
+}
+
+.course-learn__nav-btn:active {
+  background: var(--surface-rose);
+  border-color: var(--primary-light);
 }
 
 /* ── Sidebar ──
@@ -6487,10 +7028,12 @@ button.admin-course-students:disabled {
 }
 
 .course-learn__sidebar-header h3 {
+  flex: 1;
   font-family: var(--font-heading);
-  font-size: 1.1rem;
-  margin: 0;
-  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 0 0.75rem;
+  color: var(--title);
 }
 
 .course-learn__sidebar-count {
@@ -6539,9 +7082,17 @@ button.admin-course-students:disabled {
   }
 }
 
+/* Mismos estados que la portada: vista = fucsia, aprobada = dorado, sin ver = neutro. */
 .course-learn__lesson-item--completed .course-learn__lesson-number {
-  background: var(--success);
-  color: var(--text-on-status);
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+  color: var(--text-on-primary);
+}
+
+.course-learn__lesson-item--achieved .course-learn__lesson-number {
+  background: var(--btn-gold);
+  border-color: transparent;
+  color: var(--text-on-gold);
 }
 
 .course-learn__lesson-number {
@@ -6551,25 +7102,26 @@ button.admin-course-students:disabled {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 700;
   flex-shrink: 0;
-  background: var(--border);
-  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
   transition: background var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
 }
 
 .course-learn__lesson-item--active .course-learn__lesson-number {
-  background: color-mix(in srgb, var(--text-on-primary) 25%, transparent);
+  background: transparent;
+  border-color: color-mix(in srgb, var(--text-on-primary) 65%, transparent);
   color: var(--text-on-primary);
 }
 
 .course-learn__lesson-name {
   font-size: 0.9rem;
   font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 /* Estados de loading / error / empty */
@@ -6693,11 +7245,13 @@ button.admin-course-students:disabled {
 
 .lesson-type-selector {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
 }
 
 .lesson-type-option {
-  flex: 1;
+  flex: 1 1 7rem;
+  min-height: var(--touch-min);
   padding: 0.65rem 1rem;
   border: 2px solid var(--border);
   border-radius: var(--radius-md);
@@ -6721,7 +7275,7 @@ button.admin-course-students:disabled {
 
 .lesson-type-option.active {
   border-color: var(--primary);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 10%, transparent), color-mix(in srgb, var(--primary) 8%, transparent));
   color: var(--accent-text);
   box-shadow: 0 2px 8px var(--primary-glow);
 }
@@ -6894,7 +7448,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-builder__add-question {
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 8%, transparent));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--primary) 8%, transparent));
   border: 2px dashed var(--border);
   color: var(--accent-text);
   padding: 0.7rem 1rem;
@@ -7056,6 +7610,7 @@ button.admin-course-students:disabled {
   font-size: 1rem;
   margin: 0 0 0.75rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .quiz-question__options {
@@ -7088,7 +7643,7 @@ button.admin-course-students:disabled {
 
 .quiz-option--selected {
   border-color: var(--primary);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--gold) 5%, transparent));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, transparent), color-mix(in srgb, var(--primary) 5%, transparent));
   box-shadow: 0 0 0 1px var(--primary);
 }
 
@@ -7100,8 +7655,10 @@ button.admin-course-students:disabled {
 }
 
 .quiz-option__text {
+  min-width: 0;
   font-size: 0.92rem;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 /* ================================================================
@@ -7120,8 +7677,9 @@ button.admin-course-students:disabled {
   margin: 0 0 0.5rem;
 }
 
+/* Aprobar es un logro: dorado, como certificados y aprobados del temario. */
 .quiz-result--passed .quiz-result__header h2 {
-  color: var(--success);
+  color: var(--gold-text);
 }
 
 .quiz-result--failed .quiz-result__header h2 {
@@ -7189,12 +7747,14 @@ button.admin-course-students:disabled {
   font-weight: 600;
   font-size: 0.95rem;
   line-height: 1.4;
+  overflow-wrap: anywhere;
 }
 
 .quiz-result__answer {
   font-size: 0.85rem;
   color: var(--text-muted);
   margin-left: 1.7rem;
+  overflow-wrap: anywhere;
 }
 
 .quiz-result__actions {
@@ -7203,7 +7763,7 @@ button.admin-course-students:disabled {
 }
 
 .quiz-result__success-message {
-  color: var(--success);
+  color: var(--gold-text);
   font-weight: 600;
   font-size: 0.95rem;
 }
@@ -7381,8 +7941,9 @@ button.admin-course-students:disabled {
 
 .user-picker__input {
   width: 100%;
+  min-height: var(--touch-min);
   font-family: var(--font-body);
-  font-size: 0.95rem;
+  font-size: var(--input-font-size);
   background: var(--bg-elevated);
   color: var(--text-primary);
   border: 1.5px solid var(--border-strong);
@@ -7557,13 +8118,14 @@ button.admin-course-students:disabled {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--bg-elevated);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
 .faq-item--open {
-  border-color: var(--gold);
-  box-shadow: var(--shadow-sm);
+  border-color: var(--primary);
+  box-shadow: var(--shadow-md);
 }
 
 .faq-item__q {
@@ -7595,7 +8157,7 @@ button.admin-course-students:disabled {
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  color: var(--gold-dark);
+  color: var(--accent-text);
   transition: transform var(--dur-base) var(--ease-out);
 }
 
@@ -7686,7 +8248,8 @@ button.admin-course-students:disabled {
 }
 
 .agenda-legend__dot--personal {
-  background: var(--gold);
+  background: var(--surface-rose);
+  border: 1.5px solid var(--primary);
 }
 
 .agenda-legend__dot--live {
@@ -7801,12 +8364,12 @@ button.admin-course-students:disabled {
 
 /* Colores de eventos por origen */
 .fc .agenda-ev--personal {
-  background-color: var(--gold);
-  border-color: var(--gold-dark);
+  background-color: var(--surface-rose);
+  border-color: var(--primary);
 }
 
 .fc .agenda-ev--personal .fc-event-main {
-  color: var(--text-on-gold);
+  color: var(--accent-text);
 }
 
 .fc .agenda-ev--live {
@@ -7830,12 +8393,22 @@ button.admin-course-students:disabled {
   }
 
   .agenda-calendar .fc .fc-button {
-    padding: 0.4rem 0.6rem;
+    min-width: var(--touch-min);
+    min-height: var(--touch-min);
+    padding: 0.4rem 0.9rem;
     font-size: 0.8rem;
   }
 
   .agenda-header__push {
     width: 100%;
+  }
+}
+
+/* Celdas de ~32px: los días de la semana se encimaban ("marmiéjue"). */
+@media (max-width: 400px) {
+  .agenda-calendar .fc .fc-col-header-cell-cushion {
+    padding: 2px 0;
+    font-size: 0.7rem;
   }
 }
 
@@ -7868,9 +8441,10 @@ button.admin-course-students:disabled {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-height: var(--touch-min);
   font-size: 0.85rem;
   color: var(--text-secondary);
-  margin: 0.5rem 0;
+  margin: 0.25rem 0;
 }
 
 .agenda-modal__actions {
@@ -7901,6 +8475,7 @@ button.admin-course-students:disabled {
   border: 1.5px solid var(--border-strong);
   border-radius: var(--radius-md);
   padding: 0.6rem 0.8rem;
+  min-height: var(--touch-min);
   outline: none;
   margin-bottom: 0.25rem;
 }
@@ -7953,11 +8528,13 @@ button.admin-course-students:disabled {
    BOTÓN DESTRUCTIVO + DIÁLOGO DE CONFIRMACIÓN (genéricos) y
    BÚSQUEDA DE CERTIFICADOS (admin)
    ===================================================================== */
+/* Flex y no grid auto-fit: el campo a todo el ancho impedía colapsar las
+   columnas vacías y los filtros quedaban amontonados a la izquierda. */
 .cert-search__filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
-  align-items: end;
+  align-items: flex-end;
   margin-bottom: 1.5rem;
 }
 
@@ -7970,12 +8547,16 @@ button.admin-course-students:disabled {
   color: var(--text-secondary);
 }
 
-.cert-search__field--wide {
-  grid-column: 1 / -1;
+.cert-search__filters > .cert-search__field {
+  flex: 1 1 170px;
+}
+
+.cert-search__filters > .cert-search__field--wide {
+  flex-basis: 100%;
 }
 
 .cert-search__clear {
-  justify-self: start;
+  flex: 0 0 auto;
 }
 
 .cert-search__toolbar {
@@ -7984,16 +8565,17 @@ button.admin-course-students:disabled {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 0.75rem;
-  padding: 0.6rem 1rem;
+  padding: 0.6rem 1.25rem;
   margin-bottom: 0.75rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
 }
 
 .cert-search__select-all {
   display: flex;
   align-items: center;
+  min-height: var(--touch-min);
   gap: 0.6rem;
   font-size: 0.9rem;
   color: var(--text-secondary);
@@ -8013,8 +8595,12 @@ button.admin-course-students:disabled {
 }
 
 .btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   padding: 0.55rem 1.2rem;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-btn);
   border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
   background: var(--danger-soft);
   color: var(--danger);
@@ -8070,22 +8656,23 @@ button.admin-course-students:disabled {
   gap: 0.5rem;
 }
 
+/* Casilla | titular y datos | Ver: la casilla y el botón no se separan del nombre. */
 .cert-search__row {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  padding: 0.7rem 1rem;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 1rem 0.6rem 0.4rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
   font-size: 0.9rem;
   transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
 }
 
 .cert-search__row--selected {
   border-color: var(--primary);
-  background: var(--bg-elevated);
+  background: var(--surface-rose);
 }
 
 .cert-search__row input[type="checkbox"],
@@ -8097,6 +8684,33 @@ button.admin-course-students:disabled {
   flex-shrink: 0;
 }
 
+/* Blanco táctil de 44px alrededor de la casilla de 18px. */
+.cert-search__check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  cursor: pointer;
+}
+
+.cert-search__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2rem 1rem;
+}
+
+.cert-search__details {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.75rem;
+}
+
 .cert-search__name {
   font-weight: 500;
   color: var(--text-primary);
@@ -8106,7 +8720,8 @@ button.admin-course-students:disabled {
 
 .cert-search__number {
   font-family: monospace;
-  color: var(--accent-text);
+  font-weight: 600;
+  color: var(--gold-text);
 }
 
 .cert-search__meta {
@@ -8115,7 +8730,7 @@ button.admin-course-students:disabled {
 }
 
 .cert-search__view {
-  margin-left: auto;
+  flex-shrink: 0;
 }
 
 .confirm-dialog__overlay {
@@ -8317,32 +8932,67 @@ button.admin-course-students:disabled {
   align-self: flex-start;
 }
 
+/* Un certificado es un logro: banda oscura de diploma con sello dorado. */
 .cert-verify__hero {
-  background: var(--btn-primary);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 2rem 1.5rem;
+  background: var(--band);
+  border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: 2.5rem 1.5rem;
   text-align: center;
-  color: var(--text-on-primary);
-}
-
-.cert-verify__hero-icon {
-  font-size: 2.5rem;
-  line-height: 1;
-  margin-bottom: 0.75rem;
+  color: var(--band-text);
 }
 
 .cert-verify__title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: 1.75rem;
-  color: var(--text-on-primary);
-  text-shadow: 0 1px 3px color-mix(in srgb, var(--shadow-color) 20%, transparent);
+  font-size: clamp(1.9rem, 1.5rem + 1.6vw, 2.5rem);
+  font-weight: 600;
+  color: var(--band-text);
+}
+
+.cert-verify__title em {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  color: var(--gold-300);
 }
 
 .cert-verify__academy {
-  margin: 0.25rem 0 0;
-  opacity: 0.92;
+  margin: 0.5rem 0 0;
+  color: var(--band-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+/* Sello dorado (certificados: el dorado es para logros). */
+.cert-seal {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-gold);
+  color: var(--text-on-gold);
+  box-shadow: var(--shadow-gold);
+}
+
+.cert-lookup__title {
+  font-size: clamp(2rem, 1.6rem + 1.6vw, 2.6rem);
+  margin: 0 0 0.5rem;
+}
+
+.cert-lookup__title em {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em;
 }
 
 .cert-verify__facts {
@@ -8452,14 +9102,24 @@ button.admin-course-students:disabled {
 }
 
 .coming-soon__card {
+  position: relative;
+  overflow: hidden;
   background: var(--bg-elevated);
-  border: 1px solid var(--gold);
-  border-radius: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   padding: 3rem 2.5rem;
   max-width: 520px;
   width: 100%;
   text-align: center;
-  box-shadow: var(--shadow-gold);
+  box-shadow: var(--shadow-lg);
+}
+
+.coming-soon__card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--accent-paint);
 }
 
 .coming-soon__badge {
@@ -8467,27 +9127,33 @@ button.admin-course-students:disabled {
   height: auto;
   object-fit: contain;
   margin: 0 auto 1rem;
+  filter: drop-shadow(0 0 18px var(--primary-glow));
 }
 
 .coming-soon__title {
   font-family: var(--font-heading);
-  color: var(--accent-text);
+  color: var(--text-primary);
   font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.1;
   margin: 0 0 1rem;
 }
 
 .coming-soon__divider {
   width: 60px;
   height: 2px;
-  background: linear-gradient(90deg, var(--primary), var(--gold));
+  background: linear-gradient(90deg, var(--primary-strong), var(--primary));
   margin: 0 auto 1.5rem;
   border-radius: 2px;
 }
 
 .coming-soon__subtitle {
-  font-family: var(--font-heading);
-  color: var(--gold-text);
-  font-size: 1.2rem;
+  font-family: var(--font-accent);
+  color: var(--accent-text);
+  font-size: 1.35rem;
+  font-weight: 600;
   margin: 0 0 1rem;
   font-style: italic;
 }
@@ -8523,7 +9189,8 @@ button.admin-course-students:disabled {
   gap: 1rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 1.25rem 1.5rem;
   max-width: 520px;
   width: 100%;
@@ -8692,6 +9359,39 @@ button.admin-course-students:disabled {
   }
 }
 
+/* Tablets táctiles: prev/next con título medían 34px de alto. */
+@media (max-width: 768px) {
+  .course-learn__nav-btn {
+    min-height: var(--touch-min);
+  }
+}
+
+/* Pantallas anchas: clase y temario dentro del mismo marco que la cabecera.
+   A todo el ancho, el temario quedaba pegado al borde, lejos del video. */
+@media (min-width: 1600px) {
+  .course-learn {
+    max-width: var(--page-max);
+    margin-left: auto;
+    margin-right: auto;
+    /* Sin fondo propio: si no, se ve el borde del bloque sobre el fondo de la página. */
+    background: transparent;
+  }
+
+  .course-learn__sidebar {
+    border-right: 1px solid var(--border);
+  }
+
+  /* Cerrado mide 2px (los bordes): sin esto su fondo queda como una raya en medio. */
+  .course-learn--sidebar-closed .course-learn__sidebar {
+    border-right-color: transparent;
+    background-clip: padding-box;
+  }
+
+  .course-learn__sidebar-opener {
+    right: calc((100vw - var(--page-max)) / 2);
+  }
+}
+
 /* Pantallas bajas (teléfono en horizontal): el header deja de ser sticky para
    devolver la altura al contenido, y el video se mide sin él. */
 @media (max-height: 500px) {
@@ -8729,6 +9429,11 @@ button.admin-course-students:disabled {
     display: none;
   }
 
+  /* A 280px la columna lateral mide menos de 44px y el círculo se achicaba. */
+  .course-learn__nav-btn {
+    min-width: var(--touch-min);
+  }
+
   .course-learn__complete-btn {
     padding: 0.7rem 1rem;
   }
@@ -8745,8 +9450,13 @@ button.admin-course-students:disabled {
     padding: 0;
   }
 
+  /* Sin tarjeta exterior, el relleno lateral ya lo pone la página. */
   .quiz-player {
-    padding: 1.25rem 1rem;
+    padding: 1.25rem 0;
+  }
+
+  .quiz-result__question {
+    padding: 0.85rem 0.9rem;
   }
 }
 
@@ -8771,6 +9481,7 @@ button.admin-course-students:disabled {
 .course-home__back {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   min-height: var(--touch-min);
   align-self: flex-start;
   color: var(--text-secondary);
@@ -8793,13 +9504,15 @@ button.admin-course-students:disabled {
   align-items: start;
 }
 
+/* Foto enmarcada: paspartú y filete fucsia, como en la ficha del curso. */
 .course-home__visual {
   aspect-ratio: 16 / 10;
   max-height: min(40svh, 360px);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
+  padding: 10px;
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-xl);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-lg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8809,10 +9522,18 @@ button.admin-course-students:disabled {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+/* Sin foto: banda oscura con el logo encendido. */
+.course-home__visual:has(.course-home__fallback) {
+  background: var(--band);
+  padding: 0;
+  overflow: hidden;
 }
 
 .course-home__fallback {
-  font-size: 3rem;
+  filter: drop-shadow(0 0 18px var(--primary-glow));
 }
 
 .course-home__summary {
@@ -8825,8 +9546,8 @@ button.admin-course-students:disabled {
 .course-home__eyebrow {
   margin: 0;
   font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 600;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--accent-text);
 }
@@ -8834,8 +9555,11 @@ button.admin-course-students:disabled {
 .course-home__title {
   margin: 0;
   font-family: var(--font-heading);
-  font-size: clamp(1.6rem, 1.2rem + 2vw, 2.25rem);
-  color: var(--text-primary);
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .course-home__desc {
@@ -8875,6 +9599,12 @@ button.admin-course-students:disabled {
   text-decoration: none;
 }
 
+.course-home__cta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
 .course-home__cta-next {
   font-size: 0.8rem;
   font-weight: 400;
@@ -8898,9 +9628,12 @@ button.admin-course-students:disabled {
 }
 
 .course-home__heading {
-  margin: 0;
-  font-size: 1.15rem;
-  color: var(--text-primary);
+  margin: 0 0 0.5rem;
+  font-size: clamp(2rem, 1.4rem + 2.2vw, 2.9rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--title);
 }
 
 .course-home__live,
@@ -8919,12 +9652,14 @@ button.admin-course-students:disabled {
   gap: 0.25rem 1rem;
   align-items: center;
   min-height: var(--touch-min);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
   color: var(--text-primary);
   text-decoration: none;
+  transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out);
 }
 
 .course-home__live-when {
@@ -8941,20 +9676,24 @@ button.admin-course-students:disabled {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: 0.75rem;
+  gap: 1rem;
   min-height: var(--touch-min);
-  padding: 0.75rem 1rem;
+  padding: 1rem 1.25rem;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
   color: var(--text-primary);
   text-decoration: none;
-  transition: border-color var(--dur-base) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
 }
 
 @media (hover: hover) {
-  a.course-home__lesson:hover {
-    border-color: var(--primary);
+  a.course-home__lesson:hover,
+  .course-home__live-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 2px 4px color-mix(in srgb, var(--shadow-color) 4%, transparent), 0 24px 44px -20px var(--primary-glow);
   }
 }
 
@@ -8967,31 +9706,54 @@ a.course-home__lesson:active,
   border-color: var(--primary-light);
 }
 
+/* Donde sigue la alumna: filete fucsia a la izquierda y fondo rosado. */
 .course-home__lesson--next {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+  background: var(--surface-rose);
+  box-shadow: var(--shadow-md), inset 3px 0 0 var(--primary);
+}
+
+@media (hover: hover) {
+  a.course-home__lesson--next:hover {
+    box-shadow: 0 24px 44px -20px var(--primary-glow), inset 3px 0 0 var(--primary);
+  }
 }
 
 .course-home__lesson--locked {
   opacity: 0.7;
 }
 
+/* Estado de cada lección: vista = fucsia, aprobada = dorado, sin ver = neutro. */
 .course-home__lesson-index {
-  width: 2rem;
-  height: 2rem;
+  width: 34px;
+  height: 34px;
   border-radius: var(--radius-full);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 700;
-  background: var(--surface);
-  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
 }
 
 .course-home__lesson-index--done {
-  background: var(--success);
-  color: var(--text-on-status);
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+  color: var(--text-on-primary);
+}
+
+.course-home__lesson-index--achieved {
+  background: var(--btn-gold);
+  border-color: transparent;
+  color: var(--text-on-gold);
+}
+
+.course-home__lesson--next .course-home__lesson-index {
+  border-color: var(--primary);
+  color: var(--accent-text);
+  background: var(--bg-elevated);
 }
 
 .course-home__lesson-text {
@@ -9002,7 +9764,11 @@ a.course-home__lesson:active,
 }
 
 .course-home__lesson-title {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
   font-weight: 600;
+  line-height: 1.2;
+  color: var(--title);
   overflow-wrap: anywhere;
 }
 
@@ -9016,45 +9782,127 @@ a.course-home__lesson:active,
 }
 
 .course-home__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.75rem;
   font-weight: 600;
-  padding: 0.3rem 0.65rem;
+  padding: 0.35rem 0.75rem;
   border-radius: var(--radius-full);
+  border: 1px solid var(--border-strong);
   white-space: nowrap;
-  color: var(--text-muted);
-  background: var(--surface);
+  color: var(--text-secondary);
+  background: transparent;
 }
 
-.course-home__badge--done {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 14%, transparent);
+.course-home__badge--achieved {
+  color: var(--gold-text);
+  background: var(--surface-gold);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+}
+
+.course-home__lesson--next .course-home__badge {
+  color: var(--text-on-primary);
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
 }
 
 .course-home__badge--active {
   color: var(--accent-text);
-  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  background: var(--surface-rose);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
 }
 
 .course-home__badge--waiting {
-  color: var(--text-secondary);
-  background: color-mix(in srgb, var(--gold) 20%, transparent);
+  color: var(--warning);
+  background: var(--warning-soft);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
 }
 
 .course-home__badge--attention {
   color: var(--danger);
   background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+/* Bloque del certificado: es un logro, va en dorado. Sello | texto | botón. */
+.course-home__certificate {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.25rem 1.25rem;
+  margin-top: 0.5rem;
+  padding: clamp(1.25rem, 3vw, 1.65rem);
+  border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  border-radius: var(--radius-xl);
+  background: var(--surface-gold);
+}
+
+.course-home__seal {
+  grid-row: 1 / span 2;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-full);
+  background: var(--btn-gold);
+  color: var(--text-on-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-gold);
+}
+
+.course-home__certificate .course-home__heading {
+  align-self: end;
+  margin: 0;
+  font-size: 1.45rem;
 }
 
 .course-home__certificate p {
+  grid-column: 2;
+  align-self: start;
   margin: 0;
   color: var(--text-secondary);
+  font-size: 0.9rem;
   line-height: 1.6;
+}
+
+.course-home__certificate-link {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+}
+
+@media (max-width: 640px) {
+  .course-home__certificate {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+
+  .course-home__seal,
+  .course-home__certificate p,
+  .course-home__certificate-link {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .course-home__certificate-link {
+    justify-self: start;
+  }
 }
 
 /* Fila angosta: la etiqueta de estado baja bajo el título. */
 @media (max-width: 420px) {
   .course-home__lesson {
     grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.4rem 0.9rem;
+    padding: 0.9rem 1rem;
+  }
+
+  .course-home__lesson-index {
+    grid-row: 1 / span 2;
+  }
+
+  .course-home__lesson-title {
+    font-size: 1.1rem;
   }
 
   .course-home__badge {
@@ -9076,7 +9924,7 @@ a.course-home__lesson:active,
   color: var(--text-primary);
 }
 
-/* === BARRA INFERIOR DE LA ALUMNA ===
+/* === BARRA INFERIOR (alumna y admin) ===
    Solo en pantallas angostas con altura suficiente: acostado, cada píxel
    vertical es del contenido y los destinos vuelven a la cabecera.
    Fija y no sticky: sticky la dejaba a media pantalla en páginas cortas. */
@@ -9092,26 +9940,37 @@ a.course-home__lesson:active,
     position: fixed;
     inset: auto 0 0;
     z-index: 90;
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+    box-shadow: 0 -8px 30px -24px var(--shadow-color);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-top: 1px solid var(--border);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Reserva el alto de la barra para que no tape el final ni el pie. */
+  /* Reserva el alto real de la barra para que no tape el final ni el pie. */
   .site-shell:has(.tab-bar) {
-    padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--tab-bar-space) + env(safe-area-inset-bottom, 0px));
   }
 
   .nav-links--student {
     display: none;
   }
 
-  /* Repetiría los destinos de la barra; "Cerrar sesión" vive en Cuenta.
-     En el reproductor, que no tiene barra, sigue. */
-  .site-shell:has(.tab-bar) .user-menu--student {
+  /* Con barra, arriba quedan solo el logo y el tema: los desplegables
+     repetirían sus destinos y "Cerrar sesión" vive en Cuenta. En el
+     reproductor, que no tiene barra, siguen. */
+  .site-shell:has(.tab-bar) .site-menu,
+  .site-shell:has(.tab-bar) .user-menu--student,
+  .site-shell:has(.tab-bar--admin) .user-menu {
     display: none;
+  }
+
+  /* El diseñador de plantillas ocupa una pantalla exacta: sin descontar la
+     barra, "Guardar diseño" quedaba debajo de ella. Solo cambia el alto del
+     marco; las posiciones del certificado no dependen de esto. */
+  .site-shell:has(.tab-bar) .design-workspace {
+    height: calc(100svh - var(--tab-bar-space) - env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -9126,11 +9985,23 @@ a.course-home__lesson:active,
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1.2;
+  /* Con letra grande la etiqueta puede partir: centrada y pareja. La barra
+     publica su alto real (TabBar) para que la reserva del pie la siga. */
+  text-align: center;
+  text-wrap: balance;
   -webkit-tap-highlight-color: transparent;
 }
 
 .tab-bar__item.active {
   color: var(--accent-text);
+}
+
+/* En 280px "Correcciones" no cabía en su cuarto de barra. */
+@media (max-width: 340px) {
+  .tab-bar__item {
+    font-size: 0.6875rem;
+  }
 }
 
 /* La sección activa lleva su "píldora" rosa. */
@@ -9141,6 +10012,29 @@ a.course-home__lesson:active,
   padding: 4px 15px;
   border-radius: var(--radius-full);
   transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.tab-bar__icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Pendientes (ej. correcciones por revisar), sobre el ícono. */
+.tab-bar__badge {
+  position: absolute;
+  top: -2px;
+  right: 8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--primary-strong);
+  color: var(--text-on-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 10px var(--primary-glow);
 }
 
 .tab-bar__item.active .tab-bar__icon,
@@ -9163,6 +10057,7 @@ a.course-home__lesson:active,
   width: 48px;
   height: 48px;
   color: var(--gold);
+  margin-bottom: 0.5rem;
 }
 
 .certificate-list {
@@ -9179,17 +10074,29 @@ a.course-home__lesson:active,
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem 1rem;
-  padding: 1rem 1.25rem;
+  padding: 1.1rem 1.25rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+/* Sello dorado: cada certificado es un logro. */
+.certificate-list__seal {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-full);
+  background: var(--btn-gold);
+  color: var(--text-on-gold);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .certificate-list__icon {
-  flex-shrink: 0;
-  width: 28px;
-  height: 28px;
-  color: var(--gold);
+  width: 24px;
+  height: 24px;
 }
 
 .certificate-list__info {
@@ -9199,7 +10106,11 @@ a.course-home__lesson:active,
 
 .certificate-list__name {
   margin: 0;
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
   font-weight: 600;
+  line-height: 1.25;
+  color: var(--title);
   overflow-wrap: anywhere;
 }
 
@@ -9207,6 +10118,7 @@ a.course-home__lesson:active,
   margin: 0.15rem 0 0;
   font-size: 0.82rem;
   color: var(--text-muted);
+  overflow-wrap: anywhere;
 }
 
 /* Si la fila se parte, el botón ocupa todo el ancho en vez de quedar suelto. */
@@ -9239,7 +10151,7 @@ a.course-home__lesson:active,
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  min-height: 40px;
+  min-height: var(--touch-min);
   padding: 0 0.8rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-full);
@@ -9262,6 +10174,74 @@ a.course-home__lesson:active,
   height: 18px;
 }
 
+/* Zonas táctiles de la cabecera en el teléfono, también acostado: el
+   interruptor de tema se ve de 32px pero su etiqueta ocupa los 44. */
+@media (max-width: 768px), (max-height: 500px) {
+  .theme-switch {
+    height: var(--touch-min);
+  }
+
+  .theme-switch .slider {
+    inset-block: 6px;
+  }
+}
+
+/* Acostado, los destinos vuelven a la cabecera: altura táctil con el
+   subrayado pegado al texto. */
+@media (max-height: 500px) {
+  :is(.nav-links--sections, .nav-links--student) a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch-min);
+    padding-block: 0;
+  }
+
+  :is(.nav-links--sections, .nav-links--student) a::after {
+    bottom: 6px;
+  }
+
+  .user-menu__trigger {
+    min-height: var(--touch-min);
+  }
+}
+
+/* ≤340px: logo, tema, "Menú" y avatar no cabían en una fila y el tema tapaba
+   el logo. El interruptor y los huecos se compactan y "Menú" queda en su
+   ícono (la palabra sigue para lectores de pantalla); así cabe también con
+   letra grande. */
+@media (max-width: 340px) {
+  .nav {
+    column-gap: 0.25rem;
+  }
+
+  .nav-links {
+    gap: 0.25rem;
+  }
+
+  .theme-switch {
+    width: 52px;
+  }
+
+  .theme-switch input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+
+  .site-menu__toggle {
+    justify-content: center;
+    min-width: var(--touch-min);
+    padding: 0;
+  }
+
+  .site-menu__toggle span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
 .site-menu__panel {
   position: absolute;
   top: 100%;
@@ -9273,6 +10253,10 @@ a.course-home__lesson:active,
   border-bottom: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
   animation: site-menu-in var(--dur-base) var(--ease-out);
+  /* Teléfono acostado: el panel no debe salirse por abajo. */
+  max-height: calc(100dvh - 4.5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 @keyframes site-menu-in {

@@ -422,21 +422,29 @@ convention when adding new ones.
 
 ### Design system
 
+The style is **"Revista suave" (A2)**: magazine language (fashion serif, fuchsia italic
+accents) in the *showcase* moments, calm and readable UI everywhere people actually work.
 All colors are CSS custom properties defined in **two blocks at the top of `App.css`**:
-`:root` (light theme, "mixto": cream with a hint of rose, wine-dark text) and
-`[data-theme='dark']` (wine). Dark mode is `[data-theme='dark']` on `<html>`, persisted in
-localStorage. Fonts: `--font-heading` = Kaushan Script, `--font-body` = DM Sans (Google
-Fonts, loaded in `index.html`). The header comment of `App.css` says which token to use
-for what — read it before styling anything.
+`:root` (light theme: satin silver background, near-black ink, white cards separated by
+shadow) and `[data-theme='dark']` (charcoal). Dark mode is `[data-theme='dark']` on
+`<html>`, persisted in localStorage. Fonts: `--font-heading` = Bodoni Moda, `--font-accent`
+= Playfair Display italic, `--font-body` = Montserrat (Google Fonts, loaded in
+`index.html` together with the families the certificate designer offers — don't drop
+those). The logo comes in two files: `public/images/logo-mark.png` (full fuchsia circle)
+for large placements (coming-soon, login and the other auth pages), and
+`public/images/logo-mark-m.png` (simplified "M" mark, legible at small sizes) for the
+header, footer and image placeholders (`BrandMark`). The header comment of `App.css` says
+which token to use for what — read it before styling anything.
 
 Rules (decided in issue #30, after the site drifted into "all white / all wine"):
 
 - **No color is written by hand outside those two token blocks** — not in `App.css`, not
   in a component's `style={{}}`. A stray color ignores the theme and the palette.
   Transparent tints are built from a token: `color-mix(in srgb, var(--danger) 15%, transparent)`.
-- **Pink as text is `--accent-text`, never `--primary`.** `--primary` fills (bars, dots,
-  borders); as text it fails contrast. Same for gold: `--gold-text` for text, `--gold`
-  for icons and fills.
+- **Pink as text is `--accent-text`, never `--primary`.** `--primary` (`--rose-500`, the
+  logo's neon `#ff00aa`) is decoration only — bars, dots, glows, borders; white text on it
+  is 3.6:1. Same for gold: `--gold-text` for text, `--gold` for icons and fills. Gold is
+  reserved for achievements (certificates, approvals, renewals).
 - Text on solid pink uses `--primary-strong` + `--text-on-primary`; text on a solid status
   color (success/warning/danger) uses `--text-on-status`. In dark mode the status colors
   are light, so white on them is unreadable.

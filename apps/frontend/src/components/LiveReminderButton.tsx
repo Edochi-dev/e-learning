@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Bell, Check } from 'lucide-react';
 import { LIVE_REMINDER_LEAD_MINUTES } from '@maris-nails/shared';
 import { useAuth } from '../context/AuthContext';
 
@@ -38,7 +39,7 @@ export const LiveReminderButton: React.FC<Props> = ({ lessonId }) => {
     if (requested) {
         return (
             <p className="live-reminder live-reminder--done" role="status">
-                <span className="live-reminder__check" aria-hidden="true">✓</span>
+                <span className="live-reminder__check" aria-hidden="true"><Check size={16} strokeWidth={2.5} /></span>
                 <span>
                     ¡Listo! Te avisaremos por correo{user?.email ? <> a <strong>{user.email}</strong></> : null} {LEAD_TEXT} antes.
                 </span>
@@ -55,7 +56,8 @@ export const LiveReminderButton: React.FC<Props> = ({ lessonId }) => {
                 setRequested(true);
             }}
         >
-            🔔 Avísame antes de la clase
+            <Bell size={18} strokeWidth={1.75} aria-hidden="true" />
+            Avísame antes de la clase
         </button>
     );
 };

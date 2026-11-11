@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { GraduationCap } from 'lucide-react';
 import type { CertificateGateway } from '../../gateways/CertificateGateway';
 import { useCertificate } from '../../hooks/useCertificate';
 import { parseCalendarDate } from '../../lib/calendar-date';
@@ -73,7 +74,7 @@ export const CertificateDetailAdminPage: React.FC<Props> = ({ gateway }) => {
             <Link to="/admin/certificados/buscar" className="back-link">← Volver a Buscar</Link>
 
             <header className="cert-verify__hero">
-                <div className="cert-verify__hero-icon" aria-hidden="true">🎓</div>
+                <div className="cert-verify__hero-icon" aria-hidden="true"><GraduationCap size={40} strokeWidth={1.5} /></div>
                 <h1 className="cert-verify__title">Certificado Oficial</h1>
                 <p className="cert-verify__academy">Mari's Nails Academy</p>
             </header>

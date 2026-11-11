@@ -37,6 +37,6 @@ describe('openClassLabel', () => {
     });
 
     it('desde la hora de inicio, está en vivo', () => {
-        expect(openClassLabel(startsAt, new Date('2030-03-01T22:00:00Z'))).toBe('🔴 En vivo ahora');
+        expect(openClassLabel(startsAt, new Date('2030-03-01T22:00:00Z'))).toBe('En vivo ahora');
     });
 });

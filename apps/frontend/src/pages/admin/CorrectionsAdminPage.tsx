@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { ChevronRight } from 'lucide-react';
 import { Badge, type BadgeTone } from '../../components/Badge';
 import type { Course } from '@maris-nails/shared';
 import type { CourseGateway } from '../../gateways/CourseGateway';
@@ -97,9 +98,10 @@ export const CorrectionsAdminPage: React.FC<Props> = ({ gateway, courseGateway }
 
     return (
         <div className="admin-page">
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
+            <Link to="/admin" className="back-link">← Volver al panel</Link>
             <div className="admin-header">
-                <h1>Correcciones</h1>
+                <p className="section-eyebrow">Administración</p>
+                <h1>Gestión de <em>correcciones</em></h1>
                 <p>Revisa las entregas de tus alumnas y da feedback.</p>
             </div>
 
@@ -174,9 +176,12 @@ const CourseGroup: React.FC<{
                     onClick={() => setExpanded((prev) => !prev)}
                     aria-expanded={expanded}
                 >
-                    <span className={`correction-group-arrow ${expanded ? 'correction-group-arrow--open' : ''}`}>
-                        ▸
-                    </span>
+                    <ChevronRight
+                        className={`correction-group-arrow ${expanded ? 'correction-group-arrow--open' : ''}`}
+                        size={16}
+                        strokeWidth={2}
+                        aria-hidden="true"
+                    />
                     <div>
                         <h3 className="correction-group-title">
                             {group.courseTitle}
@@ -216,7 +221,7 @@ interface HistoryTabProps {
 }
 
 const statusLabels: Record<string, { text: string; tone: BadgeTone }> = {
-    approved: { text: 'Aprobada', tone: 'success' },
+    approved: { text: 'Aprobada', tone: 'gold' },
     rejected: { text: 'Rechazada', tone: 'danger' },
 };
 

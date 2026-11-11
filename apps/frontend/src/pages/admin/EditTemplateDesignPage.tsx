@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { TriangleAlert } from 'lucide-react';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { TemplateDesignPicker } from '../../components/TemplateDesignPicker';
 import { useToast } from '../../components/Toast';
+import { inlineIconStyle } from '../../components/inlineIcon';
 
 interface Props {
     gateway: CertificateGateway;
@@ -87,9 +89,10 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver a certificados</Link>
             <div className="admin-header">
-                <h1>Editar diseño</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Editar <em>diseño</em></h1>
                 <p>Edita la posición, tipografía, tamaño, color y alineación de los elementos sobre "{template.name}".</p>
             </div>
 
@@ -112,7 +115,7 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                 emitidos conservan su PDF y su templateSnapshot originales. */}
             <div className="admin-notice admin-notice--compact" role="note">
                 <p className="admin-notice__text">
-                    <strong>⚠ Edición no destructiva:</strong> solo cambia los certificados que generes a partir
+                    <strong><TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Edición no destructiva:</strong> solo cambia los certificados que generes a partir
                     de ahora; los ya emitidos conservan su diseño original.
                 </p>
             </div>

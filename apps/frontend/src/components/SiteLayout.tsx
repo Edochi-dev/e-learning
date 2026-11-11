@@ -5,7 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 import { LocalStorageThemeGateway } from '../gateways/LocalStorageThemeGateway';
 import { ThemeSwitch } from './ThemeSwitch';
 import { UserMenu } from './UserMenu';
-import { StudentHeaderLinks } from './StudentNav';
+import { StudentHeaderLinks } from './AppNav';
 import { SiteMenu, SiteSectionLinks } from './SiteSections';
 import { useSiteSections } from '../hooks/useSiteSections';
 import { useLogout } from '../hooks/useLogout';
@@ -31,8 +31,8 @@ export const SiteLayout = () => {
             <header className="header">
                 <div className="container nav">
                     <Link to={homePathFor(user)} className="logo">
-                        <img src="/images/logo.png" alt="" className="logo__img" />
-                        <span className="logo__name"><em>Mari's Nails Academy</em></span>
+                        <img src="/images/logo-mark-m.png" alt="" className="logo__img" />
+                        <span className="logo__name">Mari's Nails <em>Academy</em></span>
                     </Link>
                     {showSections && <SiteSectionLinks sections={sections} />}
                     <StudentHeaderLinks />
@@ -60,7 +60,11 @@ export const SiteLayout = () => {
             </main>
 
             <footer className="footer">
-                <div className="container">
+                <div className="container footer__inner">
+                    <span className="footer__brand">
+                        <img src="/images/logo-mark-m.png" alt="" className="footer__logo" />
+                        <span className="logo__name">Mari's Nails <em>Academy</em></span>
+                    </span>
                     <p>© {new Date().getFullYear()} Mari's Nails Academy. Todos los derechos reservados.</p>
                 </div>
             </footer>

@@ -1,42 +1,26 @@
 import type { ReactNode } from 'react';
-import type { LucideIcon } from 'lucide-react';
 import { Card } from './Card';
 
 interface AuthLayoutProps {
-    icon: LucideIcon;
-    title: string;
+    /** Admite una palabra en <em>, que se pinta con la itálica metálica de la marca. */
+    title: ReactNode;
     subtitle: string;
+    /** Rótulo opcional sobre el título (ej. "Bienvenida de vuelta"). */
+    eyebrow?: string;
     children: ReactNode;
     /** Enlaces del pie (ej. "¿No tienes cuenta? Regístrate"). */
     footer?: ReactNode;
 }
 
-/**
- * AuthLayout — Contenedor común de las páginas de autenticación
- * (login, registro, recuperar/restablecer contraseña).
- *
- * Antes, cada una repetía el mismo bloque inline: contenedor centrado + card +
- * cabecera con icono, título en degradado y subtítulo. Extraerlo aquí elimina
- * esa duplicación y unifica el look. El icono es de lucide-react (adiós emojis).
- */
-export const AuthLayout = ({ icon: Icon, title, subtitle, children, footer }: AuthLayoutProps) => (
-    <div className="container" style={{ maxWidth: '520px', marginTop: '5rem', marginBottom: '3rem' }}>
+/** Contenedor común de las páginas de autenticación: logo, título y tarjeta. */
+export const AuthLayout = ({ title, subtitle, eyebrow, children, footer }: AuthLayoutProps) => (
+    <div className="container auth-layout">
         <Card>
-            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                <Icon size={44} strokeWidth={1.5} style={{ color: 'var(--primary)' }} aria-hidden="true" />
-                <h2 style={{
-                    marginTop: '0.75rem',
-                    marginBottom: '0.25rem',
-                    fontSize: '1.8rem',
-                    background: 'linear-gradient(135deg, var(--primary), var(--gold))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                }}>
-                    {title}
-                </h2>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                    {subtitle}
-                </p>
+            <div className="auth-layout__header">
+                <img src="/images/logo-mark.png" alt="" className="auth-layout__logo" />
+                {eyebrow && <p className="section-eyebrow">{eyebrow}</p>}
+                <h1 className="auth-layout__title">{title}</h1>
+                <p className="auth-layout__subtitle">{subtitle}</p>
             </div>
 
             {children}

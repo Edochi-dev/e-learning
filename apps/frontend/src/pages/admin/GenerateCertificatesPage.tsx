@@ -127,9 +127,10 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
 
     return (
         <div className="admin-page">
-            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver al panel de certificados</Link>
             <div className="admin-header">
-                <h1>Generar Certificados</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Generar <em>certificados</em></h1>
                 <p>Selecciona una plantilla, ingresa los nombres y genera los PDFs.</p>
             </div>
 

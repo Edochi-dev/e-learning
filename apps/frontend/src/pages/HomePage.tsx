@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { ArrowRight, GraduationCap } from 'lucide-react';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 
@@ -10,6 +11,7 @@ import { FaqSection } from '../components/FaqSection';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useEnrolledCourseIds } from '../hooks/useEnrolledCourseIds';
 import { CourseCardLink } from '../components/CourseCardLink';
+import { BrandMark } from '../components/BrandMark';
 
 interface HomePageProps {
     gateway: CourseGateway;
@@ -22,24 +24,24 @@ const PREVIEW_COUNT = 3;
 // Por ahora cada item tiene un gradiente de placeholder y una etiqueta descriptiva.
 const PLACEHOLDER_TONES = {
     wine: 'linear-gradient(135deg, var(--rose-900), var(--rose-700))',
-    gold: 'linear-gradient(135deg, var(--gold-800), var(--gold-600))',
-    blend: 'linear-gradient(135deg, var(--rose-800), var(--gold-700))',
+    deep: 'linear-gradient(135deg, var(--rose-800), var(--rose-600))',
+    blend: 'linear-gradient(135deg, var(--rose-900), var(--rose-500))',
 };
 const GALLERY_ROW_1 = [
     { id: 1,  label: 'Certificación masiva · Santiago 2024',   gradient: PLACEHOLDER_TONES.wine },
-    { id: 2,  label: 'Workshop acrílico escultórico',           gradient: PLACEHOLDER_TONES.gold },
+    { id: 2,  label: 'Workshop acrílico escultórico',           gradient: PLACEHOLDER_TONES.deep },
     { id: 3,  label: 'Clausura promoción 2023',                 gradient: PLACEHOLDER_TONES.blend },
     { id: 4,  label: 'Técnica gel profesional',                 gradient: PLACEHOLDER_TONES.wine },
-    { id: 5,  label: 'Certificación masiva · 80 alumnas',       gradient: PLACEHOLDER_TONES.gold },
+    { id: 5,  label: 'Certificación masiva · 80 alumnas',       gradient: PLACEHOLDER_TONES.deep },
     { id: 6,  label: 'Entrega de diplomas · Stgo',              gradient: PLACEHOLDER_TONES.blend },
 ];
 
 const GALLERY_ROW_2 = [
     { id: 7,  label: 'Clínica presencial · Nail Art',           gradient: PLACEHOLDER_TONES.wine },
-    { id: 8,  label: 'Masterclass Chrome & Mirror',             gradient: PLACEHOLDER_TONES.gold },
+    { id: 8,  label: 'Masterclass Chrome & Mirror',             gradient: PLACEHOLDER_TONES.deep },
     { id: 9,  label: 'Práctica guiada semipermanente',          gradient: PLACEHOLDER_TONES.blend },
     { id: 10, label: 'Workshop express nail art',               gradient: PLACEHOLDER_TONES.wine },
-    { id: 11, label: 'Certificación internacional',             gradient: PLACEHOLDER_TONES.gold },
+    { id: 11, label: 'Certificación internacional',             gradient: PLACEHOLDER_TONES.deep },
     { id: 12, label: 'Talleres presenciales 2024',              gradient: PLACEHOLDER_TONES.blend },
 ];
 
@@ -87,13 +89,18 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
         <>
             {/* ─── HERO ──────────────────────────────────────────── */}
             <section className="hero">
+                <svg className="hero__wave" viewBox="0 0 1200 160" preserveAspectRatio="none" aria-hidden="true">
+                    <path d="M0 100 C 260 30, 520 170, 760 90 S 1100 20, 1200 60" />
+                    <path d="M0 130 C 300 70, 560 180, 820 110 S 1120 60, 1200 85" />
+                </svg>
                 <div className="container hero__inner">
 
                     {/* Columna izquierda — texto */}
                     <div className="hero__content">
+                        <p className="section-eyebrow">Formaciones para nail artists</p>
                         <h1 className="hero__heading">
                             Transforma<br />
-                            Tu <em>Técnica.</em>
+                            tu <em>técnica.</em>
                         </h1>
 
                         <p className="hero__desc">
@@ -104,10 +111,12 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
 
                         <div className="hero-actions">
                             <Link to="/cursos" className="btn-primary">
-                                Ver Cursos
+                                Ver cursos
+                                <ArrowRight size={18} strokeWidth={1.75} aria-hidden="true" />
                             </Link>
                             <Link to="/certificados/buscar" className="btn-secondary">
-                                🎓 Ya tengo certificado
+                                <GraduationCap size={18} strokeWidth={1.75} aria-hidden="true" />
+                                Ya tengo certificado
                             </Link>
                         </div>
                     </div>
@@ -118,7 +127,7 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                     */}
                     <div className="hero__photo">
                         <div className="hero__photo-placeholder">
-                            <span className="hero__photo-emoji">💅</span>
+                            <BrandMark width="22%" className="hero__photo-emoji" />
                             <span className="hero__photo-label">Foto aquí</span>
                         </div>
                     </div>
@@ -129,9 +138,10 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
             {/* ─── GALERÍA MARQUEE ─────────────────────────────── */}
             <section className="gallery-section reveal">
                 <div className="container">
-                    <p className="section-eyebrow">Certificaciones &amp; Talleres</p>
+                    <p className="section-eyebrow">Certificaciones &amp; talleres</p>
+                    <h2 className="section-title">Más de 3000 <em>alumnas</em></h2>
                     <p className="gallery-section__sub">
-                        Más de 3000 alumnas certificadas en clases presenciales y online.
+                        Certificadas en clases presenciales y online.
                     </p>
                 </div>
 
@@ -145,7 +155,7 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                                 className="gallery-item"
                                 style={{ background: item.gradient }}
                             >
-                                <span className="gallery-item__emoji">💅</span>
+                                <BrandMark width="16%" className="gallery-item__emoji" />
                                 <span className="gallery-item__label">{item.label}</span>
                             </div>
                         ))}
@@ -157,7 +167,7 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                                 className="gallery-item"
                                 style={{ background: item.gradient }}
                             >
-                                <span className="gallery-item__emoji">🏆</span>
+                                <BrandMark width="16%" className="gallery-item__emoji" />
                                 <span className="gallery-item__label">{item.label}</span>
                             </div>
                         ))}
@@ -224,7 +234,8 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
             <section className="home-preview reveal">
                 <div className="container">
                     <div className="home-preview__header">
-                        <p className="section-eyebrow">Aprende lo que el mercado exige</p>
+                        <p className="section-eyebrow">Programas</p>
+                        <h2 className="section-title">Aprende lo que <em>el mercado exige</em></h2>
                         <p className="home-preview__subtitle">
                             Cada programa fue diseñado con base en la demanda real del sector.
                         </p>
@@ -239,7 +250,7 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                                         <div className="preview-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
                                                 ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
-                                                : '💅'
+                                                : <BrandMark width="22%" />
                                             }
                                         </div>
                                         <div className="preview-card__body">
@@ -275,7 +286,7 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                             <div className="preview-grid">
                                 {STATIC_PREVIEWS.map((item, i) => (
                                     <article key={i} className="preview-card">
-                                        <div className="preview-card__visual" aria-hidden="true">💅</div>
+                                        <div className="preview-card__visual" aria-hidden="true"><BrandMark width="22%" /></div>
                                         <div className="preview-card__body">
                                             <span className="preview-card__badge">{item.badge}</span>
                                             <h3 className="preview-card__title">{item.title}</h3>
@@ -309,9 +320,9 @@ export const HomePage = ({ gateway, enrollmentGateway }: HomePageProps) => {
                 <div className="container">
                     <div className="home-contact__inner">
                         <p className="section-eyebrow">Ponte en contacto</p>
+                        <h2 className="section-title">Estamos para <em>orientarte</em></h2>
                         <p className="home-contact__subtitle">
                             ¿Tienes dudas sobre algún curso o problemas para comenzar tu formación?
-                            Estamos aquí para orientarte.
                         </p>
                         <div className="contact-cards">
                             <a

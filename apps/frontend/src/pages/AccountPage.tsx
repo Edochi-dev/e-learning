@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { CreditCard, GraduationCap, Receipt, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useLogout } from '../hooks/useLogout';
 import { UserAvatar, getColorFromName } from '../components/UserAvatar';
 import { useToast } from '../components/Toast';
 import { ConfirmDialog } from '../components/ConfirmDialog';
+import { inlineIconStyle } from '../components/inlineIcon';
 import type { AuthGateway } from '../gateways/AuthGateway';
 import type { OrderGateway, MyOrder } from '../gateways/OrderGateway';
 import type { StudentNameChangeGateway } from '../gateways/NameChangeGateway';
@@ -166,9 +168,12 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChange
             {/* ── Contenido ── */}
             <div className="container account-content">
                 <div className="account-profile">
+                    <p className="section-eyebrow account-profile__eyebrow">Tu cuenta</p>
                     <h1 className="account-profile__name">{user.fullName}</h1>
                     <span className="account-profile__role">
-                        {user.role === 'admin' ? '🛡️ Administradora' : '🎓 Estudiante'}
+                        {user.role === 'admin'
+                            ? <><ShieldCheck size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Administradora</>
+                            : <><GraduationCap size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Estudiante</>}
                     </span>
                 </div>
 
@@ -364,7 +369,7 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChange
                         <section className="account-card">
                             <h2 className="account-card__title">Métodos de Pago</h2>
                             <div className="account-card__empty">
-                                <p>💳</p>
+                                <p aria-hidden="true"><CreditCard size={32} strokeWidth={1.5} /></p>
                                 <p>No tienes tarjetas guardadas.</p>
                             </div>
                         </section>
@@ -384,7 +389,7 @@ export const AccountPage: React.FC<Props> = ({ gateway, orderGateway, nameChange
 
                             {!ordersLoading && !ordersError && orders.length === 0 && (
                                 <div className="account-card__empty">
-                                    <p>🧾</p>
+                                    <p aria-hidden="true"><Receipt size={32} strokeWidth={1.5} /></p>
                                     <p>Aún no tienes compras.</p>
                                 </div>
                             )}

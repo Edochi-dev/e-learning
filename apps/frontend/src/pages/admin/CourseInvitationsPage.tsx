@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { TriangleAlert } from 'lucide-react';
 import { InvitationStatus } from '@maris-nails/shared';
 import type {
     AdminInvitationGateway,
@@ -10,6 +11,7 @@ import type { CourseGateway } from '../../gateways/CourseGateway';
 import { useToast } from '../../components/Toast';
 import { Badge, type BadgeTone } from '../../components/Badge';
 import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { inlineIconStyle } from '../../components/inlineIcon';
 
 interface CourseInvitationsPageProps {
     gateway: AdminInvitationGateway;
@@ -158,10 +160,11 @@ export const CourseInvitationsPage = ({
 
     return (
         <div className="admin-page">
-            <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
+            <Link to="/admin/cursos" className="back-link">← Volver a cursos</Link>
 
             <div className="admin-header">
-                <h1>Invitaciones de {courseTitle}</h1>
+                <p className="section-eyebrow">Cursos</p>
+                <h1>Invitaciones de <em>{courseTitle}</em></h1>
                 <p>
                     Cada enlace sirve una sola vez. Quien lo abre crea su cuenta y
                     entra al curso.
@@ -223,7 +226,8 @@ export const CourseInvitationsPage = ({
                 <div className="invitation-fresh">
                     <h2>Enlaces generados</h2>
                     <p className="invitation-fresh__warning">
-                        ⚠️ Cópialos ahora. Por seguridad no se guardan, así que al salir
+                        <TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                        Cópialos ahora. Por seguridad no se guardan, así que al salir
                         de esta pantalla no habrá forma de volver a verlos: tendrías que
                         generar otros.
                     </p>

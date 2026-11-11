@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
-import { Trash2 } from 'lucide-react';
+import { FileUp, GraduationCap, Search, Trash2 } from 'lucide-react';
 import { useToast } from '../../components/Toast';
 import { Dialog } from '../../components/Dialog';
 import { BlankCertificatesDialog } from '../../components/BlankCertificatesDialog';
@@ -85,37 +85,38 @@ export const CertificatesAdminPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
+            <Link to="/admin" className="back-link">← Volver al panel</Link>
             <div className="admin-header">
-                <h1>Gestión de Certificados</h1>
+                <p className="section-eyebrow">Administración</p>
+                <h1>Gestión de <em>certificados</em></h1>
                 <p>Administra plantillas y genera certificados para tus alumnos.</p>
             </div>
 
 
             <div className="admin-grid">
                 <div className="admin-card">
-                    <div className="admin-card-icon">📄</div>
-                    <h3>Nueva Plantilla</h3>
+                    <div className="admin-card-icon"><FileUp size={22} strokeWidth={1.6} aria-hidden="true" /></div>
+                    <h3>Nueva plantilla</h3>
                     <p>Sube un PDF en blanco y configura visualmente dónde irá el nombre y el código QR.</p>
-                    <Link to="/admin/certificados/plantillas/nueva" className="btn-primary card-action-btn">
-                        Subir Plantilla
+                    <Link to="/admin/certificados/plantillas/nueva" className="btn-primary btn-sm card-action-btn">
+                        Subir plantilla
                     </Link>
                 </div>
 
                 <div className="admin-card">
-                    <div className="admin-card-icon">🎓</div>
-                    <h3>Generar Certificados</h3>
+                    <div className="admin-card-icon"><GraduationCap size={22} strokeWidth={1.6} aria-hidden="true" /></div>
+                    <h3>Generar certificados</h3>
                     <p>Selecciona una plantilla, ingresa los nombres y genera los certificados en lote.</p>
-                    <Link to="/admin/certificados/generar" className="btn-primary card-action-btn">
+                    <Link to="/admin/certificados/generar" className="btn-primary btn-sm card-action-btn">
                         Generar
                     </Link>
                 </div>
 
                 <div className="admin-card">
-                    <div className="admin-card-icon">🔍</div>
-                    <h3>Buscar Certificado</h3>
+                    <div className="admin-card-icon"><Search size={22} strokeWidth={1.6} aria-hidden="true" /></div>
+                    <h3>Buscar certificado</h3>
                     <p>Busca certificados emitidos por nombre o número y visualiza o descarga el documento.</p>
-                    <Link to="/admin/certificados/buscar" className="btn-primary card-action-btn">
+                    <Link to="/admin/certificados/buscar" className="btn-primary btn-sm card-action-btn">
                         Buscar
                     </Link>
                 </div>

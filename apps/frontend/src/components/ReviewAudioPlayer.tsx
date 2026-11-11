@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Play } from 'lucide-react';
 import type { CorrectionGateway, CorrectionReview } from '../gateways/CorrectionGateway';
 import { formatSeconds } from '../lib/audio-recording';
 import { isTranscriptInProgress } from '../lib/transcript';
@@ -60,7 +61,7 @@ export const ReviewAudioPlayer: React.FC<ReviewAudioPlayerProps> = ({ review, ga
                         onClick={handlePlay}
                         disabled={isLoading}
                     >
-                        <span className="review-audio__play-icon" aria-hidden="true">▶</span>
+                        <span className="review-audio__play-icon" aria-hidden="true"><Play size={14} strokeWidth={2} fill="currentColor" /></span>
                         <span>{isLoading ? 'Cargando…' : 'Escuchar a tu profesora'}</span>
                         {review.audioDurationSeconds !== null && (
                             <span className="review-audio__duration">

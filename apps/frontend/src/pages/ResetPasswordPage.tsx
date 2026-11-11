@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { Lock } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 /**
  * ResetPasswordPage — Paso 2 del reset: el alumno elige su nueva contraseña.
@@ -46,14 +47,16 @@ export const ResetPasswordPage = () => {
 
     return (
         <AuthLayout
-            icon={Lock}
-            title="Nueva contraseña"
+            title={<>Nueva <em>contraseña</em></>}
             subtitle="Elige una contraseña nueva para tu cuenta"
         >
             {!token ? (
                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                     <p>El enlace no es válido. Solicita uno nuevo.</p>
-                    <Link to="/recuperar" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                    <Link
+                        to="/recuperar"
+                        style={{ color: 'var(--accent-text)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', minHeight: 'var(--touch-min)' }}
+                    >
                         Recuperar contraseña
                     </Link>
                 </div>
@@ -70,7 +73,8 @@ export const ResetPasswordPage = () => {
                             border: '1px solid var(--danger-soft)',
                             fontWeight: 500,
                         }}>
-                            ⚠️ {error}
+                            <TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                            {error}
                         </div>
                     )}
 

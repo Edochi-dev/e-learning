@@ -30,7 +30,8 @@ export const MyCertificatesPage = ({ gateway }: MyCertificatesPageProps) => {
     return (
         <div className="container my-certificates-page">
             <div className="my-courses-page__header">
-                <h1>Mis certificados</h1>
+                <p className="section-eyebrow">Tus logros</p>
+                <h1>Mis <em>certificados</em></h1>
                 <p className="my-courses-page__subtitle">{subtitle()}</p>
             </div>
 
@@ -52,7 +53,9 @@ export const MyCertificatesPage = ({ gateway }: MyCertificatesPageProps) => {
                 <ul className="certificate-list">
                     {certificates.map((certificate) => (
                         <li key={certificate.id} className="certificate-list__item">
-                            <Award className="certificate-list__icon" aria-hidden />
+                            <span className="certificate-list__seal" aria-hidden="true">
+                                <Award className="certificate-list__icon" />
+                            </span>
                             <div className="certificate-list__info">
                                 <p className="certificate-list__name">
                                     {certificate.templateSnapshot?.name ?? 'Certificado'}

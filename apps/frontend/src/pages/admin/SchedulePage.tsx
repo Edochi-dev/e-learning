@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { Bell } from 'lucide-react';
 import { Dialog } from '../../components/Dialog';
 import FullCalendar from '@fullcalendar/react';
 import type {
@@ -300,10 +301,11 @@ export const SchedulePage: React.FC<Props> = ({ gateway, pushGateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
+            <Link to="/admin" className="back-link">← Volver al panel</Link>
             <div className="admin-header agenda-header">
                 <div className="agenda-header__text">
-                    <h1>Agenda</h1>
+                    <p className="section-eyebrow">Administración</p>
+                    <h1>Mi <em>agenda</em></h1>
                     <p>Organiza tus clases, correcciones y eventos. Toca un hueco para crear.</p>
                 </div>
                 <button
@@ -312,7 +314,8 @@ export const SchedulePage: React.FC<Props> = ({ gateway, pushGateway }) => {
                     onClick={enablePushReminders}
                     disabled={enablingPush}
                 >
-                    🔔 {enablingPush ? 'Activando…' : 'Activar recordatorios'}
+                    <Bell size={18} strokeWidth={1.75} aria-hidden="true" />
+                    {enablingPush ? 'Activando…' : 'Activar recordatorios'}
                 </button>
             </div>
 

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { KeyRound } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
@@ -32,8 +31,7 @@ export const ForgotPasswordPage = () => {
 
     return (
         <AuthLayout
-            icon={KeyRound}
-            title="Recuperar contraseña"
+            title={<>Recuperar <em>contraseña</em></>}
             subtitle="Te enviaremos un enlace para restablecerla"
             footer={
                 <p style={{ textAlign: 'center', marginTop: '1.5rem', marginBottom: 0, fontSize: '0.875rem', color: 'var(--text-muted)' }}>

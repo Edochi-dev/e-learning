@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { Mail, ScrollText, Sparkles, TriangleAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { AuthLayout } from '../components/AuthLayout';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 export const RegisterPage = () => {
     const { register } = useAuth();
@@ -67,26 +70,7 @@ export const RegisterPage = () => {
     };
 
     return (
-        <div className="container" style={{ maxWidth: '520px', marginTop: '5rem', marginBottom: '3rem' }}>
-            <div className="card">
-                {/* Encabezado */}
-                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <span style={{ fontSize: '3rem' }}>💅</span>
-                    <h2 style={{
-                        marginTop: '0.75rem',
-                        marginBottom: '0.25rem',
-                        fontSize: '1.8rem',
-                        background: 'linear-gradient(135deg, var(--primary), var(--gold))',
-                        WebkitBackgroundClip: 'text',
-                        WebkitTextFillColor: 'transparent',
-                    }}>
-                        Crear Cuenta
-                    </h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        Únete a nuestra academia de nail art
-                    </p>
-                </div>
-
+        <AuthLayout title={<>Crear <em>cuenta</em></>} subtitle="Únete a nuestra academia de nail art">
                 {/* Error genérico (todo lo que no sea email duplicado) */}
                 {error && (
                     <div style={{
@@ -99,7 +83,8 @@ export const RegisterPage = () => {
                         border: '1px solid var(--danger-soft)',
                         fontWeight: 500,
                     }}>
-                        ⚠️ {error}
+                        <TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                        {error}
                     </div>
                 )}
 
@@ -120,7 +105,8 @@ export const RegisterPage = () => {
                         />
                         {/* Advertencia del certificado — siempre visible */}
                         <div className="certificate-notice">
-                            📜 Este nombre aparecerá en tu certificado de aprobación. Escríbelo con cuidado, teniendo en cuenta las mayúsculas y tildes correctas.
+                            <ScrollText size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                            Este nombre aparecerá en tu certificado de aprobación. Escríbelo con cuidado, teniendo en cuenta las mayúsculas y tildes correctas.
                         </div>
 
                         {/* Previsualización del certificado — se muestra desde la primera letra
@@ -128,13 +114,13 @@ export const RegisterPage = () => {
                             fullName.trim() es falsy cuando está vacío, truthy en cuanto hay texto. */}
                         {fullName.trim() && (
                             <div className="certificate-preview">
-                                <p className="certificate-preview__label">✨ Vista previa de tu certificado</p>
+                                <p className="certificate-preview__label"><Sparkles size={12} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Vista previa de tu certificado</p>
                                 <hr className="certificate-preview__divider" />
                                 <p className="certificate-preview__granted">
                                     Este certificado de aprobación se otorga a:
                                 </p>
                                 <p className="certificate-preview__name">{fullName}</p>
-                                <p className="certificate-preview__footer">Mari's Nails Academy 💅</p>
+                                <p className="certificate-preview__footer">Mari's Nails Academy</p>
                             </div>
                         )}
                     </div>
@@ -159,7 +145,8 @@ export const RegisterPage = () => {
                         {/* Mensajito suave cuando el email ya está registrado */}
                         {emailError && (
                             <div className="email-taken-notice">
-                                📧 {emailError}{' '}
+                                <Mail size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                                {emailError}{' '}
                                 <Link to="/login" style={{ color: 'inherit', fontWeight: 600 }}>
                                     Ir al login →
                                 </Link>
@@ -210,7 +197,8 @@ export const RegisterPage = () => {
                                 marginTop: '0.35rem',
                                 marginBottom: 0,
                             }}>
-                                ⚠️ {passwordError}
+                                <TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                                {passwordError}
                             </p>
                         )}
                     </div>
@@ -234,11 +222,10 @@ export const RegisterPage = () => {
                     color: 'var(--text-muted)',
                 }}>
                     ¿Ya tienes cuenta?{' '}
-                    <Link to="/login" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                    <Link to="/login" style={{ color: 'var(--accent-text)', fontWeight: 600 }}>
                         Iniciar sesión
                     </Link>
                 </p>
-            </div>
-        </div>
+        </AuthLayout>
     );
 };
