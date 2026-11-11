@@ -273,7 +273,8 @@ wipe to the remote and destroy the very copy meant to survive it.
 
 Exit codes matter, because `deploy.sh` reads them: `0` all good, `3` the local snapshot is
 fine but the off-site copy failed (a deploy continues — what protects the deploy is the local
-copy), anything else means there is no backup and the deploy aborts.
+copy; this includes `RCLONE_REMOTE` set with no `rclone` installed), anything else means there
+is no backup and the deploy aborts.
 
 **Verification.** `verify-backup.sh` compares both snapshots against their live sources byte
 by byte with `cmp`, and checks each off-site copy by hash with `rclone check --one-way`. Counting

@@ -135,9 +135,10 @@ if [ -z "$RCLONE_REMOTE" ]; then
 fi
 
 if ! command -v rclone >/dev/null 2>&1; then
-    echo "  AVISO: RCLONE_REMOTE está definido pero rclone no está instalado."
-    echo "         La copia local SÍ se hizo. Revisa la copia externa."
-    exit 0
+    echo "  ERROR: RCLONE_REMOTE está definido pero rclone no está instalado."
+    echo "         La copia local SÍ se hizo, pero NO existe copia externa."
+    echo "============================================"
+    exit 3
 fi
 
 # --progress redibuja una línea en bucle con secuencias de terminal: útil a
