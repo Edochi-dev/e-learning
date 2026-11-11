@@ -6,155 +6,204 @@ set -euo pipefail
 # ------------------------------------------------------------
 #  backup-files.sh cuenta archivos. Contar demuestra que hay
 #  751 cosas, no que esas cosas sean los certificados. Esto
-#  compara BYTE A BYTE el snapshot contra el original.
-#
-#  Un respaldo cuya restauración nunca se probó no es un
-#  respaldo: es una suposición con nombre de archivo.
+#  compara BYTE A BYTE cada snapshot (public/ y storage/)
+#  contra el original, y la copia externa por hash.
 #
 #  Uso:
 #    ./verify-backup.sh          # compara TODOS los archivos
-#    ./verify-backup.sh 25       # muestra aleatoria de 25
+#    ./verify-backup.sh 25       # muestra aleatoria de 25 por carpeta
 #
 #  Salida: 0 todo bien · 1 hay diferencias · 2 no se pudo verificar
+#  (si hay de ambas, gana 1: un respaldo corrupto es lo más grave)
 # ============================================================
 
+# Mismos valores por defecto y mismos overrides que backup-files.sh.
 PROJECT_DIR="${PROJECT_DIR:-/home/cerberus/e-learning}"
-SOURCE_DIR="$PROJECT_DIR/apps/backend/public"
-BACKUP_ROOT="${BACKUP_ROOT:-$HOME/backups-marisnails/files}"
-LATEST="$BACKUP_ROOT/latest"
+BACKEND_DIR="$PROJECT_DIR/apps/backend"
+BACKUP_BASE="${BACKUP_BASE:-$HOME/backups-marisnails}"
+RCLONE_REMOTE="${RCLONE_REMOTE:-}"
 SAMPLE="${1:-0}"
 
-echo "============================================"
-echo "  VERIFICACIÓN DEL RESPALDO"
-echo "============================================"
-echo "  Original: $SOURCE_DIR"
-echo "  Snapshot: $LATEST -> $(readlink -f "$LATEST" 2>/dev/null || echo '(sin resolver)')"
-
-if [ ! -d "$SOURCE_DIR" ]; then
-    echo "  ERROR: el original no existe. Nada que comparar."
+if ! [[ "$SAMPLE" =~ ^[0-9]+$ ]]; then
+    echo "Uso: $0 [tamaño de la muestra]"
     exit 2
 fi
 
-if [ ! -d "$LATEST" ]; then
-    echo "  ERROR: no hay snapshot 'latest'. ¿Se ejecutó backup-files.sh?"
-    exit 2
-fi
+# comm exige exactamente el orden de sort; se fija para no depender del locale.
+export LC_ALL=C
 
 WORK=$(mktemp -d)
 trap 'rm -rf "$WORK"' EXIT
 
-(cd "$SOURCE_DIR" && find . -type f | sort) > "$WORK/origen.txt"
-(cd "$LATEST" && find . -type f | sort) > "$WORK/copia.txt"
+HAY_DIFERENCIAS=0
+NO_VERIFICABLE=0
 
-# Tres conjuntos, y solo uno de ellos es un problema.
+# list_files <dir> [carpeta excluida...] — rutas relativas, ordenadas.
+list_files() {
+    local dir=$1; shift
+    local prune=()
+    for excluded in "$@"; do
+        prune+=(-path "./$excluded" -prune -o)
+    done
+    (cd "$dir" && find . "${prune[@]}" -type f -print | sort)
+}
+
+# verify_tree <nombre> <origen> <required|optional> [carpeta excluida...]
 #
-# Que el original tenga archivos que el snapshot no: normal. Son los
-# certificados emitidos desde el último respaldo. Que el snapshot tenga
-# archivos que el original ya no: también normal, es justamente para lo que
-# sirve. Lo que NO puede pasar es que un archivo esté en los dos con
-# contenido distinto: estos datos se escriben una vez y no se vuelven a
-# tocar, así que una diferencia ahí significa corrupción.
-comm -23 "$WORK/origen.txt" "$WORK/copia.txt" > "$WORK/solo-origen.txt"
-comm -13 "$WORK/origen.txt" "$WORK/copia.txt" > "$WORK/solo-copia.txt"
-comm -12 "$WORK/origen.txt" "$WORK/copia.txt" > "$WORK/comunes.txt"
+# <nombre> es a la vez la subcarpeta en BACKUP_BASE y en el remoto, igual que
+# en backup-files.sh. Las exclusiones deben coincidir con las de ese script.
+verify_tree() {
+    local name=$1 source=$2 mode=$3; shift 3
+    local excludes=("$@")
+    local latest="$BACKUP_BASE/$name/latest"
+    local work="$WORK/$name"
+    mkdir -p "$work"
 
-NUEVOS=$(wc -l < "$WORK/solo-origen.txt")
-BORRADOS=$(wc -l < "$WORK/solo-copia.txt")
-COMUNES=$(wc -l < "$WORK/comunes.txt")
-
-echo ""
-echo "  En ambos:              $COMUNES"
-echo "  Nuevos desde el backup: $NUEVOS  (se respaldarán en la próxima corrida)"
-echo "  Borrados desde el backup: $BORRADOS  (el snapshot los conserva)"
-
-if [ "$COMUNES" -eq 0 ]; then
     echo ""
-    echo "  ERROR: no hay ni un archivo en común. El snapshot no corresponde"
-    echo "         a este origen, o está vacío."
-    exit 2
-fi
+    echo "--- $name ---"
+    echo "  Original: $source"
+    echo "  Snapshot: $latest -> $(readlink -f "$latest" 2>/dev/null || echo '(sin resolver)')"
 
-# ── Qué se compara ─────────────────────────────────────────────────────
-if [ "$SAMPLE" -gt 0 ] && [ "$SAMPLE" -lt "$COMUNES" ]; then
-    shuf -n "$SAMPLE" "$WORK/comunes.txt" > "$WORK/a-comparar.txt"
-    echo ""
-    echo "  Comparando una muestra aleatoria de $SAMPLE archivos..."
-else
-    cp "$WORK/comunes.txt" "$WORK/a-comparar.txt"
-    echo ""
-    echo "  Comparando los $COMUNES archivos, byte a byte..."
-fi
-
-DISTINTOS=0
-COMPARTEN_INODO=0
-OK=0
-
-while IFS= read -r rel; do
-    src="$SOURCE_DIR/${rel#./}"
-    bak="$LATEST/${rel#./}"
-
-    if ! cmp -s "$src" "$bak"; then
-        echo "    DIFERENTE: $rel"
-        DISTINTOS=$((DISTINTOS + 1))
-        continue
+    if [ ! -d "$latest" ] && [ "$mode" = "optional" ]; then
+        if [ -d "$source" ] && [ -n "$(list_files "$source" "${excludes[@]}" | head -n 1)" ]; then
+            echo "  ERROR: hay archivos en el original y ningún snapshot. ¿Se ejecutó backup-files.sh?"
+            NO_VERIFICABLE=1
+        else
+            echo "  (Sin archivos ni snapshot todavía: nada que verificar)"
+        fi
+        return 0
     fi
 
-    # Los hardlinks de --link-dest apuntan al snapshot ANTERIOR, nunca al
-    # original. Si original y copia compartieran inodo no habría dos copias
-    # del dato, sino una con dos nombres: corromper el original corrompería
-    # el respaldo en el mismo acto.
-    if [ "$(stat -c %i "$src")" = "$(stat -c %i "$bak")" ]; then
-        echo "    MISMO INODO (no es una copia real): $rel"
-        COMPARTEN_INODO=$((COMPARTEN_INODO + 1))
-        continue
+    if [ ! -d "$source" ]; then
+        echo "  ERROR: el original no existe. Nada que comparar."
+        NO_VERIFICABLE=1
+        return 0
     fi
 
-    OK=$((OK + 1))
-done < "$WORK/a-comparar.txt"
+    if [ ! -d "$latest" ]; then
+        echo "  ERROR: no hay snapshot 'latest'. ¿Se ejecutó backup-files.sh?"
+        NO_VERIFICABLE=1
+        return 0
+    fi
 
-echo ""
-echo "  Idénticos y con dato propio: $OK"
-[ "$DISTINTOS" -gt 0 ] && echo "  Con contenido distinto:      $DISTINTOS"
-[ "$COMPARTEN_INODO" -gt 0 ] && echo "  Sin dato propio:             $COMPARTEN_INODO"
+    list_files "$source" "${excludes[@]}" > "$work/origen.txt"
+    list_files "$latest" > "$work/copia.txt"
 
-# ── La copia externa ───────────────────────────────────────────────────
-#
-# Lo de arriba compara dos rutas del MISMO disco. Si ese disco muere se van
-# las dos. La única copia que sobrevive es la remota, así que también hay
-# que comprobarla: `rclone check` compara hashes, no fechas ni tamaños.
-RCLONE_REMOTE="${RCLONE_REMOTE:-}"
-REMOTO_FALLO=0
+    # Solo uno de los tres conjuntos es un problema. Nuevos en el original son
+    # los emitidos desde el último respaldo; los que solo tiene el snapshot son
+    # justamente lo que el respaldo conserva. Pero estos datos se escriben una
+    # vez y no se tocan: un archivo en ambos con contenido distinto es corrupción.
+    comm -23 "$work/origen.txt" "$work/copia.txt" > "$work/solo-origen.txt"
+    comm -13 "$work/origen.txt" "$work/copia.txt" > "$work/solo-copia.txt"
+    comm -12 "$work/origen.txt" "$work/copia.txt" > "$work/comunes.txt"
 
-if [ -z "$RCLONE_REMOTE" ]; then
-    echo ""
-    echo "  (Copia externa no verificada: RCLONE_REMOTE no está definido)"
-elif ! command -v rclone >/dev/null 2>&1; then
-    echo ""
-    echo "  AVISO: RCLONE_REMOTE definido pero rclone no está instalado."
-    REMOTO_FALLO=1
-else
-    echo ""
-    echo "  Verificando la copia externa en $RCLONE_REMOTE (por hash)..."
-    # --one-way: al remoto le sobran archivos a propósito (se usa `copy`, que
-    # nunca borra). Lo que importa es que no le FALTE ninguno.
-    if rclone check "$LATEST/" "$RCLONE_REMOTE/" --one-way; then
+    local nuevos borrados comunes
+    nuevos=$(wc -l < "$work/solo-origen.txt")
+    borrados=$(wc -l < "$work/solo-copia.txt")
+    comunes=$(wc -l < "$work/comunes.txt")
+
+    echo "  En ambos:                 $comunes"
+    echo "  Nuevos desde el backup:   $nuevos  (se respaldarán en la próxima corrida)"
+    echo "  Borrados desde el backup: $borrados  (el snapshot los conserva)"
+
+    if [ "$comunes" -eq 0 ]; then
+        echo "  ERROR: no hay ni un archivo en común. El snapshot no corresponde"
+        echo "         a este origen, o está vacío."
+        NO_VERIFICABLE=1
+        return 0
+    fi
+
+    if [ "$SAMPLE" -gt 0 ] && [ "$SAMPLE" -lt "$comunes" ]; then
+        shuf -n "$SAMPLE" "$work/comunes.txt" > "$work/a-comparar.txt"
+        echo "  Comparando una muestra aleatoria de $SAMPLE archivos..."
+    else
+        cp "$work/comunes.txt" "$work/a-comparar.txt"
+        echo "  Comparando los $comunes archivos, byte a byte..."
+    fi
+
+    local distintos=0 comparten_inodo=0 ok=0 rel src bak
+    while IFS= read -r rel; do
+        src="$source/${rel#./}"
+        bak="$latest/${rel#./}"
+
+        if ! cmp -s "$src" "$bak"; then
+            echo "    DIFERENTE: $rel"
+            distintos=$((distintos + 1))
+            continue
+        fi
+
+        # Los hardlinks de --link-dest apuntan al snapshot ANTERIOR, nunca al
+        # original. Compartir inodo con el original sería un solo dato con dos
+        # nombres: corromper uno corrompe el otro. Se compara dispositivo:inodo
+        # porque el número de inodo solo es único dentro de un mismo disco.
+        if [ "$(stat -c '%d:%i' "$src")" = "$(stat -c '%d:%i' "$bak")" ]; then
+            echo "    MISMO INODO (no es una copia real): $rel"
+            comparten_inodo=$((comparten_inodo + 1))
+            continue
+        fi
+
+        ok=$((ok + 1))
+    done < "$work/a-comparar.txt"
+
+    echo "  Idénticos y con dato propio: $ok"
+    if [ "$distintos" -gt 0 ]; then
+        echo "  Con contenido distinto:      $distintos"
+        HAY_DIFERENCIAS=1
+    fi
+    if [ "$comparten_inodo" -gt 0 ]; then
+        echo "  Sin dato propio:             $comparten_inodo"
+        HAY_DIFERENCIAS=1
+    fi
+
+    verify_remote "$name" "$latest"
+}
+
+# Lo de arriba compara dos rutas del MISMO disco; si ese disco muere se van
+# las dos. La copia que sobrevive es la remota, y `rclone check` la compara
+# por hash, no por fecha ni tamaño.
+verify_remote() {
+    local name=$1 latest=$2
+
+    if [ -z "$RCLONE_REMOTE" ]; then
+        echo "  (Copia externa no verificada: RCLONE_REMOTE no está definido)"
+        return 0
+    fi
+
+    if ! command -v rclone >/dev/null 2>&1; then
+        echo "  ERROR: RCLONE_REMOTE definido pero rclone no está instalado."
+        NO_VERIFICABLE=1
+        return 0
+    fi
+
+    echo "  Verificando la copia externa en $RCLONE_REMOTE/$name (por hash)..."
+    # --one-way: al remoto le sobran archivos a propósito (se sube con `copy`,
+    # que nunca borra). Lo que importa es que no le FALTE ninguno.
+    if rclone check "$latest/" "$RCLONE_REMOTE/$name/" --one-way; then
         echo "  Copia externa íntegra."
     else
         echo "  ERROR: la copia externa no coincide con el snapshot."
-        REMOTO_FALLO=1
+        HAY_DIFERENCIAS=1
     fi
-fi
+}
 
 echo "============================================"
+echo "  VERIFICACIÓN DEL RESPALDO"
+echo "============================================"
 
-if [ "$DISTINTOS" -gt 0 ] || [ "$COMPARTEN_INODO" -gt 0 ] || [ "$REMOTO_FALLO" -ne 0 ]; then
-    echo "  RESULTADO: HAY PROBLEMAS. Revisar antes de confiar en este respaldo."
+verify_tree files "$BACKEND_DIR/public" required
+verify_tree storage "$BACKEND_DIR/storage" optional hls
+
+echo ""
+echo "============================================"
+if [ "$HAY_DIFERENCIAS" -ne 0 ]; then
+    echo "  RESULTADO: HAY DIFERENCIAS. Revisar antes de confiar en este respaldo."
+    echo "============================================"
     exit 1
 fi
-
-if [ "$SAMPLE" -gt 0 ] && [ "$SAMPLE" -lt "$COMUNES" ]; then
-    echo "  RESULTADO: la muestra de $SAMPLE archivos restaura correctamente."
-else
-    echo "  RESULTADO: los $OK archivos del snapshot restauran correctamente."
+if [ "$NO_VERIFICABLE" -ne 0 ]; then
+    echo "  RESULTADO: NO SE PUDO VERIFICAR el respaldo (ver los ERROR de arriba)."
+    echo "============================================"
+    exit 2
 fi
+echo "  RESULTADO: el respaldo restaura correctamente."
 echo "============================================"

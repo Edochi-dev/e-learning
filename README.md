@@ -257,35 +257,40 @@ Two different things need saving, and only one of them is in the database.
 **The database** is dumped by `deploy.sh` (`pg_dump`, ten most recent kept). It aborts the
 deploy if the dump comes out empty.
 
-**The uploaded files** — issued certificates, the templates they are generated from,
-correction photos, thumbnails — live only on disk. `backup-files.sh` snapshots
-`apps/backend/public` with `rsync --link-dest`, so files identical to the previous snapshot
-are hardlinked rather than copied and ten snapshots cost about as much as one. It refuses to
-run when the source is missing or empty, and verifies the file count before moving the
-`latest` pointer, so a half-finished copy never becomes the base of the next snapshot.
+**The uploaded files** live only on disk: `apps/backend/public` (issued certificates, the
+templates they are generated from, correction photos, thumbnails) and `apps/backend/storage`
+(correction audio, video sources; `storage/hls` is skipped because it is regenerated from the
+sources). `backup-files.sh` snapshots each one into its own root under
+`~/backups-marisnails/` (`files/` and `storage/`) with `rsync --link-dest`, so files identical
+to the previous snapshot are hardlinked rather than copied and ten snapshots cost about as much
+as one. It refuses to run when a source is missing or empty (an empty `storage/` is fine until
+its first snapshot), and verifies the file count before moving the `latest` pointer, so a
+half-finished copy never becomes the base of the next snapshot.
 
-Set `RCLONE_REMOTE` to also push the newest snapshot off-site. It uses `rclone copy`, never
-`sync`: sync would replicate a local wipe to the remote and destroy the very copy meant to
-survive it.
+Set `RCLONE_REMOTE` to also push the newest snapshots off-site, to `$RCLONE_REMOTE/files` and
+`$RCLONE_REMOTE/storage`. It uses `rclone copy`, never `sync`: sync would replicate a local
+wipe to the remote and destroy the very copy meant to survive it.
 
 Exit codes matter, because `deploy.sh` reads them: `0` all good, `3` the local snapshot is
 fine but the off-site copy failed (a deploy continues — what protects the deploy is the local
 copy), anything else means there is no backup and the deploy aborts.
 
-**Verification.** `verify-backup.sh` compares the snapshot against the live source byte by
-byte with `cmp`, and checks the off-site copy by hash with `rclone check --one-way`. Counting
+**Verification.** `verify-backup.sh` compares both snapshots against their live sources byte
+by byte with `cmp`, and checks each off-site copy by hash with `rclone check --one-way`. Counting
 files proves there are 751 things, not that those things are the certificates. It also
 asserts that each backed-up file has its **own inode**: sharing one with the original would
 mean a single copy of the data under two names, where corrupting the original corrupts the
 backup in the same act. Files present only in the source (issued since the snapshot) or only
-in the snapshot (deleted since) are reported, not treated as failures.
+in the snapshot (deleted since) are reported, not treated as failures. Exit codes: `0` the
+backup restores, `1` differences (corrupt or shared-inode file, off-site copy incomplete),
+`2` it could not be verified (no snapshot, empty snapshot, `rclone` missing).
 
 ```bash
 ./verify-backup.sh        # every file
-./verify-backup.sh 200    # random sample of 200
+./verify-backup.sh 200    # random sample of 200 per folder
 ```
 
-Both scripts honour `PROJECT_DIR` and `BACKUP_ROOT` overrides so they can be exercised
+Both scripts honour `PROJECT_DIR` and `BACKUP_BASE` overrides so they can be exercised
 against a throwaway tree instead of real data.
 
 Suggested crontab on the server:
