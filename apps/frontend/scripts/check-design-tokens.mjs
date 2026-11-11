@@ -1,4 +1,5 @@
-// Falla si aparece un color escrito a mano fuera de los tokens de App.css (#30).
+// Falla si aparece un color escrito a mano fuera de los tokens de App.css (#30),
+// en cualquier hoja de estilos o componente de src/.
 // Un color suelto no cambia con el tema ni con la paleta: así empezó el
 // "todo blanco / todo vino". Excepción: una línea marcada con
 // `design-tokens: allow` y su motivo (p. ej. colores que se imprimen en un PDF).
@@ -18,7 +19,7 @@ const report = (file, line, text) =>
 const stripComments = (text) =>
     text.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '));
 
-/** Recorre las declaraciones de App.css, saltando los dos bloques de tokens. */
+/** Recorre las declaraciones de una hoja de estilos, saltando los bloques de tokens. */
 function checkStylesheet(file) {
     const css = stripComments(readFileSync(file, 'utf8'));
     const lines = css.split('\n');
@@ -55,11 +56,11 @@ function walk(dir) {
     for (const name of readdirSync(dir)) {
         const path = join(dir, name);
         if (statSync(path).isDirectory()) walk(path);
+        else if (name.endsWith('.css')) checkStylesheet(path);
         else if (/\.(tsx?)$/.test(name) && !/\.test\.tsx?$/.test(name)) checkSource(path);
     }
 }
 
-checkStylesheet(join(SRC, 'App.css'));
 walk(SRC);
 
 if (errors.length > 0) {
