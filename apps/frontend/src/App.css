@@ -6508,7 +6508,6 @@ button.admin-course-students:disabled {
   display: flex;
   min-height: calc(100vh - 80px);
   min-height: calc(100dvh - 80px);
-  background: var(--bg);
   /* El footer global tiene margin-top: 6rem (pensado para páginas tipo
      landing/catálogo). En esta página de estudio ese aire sobra — el
      sidebar y el main deberían terminar pegados al footer. No toco el
