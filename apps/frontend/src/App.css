@@ -118,8 +118,18 @@
   --shadow-xl: 0 24px 60px rgba(27, 18, 23, 0.16), 0 8px 20px rgba(27, 18, 23, 0.06);
   --shadow-glow: 0 10px 26px -12px rgba(255, 0, 170, 0.6);
   --shadow-gold: 0 8px 32px var(--gold-glow);
-  /* Destello que cruza el botón principal al pasar el mouse. */
-  --sheen: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.35) 50%, transparent 70%);
+  /* Destello que cruza el botón principal al pasar el mouse. Tope de 0.12:
+     más claro, el texto blanco baja de 4.5:1 sobre el --rose-600. */
+  --sheen: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.12) 50%, transparent 70%);
+  /* Hover y toque de TODOS los botones de contorno o discretos (.btn-secondary,
+     .btn-ghost y los propios de cada pantalla): mismo fondo, texto y borde. */
+  --hover-surface: var(--surface-rose);
+  --hover-text: var(--accent-text);
+  --hover-border: var(--accent-text);
+  --hover-surface-danger: color-mix(in srgb, var(--danger) 12%, var(--danger-soft));
+  /* Los sólidos (primario, dorado, éxito, peligro sólido) no cambian el color
+     del texto: solo se elevan y crece su sombra. */
+  --hover-lift: translateY(-2px);
   /* Banda oscura (pie de página): igual en ambos temas, como el de la revista. */
   --band: linear-gradient(180deg, #2c292c 0%, #141214 100%);
   --band-text: #f2eef1;
@@ -491,7 +501,6 @@ a {
 
 .nav-links .nav-login {
   padding: 0.5rem 1rem;
-  color: var(--text-on-primary);
 }
 
 /* Las secciones van separadas de los controles (tema, menú) para que en
@@ -528,7 +537,10 @@ a {
   flex: 1 0 auto;
 }
 
-.nav-links a {
+/* Solo las listas de destinos: un `.nav-links a` genérico alcanza también al
+   botón "Ingresar" y a los menús, y su hover (más específico que
+   .btn-*:hover) les cambia el color del texto. */
+:is(.nav-links--sections, .nav-links--student) a {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
@@ -557,7 +569,7 @@ a {
   color: var(--accent-text);
 }
 
-.nav-links a::after {
+:is(.nav-links--sections, .nav-links--student) a::after {
   content: '';
   position: absolute;
   bottom: -2px;
@@ -570,13 +582,13 @@ a {
 }
 
 @media (hover: hover) {
-  .nav-links a:hover {
+  :is(.nav-links--sections, .nav-links--student) a:hover {
     color: var(--accent-text);
   }
 }
 
 @media (hover: hover) {
-  .nav-links a:hover::after {
+  :is(.nav-links--sections, .nav-links--student) a:hover::after {
     width: 100%;
   }
 }
@@ -837,8 +849,10 @@ a {
    Cinco tipos para todo el sitio: primario, secundario, dorado, discreto
    (ghost) y peligro (.btn-danger, más abajo). Las pantallas los reutilizan y
    solo añaden clases de disposición, nunca colores propios.
-   El hover solo existe con mouse: en el teléfono iOS lo deja "pegado" tras
-   tocar. Al tocar, todos se hunden (:active). */
+   Dos patrones de hover: los sólidos se elevan sin cambiar el color del texto;
+   los de contorno/discretos toman --hover-surface/-text/-border. El toque
+   (:active) muestra lo mismo que el hover. Ninguna regla de contexto
+   (`.x a`, `.x button`) debe pintar color: le gana a .btn-*:hover. */
 .btn-primary,
 .btn-secondary,
 .btn-gold,
@@ -910,7 +924,7 @@ a {
 @media (hover: hover) {
   /* El sello del primario: un destello lo cruza al pasar el mouse. */
   .btn-primary:hover {
-    transform: translateY(-2px);
+    transform: var(--hover-lift);
     box-shadow: 0 14px 30px -12px var(--primary);
   }
 
@@ -919,20 +933,20 @@ a {
   }
 
   .btn-secondary:hover {
-    border-color: var(--accent-text);
-    color: var(--accent-text);
-    background: var(--surface-rose);
-    transform: translateY(-2px);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+    background: var(--hover-surface);
+    transform: var(--hover-lift);
   }
 
   .btn-gold:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 26px var(--gold-glow);
+    transform: var(--hover-lift);
+    box-shadow: 0 14px 30px -12px var(--gold);
   }
 
   .btn-ghost:hover {
-    background: var(--surface-rose);
-    color: var(--accent-text);
+    background: var(--hover-surface);
+    color: var(--hover-text);
   }
 }
 
@@ -950,8 +964,29 @@ a {
 
 .btn-secondary:active,
 .btn-ghost:active {
-  background: var(--surface-rose);
-  border-color: var(--primary-light);
+  background: var(--hover-surface);
+  border-color: var(--hover-border);
+  color: var(--hover-text);
+}
+
+/* Toque de los botones de contorno propios de cada pantalla: el mismo estado
+   que su hover (en el teléfono no hay hover). */
+:is(
+  .course-learn__complete-btn:not(.course-learn__complete-btn--done),
+  .course-learn__context-toggle, .course-learn__sidebar-opener, .course-learn__sidebar-closer,
+  .add-lesson-toggle, .lesson-type-option:not(.active), .pdf-uploader__remove,
+  .quiz-builder__add-option, .quiz-builder__add-question, .user-picker__chip-remove,
+  .site-menu__toggle
+):active:not(:disabled) {
+  background: var(--hover-surface);
+  border-color: var(--hover-border);
+  color: var(--hover-text);
+}
+
+:is(.quiz-builder__remove-btn, .quiz-builder__remove-option):active:not(:disabled) {
+  background: var(--hover-surface-danger);
+  border-color: var(--danger);
+  color: var(--danger);
 }
 
 :is(.btn-primary, .btn-secondary, .btn-gold, .btn-ghost):disabled {
@@ -977,12 +1012,13 @@ a {
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: transform var(--dur-fast), filter var(--dur-base);
+  transition: transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
 @media (hover: hover) {
   .btn-success:hover:not(:disabled) {
-    filter: brightness(1.08);
+    transform: var(--hover-lift);
+    box-shadow: 0 14px 30px -12px var(--success);
   }
 }
 
@@ -1453,8 +1489,8 @@ a {
 
 @media (hover: hover) {
   .cd-purchase-card__cta:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--primary) 40%, transparent);
+    transform: var(--hover-lift);
+    box-shadow: 0 14px 30px -12px var(--primary);
   }
 }
 
@@ -2909,8 +2945,8 @@ input.input-code {
 
 @media (hover: hover) {
   .drag-handle:hover {
-    color: var(--accent-text);
-    background: var(--surface-rose);
+    color: var(--hover-text);
+    background: var(--hover-surface);
   }
 }
 
@@ -3012,8 +3048,8 @@ input.input-code {
 
 @media (hover: hover) {
   .add-lesson-toggle:hover {
-    background: var(--surface-rose);
-    border-color: var(--primary);
+    background: var(--hover-surface);
+    border-color: var(--hover-border);
   }
 }
 
@@ -5099,13 +5135,15 @@ input.filter-control[type="search"] {
   border-radius: var(--radius-full);
   padding: 0.35rem 0.8rem;
   cursor: pointer;
-  transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
 }
 
 @media (hover: hover) {
   .pdf-uploader__remove:hover {
-    border-color: var(--primary);
-    color: var(--accent-text);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+    background: var(--hover-surface);
   }
 }
 
@@ -5321,7 +5359,7 @@ input.filter-control[type="search"] {
 
 @media (hover: hover) {
   .user-menu__trigger:hover {
-    background: var(--border);
+    background: var(--hover-surface);
   }
 }
 
@@ -5401,9 +5439,7 @@ input.filter-control[type="search"] {
   margin: 0.35rem 0;
 }
 
-/* Item de menú — padding-left alineado con el header.
-   Usamos .user-menu__dropdown para ganar especificidad sobre .nav-links a,
-   que también aplica a estos <a> porque el menú vive dentro de .nav-links. */
+/* Item de menú — padding-left alineado con el header. */
 .user-menu__dropdown .user-menu__item {
   -webkit-appearance: none;
   appearance: none;
@@ -6722,15 +6758,16 @@ button.admin-course-students:disabled {
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
-  transition: color 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
+  transition: color 0.25s var(--ease-out), background-color 0.25s var(--ease-out),
+    border-color 0.25s var(--ease-out);
   white-space: nowrap;
 }
 
 @media (hover: hover) {
   .course-learn__complete-btn:not(.course-learn__complete-btn--done):hover:not(:disabled) {
-    background: var(--primary-strong);
-    color: var(--text-on-primary);
-    box-shadow: var(--shadow-glow);
+    background: var(--hover-surface);
+    color: var(--hover-text);
+    border-color: var(--hover-border);
   }
 }
 
@@ -6874,15 +6911,16 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .course-learn__nav-btn:hover {
-    border-color: var(--accent-text);
-    color: var(--accent-text);
-    background: var(--surface-rose);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+    background: var(--hover-surface);
   }
 }
 
 .course-learn__nav-btn:active {
-  background: var(--surface-rose);
-  border-color: var(--primary-light);
+  background: var(--hover-surface);
+  border-color: var(--hover-border);
+  color: var(--hover-text);
 }
 
 /* ── Sidebar ──
@@ -6962,9 +7000,9 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .course-learn__sidebar-opener:hover {
-    background: var(--primary-strong);
-    color: var(--text-on-primary);
-    border-color: var(--primary);
+    background: var(--hover-surface);
+    color: var(--hover-text);
+    border-color: var(--hover-border);
   }
 }
 
@@ -7005,9 +7043,9 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .course-learn__sidebar-closer:hover {
-    color: var(--accent-text);
-    border-color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    color: var(--hover-text);
+    border-color: var(--hover-border);
+    background: var(--hover-surface);
   }
 }
 
@@ -7268,8 +7306,9 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .lesson-type-option:hover {
-    border-color: var(--primary);
-    background: color-mix(in srgb, var(--primary) 4%, transparent);
+    border-color: var(--hover-border);
+    background: var(--hover-surface);
+    color: var(--hover-text);
   }
 }
 
@@ -7321,13 +7360,15 @@ button.admin-course-students:disabled {
   font-size: 0.78rem;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out);
+  transition: color var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
 }
 
 @media (hover: hover) {
   .quiz-builder__remove-btn:hover {
     color: var(--danger);
     border-color: var(--danger);
+    background: var(--hover-surface-danger);
   }
 }
 
@@ -7418,12 +7459,13 @@ button.admin-course-students:disabled {
   padding: 0.2rem 0.4rem;
   line-height: 1;
   border-radius: var(--radius-sm);
-  transition: color 0.2s;
+  transition: color 0.2s, background-color 0.2s;
 }
 
 @media (hover: hover) {
   .quiz-builder__remove-option:hover {
     color: var(--danger);
+    background: var(--hover-surface-danger);
   }
 }
 
@@ -7436,14 +7478,16 @@ button.admin-course-students:disabled {
   font-size: 0.8rem;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out), color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
   margin-top: 0.25rem;
 }
 
 @media (hover: hover) {
   .quiz-builder__add-option:hover {
-    border-color: var(--primary);
-    color: var(--accent-text);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+    background: var(--hover-surface);
   }
 }
 
@@ -7457,14 +7501,14 @@ button.admin-course-students:disabled {
   font-weight: 600;
   cursor: pointer;
   font-family: var(--font-body);
-  transition: border-color var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
+  transition: border-color var(--dur-base) var(--ease-out), background var(--dur-base) var(--ease-out);
   width: 100%;
 }
 
 @media (hover: hover) {
   .quiz-builder__add-question:hover {
-    border-color: var(--primary);
-    box-shadow: 0 2px 8px var(--primary-glow);
+    border-color: var(--hover-border);
+    background: var(--hover-surface);
   }
 }
 
@@ -8060,8 +8104,8 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .user-picker__chip-remove:hover {
-    background: var(--primary-strong);
-    color: var(--text-on-primary);
+    background: var(--hover-surface);
+    color: var(--hover-text);
   }
 }
 
@@ -8311,9 +8355,9 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .agenda-calendar .fc .fc-button:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--primary) 4%, transparent);
-    border-color: var(--primary);
-    color: var(--accent-text);
+    background: var(--hover-surface);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
   }
 }
 
@@ -8329,11 +8373,11 @@ button.admin-course-students:disabled {
   color: var(--text-muted);
 }
 
-/* Presión momentánea en navegación (prev/next/today): tinte sutil, no relleno. */
+/* Presión momentánea en navegación (prev/next/today): igual que el hover. */
 .agenda-calendar .fc .fc-button-primary:not(:disabled):active {
-  background: color-mix(in srgb, var(--primary) 8%, transparent);
-  border-color: var(--primary);
-  color: var(--accent-text);
+  background: var(--hover-surface);
+  border-color: var(--hover-border);
+  color: var(--hover-text);
 }
 
 /* Vista activa (Mes o Día): relleno rosa como .btn-primary. */
@@ -8608,16 +8652,21 @@ button.admin-course-students:disabled {
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background var(--dur-base) var(--ease-out), transform var(--dur-fast);
+  transition: background var(--dur-base) var(--ease-out), border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out), box-shadow var(--dur-base) var(--ease-out);
 }
 
+/* Contorno en su versión de peligro: el borde toma el color del texto. */
 @media (hover: hover) {
   .btn-danger:hover:not(:disabled) {
-    background: color-mix(in srgb, var(--danger) 16%, var(--danger-soft));
+    background: var(--hover-surface-danger);
+    border-color: var(--danger);
   }
 }
 
 .btn-danger:active:not(:disabled) {
+  background: var(--hover-surface-danger);
+  border-color: var(--danger);
   transform: scale(0.97);
 }
 
@@ -8630,8 +8679,13 @@ button.admin-course-students:disabled {
 @media (hover: hover) {
   .btn-danger--solid:hover:not(:disabled) {
     background: var(--danger);
-    filter: brightness(1.08);
+    transform: var(--hover-lift);
+    box-shadow: 0 14px 30px -12px var(--danger);
   }
+}
+
+.btn-danger--solid:active:not(:disabled) {
+  background: var(--danger);
 }
 
 .btn-danger:disabled {
@@ -8827,7 +8881,8 @@ button.admin-course-students:disabled {
 
 .dialog-option:active:not(:disabled) {
   transform: scale(0.99);
-  background: var(--surface-rose);
+  background: var(--hover-surface);
+  border-color: var(--hover-border);
 }
 
 .dialog-option--danger {
@@ -8841,12 +8896,19 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .dialog-option:hover:not(:disabled) {
-    border-color: var(--primary);
+    border-color: var(--hover-border);
+    background: var(--hover-surface);
   }
 
   .dialog-option--danger:hover:not(:disabled) {
     border-color: var(--danger);
+    background: var(--hover-surface-danger);
   }
+}
+
+.dialog-option--danger:active:not(:disabled) {
+  border-color: var(--danger);
+  background: var(--hover-surface-danger);
 }
 
 .dialog-option:disabled {
@@ -9338,8 +9400,9 @@ button.admin-course-students:disabled {
 
 @media (hover: hover) {
   .course-learn__context-toggle:hover {
-    border-color: var(--primary);
-    color: var(--accent-text);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+    background: var(--hover-surface);
   }
 }
 
@@ -10135,8 +10198,7 @@ a.course-home__lesson:active,
 }
 
 /* === MENÚ DEL SITIO (teléfono) ===
-   El panel se posiciona respecto a la cabecera sticky, a todo su ancho.
-   Los selectores dobles ganan a `.nav-links a`, que también lo alcanza. */
+   El panel se posiciona respecto a la cabecera sticky, a todo su ancho. */
 .site-menu {
   display: none;
 }
@@ -10162,6 +10224,14 @@ a.course-home__lesson:active,
   font-weight: 600;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .site-menu__toggle:hover {
+    background: var(--hover-surface);
+    border-color: var(--hover-border);
+    color: var(--hover-text);
+  }
 }
 
 .site-menu__toggle[aria-expanded='true'] {
@@ -10274,12 +10344,9 @@ a.course-home__lesson:active,
   padding: 0 var(--mobile-pad-x);
   border-top: 1px solid var(--border);
   color: var(--text-primary);
+  text-decoration: none;
   font-size: 1rem;
   font-weight: 600;
-}
-
-.site-menu__panel .site-menu__item::after {
-  content: none;
 }
 
 .site-menu__panel .site-menu__item--logout {
@@ -10297,6 +10364,13 @@ a.course-home__lesson:active,
 
 .site-menu__item--logout .site-menu__chevron {
   color: var(--danger);
+}
+
+/* Mismo hover que los ítems del menú del avatar. */
+@media (hover: hover) {
+  .site-menu__panel .site-menu__item:hover {
+    background: var(--surface);
+  }
 }
 
 .site-menu__panel .site-menu__item:active {
