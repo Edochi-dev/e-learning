@@ -1,9 +1,18 @@
-import { PDFDocument, StandardFonts } from 'pdf-lib';
+import {
+  decodePDFRawStream,
+  PDFDict,
+  PDFDocument,
+  PDFName,
+  PDFRawStream,
+  PDFRef,
+  StandardFonts,
+} from 'pdf-lib';
 import * as path from 'path';
 import * as fs from 'fs';
 import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { GenerateCertificateParams } from './gateways/certificate-generator.gateway';
 import { DateStamp } from './value-objects';
+import { create as createFont } from '@pdf-lib/fontkit';
 
 // fontkit para cargar fuentes directamente en los tests de ancho
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -194,6 +203,39 @@ describe('PdfCertificateGenerator — text integrity', () => {
     }
   });
 
+  describe('fuente incrustada — los glifos dibujados son los de la fuente original', () => {
+    // Un subconjunto corrupto no rompe el PDF: dibuja glifos equivocados o vacíos.
+    // Por eso se compara el contorno de cada glifo incrustado con el del TTF.
+    const name = 'María Fernanda Castañeda Rodríguez Ñúñez';
+    const fontsDir = path.join(__dirname, 'fonts');
+
+    for (const fontName of customFonts) {
+      it(`"${fontName}" dibuja exactamente los glifos del TTF`, async () => {
+        const ttf = fs.readFileSync(path.join(fontsDir, `${fontName}.ttf`));
+        const original = createFont(ttf);
+        const pdf = await generator.generate(makeParams(name, fontName));
+
+        const { fontFile, glyphCodes } = await readEmbeddedFont(pdf);
+        const embedded = createFont(fontFile);
+
+        const chars = [...name];
+        expect(glyphCodes).toHaveLength(chars.length);
+        chars.forEach((char, i) => {
+          const expected = original.layout(char).glyphs[0];
+          const actual = embedded.getGlyph(glyphCodes[i]);
+          expect(actual.path.toSVG()).toBe(expected.path.toSVG());
+          expect(actual.advanceWidth).toBe(expected.advanceWidth);
+        });
+
+        if (fontName === 'Allura-Regular') {
+          expect(fontFile.length).toBe(ttf.length);
+        } else {
+          expect(fontFile.length).toBeLessThan(ttf.length / 2);
+        }
+      });
+    }
+  });
+
   // ─── Test de consistencia de anchos ──────────────────────────────────
 
   describe('consistencia de anchos — widthOfTextAtSize vs suma char-by-char', () => {
@@ -331,6 +373,32 @@ function createMinimalPng(): Buffer {
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC',
     'base64',
   );
+}
+
+/**
+ * Devuelve el programa de la única fuente TTF incrustada y, en orden, los códigos
+ * de glifo de los operadores `<XXXX> Tj` (uno por carácter del nombre).
+ */
+async function readEmbeddedFont(
+  pdfBuffer: Buffer,
+): Promise<{ fontFile: Uint8Array; glyphCodes: number[] }> {
+  const doc = await PDFDocument.load(pdfBuffer);
+  const fontFiles: Uint8Array[] = [];
+  for (const [, obj] of doc.context.enumerateIndirectObjects()) {
+    if (!(obj instanceof PDFDict)) continue;
+    const ref = obj.get(PDFName.of('FontFile2'));
+    const stream = ref instanceof PDFRef ? doc.context.lookup(ref) : null;
+    if (stream instanceof PDFRawStream) {
+      fontFiles.push(decodePDFRawStream(stream).decode());
+    }
+  }
+  expect(fontFiles).toHaveLength(1);
+
+  const content = extractPageContentStream(pdfBuffer);
+  const glyphCodes = [...content.matchAll(/<([0-9A-Fa-f]{4})>\s*Tj/g)].map(
+    (match) => parseInt(match[1], 16),
+  );
+  return { fontFile: fontFiles[0], glyphCodes };
 }
 
 /**
