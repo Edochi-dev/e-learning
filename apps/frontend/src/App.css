@@ -152,6 +152,12 @@
   --font-heading: 'Bodoni Moda', Georgia, serif;
   --font-accent: 'Playfair Display', Georgia, serif;
   --font-body: 'Montserrat', system-ui, -apple-system, sans-serif;
+  /* Tamaño de la palabra en itálica de acento dentro de un título en Bodoni.
+     Medido con las fuentes cargadas: altura x de Playfair 0.54em; Bodoni,
+     mayúscula 0.75em y altura x 0.46em. Caps: la minúscula fucsia mide ~78%
+     de la mayúscula negra. Text (tipo oración): misma altura x que el negro. */
+  --accent-scale-caps: 1.08em;
+  --accent-scale-text: 0.85em;
 
   /* Transitions */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -455,6 +461,7 @@ a {
 .logo__name em {
   font-family: var(--font-accent);
   font-weight: 700;
+  font-size: var(--accent-scale-caps);
   letter-spacing: 0;
   text-transform: none;
   color: var(--accent-text);
@@ -672,7 +679,7 @@ a {
   font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
-  font-size: 0.72em;
+  font-size: var(--accent-scale-caps);
   text-transform: none;
   padding-right: 0.08em;
 }
@@ -712,7 +719,7 @@ a {
   font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
-  font-size: 0.72em;
+  font-size: var(--accent-scale-caps);
   text-transform: none;
   padding-right: 0.08em;
 }
@@ -1717,6 +1724,7 @@ a {
 .auth-layout__title em {
   font-family: var(--font-accent);
   font-weight: 700;
+  font-size: var(--accent-scale-text);
   background: var(--accent-paint);
   -webkit-background-clip: text;
   background-clip: text;
@@ -2390,7 +2398,7 @@ input.input-code {
   font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
-  font-size: 0.7em;
+  font-size: var(--accent-scale-text);
   letter-spacing: 0;
   padding-right: 0.08em;
   background: var(--accent-paint);
@@ -4252,7 +4260,7 @@ input.filter-control[type="search"] {
 
 .home-about__name {
   text-transform: none;
-  font-size: 0.8em;
+  font-size: var(--accent-scale-caps);
   font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
@@ -5490,7 +5498,7 @@ input.filter-control[type="search"] {
   font-family: var(--font-accent);
   font-style: italic;
   font-weight: 700;
-  font-size: 0.9em;
+  font-size: var(--accent-scale-text);
   background: var(--accent-paint);
   -webkit-background-clip: text;
   background-clip: text;
@@ -8954,6 +8962,7 @@ button.admin-course-students:disabled {
 .cert-verify__title em {
   font-family: var(--font-accent);
   font-weight: 700;
+  font-size: var(--accent-scale-text);
   color: var(--gold-300);
 }
 
@@ -8988,6 +8997,7 @@ button.admin-course-students:disabled {
 .cert-lookup__title em {
   font-family: var(--font-accent);
   font-weight: 700;
+  font-size: var(--accent-scale-text);
   background: var(--accent-paint);
   -webkit-background-clip: text;
   background-clip: text;
