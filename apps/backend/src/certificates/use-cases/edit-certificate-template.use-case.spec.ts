@@ -1,9 +1,10 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, PayloadTooLargeException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { EditCertificateTemplateUseCase } from './edit-certificate-template.use-case';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
+import { TemplateFilePreparer } from '../services/template-file-preparer';
 import {
   DEFAULT_NAME_STYLE,
   DEFAULT_QR_STYLE,
@@ -20,21 +21,26 @@ import {
  *   - Reemplazo de PDF con dimensiones distintas (resetea styles a defaults)
  *   - Orden de operaciones: BD se actualiza ANTES de borrar el archivo viejo
  *   - Resiliencia: si borrar el viejo falla, la operación NO falla
- *   - Atomicidad: si pdf-lib falla, NO se llama a saveFile ni a update
+ *   - Atomicidad: si el preparador rechaza el PDF (corrupto o pesado), NO se
+ *     llama a saveFile ni a update
  */
-jest.mock('pdf-lib', () => ({
-  PDFDocument: { load: jest.fn() },
-}));
-
-import { PDFDocument } from 'pdf-lib';
-const pdfLoadMock = PDFDocument.load as jest.MockedFunction<
-  typeof PDFDocument.load
->;
 
 describe('EditCertificateTemplateUseCase', () => {
   let useCase: EditCertificateTemplateUseCase;
   let templateGateway: jest.Mocked<CertificateTemplateGateway>;
   let fileStorageGateway: jest.Mocked<FileStorageGateway>;
+  let preparer: jest.Mocked<TemplateFilePreparer>;
+
+  const preparedFile = {
+    originalname: 'nuevo.pdf',
+    buffer: Buffer.from('optimized-pdf-bytes'),
+  } as Express.Multer.File;
+  const preparedAs = (pageWidth: number, pageHeight: number) =>
+    preparer.prepare.mockResolvedValue({
+      file: preparedFile,
+      pageWidth,
+      pageHeight,
+    });
 
   const fakeFile = () =>
     ({
@@ -80,11 +86,6 @@ describe('EditCertificateTemplateUseCase', () => {
   beforeEach(async () => {
     jest.clearAllMocks();
 
-    // Default: el PDF nuevo tiene las MISMAS dimensiones que el existente
-    pdfLoadMock.mockResolvedValue({
-      getPages: () => [{ getSize: () => ({ width: 841, height: 595 }) }],
-    } as unknown as any);
-
     const module = await Test.createTestingModule({
       providers: [
         EditCertificateTemplateUseCase,
@@ -96,12 +97,20 @@ describe('EditCertificateTemplateUseCase', () => {
           provide: FileStorageGateway,
           useValue: { saveFile: jest.fn(), deleteByUrl: jest.fn() },
         },
+        {
+          provide: TemplateFilePreparer,
+          useValue: { prepare: jest.fn() },
+        },
       ],
     }).compile();
 
     useCase = module.get(EditCertificateTemplateUseCase);
     templateGateway = module.get(CertificateTemplateGateway);
     fileStorageGateway = module.get(FileStorageGateway);
+    preparer = module.get(TemplateFilePreparer);
+
+    // Default: el PDF nuevo tiene las MISMAS dimensiones que el existente
+    preparedAs(841, 595);
 
     fileStorageGateway.saveFile.mockResolvedValue(
       '/static/certificates/templates/new.pdf',
@@ -153,16 +162,37 @@ describe('EditCertificateTemplateUseCase', () => {
     expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
+  it('editar solo los metadatos de una plantilla pesada no aplica la regla de peso', async () => {
+    // Plantillas subidas antes de la regla pueden superar el límite: deben poder
+    // renombrarse sin volver a subir el PDF.
+    templateGateway.findOne.mockResolvedValue(existingTemplate);
+    preparer.prepare.mockRejectedValue(
+      new PayloadTooLargeException('pesa 4,6 MB'),
+    );
+
+    await useCase.execute('tpl-1', {
+      name: 'Otro nombre',
+      courseAbbreviation: 'on',
+      paperFormat: 'A4 Vertical',
+    });
+
+    expect(preparer.prepare).not.toHaveBeenCalled();
+    expect(templateGateway.update).toHaveBeenCalledWith('tpl-1', {
+      name: 'Otro nombre',
+      courseAbbreviation: 'ON',
+      paperFormat: 'A4 Vertical',
+    });
+  });
+
   it('reemplaza el PDF y persiste el nuevo filePath + nuevas dimensiones', async () => {
     templateGateway.findOne.mockResolvedValue(existingTemplate);
-    pdfLoadMock.mockResolvedValue({
-      getPages: () => [{ getSize: () => ({ width: 841, height: 595 }) }],
-    } as unknown as any);
+    const file = fakeFile();
 
-    await useCase.execute('tpl-1', {}, fakeFile());
+    await useCase.execute('tpl-1', {}, file);
 
+    expect(preparer.prepare).toHaveBeenCalledWith(file);
     expect(fileStorageGateway.saveFile).toHaveBeenCalledWith(
-      expect.any(Object),
+      preparedFile,
       'certificates/templates',
     );
     expect(templateGateway.update).toHaveBeenCalledWith(
@@ -189,9 +219,7 @@ describe('EditCertificateTemplateUseCase', () => {
 
   it('RESETEA los styles a defaults cuando las dimensiones del PDF cambian', async () => {
     templateGateway.findOne.mockResolvedValue(existingTemplate);
-    pdfLoadMock.mockResolvedValue({
-      getPages: () => [{ getSize: () => ({ width: 595, height: 842 }) }], // A4 vertical
-    } as unknown as any);
+    preparedAs(595, 842); // A4 vertical
 
     await useCase.execute('tpl-1', {}, fakeFile());
 
@@ -236,18 +264,24 @@ describe('EditCertificateTemplateUseCase', () => {
     expect(templateGateway.update).toHaveBeenCalled();
   });
 
-  it('NO escribe nada al storage si pdf-lib falla al leer dimensiones (atomicidad)', async () => {
-    templateGateway.findOne.mockResolvedValue(existingTemplate);
-    pdfLoadMock.mockRejectedValue(new Error('PDF corrupto'));
+  it.each([
+    ['PDF corrupto', new Error('PDF corrupto')],
+    ['plantilla demasiado pesada', new PayloadTooLargeException('pesa 4,6 MB')],
+  ])(
+    'NO escribe nada si el preparador rechaza el PDF nuevo (%s)',
+    async (_, error) => {
+      templateGateway.findOne.mockResolvedValue(existingTemplate);
+      preparer.prepare.mockRejectedValue(error);
 
-    await expect(
-      useCase.execute('tpl-1', {}, fakeFile()),
-    ).rejects.toThrow('PDF corrupto');
+      await expect(useCase.execute('tpl-1', {}, fakeFile())).rejects.toBe(
+        error,
+      );
 
-    expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
-    expect(templateGateway.update).not.toHaveBeenCalled();
-    expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
-  });
+      expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
+      expect(templateGateway.update).not.toHaveBeenCalled();
+      expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
+    },
+  );
 
   it('combina edición de metadatos + reemplazo de PDF en una sola operación', async () => {
     templateGateway.findOne.mockResolvedValue(existingTemplate);

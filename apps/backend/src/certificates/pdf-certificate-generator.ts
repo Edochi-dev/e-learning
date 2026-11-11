@@ -8,6 +8,7 @@ import {
 } from './gateways/certificate-generator.gateway';
 import { CertificateDateStamperGateway } from './gateways/certificate-date-stamper.gateway';
 import { DateStamp } from './value-objects';
+import { canSubsetSafely } from './font-subsetting';
 
 // fontkit permite incrustar fuentes TTF/OTF custom en los PDFs generados por pdf-lib.
 // Usamos require() porque @pdf-lib/fontkit es un módulo CJS y su export por defecto
@@ -37,6 +38,9 @@ const fontkit = fontkitModule.default ?? fontkitModule;
  *   coordenada X explícita, calculada sumando los anchos de pdf-lib uno a uno.
  *   Así el visor no puede "adivinar" mal la posición — la recibe explícita.
  *
+ * Las fuentes custom se incrustan como subconjunto (solo los glifos usados) cuando
+ * fontkit puede hacerlo sin corromperlas; ver canSubsetSafely().
+ *
  * El sistema de coordenadas de pdf-lib tiene el origen (0,0) en la esquina
  * inferior-izquierda del PDF. Por eso convertimos las coordenadas del frontend
  * (que vienen desde la esquina superior-izquierda) a coordenadas PDF.
@@ -49,6 +53,18 @@ export class PdfCertificateGenerator
 
   // Ruta a la carpeta de fuentes TTF (se copia de src/ a dist/ via nest-cli.json assets)
   private readonly fontsDir = path.join(__dirname, 'fonts');
+
+  // Las fuentes no cambian en runtime: cada una se analiza una sola vez.
+  private readonly subsetSafety = new Map<string, boolean>();
+
+  private isSubsetSafe(fontFamily: string, fontBytes: Buffer): boolean {
+    let safe = this.subsetSafety.get(fontFamily);
+    if (safe === undefined) {
+      safe = canSubsetSafely(fontBytes);
+      this.subsetSafety.set(fontFamily, safe);
+    }
+    return safe;
+  }
 
   /**
    * Calcula el X real de dibujo según la alineación elegida.
@@ -73,7 +89,7 @@ export class PdfCertificateGenerator
    * Dibuja texto carácter por carácter con posición X explícita.
    *
    * ¿Por qué no usar page.drawText(texto_completo)?
-   * Cuando pdf-lib embebe una fuente custom (TTF) con subset: false, la fuente
+   * Cuando pdf-lib embebe una fuente custom (TTF), la fuente
    * queda en el PDF con dos tablas de anchos: el array /W (de fontkit) y la
    * tabla hmtx interna del TTF. Algunos visores usan hmtx en vez de /W,
    * y si difieren → se generan gaps fantasma entre letras.
@@ -263,12 +279,13 @@ export class PdfCertificateGenerator
     if (fs.existsSync(ttfPath)) {
       try {
         // Registramos fontkit para que pdf-lib pueda incrustar fuentes custom.
-        // subset: false evita que el subsetting reconstruya las tablas de glifos
-        // incorrectamente en fuentes OpenType complejas (caligráficas, con ligaduras).
         pdfDoc.registerFontkit(fontkit);
         const fontBytes = fs.readFileSync(ttfPath);
+        // Completa, una fuente suma 20–150 KB a cada PDF; como subconjunto, pocos KB.
+        // Las que fontkit corrompería al recortarlas se incrustan completas.
+        const subset = this.isSubsetSafe(fontFamily, fontBytes);
         return {
-          font: await pdfDoc.embedFont(fontBytes, { subset: false }),
+          font: await pdfDoc.embedFont(fontBytes, { subset }),
           isCustom: true,
         };
       } catch (error) {

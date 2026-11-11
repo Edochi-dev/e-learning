@@ -14,6 +14,7 @@ import { CertificateGeneratorGateway } from './gateways/certificate-generator.ga
 import { QrCodeGateway } from './gateways/qr-code.gateway';
 import { CertificateArchiveGateway } from './gateways/certificate-archive.gateway';
 import { PdfMergerGateway } from './gateways/pdf-merger.gateway';
+import { TemplatePdfOptimizerGateway } from './gateways/template-pdf-optimizer.gateway';
 import { CertificateTemplatesRepository } from './certificate-templates.repository';
 import { CertificatesRepository } from './certificates.repository';
 import { CertificateNumberSequenceRepository } from './certificate-number-sequence.repository';
@@ -21,6 +22,7 @@ import { PdfCertificateGenerator } from './pdf-certificate-generator';
 import { QrCodeService } from './qr-code.service';
 import { ArchiverZipGateway } from './archiver-zip.gateway';
 import { PdfLibMerger } from './pdf-lib-merger';
+import { PdfLibTemplateOptimizer } from './template-optimization/pdf-lib-template-optimizer';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
@@ -41,6 +43,7 @@ import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-cer
 import { CertificateRenderer } from './services/certificate-renderer';
 import { ZipCertificateBundler } from './services/zip-certificate-bundler';
 import { MergedPdfCertificateBundler } from './services/merged-pdf-certificate-bundler';
+import { TemplateFilePreparer } from './services/template-file-preparer';
 
 const USE_CASES = [
   UploadCertificateTemplateUseCase,
@@ -90,6 +93,7 @@ const USE_CASES = [
     CertificateRenderer,
     ZipCertificateBundler,
     MergedPdfCertificateBundler,
+    TemplateFilePreparer,
 
     // Wiring: abstracción → implementación concreta
     {
@@ -111,6 +115,10 @@ const USE_CASES = [
     { provide: QrCodeGateway, useClass: QrCodeService },
     { provide: CertificateArchiveGateway, useClass: ArchiverZipGateway },
     { provide: PdfMergerGateway, useClass: PdfLibMerger },
+    {
+      provide: TemplatePdfOptimizerGateway,
+      useClass: PdfLibTemplateOptimizer,
+    },
   ],
   exports: USE_CASES,
 })

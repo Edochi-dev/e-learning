@@ -32,6 +32,20 @@ describe('HttpCertificateGateway', () => {
         expect(JSON.parse(fetch.mock.calls[1][1].body)).toEqual({ ids: ['c1', 'c2'], layout: 'separate' });
     });
 
+    it('uploadTemplate y updateTemplate muestran por qué el backend rechazó el PDF', async () => {
+        const message = 'La plantilla pesa 4,6 MB y el máximo es 1 MB. Expórtala de nuevo más liviana…';
+        const fetch = vi.fn().mockResolvedValue({
+            ok: false,
+            statusText: 'Payload Too Large',
+            json: () => Promise.resolve({ statusCode: 413, message }),
+        } as Response);
+        const gateway = new HttpCertificateGateway('http://api.test', { fetch });
+        const file = new File(['%PDF'], 'plantilla.pdf', { type: 'application/pdf' });
+
+        await expect(gateway.uploadTemplate('Curso', 'CU', 'A4 Vertical', file)).rejects.toThrow(message);
+        await expect(gateway.updateTemplate('t1', {}, file)).rejects.toThrow(message);
+    });
+
     it('downloadBlankCertificates muestra el mensaje de validación del backend', async () => {
         const fetch = vi.fn().mockResolvedValue({
             ok: false,

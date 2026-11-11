@@ -37,7 +37,7 @@ export class HttpCertificateGateway implements CertificateGateway {
             credentials: 'include',
             body,
         });
-        if (!res.ok) throw new Error(`Error al subir plantilla: ${res.statusText}`);
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al subir plantilla'));
         return res.json();
     }
 
@@ -57,10 +57,7 @@ export class HttpCertificateGateway implements CertificateGateway {
             credentials: 'include',
             body,
         });
-        if (!res.ok) {
-            const errBody = await res.json().catch(() => ({}));
-            throw new Error(errBody.message ?? `Error al editar plantilla: ${res.statusText}`);
-        }
+        if (!res.ok) throw new Error(await errorMessage(res, 'Error al editar plantilla'));
         return res.json();
     }
 

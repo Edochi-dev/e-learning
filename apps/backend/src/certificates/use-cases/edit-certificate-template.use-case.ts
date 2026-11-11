@@ -1,9 +1,9 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { PDFDocument } from 'pdf-lib';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
 import { EditCertificateTemplateDto } from '../dto/edit-certificate-template.dto';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { TemplateFilePreparer } from '../services/template-file-preparer';
 import {
   DEFAULT_NAME_STYLE,
   DEFAULT_QR_STYLE,
@@ -37,8 +37,8 @@ import {
  * Orden de operaciones cuando se reemplaza el PDF (importa para atomicidad):
  *
  *   1. findOne — validar que la plantilla existe.
- *   2. pdf-lib.load(buffer) — leer dimensiones del PDF nuevo. Si está corrupto,
- *      fallamos AHORA sin haber tocado nada.
+ *   2. TemplateFilePreparer — valida, optimiza, aplica la regla de peso y lee
+ *      las dimensiones del PDF nuevo. Si algo falla, no hemos tocado nada.
  *   3. saveFile(nuevo) — el storage ahora tiene los DOS PDFs (viejo y nuevo).
  *   4. update(BD) — la BD ahora apunta al nuevo. Punto de no retorno.
  *   5. deleteByUrl(viejo) — limpieza best-effort. Si falla por permisos o lo
@@ -59,6 +59,7 @@ export class EditCertificateTemplateUseCase {
   constructor(
     private readonly templateGateway: CertificateTemplateGateway,
     private readonly fileStorageGateway: FileStorageGateway,
+    private readonly templateFilePreparer: TemplateFilePreparer,
   ) {}
 
   async execute(
@@ -91,16 +92,18 @@ export class EditCertificateTemplateUseCase {
     let oldFilePathToDelete: string | null = null;
 
     if (file) {
-      // 3a. Leer dimensiones del PDF nuevo (operación de dominio).
-      //     Falla atómica: si el PDF está corrupto, no hemos escrito nada.
-      const pdfDoc = await PDFDocument.load(file.buffer);
-      const firstPage = pdfDoc.getPages()[0];
-      const { width: newWidth, height: newHeight } = firstPage.getSize();
+      // 3a. Validar, optimizar y aplicar la regla de peso. Falla atómica:
+      //     si el PDF está corrupto o pesa demasiado, no hemos escrito nada.
+      const {
+        file: prepared,
+        pageWidth: newWidth,
+        pageHeight: newHeight,
+      } = await this.templateFilePreparer.prepare(file);
 
       // 3b. Guardar el PDF nuevo en el storage. A partir de aquí, el storage
       //     contiene tanto el viejo como el nuevo. La BD aún apunta al viejo.
       const newFilePath = await this.fileStorageGateway.saveFile(
-        file,
+        prepared,
         'certificates/templates',
       );
 

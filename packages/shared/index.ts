@@ -628,3 +628,12 @@ export interface InvitationPreview {
     /** Días de acceso que otorgará el canje. null = permanente. */
     accessDurationDays: number | null;
 }
+
+// ─── Certificados ─────────────────────────────────────────────────────
+
+/**
+ * Peso máximo de una plantilla de certificado, medido sobre el PDF que se guarda
+ * (ya optimizado). Cada certificado suma ~70–100 KB (QR y fuentes) a
+ * su plantilla, así que un certificado queda en ~1,1 MB como mucho.
+ */
+export const CERTIFICATE_TEMPLATE_MAX_BYTES = 1024 * 1024;
