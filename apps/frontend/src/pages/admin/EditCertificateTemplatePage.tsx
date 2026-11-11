@@ -3,13 +3,15 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { useToast } from '../../components/Toast';
 import { PdfUploader } from '../../components/PdfUploader';
+import { CERTIFICATE_TEMPLATE_MAX_BYTES } from '@maris-nails/shared';
 
 interface Props {
     gateway: CertificateGateway;
 }
 
-const MAX_FILE_SIZE_MB = 10;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+// El servidor decide con el PDF ya optimizado; aquí solo se corta lo que ni vale la pena subir.
+const UPLOAD_CAP_BYTES = 10 * 1024 * 1024;
+const MAX_TEMPLATE_KB = CERTIFICATE_TEMPLATE_MAX_BYTES / 1024;
 
 const PAPER_FORMAT_OPTIONS = [
     { value: 'A4 Vertical',   label: 'A4 Vertical' },
@@ -77,8 +79,8 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // El PdfUploader ya filtra por tipo (accept + guard en drop); aquí solo
     // validamos el tamaño antes de aceptar el archivo.
     const handleFile = (selected: File | null) => {
-        if (selected && selected.size > MAX_FILE_SIZE_BYTES) {
-            toast.error(`El archivo supera el límite de ${MAX_FILE_SIZE_MB} MB`);
+        if (selected && selected.size > UPLOAD_CAP_BYTES) {
+            toast.error(`El archivo pesa ${(selected.size / 1024 / 1024).toFixed(1)} MB y el máximo es ${MAX_TEMPLATE_KB} KB.`);
             return;
         }
         setFile(selected);
@@ -222,7 +224,7 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                         file={file}
                         onFileChange={handleFile}
                         label="Reemplazar PDF base (opcional)"
-                        hint="Sube un nuevo PDF si necesitas actualizar el diseño (logo nuevo, datos del curso, etc.). Si las dimensiones del PDF nuevo son distintas, las posiciones del nombre y el QR se resetearán a defaults — tendrás que reposicionarlas después."
+                        hint={`Máximo ${MAX_TEMPLATE_KB} KB. Sube un nuevo PDF si necesitas actualizar el diseño (logo nuevo, datos del curso, etc.). Si las dimensiones del PDF nuevo son distintas, las posiciones del nombre y el QR se resetearán a defaults — tendrás que reposicionarlas después.`}
                     />
                 </div>
 

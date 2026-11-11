@@ -53,6 +53,10 @@ import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-cas
 import { LookupCertificateDto } from './dto/lookup-certificate.dto';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
 
+// Tope de transporte (memoria del servidor), no la regla de peso: esa la aplica
+// TemplateFilePreparer sobre el PDF ya optimizado (CERTIFICATE_TEMPLATE_MAX_BYTES).
+const TEMPLATE_UPLOAD_CAP_BYTES = 10 * 1024 * 1024;
+
 @Controller()
 export class CertificatesController {
   constructor(
@@ -82,13 +86,15 @@ export class CertificatesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+    FileInterceptor('file', {
+      limits: { fileSize: TEMPLATE_UPLOAD_CAP_BYTES },
+    }),
   )
   uploadTemplate(
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new MaxFileSizeValidator({ maxSize: TEMPLATE_UPLOAD_CAP_BYTES }),
           new FileTypeValidator({ fileType: 'application/pdf' }),
         ],
       }),
@@ -179,7 +185,9 @@ export class CertificatesController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
   @UseInterceptors(
-    FileInterceptor('file', { limits: { fileSize: 10 * 1024 * 1024 } }),
+    FileInterceptor('file', {
+      limits: { fileSize: TEMPLATE_UPLOAD_CAP_BYTES },
+    }),
   )
   editTemplate(
     @Param('id', ParseUUIDPipe) id: string,
@@ -187,7 +195,7 @@ export class CertificatesController {
     @UploadedFile(
       new ParseFilePipe({
         validators: [
-          new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }),
+          new MaxFileSizeValidator({ maxSize: TEMPLATE_UPLOAD_CAP_BYTES }),
           new FileTypeValidator({ fileType: 'application/pdf' }),
         ],
         fileIsRequired: false,

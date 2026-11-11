@@ -41,6 +41,7 @@ import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-cer
 import { CertificateRenderer } from './services/certificate-renderer';
 import { ZipCertificateBundler } from './services/zip-certificate-bundler';
 import { MergedPdfCertificateBundler } from './services/merged-pdf-certificate-bundler';
+import { TemplateFilePreparer } from './services/template-file-preparer';
 
 const USE_CASES = [
   UploadCertificateTemplateUseCase,
@@ -90,6 +91,7 @@ const USE_CASES = [
     CertificateRenderer,
     ZipCertificateBundler,
     MergedPdfCertificateBundler,
+    TemplateFilePreparer,
 
     // Wiring: abstracción → implementación concreta
     {

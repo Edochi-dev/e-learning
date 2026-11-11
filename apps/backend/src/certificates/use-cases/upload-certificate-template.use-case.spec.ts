@@ -1,35 +1,21 @@
 import { Test } from '@nestjs/testing';
+import { PayloadTooLargeException } from '@nestjs/common';
 import { UploadCertificateTemplateUseCase } from './upload-certificate-template.use-case';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
 import { CertificateTemplate } from '../entities/certificate-template.entity';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import { TemplateFilePreparer } from '../services/template-file-preparer';
 
 /**
- * Tests para UploadCertificateTemplateUseCase tras el refactor a FileStorageGateway.
- *
- * Antes mockeábamos fs/promises y crypto porque el use case los importaba directo.
- * Ahora solo mockeamos:
- *   - pdf-lib (para no depender de un PDF real al leer dimensiones)
- *   - FileStorageGateway (la abstracción de almacenamiento)
- *   - CertificateTemplateGateway (la abstracción de persistencia)
- *
- * El use case quedó tan limpio que sus tests son puramente declarativos.
+ * El use case orquesta: preparar el PDF (validación, optimización, regla de
+ * peso y dimensiones), guardarlo y persistir la plantilla. Se mockean las tres
+ * colaboraciones; TemplateFilePreparer tiene sus propios tests.
  */
-jest.mock('pdf-lib', () => ({
-  PDFDocument: {
-    load: jest.fn(),
-  },
-}));
-
-import { PDFDocument } from 'pdf-lib';
-const pdfLoadMock = PDFDocument.load as jest.MockedFunction<
-  typeof PDFDocument.load
->;
-
 describe('UploadCertificateTemplateUseCase', () => {
   let useCase: UploadCertificateTemplateUseCase;
   let templateGateway: jest.Mocked<CertificateTemplateGateway>;
   let fileStorageGateway: jest.Mocked<FileStorageGateway>;
+  let preparer: jest.Mocked<TemplateFilePreparer>;
 
   const fakeFile = (originalname = 'plantilla.pdf') =>
     ({
@@ -37,14 +23,18 @@ describe('UploadCertificateTemplateUseCase', () => {
       buffer: Buffer.from('fake-pdf-bytes'),
     }) as Express.Multer.File;
 
+  const preparedFile = {
+    originalname: 'plantilla.pdf',
+    buffer: Buffer.from('optimized-pdf-bytes'),
+  } as Express.Multer.File;
+
+  const dto = {
+    name: 'Manicure Básico',
+    courseAbbreviation: 'MB',
+    paperFormat: 'A4 Horizontal',
+  };
+
   beforeEach(async () => {
-    jest.clearAllMocks();
-
-    // Por defecto el PDF tiene una página A4 horizontal (841 x 595 pts)
-    pdfLoadMock.mockResolvedValue({
-      getPages: () => [{ getSize: () => ({ width: 841, height: 595 }) }],
-    } as unknown as any);
-
     const module = await Test.createTestingModule({
       providers: [
         UploadCertificateTemplateUseCase,
@@ -56,68 +46,53 @@ describe('UploadCertificateTemplateUseCase', () => {
           provide: FileStorageGateway,
           useValue: { saveFile: jest.fn() },
         },
+        {
+          provide: TemplateFilePreparer,
+          useValue: { prepare: jest.fn() },
+        },
       ],
     }).compile();
 
     useCase = module.get(UploadCertificateTemplateUseCase);
     templateGateway = module.get(CertificateTemplateGateway);
     fileStorageGateway = module.get(FileStorageGateway);
+    preparer = module.get(TemplateFilePreparer);
 
-    // Default: el storage retorna una URL pública previsible
+    preparer.prepare.mockResolvedValue({
+      file: preparedFile,
+      pageWidth: 841,
+      pageHeight: 595,
+    });
     fileStorageGateway.saveFile.mockResolvedValue(
       '/static/certificates/templates/uuid-from-storage.pdf',
     );
+    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
   });
 
-  it('persiste la plantilla con las dimensiones reales del PDF', async () => {
-    const created = { id: 'tpl-1' } as CertificateTemplate;
-    templateGateway.create.mockResolvedValue(created);
-
-    await useCase.execute(
-      {
-        name: 'Manicure Básico',
-        courseAbbreviation: 'MB',
-        paperFormat: 'A4 Horizontal',
-      },
-      fakeFile(),
-    );
+  it('persiste la plantilla con las dimensiones que lee el preparador', async () => {
+    await useCase.execute(dto, fakeFile());
 
     expect(templateGateway.create).toHaveBeenCalledWith(
-      expect.objectContaining({
-        pageWidth: 841,
-        pageHeight: 595,
-      }),
+      expect.objectContaining({ pageWidth: 841, pageHeight: 595 }),
     );
   });
 
   it('convierte courseAbbreviation a mayúsculas antes de persistir', async () => {
-    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
-
-    await useCase.execute(
-      { name: 'Básico', courseAbbreviation: 'mb', paperFormat: 'A4 Vertical' },
-      fakeFile(),
-    );
+    await useCase.execute({ ...dto, courseAbbreviation: 'mb' }, fakeFile());
 
     expect(templateGateway.create).toHaveBeenCalledWith(
       expect.objectContaining({ courseAbbreviation: 'MB' }),
     );
   });
 
-  it('delega el guardado del archivo al FileStorageGateway en la subcarpeta certificates/templates', async () => {
-    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
+  it('guarda el PDF preparado (optimizado), no el subido, en certificates/templates', async () => {
     const file = fakeFile();
 
-    await useCase.execute(
-      {
-        name: 'Test',
-        courseAbbreviation: 'T',
-        paperFormat: 'A4 Vertical',
-      },
-      file,
-    );
+    await useCase.execute(dto, file);
 
+    expect(preparer.prepare).toHaveBeenCalledWith(file);
     expect(fileStorageGateway.saveFile).toHaveBeenCalledWith(
-      file,
+      preparedFile,
       'certificates/templates',
     );
   });
@@ -126,12 +101,8 @@ describe('UploadCertificateTemplateUseCase', () => {
     fileStorageGateway.saveFile.mockResolvedValue(
       '/static/certificates/templates/abc-123.pdf',
     );
-    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
 
-    await useCase.execute(
-      { name: 'Test', courseAbbreviation: 'T', paperFormat: 'A4 Vertical' },
-      fakeFile(),
-    );
+    await useCase.execute(dto, fakeFile());
 
     expect(templateGateway.create).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -140,39 +111,18 @@ describe('UploadCertificateTemplateUseCase', () => {
     );
   });
 
-  it('lee las dimensiones de la PRIMERA página (ignora el resto en PDFs multipágina)', async () => {
-    pdfLoadMock.mockResolvedValue({
-      getPages: () => [
-        { getSize: () => ({ width: 595, height: 842 }) }, // primera página: A4 portrait
-        { getSize: () => ({ width: 1000, height: 2000 }) }, // segunda
-        { getSize: () => ({ width: 500, height: 700 }) }, // tercera
-      ],
-    } as unknown as any);
+  it.each([
+    ['PDF corrupto', new Error('PDF corrupto')],
+    ['plantilla demasiado pesada', new PayloadTooLargeException('pesa 4,6 MB')],
+  ])(
+    'NO escribe nada si el preparador rechaza el PDF (%s)',
+    async (_, error) => {
+      preparer.prepare.mockRejectedValue(error);
 
-    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
+      await expect(useCase.execute(dto, fakeFile())).rejects.toBe(error);
 
-    await useCase.execute(
-      { name: 'Multi', courseAbbreviation: 'M', paperFormat: 'A4 Vertical' },
-      fakeFile(),
-    );
-
-    expect(templateGateway.create).toHaveBeenCalledWith(
-      expect.objectContaining({ pageWidth: 595, pageHeight: 842 }),
-    );
-  });
-
-  it('NO escribe nada al storage si pdf-lib falla al leer las dimensiones (atómico)', async () => {
-    pdfLoadMock.mockRejectedValue(new Error('PDF corrupto'));
-    templateGateway.create.mockResolvedValue({} as CertificateTemplate);
-
-    await expect(
-      useCase.execute(
-        { name: 'Test', courseAbbreviation: 'T', paperFormat: 'A4 Vertical' },
-        fakeFile(),
-      ),
-    ).rejects.toThrow('PDF corrupto');
-
-    expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
-    expect(templateGateway.create).not.toHaveBeenCalled();
-  });
+      expect(fileStorageGateway.saveFile).not.toHaveBeenCalled();
+      expect(templateGateway.create).not.toHaveBeenCalled();
+    },
+  );
 });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 // Build legacy: el moderno usa Uint8Array.toHex, que navegadores no actualizados no tienen.
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { CERTIFICATE_TEMPLATE_MAX_BYTES } from '@maris-nails/shared';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { TemplateDesignPicker } from '../../components/TemplateDesignPicker';
 import { PdfUploader } from '../../components/PdfUploader';
@@ -22,8 +23,9 @@ interface Props {
     gateway: CertificateGateway;
 }
 
-const MAX_FILE_SIZE_MB = 10;
-const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+// El servidor decide con el PDF ya optimizado; aquí solo se corta lo que ni vale la pena subir.
+const UPLOAD_CAP_BYTES = 10 * 1024 * 1024;
+const MAX_TEMPLATE_KB = CERTIFICATE_TEMPLATE_MAX_BYTES / 1024;
 
 // Agrupa los formatos por tamaño de papel para el <optgroup> del selector
 const FORMAT_GROUPS = [
@@ -70,8 +72,8 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // coincide con el formato seleccionado ANTES de subirlo, evitando un
     // round-trip inútil al backend si el archivo no encaja.
     const validateFile = async (selectedFile: File): Promise<string | null> => {
-        if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-            return `El archivo pesa ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB. El máximo permitido es ${MAX_FILE_SIZE_MB} MB.`;
+        if (selectedFile.size > UPLOAD_CAP_BYTES) {
+            return `El archivo pesa ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB y el máximo es ${MAX_TEMPLATE_KB} KB.`;
         }
 
         const format = PAPER_FORMATS.find(f => f.value === formPaperFormat);
@@ -166,7 +168,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                             onFileChange={handleFileChange}
                             error={fileError}
                             label="Archivo PDF (plantilla en blanco)"
-                            hint={`Máximo ${MAX_FILE_SIZE_MB} MB · El tamaño del PDF debe coincidir con el formato seleccionado.`}
+                            hint={`Máximo ${MAX_TEMPLATE_KB} KB · El tamaño del PDF debe coincidir con el formato seleccionado.`}
                         />
                     </div>
 
