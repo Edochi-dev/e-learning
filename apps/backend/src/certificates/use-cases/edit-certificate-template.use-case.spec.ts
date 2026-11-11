@@ -162,6 +162,28 @@ describe('EditCertificateTemplateUseCase', () => {
     expect(fileStorageGateway.deleteByUrl).not.toHaveBeenCalled();
   });
 
+  it('editar solo los metadatos de una plantilla pesada no aplica la regla de peso', async () => {
+    // Plantillas subidas antes de la regla pueden superar el límite: deben poder
+    // renombrarse sin volver a subir el PDF.
+    templateGateway.findOne.mockResolvedValue(existingTemplate);
+    preparer.prepare.mockRejectedValue(
+      new PayloadTooLargeException('pesa 4,6 MB'),
+    );
+
+    await useCase.execute('tpl-1', {
+      name: 'Otro nombre',
+      courseAbbreviation: 'on',
+      paperFormat: 'A4 Vertical',
+    });
+
+    expect(preparer.prepare).not.toHaveBeenCalled();
+    expect(templateGateway.update).toHaveBeenCalledWith('tpl-1', {
+      name: 'Otro nombre',
+      courseAbbreviation: 'ON',
+      paperFormat: 'A4 Vertical',
+    });
+  });
+
   it('reemplaza el PDF y persiste el nuevo filePath + nuevas dimensiones', async () => {
     templateGateway.findOne.mockResolvedValue(existingTemplate);
     const file = fakeFile();
