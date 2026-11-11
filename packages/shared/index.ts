@@ -633,7 +633,7 @@ export interface InvitationPreview {
 
 /**
  * Peso máximo de una plantilla de certificado, medido sobre el PDF que se guarda
- * (ya optimizado sin pérdida). Cada certificado suma ~70–100 KB (QR y fuentes) a
+ * (ya optimizado). Cada certificado suma ~70–100 KB (QR y fuentes) a
  * su plantilla, así que con 900 KB los certificados quedan en ~1 MB o menos.
  */
 export const CERTIFICATE_TEMPLATE_MAX_BYTES = 900 * 1024;

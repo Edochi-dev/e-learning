@@ -4,7 +4,7 @@ import { PdfLibTemplateOptimizer } from './pdf-lib-template-optimizer';
 
 const A4 = { width: 595.2, height: 841.92 };
 
-/** JPEG con tablas de Huffman estándar (las que dejan Photoshop y Canva sin optimizar). */
+/** Foto JPEG con contenido no trivial (para que pese algo). */
 async function photo(
   width: number,
   height: number,
@@ -14,7 +14,7 @@ async function photo(
   for (let i = 0; i < pixels.length; i++) pixels[i] = (i * 31 + (i >> 9)) & 255;
   return sharp(pixels, { raw: { width, height, channels } })
     .toColourspace(channels === 1 ? 'b-w' : 'srgb')
-    .jpeg({ quality: 90, optimiseCoding: false })
+    .jpeg({ quality: 90 })
     .toBuffer();
 }
 
@@ -57,12 +57,10 @@ async function images(pdf: Buffer) {
   return { doc, found };
 }
 
-const pixels = (jpeg: Buffer) => sharp(jpeg).raw().toBuffer();
-
 describe('PdfLibTemplateOptimizer', () => {
   const optimizer = new PdfLibTemplateOptimizer();
 
-  it('a 300 ppp o menos: quita metadatos y deja los píxeles idénticos', async () => {
+  it('a 300 ppp o menos: quita metadatos y copia la imagen byte a byte', async () => {
     const original = await template(await photo(1240, 1754)); // A4 a 150 ppp
 
     const optimized = await optimizer.optimize(original);
@@ -73,11 +71,7 @@ describe('PdfLibTemplateOptimizer', () => {
     expect(after.doc.catalog.has(PDFName.of('Metadata'))).toBe(false);
     expect(after.found).toHaveLength(1);
     expect(after.found[0]).toMatchObject({ width: 1240, height: 1754 });
-    expect(
-      (await pixels(after.found[0].jpeg)).equals(
-        await pixels(before.found[0].jpeg),
-      ),
-    ).toBe(true);
+    expect(after.found[0].jpeg.equals(before.found[0].jpeg)).toBe(true);
     expect(after.doc.getPages()[0].getSize()).toEqual(A4);
   });
 

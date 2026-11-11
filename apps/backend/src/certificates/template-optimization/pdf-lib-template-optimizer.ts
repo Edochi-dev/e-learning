@@ -15,7 +15,6 @@ import {
 } from 'pdf-lib';
 import sharp from 'sharp';
 import { TemplatePdfOptimizerGateway } from '../gateways/template-pdf-optimizer.gateway';
-import { optimizeJpegHuffman } from './jpeg-huffman-optimizer';
 import { readJpegInfo } from './jpeg-info';
 import { findImagePlacements, Placement } from './image-placements';
 
@@ -35,9 +34,8 @@ const name = (key: string) => PDFName.of(key);
  *  1. Quita metadatos que no se dibujan.
  *  2. Baja a 300 ppp las fotos JPEG que la superan (único paso con pérdida,
  *     y solo cuando sobran píxeles que la impresión no puede mostrar).
- *  3. Recodifica el resto de JPEG con Huffman óptimo, comprobando que los
- *     píxeles decodificados sean idénticos.
- *  4. Descarta objetos que ya nadie referencia.
+ *  3. Descarta objetos que ya nadie referencia.
+ * El resto de las imágenes se copia byte a byte.
  */
 @Injectable()
 export class PdfLibTemplateOptimizer implements TemplatePdfOptimizerGateway {
@@ -47,8 +45,7 @@ export class PdfLibTemplateOptimizer implements TemplatePdfOptimizerGateway {
     try {
       const doc = await PDFDocument.load(pdf, { updateMetadata: false });
       this.stripInvisibleData(doc);
-      const downscaled = await this.downscaleOversizedImages(doc);
-      await this.recodeJpegs(doc, downscaled);
+      await this.downscaleOversizedImages(doc);
       removeUnreachableObjects(doc.context);
       const optimized = Buffer.from(
         await doc.save({
@@ -82,14 +79,11 @@ export class PdfLibTemplateOptimizer implements TemplatePdfOptimizerGateway {
 
   /**
    * Junta, por imagen, todos los tamaños a los que la dibujan las páginas y la
-   * re-muestrea según el mayor. Devuelve las referencias ya reescritas.
+   * re-muestrea según el mayor.
    */
-  private async downscaleOversizedImages(
-    doc: PDFDocument,
-  ): Promise<Set<string>> {
-    const done = new Set<string>();
+  private async downscaleOversizedImages(doc: PDFDocument): Promise<void> {
     // Un Form sin /Resources propios dibuja con los de la página: no lo seguimos.
-    if (hasFormsInheritingResources(doc.context)) return done;
+    if (hasFormsInheritingResources(doc.context)) return;
 
     const drawnSizes = new Map<string, { ref: PDFRef; sizes: Placement[] }>();
     for (const page of doc.getPages()) {
@@ -99,7 +93,7 @@ export class PdfLibTemplateOptimizer implements TemplatePdfOptimizerGateway {
       if (!xObjects) continue;
       const placements = findImagePlacements(readPageContent(page));
       // Con imágenes en línea no vemos todo lo que se dibuja: no se toca nada.
-      if (!placements) return done;
+      if (!placements) return;
 
       for (const [key, value] of xObjects.entries()) {
         if (!(value instanceof PDFRef)) continue;
@@ -120,42 +114,12 @@ export class PdfLibTemplateOptimizer implements TemplatePdfOptimizerGateway {
       if (!(stream instanceof PDFRawStream)) continue;
       try {
         const replacement = await downscaleJpegImage(stream, largest(sizes));
-        if (replacement) {
-          doc.context.assign(ref, replacement);
-          done.add(ref.toString());
-        }
+        if (replacement) doc.context.assign(ref, replacement);
       } catch (error) {
         this.logger.warn(
           `No se pudo re-muestrear ${ref.toString()}: ${(error as Error).message}`,
         );
       }
-    }
-    return done;
-  }
-
-  private async recodeJpegs(
-    doc: PDFDocument,
-    skip: Set<string>,
-  ): Promise<void> {
-    for (const [ref, object] of doc.context.enumerateIndirectObjects()) {
-      if (skip.has(ref.toString())) continue;
-      if (!(object instanceof PDFRawStream) || !isDctImage(object.dict))
-        continue;
-
-      const original = object.contents;
-      const recoded = optimizeJpegHuffman(original);
-      if (!recoded || recoded.length >= original.length) continue;
-      // Red de seguridad: solo se reemplaza si decodifica a los mismos píxeles.
-      const identical = await decodeToSamePixels(original, recoded).catch(
-        () => false,
-      );
-      if (!identical) {
-        this.logger.warn(
-          `Huffman de ${ref.toString()} no reproduce los píxeles; se conserva`,
-        );
-        continue;
-      }
-      doc.context.assign(ref, withContents(doc.context, object.dict, recoded));
     }
   }
 }
@@ -256,16 +220,6 @@ function withContents(
   const copy = dict.clone(context);
   copy.set(name('Length'), PDFNumber.of(contents.length));
   return PDFRawStream.of(copy, contents);
-}
-
-async function decodeToSamePixels(
-  a: Uint8Array,
-  b: Uint8Array,
-): Promise<boolean> {
-  const [pa, pb] = await Promise.all(
-    [a, b].map((bytes) => sharp(Buffer.from(bytes)).raw().toBuffer()),
-  );
-  return pa.equals(pb);
 }
 
 function children(object: PDFObject | undefined): PDFObject[] {

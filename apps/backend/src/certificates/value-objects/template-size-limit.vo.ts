@@ -16,7 +16,7 @@ export function formatBytes(bytes: number): string {
 
 /**
  * Regla de peso de una plantilla. Se mide lo que se guardaría (ya optimizado),
- * no lo subido: así la optimización sin pérdida juega a favor de la admin.
+ * no lo subido: así la optimización juega a favor de la admin.
  */
 export function assertTemplateWithinSizeLimit(
   uploadedBytes: number,
