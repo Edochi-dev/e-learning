@@ -30,7 +30,7 @@ import { HttpInvitationGateway } from './gateways/HttpInvitationGateway';
 import { HttpPushGateway } from './gateways/HttpPushGateway';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SiteLayout } from './components/SiteLayout';
-import { StudentTabBarLayout } from './components/StudentNav';
+import { TabBarLayout } from './components/AppNav';
 import { SalesLandingPage } from './pages/SalesLandingPage';
 import { ScrollToTop } from './components/ScrollToTop';
 import { UserRole } from '@maris-nails/shared';
@@ -139,7 +139,7 @@ function AppContent({ http }: { http: HttpClient }) {
         <Route path="/oferta" element={<ComingSoonGuard><SalesLandingPage /></ComingSoonGuard>} />
 
         <Route element={<SiteLayout />}>
-          <Route element={<StudentTabBarLayout />}>
+          <Route element={<TabBarLayout correctionGateway={correctionGateway} />}>
             {/* Rutas siempre públicas */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/registro" element={<RegisterPage />} />

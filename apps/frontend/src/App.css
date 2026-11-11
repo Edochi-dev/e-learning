@@ -177,6 +177,8 @@
   */
   --touch-min: 44px;       /* mínimo Apple HIG / WCAG para touch targets */
   --tab-bar-height: 56px;  /* barra inferior de la alumna, sin el margen del iPhone */
+  /* Alto real de la barra: crece con letra grande (ícono 30px + 1.1rem de texto) y suma su borde. */
+  --tab-bar-space: calc(max(var(--tab-bar-height), 30px + 1.1rem) + 1px);
   --mobile-pad-x: 1rem;    /* padding lateral estándar en mobile */
   /* Marco de página: la cabecera y TODO el contenido arrancan en la misma
      vertical que el logo. --page-pad-x se achica en móvil (más abajo). */
@@ -9916,7 +9918,7 @@ a.course-home__lesson:active,
   color: var(--text-primary);
 }
 
-/* === BARRA INFERIOR DE LA ALUMNA ===
+/* === BARRA INFERIOR (alumna y admin) ===
    Solo en pantallas angostas con altura suficiente: acostado, cada píxel
    vertical es del contenido y los destinos vuelven a la cabecera.
    Fija y no sticky: sticky la dejaba a media pantalla en páginas cortas. */
@@ -9940,19 +9942,29 @@ a.course-home__lesson:active,
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
-  /* Reserva el alto de la barra para que no tape el final ni el pie. */
+  /* Reserva el alto real de la barra para que no tape el final ni el pie. */
   .site-shell:has(.tab-bar) {
-    padding-bottom: calc(var(--tab-bar-height) + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(var(--tab-bar-space) + env(safe-area-inset-bottom, 0px));
   }
 
   .nav-links--student {
     display: none;
   }
 
-  /* Repetiría los destinos de la barra; "Cerrar sesión" vive en Cuenta.
-     En el reproductor, que no tiene barra, sigue. */
-  .site-shell:has(.tab-bar) .user-menu--student {
+  /* Con barra, arriba quedan solo el logo y el tema: los desplegables
+     repetirían sus destinos y "Cerrar sesión" vive en Cuenta. En el
+     reproductor, que no tiene barra, siguen. */
+  .site-shell:has(.tab-bar) .site-menu,
+  .site-shell:has(.tab-bar) .user-menu--student,
+  .site-shell:has(.tab-bar--admin) .user-menu {
     display: none;
+  }
+
+  /* El diseñador de plantillas ocupa una pantalla exacta: sin descontar la
+     barra, "Guardar diseño" quedaba debajo de ella. Solo cambia el alto del
+     marco; las posiciones del certificado no dependen de esto. */
+  .site-shell:has(.tab-bar) .design-workspace {
+    height: calc(100svh - var(--tab-bar-space) - env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -9967,11 +9979,23 @@ a.course-home__lesson:active,
   text-decoration: none;
   font-size: 0.75rem;
   font-weight: 600;
+  line-height: 1.2;
+  /* Con letra grande la etiqueta puede partir: centrada y pareja. La barra
+     publica su alto real (TabBar) para que la reserva del pie la siga. */
+  text-align: center;
+  text-wrap: balance;
   -webkit-tap-highlight-color: transparent;
 }
 
 .tab-bar__item.active {
   color: var(--accent-text);
+}
+
+/* En 280px "Correcciones" no cabía en su cuarto de barra. */
+@media (max-width: 340px) {
+  .tab-bar__item {
+    font-size: 0.6875rem;
+  }
 }
 
 /* La sección activa lleva su "píldora" rosa. */
@@ -9982,6 +10006,29 @@ a.course-home__lesson:active,
   padding: 4px 15px;
   border-radius: var(--radius-full);
   transition: background-color var(--dur-base) var(--ease-out);
+}
+
+.tab-bar__icon-wrap {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Pendientes (ej. correcciones por revisar), sobre el ícono. */
+.tab-bar__badge {
+  position: absolute;
+  top: -2px;
+  right: 8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--primary-strong);
+  color: var(--text-on-primary);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--bg-elevated), 0 0 10px var(--primary-glow);
 }
 
 .tab-bar__item.active .tab-bar__icon,

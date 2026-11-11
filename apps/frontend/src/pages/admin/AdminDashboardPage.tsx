@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BookOpen, CalendarDays, GraduationCap, PenLine, UserPen } from 'lucide-react';
 import type { CorrectionGateway } from '../../gateways/CorrectionGateway';
 import type { AdminNameChangeGateway } from '../../gateways/NameChangeGateway';
+import { usePendingCorrectionsCount } from '../../hooks/usePendingCorrectionsCount';
 
 /**
  * AdminDashboardPage — Hub principal del panel de administración.
@@ -24,15 +25,8 @@ interface Props {
 }
 
 export const AdminDashboardPage: React.FC<Props> = ({ correctionGateway, nameChangeGateway }) => {
-    const [pendingCount, setPendingCount] = useState<number>(0);
+    const pendingCount = usePendingCorrectionsCount(correctionGateway);
     const [nameReqCount, setNameReqCount] = useState<number>(0);
-
-    useEffect(() => {
-        correctionGateway
-            .listPending()
-            .then((submissions) => setPendingCount(submissions.length))
-            .catch(() => setPendingCount(0));
-    }, [correctionGateway]);
 
     useEffect(() => {
         nameChangeGateway

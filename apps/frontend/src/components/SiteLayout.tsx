@@ -5,7 +5,7 @@ import { useTheme } from '../hooks/useTheme';
 import { LocalStorageThemeGateway } from '../gateways/LocalStorageThemeGateway';
 import { ThemeSwitch } from './ThemeSwitch';
 import { UserMenu } from './UserMenu';
-import { StudentHeaderLinks } from './StudentNav';
+import { StudentHeaderLinks } from './AppNav';
 import { SiteMenu, SiteSectionLinks } from './SiteSections';
 import { useSiteSections } from '../hooks/useSiteSections';
 import { useLogout } from '../hooks/useLogout';
