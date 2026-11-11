@@ -50,6 +50,12 @@ describe('assertTemplateWithinSizeLimit', () => {
     expect(message).not.toContain('después de optimizarla');
   });
 
+  it('no repite la cifra si la optimización no cambia lo que se muestra', () => {
+    expect(rejection(2.72 * MB, 2.69 * MB)).not.toContain(
+      'después de optimizarla',
+    );
+  });
+
   it('menciona el peso optimizado cuando la optimización ayudó pero no bastó', () => {
     expect(rejection(4.6 * MB, 4.5 * MB)).toContain(
       'pesa 4,6 MB (4,5 MB después de optimizarla) y el máximo es 900 KB',

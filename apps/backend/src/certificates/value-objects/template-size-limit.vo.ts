@@ -24,12 +24,13 @@ export function assertTemplateWithinSizeLimit(
 ): void {
   if (storedBytes <= CERTIFICATE_TEMPLATE_MAX_BYTES) return;
 
+  const uploaded = formatBytes(uploadedBytes);
+  const stored = formatBytes(storedBytes);
+  // Solo si la optimización se nota en la cifra que ve la admin.
   const optimized =
-    storedBytes < uploadedBytes
-      ? ` (${formatBytes(storedBytes)} después de optimizarla)`
-      : '';
+    stored !== uploaded ? ` (${stored} después de optimizarla)` : '';
   throw new PayloadTooLargeException(
-    `La plantilla pesa ${formatBytes(uploadedBytes)}${optimized} y el máximo es ` +
+    `La plantilla pesa ${uploaded}${optimized} y el máximo es ` +
       `${formatBytes(CERTIFICATE_TEMPLATE_MAX_BYTES)}. ${EXPORT_HINT}`,
   );
 }
