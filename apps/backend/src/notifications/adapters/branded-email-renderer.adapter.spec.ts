@@ -37,6 +37,12 @@ describe('BrandedEmailRenderer', () => {
     );
   });
 
+  it('paints the button with the contrast-safe rose, not the decorative fuchsia', () => {
+    expect(message.body).toContain('bgcolor="#d1008b"');
+    expect(message.body).not.toContain('bgcolor="#ff00aa"');
+    expect(message.body).not.toMatch(/#e84393|#cd9e55/i);
+  });
+
   it('escapes text fields', () => {
     expect(message.body).toContain('Hola &lt;Ana&gt;');
     expect(message.body).toContain('Texto &lt;b&gt;de&lt;/b&gt; prueba');
