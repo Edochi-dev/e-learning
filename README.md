@@ -223,9 +223,9 @@ npm run test               # Vitest
 
 `deploy.sh` runs on the server and performs, in order:
 
-1. `pg_dump` backup of the database (aborts the deploy if the dump is empty; keeps the 10
-   most recent under `backups/`), then `backup-files.sh` for the uploaded files — see
-   [Backups](#backups)
+1. `pg_dump` backup of the database (aborts the deploy if the dump fails, is empty or is
+   truncated; keeps the 10 most recent under `backups/`), then `backup-files.sh` for the
+   uploaded files — see [Backups](#backups)
 2. `git pull origin main`
 3. `npm ci` **once, from the monorepo root** — never per-app. A stray local `node_modules`
    inside `apps/backend/` or `apps/frontend/` once made npm treat that folder as a
@@ -255,7 +255,9 @@ SSL certificates live in `ssl/` and are git-ignored, as are `backups/` and every
 Two different things need saving, and only one of them is in the database.
 
 **The database** is dumped by `deploy.sh` (`pg_dump`, ten most recent kept). It aborts the
-deploy if the dump comes out empty.
+deploy if `pg_dump` fails, or if the dump is empty or lacks the
+`-- PostgreSQL database dump complete` line `pg_dump` writes last (a truncated dump); in
+every case the bad file is deleted so it can never be mistaken for a backup.
 
 **The uploaded files** live only on disk: `apps/backend/public` (issued certificates, the
 templates they are generated from, correction photos, thumbnails) and `apps/backend/storage`
@@ -291,8 +293,9 @@ backup restores, `1` differences (corrupt or shared-inode file, off-site copy in
 ./verify-backup.sh 200    # random sample of 200 per folder
 ```
 
-Both scripts honour `PROJECT_DIR` and `BACKUP_BASE` overrides so they can be exercised
-against a throwaway tree instead of real data.
+Both scripts honour `PROJECT_DIR` and `BACKUP_BASE` overrides, and `deploy.sh` honours
+`PROJECT_DIR` and `PG_CONTAINER` (default `mn_postgres`), so they can be exercised against a
+throwaway tree and database instead of real data.
 
 Suggested crontab on the server:
 
