@@ -355,6 +355,10 @@ body {
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Bodoni Moda con tamaño óptico fijo (18): el automático afinaba los filetes de
+     los titulares grandes hasta casi borrarlos. Se hereda; las demás fuentes no
+     tienen eje opsz. */
+  font-variation-settings: 'opsz' 18;
   transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out);
 }
 
