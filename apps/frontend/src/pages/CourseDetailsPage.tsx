@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BookOpen, Check, Clock, Radio } from 'lucide-react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { OrderGateway } from '../gateways/OrderGateway';
@@ -9,6 +10,8 @@ import { useEnrollments } from '../hooks/useEnrollments';
 import { enrollWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
 import { OrderStatus } from '@maris-nails/shared';
 import { API_URL as BACKEND_URL, ONLINE_PAYMENTS } from '../config';
+import { BrandMark } from '../components/BrandMark';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 interface CourseDetailsPageProps {
     gateway: CourseGateway;
@@ -136,26 +139,29 @@ export const CourseDetailsPage = ({ gateway, orderGateway, enrollmentGateway }: 
                     {thumbnailSrc ? (
                         <img src={thumbnailSrc} alt={course.title} className="cd-hero__img" />
                     ) : (
-                        <div className="cd-hero__placeholder">💅</div>
+                        <div className="cd-hero__placeholder"><BrandMark width="28%" /></div>
                     )}
                 </div>
 
                 <div className="cd-hero__content">
+                    <p className="section-eyebrow">
+                        {sortedLessons.some(l => l.videoData?.isLive) ? 'Incluye clases en vivo' : 'Clases grabadas'}
+                    </p>
                     <h1 className="cd-hero__title">{course.title}</h1>
                     <p className="cd-hero__desc">{course.description}</p>
 
                     <div className="cd-hero__stats">
                         <span className="cd-stat">
-                            <span className="cd-stat__icon">📚</span>
+                            <BookOpen className="cd-stat__icon" size={16} strokeWidth={1.75} aria-hidden="true" />
                             {sortedLessons.length} lecciones
                         </span>
                         <span className="cd-stat">
-                            <span className="cd-stat__icon">⏱️</span>
+                            <Clock className="cd-stat__icon" size={16} strokeWidth={1.75} aria-hidden="true" />
                             {durationLabel}
                         </span>
                         {sortedLessons.some(l => l.videoData?.isLive) && (
                             <span className="cd-stat cd-stat--live">
-                                <span className="cd-stat__icon">🔴</span>
+                                <Radio className="cd-stat__icon" size={16} strokeWidth={1.75} aria-hidden="true" />
                                 Incluye sesión en vivo
                             </span>
                         )}
@@ -168,7 +174,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway, enrollmentGateway }: 
                 {/* Columna izquierda: timeline */}
                 <div className="cd-main">
                     <div className="cd-section-header">
-                        <h2 className="cd-section-title">Contenido del Curso</h2>
+                        <h2 className="cd-section-title">Contenido <em>del curso</em></h2>
                         <span className="cd-section-badge">
                             {sortedLessons.length} {sortedLessons.length === 1 ? 'lección' : 'lecciones'}
                         </span>
@@ -179,7 +185,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway, enrollmentGateway }: 
                             {sortedLessons.map((lesson, idx) => (
                                 <li key={lesson.id} className="cd-timeline__item">
                                     <div className="cd-timeline__marker">
-                                        <span className="cd-timeline__number">{idx + 1}</span>
+                                        <span className="cd-timeline__number">{String(idx + 1).padStart(2, '0')}</span>
                                     </div>
                                     <div className="cd-timeline__content">
                                         <div className="cd-timeline__header">
@@ -212,7 +218,7 @@ export const CourseDetailsPage = ({ gateway, orderGateway, enrollmentGateway }: 
                     <div className="cd-purchase-card">
                         {enrollment?.isActive ? (
                             <>
-                                <p className="cd-purchase-card__enrolled">✓ Ya estás inscrita en este curso</p>
+                                <p className="cd-purchase-card__enrolled"><Check size={16} strokeWidth={2} aria-hidden="true" style={inlineIconStyle} />Ya estás inscrita en este curso</p>
                                 <Link to={`/mis-cursos/${course.id}`} className="btn-primary cd-purchase-card__cta">
                                     Ir al curso
                                 </Link>

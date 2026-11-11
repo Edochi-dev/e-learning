@@ -77,10 +77,11 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin/certificados" className="back-link">← Volver a Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver a certificados</Link>
 
             <div className="admin-header">
-                <h1>Buscar Certificado</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Buscar <em>certificado</em></h1>
                 <p>Filtra por titular, número, curso, fecha o cuenta. Selecciona varios para descargarlos o eliminarlos.</p>
             </div>
 
@@ -139,19 +140,25 @@ export const SearchCertificatesPage: React.FC<Props> = ({ gateway }) => {
                             key={cert.id}
                             className={`cert-search__row ${selection.isSelected(cert.id) ? 'cert-search__row--selected' : ''}`}
                         >
-                            <input
-                                type="checkbox"
-                                checked={selection.isSelected(cert.id)}
-                                onChange={() => selection.toggle(cert.id)}
-                                aria-label={`Seleccionar ${cert.certificateNumber}`}
-                            />
-                            <span className="cert-search__name">{cert.recipientName}</span>
-                            <span className="cert-search__number">{cert.certificateNumber}</span>
-                            <span className="cert-search__meta">
-                                {parseCalendarDate(cert.certificateDate).toLocaleDateString('es-MX')}
+                            <label className="cert-search__check">
+                                <input
+                                    type="checkbox"
+                                    checked={selection.isSelected(cert.id)}
+                                    onChange={() => selection.toggle(cert.id)}
+                                    aria-label={`Seleccionar ${cert.certificateNumber}`}
+                                />
+                            </label>
+                            <span className="cert-search__main">
+                                <span className="cert-search__name">{cert.recipientName}</span>
+                                <span className="cert-search__details">
+                                    <span className="cert-search__number">{cert.certificateNumber}</span>
+                                    <span className="cert-search__meta">
+                                        {parseCalendarDate(cert.certificateDate).toLocaleDateString('es-MX')}
+                                    </span>
+                                    <span className="cert-search__meta">{cert.templateSnapshot.name}</span>
+                                    {cert.userId && <Badge tone="rose">Con cuenta</Badge>}
+                                </span>
                             </span>
-                            <span className="cert-search__meta">{cert.templateSnapshot.name}</span>
-                            {cert.userId && <Badge tone="gold">Con cuenta</Badge>}
                             <button
                                 type="button"
                                 className="btn-secondary btn-sm cert-search__view"

@@ -11,13 +11,12 @@
  *   verá el mismo color — consistente en todos los dispositivos y sesiones.
  */
 
-// Solo tonos de la marca, profundos para que las iniciales blancas se lean.
+// Solo fucsias y vinos de la marca: las iniciales blancas pasan 4.5:1 en todos.
+// Sin dorado, que queda para los logros (y con blanco encima no se lee).
 const PALETTE = [
     'var(--rose-600)',
     'var(--rose-800)',
-    'var(--gold-600)',
     'var(--rose-700)',
-    'var(--gold-700)',
     'var(--rose-900)',
 ];
 

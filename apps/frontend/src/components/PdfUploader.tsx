@@ -1,4 +1,6 @@
 import { useRef, useState } from 'react';
+import { FileText, FileUp, TriangleAlert, X } from 'lucide-react';
+import { inlineIconStyle } from './inlineIcon';
 
 // ─── Contrato del componente ─────────────────────────────────────────────────
 // Componente CONTROLADO: no guarda el archivo, solo lo reporta al padre via
@@ -46,13 +48,14 @@ export const PdfUploader = ({ file, onFileChange, error, label, hint }: PdfUploa
             {file ? (
                 /* Card del archivo ya seleccionado */
                 <div className="pdf-uploader__file">
-                    <span className="pdf-uploader__file-icon" aria-hidden="true">📄</span>
+                    <FileText className="pdf-uploader__file-icon" size={24} strokeWidth={1.6} aria-hidden="true" style={{ flexShrink: 0 }} />
                     <span className="pdf-uploader__file-info">
                         <span className="pdf-uploader__file-name">{file.name}</span>
                         <span className="pdf-uploader__file-size">{formatSize(file.size)}</span>
                     </span>
                     <button type="button" className="pdf-uploader__remove" onClick={handleRemove}>
-                        ✕ Quitar
+                        <X size={14} strokeWidth={2} aria-hidden="true" style={inlineIconStyle} />
+                        Quitar
                     </button>
                 </div>
             ) : (
@@ -74,7 +77,7 @@ export const PdfUploader = ({ file, onFileChange, error, label, hint }: PdfUploa
                     onKeyDown={(e) => e.key === 'Enter' && openPicker()}
                     aria-label="Área para subir PDF"
                 >
-                    <span className="pdf-uploader__icon" aria-hidden="true">📄</span>
+                    <FileUp className="pdf-uploader__icon" size={32} strokeWidth={1.5} aria-hidden="true" />
                     <p className="pdf-uploader__text">
                         Arrastra tu PDF aquí o{' '}
                         <span className="pdf-uploader__link">haz clic para seleccionar</span>
@@ -83,7 +86,7 @@ export const PdfUploader = ({ file, onFileChange, error, label, hint }: PdfUploa
                 </div>
             )}
 
-            {error && <p className="pdf-uploader__error">⚠ {error}</p>}
+            {error && <p className="pdf-uploader__error"><TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{error}</p>}
 
             <input
                 ref={inputRef}

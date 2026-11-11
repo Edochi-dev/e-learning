@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { Check, X } from 'lucide-react';
 import type { QuizQuestion, QuizAnswer, QuizResult } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
@@ -246,9 +247,9 @@ export const QuizPlayer: React.FC<QuizPlayerProps> = ({
                                 className={`quiz-result__question ${detail.correct ? 'quiz-result__question--correct' : 'quiz-result__question--wrong'}`}
                             >
                                 <div className="quiz-result__question-header">
-                                    <span className="quiz-result__question-icon">
-                                        {detail.correct ? '✓' : '✗'}
-                                    </span>
+                                    {detail.correct
+                                        ? <Check className="quiz-result__question-icon" size={18} strokeWidth={2.25} role="img" aria-label="Correcta" style={{ marginTop: '0.1rem' }} />
+                                        : <X className="quiz-result__question-icon" size={18} strokeWidth={2.25} role="img" aria-label="Incorrecta" style={{ marginTop: '0.1rem' }} />}
                                     <span className="quiz-result__question-text">
                                         {qIndex + 1}. {q.text}
                                     </span>

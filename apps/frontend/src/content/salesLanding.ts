@@ -6,8 +6,9 @@
  * a recibir este mismo objeto desde un gateway y no cambia una sola línea de su
  * JSX. Mientras tanto, editar aquí y desplegar.
  *
- * En los textos, **lo que va entre dobles asteriscos** se pinta resaltado. Lo
- * interpreta el componente Highlight de la página.
+ * En los textos, **lo que va entre dobles asteriscos** se pinta resaltado; en
+ * los titulares, en la itálica de acento. Lo interpretan los componentes
+ * Highlight y Headline de la página.
  *
  * FUENTE: "Master Educador Online (Grabado con mentorias).pdf".
  *
@@ -79,10 +80,12 @@ export interface SalesLandingContent {
     stats: SalesLandingStat[];
     marqueeWords: string[];
 
+    winsEyebrow: string;
     winsTitle: string;
     winsIntro: string;
     wins: string[];
 
+    modulesEyebrow: string;
     modulesTitle: string;
     modulesIntro: string;
     modules: SalesLandingModule[];
@@ -90,22 +93,29 @@ export interface SalesLandingContent {
     requirementTitle: string;
     requirementBody: string;
 
+    plansEyebrow: string;
     plansTitle: string;
     plansIntro: string;
     plans: SalesLandingPlan[];
     plansFooter: string;
     finePrint: string;
 
+    forWhomEyebrow: string;
+    forWhomTitle: string;
     forWhom: string[];
+
+    testimonialsEyebrow: string;
+    testimonialsTitle: string;
     testimonials: SalesLandingTestimonial[];
 
     scarcityNote: string;
+    closingEyebrow: string;
     closingHeadline: string;
     closingBody: string;
 }
 
 export const SALES_LANDING: SalesLandingContent = {
-    announcement: '✨ INSCRIPCIONES ABIERTAS · 6 SEMANAS · 100 % ONLINE · CUPOS LIMITADOS',
+    announcement: 'INSCRIPCIONES ABIERTAS · 6 SEMANAS · 100 % ONLINE · CUPOS LIMITADOS',
 
     // Admite dos formas, y NO dan el mismo resultado:
     //
@@ -149,7 +159,8 @@ export const SALES_LANDING: SalesLandingContent = {
         'Marketing académico',
     ],
 
-    winsTitle: 'Tu experiencia todavía no es una metodología',
+    winsEyebrow: 'Lo que ganas',
+    winsTitle: 'Tu experiencia todavía no es **una metodología**',
     winsIntro:
         'Esto no es un curso técnico centrado en estructuras. Es una **formación pedagógica de nivel superior** para quien ya domina la técnica y ahora quiere dominar el arte de transmitirla.',
     wins: [
@@ -161,7 +172,8 @@ export const SALES_LANDING: SalesLandingContent = {
         'Una **certificación profesional** que diferencia tu academia en el mercado',
     ],
 
-    modulesTitle: 'Los 4 pilares',
+    modulesEyebrow: 'El programa',
+    modulesTitle: 'Los 4 **pilares**',
     modulesIntro:
         'Enseñar, comunicar, diseñar y **vender tu propia formación** con criterio profesional.',
 
@@ -209,7 +221,8 @@ export const SALES_LANDING: SalesLandingContent = {
     requirementBody:
         'Debes **dominar previamente al menos una técnica** del área de uñas que quieras enseñar. Uña natural, nivelación, reconstrucción, estructuras, acrílico, gel, dual system, nail art… la que sea. Este Máster **no sustituye una formación técnica inicial**: aquí aprendes a enseñar lo que ya sabes hacer.',
 
-    plansTitle: 'Elige cómo quieres cursarlo',
+    plansEyebrow: 'Dos modalidades',
+    plansTitle: 'Elige cómo **quieres cursarlo**',
     plansIntro:
         'Mismo programa, mismas evaluaciones, misma certificación. **Lo que cambia es el acompañamiento** — y cada grupo gana en algo distinto. En el video te cuento el detalle.',
 
@@ -267,6 +280,8 @@ export const SALES_LANDING: SalesLandingContent = {
     finePrint:
         'La inscripción se descuenta del valor total. La inscripción y el valor del curso no son reembolsables, y el curso no es transferible. En casos excepcionales y comprobables —por ejemplo, razones médicas documentadas— el monto puede reagendarse para una futura edición. El acceso a las clases está condicionado al pago total.',
 
+    forWhomEyebrow: 'Antes de inscribirte',
+    forWhomTitle: 'Esto es **para ti** si…',
     forWhom: [
         'Eres **manicurista y dominas una técnica** que quieres enseñar de forma profesional',
         'Tienes **una academia** y quieres profesionalizar tu forma de enseñar',
@@ -274,6 +289,8 @@ export const SALES_LANDING: SalesLandingContent = {
         'Ya das clases, pero **improvisas** y quieres un método que no dependa de la inspiración',
     ],
 
+    testimonialsEyebrow: 'Casos de éxito',
+    testimonialsTitle: 'Lo que dicen **las alumnas**',
     // ⚠️ PLACEHOLDER — testimonios REALES, con permiso de la alumna.
     testimonials: [
         {
@@ -299,7 +316,8 @@ export const SALES_LANDING: SalesLandingContent = {
     scarcityNote:
         'Los cupos son limitados: cada edición lleva **evaluación individual** de cada participante, y eso **pone un tope real** a cuántas educadoras puedo acompañar a la vez. **Escríbeme para saber la próxima fecha disponible.**',
 
-    closingHeadline: 'Tu talento te hizo artista, tu pedagogía te hará leyenda.',
+    closingEyebrow: 'Máster Educador Internacional',
+    closingHeadline: 'Tu talento te hizo artista, **tu pedagogía te hará leyenda.**',
     closingBody:
         'Escríbeme y vemos juntas cuál de los dos grupos te conviene. **Sin compromiso.**',
 };

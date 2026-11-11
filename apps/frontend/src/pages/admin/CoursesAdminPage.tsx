@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import type { Course } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
@@ -119,27 +119,20 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
 
     return (
         <div className="admin-page">
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
-            <div className="admin-header">
-                <h1>Gestión de Cursos</h1>
-                <p>Crea nuevos cursos o administra los existentes desde aquí.</p>
-            </div>
-
-            <div className="admin-grid">
-                {/* Card-puerta: Crear Curso */}
-                <div className="admin-card">
-                    <div className="admin-card-icon">✨</div>
-                    <h3>Nuevo Curso</h3>
-                    <p>Agrega un nuevo curso a la plataforma con título, descripción, precio y lecciones.</p>
-                    <Link to="/admin/courses/new" className="btn-primary card-action-btn">
-                        Crear Nuevo Curso
-                    </Link>
+            <Link to="/admin" className="back-link">← Volver al panel</Link>
+            <div className="admin-header admin-header--action">
+                <div className="admin-header__text">
+                    <p className="section-eyebrow">Administración</p>
+                    <h1>Gestión de <em>cursos</em></h1>
+                    <p>Crea nuevos cursos o administra los existentes desde aquí.</p>
                 </div>
+                <Link to="/admin/courses/new" className="btn-primary">
+                    <Plus size={18} strokeWidth={2} aria-hidden="true" />
+                    Nuevo curso
+                </Link>
             </div>
 
-            {/* Listado de cursos existentes */}
-            <section className="admin-section">
-                <h2 className="admin-section__title">Cursos existentes</h2>
+            <section aria-label="Cursos existentes">
                 {isLoading ? (
                     <p className="admin-section__status">Cargando cursos...</p>
                 ) : courses.length === 0 ? (
@@ -157,7 +150,7 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
                                     </span>
                                 </div>
 
-                                <Badge tone={course.publishedAt ? 'success' : 'neutral'}>
+                                <Badge tone={course.publishedAt ? 'rose' : 'neutral'}>
                                     {course.publishedAt ? 'Publicado' : 'Borrador'}
                                 </Badge>
 
@@ -173,7 +166,7 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
 
                                     <Link
                                         to={`/admin/cursos/${course.id}/alumnas`}
-                                        className="btn-secondary btn-sm"
+                                        className="btn-ghost btn-sm"
                                         aria-label={`Ver alumnas de ${course.title}`}
                                     >
                                         Alumnas
@@ -181,7 +174,7 @@ export const CoursesAdminPage: React.FC<Props> = ({ gateway: courseGateway }) =>
 
                                     <Link
                                         to={`/admin/cursos/${course.id}/invitaciones`}
-                                        className="btn-secondary btn-sm"
+                                        className="btn-ghost btn-sm"
                                         aria-label={`Invitaciones de ${course.title}`}
                                     >
                                         Invitaciones

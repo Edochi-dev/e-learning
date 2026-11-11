@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { CircleCheck } from 'lucide-react';
 import type { CorrectionGateway, AssignmentSubmission } from '../../gateways/CorrectionGateway';
 import { API_URL } from '../../config';
 import { VoiceReviewRecorder } from '../../components/VoiceReviewRecorder';
@@ -83,7 +84,7 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
     if (isLoading) {
         return (
             <div className="admin-page">
-                <Link to="/admin/correcciones" className="back-link">← Volver a Correcciones</Link>
+                <Link to="/admin/correcciones" className="back-link">← Volver a correcciones</Link>
                 <p className="admin-section admin-section__status">Cargando entregas...</p>
             </div>
         );
@@ -93,9 +94,9 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
     if (!current) {
         return (
             <div className="admin-page">
-                <Link to="/admin/correcciones" className="back-link">← Volver a Correcciones</Link>
+                <Link to="/admin/correcciones" className="back-link">← Volver a correcciones</Link>
                 <div className="review-done">
-                    <div className="review-done-icon">✅</div>
+                    <div className="review-done-icon" aria-hidden="true"><CircleCheck size={48} strokeWidth={1.5} /></div>
                     <h2>¡Todas revisadas!</h2>
                     <p>
                         {totalCount > 0
@@ -119,9 +120,10 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin/correcciones" className="back-link">← Volver a Correcciones</Link>
+            <Link to="/admin/correcciones" className="back-link">← Volver a correcciones</Link>
 
             <div className="admin-header">
+                <p className="section-eyebrow">Correcciones</p>
                 <h1>{courseTitle}</h1>
                 <p className="review-progress">
                     Entrega {reviewedCount + 1} de {totalCount}

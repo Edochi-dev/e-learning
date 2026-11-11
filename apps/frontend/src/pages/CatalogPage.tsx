@@ -9,6 +9,7 @@ import { SkeletonCourseCard } from '../components/Skeleton';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useEnrolledCourseIds } from '../hooks/useEnrolledCourseIds';
 import { CourseCardLink } from '../components/CourseCardLink';
+import { BrandMark } from '../components/BrandMark';
 
 interface CatalogPageProps {
     gateway: CourseGateway;
@@ -148,7 +149,7 @@ export const CatalogPage = ({ gateway, enrollmentGateway }: CatalogPageProps) =>
                                 <div className="catalog-featured__visual" aria-hidden="true">
                                     {featured.thumbnailUrl
                                         ? <img src={`${BACKEND_URL}${featured.thumbnailUrl}`} alt="" className="course-thumbnail" />
-                                        : '💅'
+                                        : <BrandMark width="22%" />
                                     }
                                 </div>
                             </article>
@@ -162,7 +163,7 @@ export const CatalogPage = ({ gateway, enrollmentGateway }: CatalogPageProps) =>
                                         <div className="catalog-card__visual" aria-hidden="true">
                                             {course.thumbnailUrl
                                                 ? <img src={`${BACKEND_URL}${course.thumbnailUrl}`} alt="" className="course-thumbnail" />
-                                                : '💅'
+                                                : <BrandMark width="22%" />
                                             }
                                         </div>
                                         <div className="catalog-card__body">

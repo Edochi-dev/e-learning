@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react';
 import { AUTO_COMPLETE_WATCH_PERCENT } from '@maris-nails/shared';
 
 interface WatchProgressProps {
@@ -11,7 +12,12 @@ interface WatchProgressProps {
  */
 export const WatchProgress = ({ percent, completed }: WatchProgressProps) => {
     if (completed) {
-        return <span className="watch-progress watch-progress--done" role="status">✓ Completada</span>;
+        return (
+            <span className="watch-progress watch-progress--done" role="status">
+                <Check size={16} strokeWidth={2.25} aria-hidden="true" />
+                Completada
+            </span>
+        );
     }
     const value = Math.min(100, Math.round(percent));
     return (

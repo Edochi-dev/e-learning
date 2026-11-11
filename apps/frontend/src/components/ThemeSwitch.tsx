@@ -1,4 +1,5 @@
 import React from 'react';
+import { Moon, Sun } from 'lucide-react';
 
 interface ThemeSwitchProps {
     theme: 'light' | 'dark';
@@ -14,8 +15,8 @@ export const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ theme, toggleTheme }) 
                 onChange={toggleTheme}
             />
             <span className="slider round">
-                <span className="icon-sun">☀️</span>
-                <span className="icon-moon">🌙</span>
+                <Sun className="icon-sun" size={14} strokeWidth={2} aria-hidden="true" />
+                <Moon className="icon-moon" size={14} strokeWidth={2} aria-hidden="true" />
             </span>
         </label>
     );

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import { Trash2 } from 'lucide-react';
+import { CircleCheck, CircleHelp, ClipboardList, Clock, GripVertical, ImageIcon, PenLine, Plus, Trash2, Video } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
 import { COURSE_LEVEL_OPTIONS } from '../../constants/courseLevels';
+import { inlineIconStyle } from '../../components/inlineIcon';
 import type { CourseGateway } from '../../gateways/CourseGateway';
 import {
     LessonType,
@@ -74,7 +75,7 @@ interface SortableLessonItemProps {
 /** Tono de la etiqueta de cada tipo de lección. */
 const LESSON_TYPE_TONE: Record<LessonType, BadgeTone> = {
     [LessonType.CLASS]: 'neutral',
-    [LessonType.EXAM]: 'gold',
+    [LessonType.EXAM]: 'rose',
     [LessonType.CORRECTION]: 'rose',
 };
 
@@ -82,8 +83,8 @@ const LESSON_TYPE_TONE: Record<LessonType, BadgeTone> = {
 const LESSON_META: Record<LessonType, (lesson: Lesson) => React.ReactNode> = {
     [LessonType.CLASS]: (lesson) => (
         <>
-            <span>⏱ {lesson.videoData?.duration || '—'}</span>
-            <span className="admin-lesson-meta__url">🎬 {lesson.videoData?.videoUrl || 'Sin video'}</span>
+            <span><Clock size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{lesson.videoData?.duration || '—'}</span>
+            <span className="admin-lesson-meta__url"><Video size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{lesson.videoData?.videoUrl || 'Sin video'}</span>
             <Badge tone={lesson.videoData?.isLive ? 'rose' : 'neutral'}>
                 {lesson.videoData?.isLive ? 'En vivo' : 'Grabado'}
             </Badge>
@@ -91,12 +92,12 @@ const LESSON_META: Record<LessonType, (lesson: Lesson) => React.ReactNode> = {
     ),
     [LessonType.EXAM]: (lesson) => (
         <>
-            <span>✅ Mínimo para aprobar: {lesson.examData?.passingScore}</span>
-            <span>❓ {lesson.questions?.length ?? 0} preguntas</span>
+            <span><CircleCheck size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Mínimo para aprobar: {lesson.examData?.passingScore}</span>
+            <span><CircleHelp size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{lesson.questions?.length ?? 0} preguntas</span>
         </>
     ),
     [LessonType.CORRECTION]: (lesson) => (
-        <span>🖼 {lesson.assignmentData?.referenceImageUrl ? 'Con foto de referencia' : 'Sin foto de referencia'}</span>
+        <span><ImageIcon size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{lesson.assignmentData?.referenceImageUrl ? 'Con foto de referencia' : 'Sin foto de referencia'}</span>
     ),
 };
 
@@ -226,8 +227,9 @@ function SortableLessonItem({
                         {...attributes}
                         {...listeners}
                         title="Arrastra para reordenar"
+                        aria-label="Arrastra para reordenar"
                     >
-                        ⠿
+                        <GripVertical size={18} strokeWidth={1.75} aria-hidden="true" style={{ display: 'block' }} />
                     </span>
                     <div className="admin-lesson-info">
                         <h4>
@@ -720,7 +722,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     return (
         <div className="admin-page">
-            <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
+            <Link to="/admin/cursos" className="back-link">← Volver a cursos</Link>
 
 
             {/* Fila superior: datos del curso + miniatura lado a lado en desktop */}
@@ -728,7 +730,8 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
             {/* Sección 1: Editar datos del curso */}
             <div className="admin-form">
-                <h1>Editar Curso</h1>
+                <p className="section-eyebrow">Cursos</p>
+                <h1>Editar <em>curso</em></h1>
                 <p className="admin-form-subtitle">Modifica los datos del curso y guarda los cambios.</p>
 
                 <form onSubmit={handleCourseSubmit}>
@@ -914,7 +917,9 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     onClick={() => setIsAddingLesson(prev => !prev)}
                     aria-expanded={isAddingLesson}
                 >
-                    <span className={`add-lesson-toggle-icon ${isAddingLesson ? 'open' : ''}`}>＋</span>
+                    <span className={`add-lesson-toggle-icon ${isAddingLesson ? 'open' : ''}`} aria-hidden="true">
+                        <Plus size={18} strokeWidth={2} style={{ display: 'block' }} />
+                    </span>
                     {isAddingLesson ? 'Cancelar' : 'Agregar Nueva Lección'}
                 </button>
 
@@ -931,21 +936,24 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                         className={`lesson-type-option ${lessonForm.type === LessonType.CLASS ? 'active' : ''}`}
                                         onClick={() => switchLessonType(LessonType.CLASS)}
                                     >
-                                        🎬 Clase (video)
+                                        <Video size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                                        Clase (video)
                                     </button>
                                     <button
                                         type="button"
                                         className={`lesson-type-option ${lessonForm.type === LessonType.EXAM ? 'active' : ''}`}
                                         onClick={() => switchLessonType(LessonType.EXAM)}
                                     >
-                                        📝 Examen
+                                        <ClipboardList size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                                        Examen
                                     </button>
                                     <button
                                         type="button"
                                         className={`lesson-type-option ${lessonForm.type === LessonType.CORRECTION ? 'active' : ''}`}
                                         onClick={() => switchLessonType(LessonType.CORRECTION)}
                                     >
-                                        ✏️ Corrección
+                                        <PenLine size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                                        Corrección
                                     </button>
                                 </div>
                             </div>

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
+import { Mic, Square } from 'lucide-react';
 import { useAudioRecorder } from '../hooks/useAudioRecorder';
 import { formatSeconds, MAX_REVIEW_SECONDS } from '../lib/audio-recording';
+import { inlineIconStyle } from './inlineIcon';
 
 type ReviewAction = 'approve' | 'reject';
 
@@ -63,10 +65,12 @@ export const VoiceReviewRecorder: React.FC<VoiceReviewRecorderProps> = ({ onSubm
                 {recorder.error && <p className="voice-review__error">{recorder.error}</p>}
                 <div className="review-actions">
                     <button type="button" className="btn-danger review-actions__btn" onClick={() => begin('reject')}>
-                        🎙 Rechazar
+                        <Mic size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                        Rechazar
                     </button>
                     <button type="button" className="btn-success review-actions__btn" onClick={() => begin('approve')}>
-                        🎙 Aprobar
+                        <Mic size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                        Aprobar
                     </button>
                 </div>
             </div>
@@ -99,7 +103,8 @@ export const VoiceReviewRecorder: React.FC<VoiceReviewRecorderProps> = ({ onSubm
                             onClick={recorder.stop}
                             disabled={recorder.status !== 'recording'}
                         >
-                            ■ Detener
+                            <Square size={14} strokeWidth={2} fill="currentColor" aria-hidden="true" />
+                            Detener
                         </button>
                     </div>
                 </>

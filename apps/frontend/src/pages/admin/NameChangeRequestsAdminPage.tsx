@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { ArrowRight, PartyPopper } from 'lucide-react';
 import type { AdminNameChangeGateway } from '../../gateways/NameChangeGateway';
 import type { NameChangeRequest } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
+import { inlineIconStyle } from '../../components/inlineIcon';
 
 interface Props {
     gateway: AdminNameChangeGateway;
@@ -61,9 +63,10 @@ export const NameChangeRequestsAdminPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin" className="back-link">← Volver al Panel</Link>
+            <Link to="/admin" className="back-link">← Volver al panel</Link>
             <div className="admin-header">
-                <h1>Solicitudes de Cambio de Nombre</h1>
+                <p className="section-eyebrow">Administración</p>
+                <h1>Cambios de <em>nombre</em></h1>
                 <p>Aprueba o rechaza los cambios de nombre solicitados por los alumnos.</p>
             </div>
 
@@ -74,7 +77,7 @@ export const NameChangeRequestsAdminPage: React.FC<Props> = ({ gateway }) => {
             )}
 
             {!loading && !error && requests.length === 0 && (
-                <div className="admin-empty">No hay solicitudes pendientes. 🎉</div>
+                <div className="admin-empty"><PartyPopper size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />No hay solicitudes pendientes.</div>
             )}
 
             {!loading && !error && requests.length > 0 && (
@@ -84,7 +87,7 @@ export const NameChangeRequestsAdminPage: React.FC<Props> = ({ gateway }) => {
                             <div className="request-card__head">
                                 <p className="request-card__names">
                                     <strong>{req.currentName}</strong>
-                                    <span className="request-card__arrow" aria-label="cambia a">→</span>
+                                    <ArrowRight className="request-card__arrow" size={16} strokeWidth={1.75} role="img" aria-label="cambia a" style={{ verticalAlign: '-0.15em' }} />
                                     <strong className="request-card__new">{req.requestedName}</strong>
                                 </p>
                                 <span className="admin-row__meta">

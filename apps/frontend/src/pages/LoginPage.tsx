@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link, type Location } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
+import { TriangleAlert } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '@maris-nails/shared';
 import { AuthLayout } from '../components/AuthLayout';
 import { Button } from '../components/Button';
+import { inlineIconStyle } from '../components/inlineIcon';
 
 export const LoginPage = () => {
     const [email, setEmail] = useState('');
@@ -33,14 +34,14 @@ export const LoginPage = () => {
 
     return (
         <AuthLayout
-            icon={LogIn}
-            title="Iniciar Sesión"
+            eyebrow="Bienvenida de vuelta"
+            title={<>Iniciar <em>sesión</em></>}
             subtitle="Entra para acceder a tus cursos"
             footer={
                 <>
                     <p style={{ textAlign: 'center', marginTop: '1.5rem', marginBottom: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>
                         ¿No tienes cuenta?{' '}
-                        <Link to="/registro" style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                        <Link to="/registro" style={{ color: 'var(--accent-text)', fontWeight: 600 }}>
                             Regístrate
                         </Link>
                     </p>
@@ -68,7 +69,8 @@ export const LoginPage = () => {
                     border: '1px solid var(--danger-soft)',
                     fontWeight: 500,
                 }}>
-                    ⚠️ {error}
+                    <TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                    {error}
                 </div>
             )}
 

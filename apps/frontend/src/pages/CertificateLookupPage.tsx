@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GraduationCap } from 'lucide-react';
 import type { CertificateGateway } from '../gateways/CertificateGateway';
 import { useCertificateLookup } from '../hooks/useCertificateLookup';
 
@@ -27,13 +28,14 @@ export const CertificateLookupPage: React.FC<Props> = ({ gateway }) => {
 
             {/* Encabezado */}
             <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎓</div>
-                <h1 style={{ fontFamily: 'var(--font-heading)', marginBottom: '0.5rem' }}>
-                    Busca tu Certificado
+                <span className="cert-seal" aria-hidden="true"><GraduationCap size={30} strokeWidth={1.5} /></span>
+                <p className="section-eyebrow">Verificación oficial</p>
+                <h1 className="cert-lookup__title">
+                    Busca tu <em>certificado</em>
                 </h1>
                 <p style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>
                     Ingresa el número y el nombre tal como aparecen en el documento.
-                    Por ejemplo: <span style={{ fontFamily: 'monospace', color: 'var(--primary)', whiteSpace: 'nowrap' }}>MR-00001</span>
+                    Por ejemplo: <span style={{ fontFamily: 'monospace', color: 'var(--accent-text)', whiteSpace: 'nowrap' }}>MR-00001</span>
                 </p>
             </div>
 

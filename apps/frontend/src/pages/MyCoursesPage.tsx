@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
 import { useEnrollments } from '../hooks/useEnrollments';
 
 import { API_URL as BACKEND_URL } from '../config';
 import { SkeletonCourseCard } from '../components/Skeleton';
 import { UpcomingLiveClasses } from '../components/UpcomingLiveClasses';
+import { BrandMark } from '../components/BrandMark';
 import { coursesInfoWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
 import { canSeePublicSite } from '../lib/public-site';
 import { useAuth } from '../context/AuthContext';
@@ -64,6 +66,7 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
 
     // "Activos" debe significar activos: contar también los vencidos haría que
     // el encabezado contradijera las tarjetas de abajo.
+    const firstName = user?.fullName.trim().split(/\s+/)[0];
     const activeCount = enrollments.filter((e) => e.isActive).length;
     const expiredCount = enrollments.length - activeCount;
 
@@ -79,7 +82,8 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
     return (
         <div className="container my-courses-page">
             <div className="my-courses-page__header">
-                <h1>Mis Cursos</h1>
+                {firstName && <p className="section-eyebrow">Hola, {firstName}</p>}
+                <h1>Mis <em>cursos</em></h1>
                 <p className="my-courses-page__subtitle">{subtitle()}</p>
             </div>
 
@@ -87,7 +91,7 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
 
             {enrollments.length === 0 ? (
                 <div className="my-courses-page__empty">
-                    <p className="my-courses-page__empty-icon">📚</p>
+                    <p className="my-courses-page__empty-icon" aria-hidden="true"><BookOpen size={48} strokeWidth={1.5} /></p>
                     <h2>Empieza tu formación</h2>
                     {canSeePublicSite(user) ? (
                         <>
@@ -121,7 +125,7 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                         className="course-thumbnail"
                                     />
                                 ) : (
-                                    <span className="enrollment-card__fallback">💅</span>
+                                    <BrandMark width="46%" className="enrollment-card__fallback" />
                                 )}
 
                                 {/* Solo los cursos con vencimiento muestran estado. */}
@@ -185,7 +189,8 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                         to={`/mis-cursos/${enrollment.course.id}`}
                                         className="btn-primary enrollment-card__cta"
                                     >
-                                        Ir al curso →
+                                        {enrollment.completedLessons ? 'Continuar' : 'Empezar'}
+                                        <ArrowRight size={16} strokeWidth={1.75} aria-hidden="true" />
                                     </Link>
                                 ) : (
                                     <a

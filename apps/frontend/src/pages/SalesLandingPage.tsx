@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, KeyRound, MessageCircle, Play, Sparkle, Star } from 'lucide-react';
 import { useScrollReveal } from '../hooks/useScrollReveal';
 import { useCountUp } from '../hooks/useCountUp';
 import { useAnyVisible } from '../hooks/useAnyVisible';
@@ -8,9 +9,8 @@ import { buildWhatsappUrl } from '../lib/whatsapp';
 
 const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
 
-
 /**
- * Pinta **lo marcado entre dobles asteriscos** con el color de énfasis.
+ * Separa **lo marcado entre dobles asteriscos** para envolverlo.
  *
  * El texto vive en un objeto de configuración que mañana llegará de la base de
  * datos, así que no puede traer JSX. Un marcador dentro de la cadena deja que
@@ -18,13 +18,26 @@ const VIDEO_PLACEHOLDER = 'REEMPLAZAR';
  * abrir la puerta a inyectar HTML, porque lo único que se interpreta son los
  * asteriscos.
  */
+const splitMarked = (text: string, wrap: (inner: string, key: number) => React.ReactNode) =>
+    text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+        part.startsWith('**') && part.endsWith('**') ? wrap(part.slice(2, -2), i) : part,
+    );
+
+/** En el cuerpo, lo marcado se resalta con el color de énfasis. */
 const Highlight = ({ text }: { text: string }) => (
+    <>{splitMarked(text, (inner, key) => <mark key={key} className="sl-mark">{inner}</mark>)}</>
+);
+
+/** En los titulares, lo marcado va en la itálica metálica de acento. */
+const Headline = ({ text }: { text: string }) => (
+    <>{splitMarked(text, (inner, key) => <em key={key}>{inner}</em>)}</>
+);
+
+/** Rótulo + titular de revista, el encabezado de cada sección. */
+const SectionHead = ({ eyebrow, title }: { eyebrow: string; title: string }) => (
     <>
-        {text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-            part.startsWith('**') && part.endsWith('**')
-                ? <mark key={i} className="sl-mark">{part.slice(2, -2)}</mark>
-                : part,
-        )}
+        <p className="section-eyebrow">{eyebrow}</p>
+        <h2 className="section-title sl-section__title"><Headline text={title} /></h2>
     </>
 );
 
@@ -39,7 +52,7 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
     if (videoId === VIDEO_PLACEHOLDER) {
         return (
             <div className="sl-video sl-video--pending">
-                <span className="sl-video__pending-icon">🎬</span>
+                <img src="/images/logo-mark-m.png" alt="" aria-hidden="true" className="sl-video__pending-mark" />
                 <p>Video pendiente: pon su identificador en <code>salesLanding.ts</code>.</p>
             </div>
         );
@@ -59,7 +72,9 @@ const VideoEmbed = ({ videoId }: { videoId: string }) => {
                     className="sl-video__thumb"
                     loading="lazy"
                 />
-                <span className="sl-video__play" aria-hidden="true">▶</span>
+                <span className="sl-video__play" aria-hidden="true">
+                    <Play size={30} fill="currentColor" />
+                </span>
             </button>
         );
     }
@@ -82,7 +97,7 @@ const Stat = ({ stat }: { stat: SalesLandingStat }) => {
     return (
         <div className="sl-stat">
             <span className="sl-stat__value" ref={ref}>
-                {stat.prefix}{value}{stat.suffix}
+                {stat.prefix}{value}{stat.suffix && <em>{stat.suffix}</em>}
             </span>
             <span className="sl-stat__label">{stat.label}</span>
         </div>
@@ -92,8 +107,8 @@ const Stat = ({ stat }: { stat: SalesLandingStat }) => {
 /**
  * Tarjeta de un grupo.
  *
- * `perks` y `extras` se pintan con el mismo tick: los extras solo cambian de
- * color. Es deliberado — marcar los extras con otro símbolo insinuaría que a
+ * `perks` y `extras` se pintan con el mismo tick: los extras solo resaltan el
+ * texto. Es deliberado — marcar los extras con otro símbolo insinuaría que a
  * la otra tarjeta le faltan, y aquí ninguna carece de nada: cada una suma.
  */
 const PlanCard = ({ plan, whatsappTarget }: { plan: SalesLandingPlan; whatsappTarget: string }) => (
@@ -108,13 +123,13 @@ const PlanCard = ({ plan, whatsappTarget }: { plan: SalesLandingPlan; whatsappTa
         <ul className="sl-plan__perks">
             {plan.perks.map((perk) => (
                 <li key={perk}>
-                    <span className="sl-plan__tick" aria-hidden="true">✓</span>
+                    <Check className="sl-plan__tick" size={18} aria-hidden="true" />
                     <span><Highlight text={perk} /></span>
                 </li>
             ))}
             {plan.extras.map((extra) => (
                 <li key={extra} className="sl-plan__perk--extra">
-                    <span className="sl-plan__tick" aria-hidden="true">✓</span>
+                    <Check className="sl-plan__tick" size={18} aria-hidden="true" />
                     <span><Highlight text={extra} /></span>
                 </li>
             ))}
@@ -122,11 +137,11 @@ const PlanCard = ({ plan, whatsappTarget }: { plan: SalesLandingPlan; whatsappTa
 
         <a
             href={buildWhatsappUrl(whatsappTarget, plan.whatsappMessage)}
-            className="sl-cta sl-cta--plan sl-cta--inline"
+            className="btn-primary sl-cta sl-cta--plan sl-cta--inline"
             target="_blank"
             rel="noopener noreferrer"
         >
-            <span className="sl-cta__icon" aria-hidden="true">💬</span>
+            <MessageCircle size={20} aria-hidden="true" />
             {plan.ctaLabel}
         </a>
     </article>
@@ -168,11 +183,11 @@ const TestimonialSlider = ({ items }: { items: SalesLandingTestimonial[] }) => {
         <div className="sl-slider">
             <button
                 type="button"
-                className="sl-slider__arrow"
+                className="btn-secondary btn-icon sl-slider__arrow"
                 onClick={() => go(-1)}
                 aria-label="Caso anterior"
             >
-                ‹
+                <ChevronLeft size={22} aria-hidden="true" />
             </button>
 
             <div
@@ -186,7 +201,9 @@ const TestimonialSlider = ({ items }: { items: SalesLandingTestimonial[] }) => {
                 >
                     {items.map((t, i) => (
                         <figure className="sl-testimonial" key={i} aria-hidden={i !== index}>
-                            <span className="sl-testimonial__stars" aria-hidden="true">★★★★★</span>
+                            <span className="sl-testimonial__stars" aria-hidden="true">
+                                {[0, 1, 2, 3, 4].map((n) => <Star key={n} size={16} fill="currentColor" />)}
+                            </span>
                             <blockquote>{t.quote}</blockquote>
                             <p className="sl-testimonial__result">{t.result}</p>
                             <figcaption>
@@ -200,11 +217,11 @@ const TestimonialSlider = ({ items }: { items: SalesLandingTestimonial[] }) => {
 
             <button
                 type="button"
-                className="sl-slider__arrow"
+                className="btn-secondary btn-icon sl-slider__arrow"
                 onClick={() => go(1)}
                 aria-label="Caso siguiente"
             >
-                ›
+                <ChevronRight size={22} aria-hidden="true" />
             </button>
 
             <div className="sl-slider__dots">
@@ -241,6 +258,7 @@ export const SalesLandingPage = () => {
         <a
             href={whatsappUrl}
             className={[
+                'btn-primary',
                 'sl-cta',
                 `sl-cta--${variant}`,
                 INLINE_VARIANTS.includes(variant) ? 'sl-cta--inline' : '',
@@ -248,7 +266,7 @@ export const SalesLandingPage = () => {
             target="_blank"
             rel="noopener noreferrer"
         >
-            <span className="sl-cta__icon" aria-hidden="true">💬</span>
+            <MessageCircle size={20} aria-hidden="true" />
             {label}
         </a>
     );
@@ -259,17 +277,23 @@ export const SalesLandingPage = () => {
                 <div className="sl-announce__track">
                     {[0, 1].map((copy) => (
                         <div className="sl-announce__group" key={copy} aria-hidden={copy === 1}>
-                            {[0, 1, 2].map((i) => <span key={i}>{c.announcement}</span>)}
+                            {[0, 1, 2].map((i) => (
+                                <span className="sl-announce__item" key={i}>
+                                    <Sparkle size={12} fill="currentColor" aria-hidden="true" />
+                                    {c.announcement}
+                                </span>
+                            ))}
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* ─── HERO ─────────────────────────────────────────── */}
+            {/* Hero */}
             <section className="sl-hero">
                 <div className="sl-hero__glow" aria-hidden="true" />
                 <div className="sl-container">
-                    <p className="sl-eyebrow">{c.eyebrow}</p>
+                    <img src="/images/logo-mark-m.png" alt="Mari's Nails Academy" className="sl-hero__mark" />
+                    <p className="section-eyebrow">{c.eyebrow}</p>
                     <h1 className="sl-hero__title">
                         {c.headline} <em>{c.headlineAccent}</em>
                     </h1>
@@ -288,28 +312,31 @@ export const SalesLandingPage = () => {
                 </div>
             </section>
 
-            {/* ─── CINTA ────────────────────────────────────────── */}
+            {/* Cinta */}
             <div className="sl-marquee" aria-hidden="true">
                 <div className="sl-marquee__track">
                     {[0, 1].map((copy) => (
                         <div className="sl-marquee__group" key={copy}>
                             {c.marqueeWords.map((w) => (
-                                <span className="sl-marquee__item" key={w}>{w}<i>✦</i></span>
+                                <span className="sl-marquee__item" key={w}>
+                                    {w}
+                                    <Sparkle size={14} fill="currentColor" />
+                                </span>
                             ))}
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* ─── LO QUE GANAS ─────────────────────────────────── */}
+            {/* Lo que ganas */}
             <section className="sl-section reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">{c.winsTitle}</h2>
+                    <SectionHead eyebrow={c.winsEyebrow} title={c.winsTitle} />
                     <p className="sl-section__intro"><Highlight text={c.winsIntro} /></p>
                     <div className="sl-wins">
                         {c.wins.map((w) => (
                             <div className="sl-win" key={w}>
-                                <span className="sl-win__tick" aria-hidden="true">✓</span>
+                                <span className="sl-win__tick" aria-hidden="true"><Check size={16} /></span>
                                 <p><Highlight text={w} /></p>
                             </div>
                         ))}
@@ -317,10 +344,10 @@ export const SalesLandingPage = () => {
                 </div>
             </section>
 
-            {/* ─── LOS 4 PILARES ───────────────────────────────── */}
+            {/* Los 4 pilares */}
             <section className="sl-section sl-section--alt reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">{c.modulesTitle}</h2>
+                    <SectionHead eyebrow={c.modulesEyebrow} title={c.modulesTitle} />
                     <p className="sl-section__intro"><Highlight text={c.modulesIntro} /></p>
                     <div className="sl-modules">
                         {c.modules.map((m) => (
@@ -336,11 +363,11 @@ export const SalesLandingPage = () => {
                 </div>
             </section>
 
-            {/* ─── REQUISITO ───────────────────────────────────── */}
+            {/* Requisito */}
             <section className="sl-section reveal">
                 <div className="sl-container sl-container--narrow">
                     <div className="sl-requirement">
-                        <span className="sl-requirement__icon" aria-hidden="true">🔑</span>
+                        <span className="sl-requirement__icon" aria-hidden="true"><KeyRound size={24} /></span>
                         <div>
                             <h2 className="sl-requirement__title">{c.requirementTitle}</h2>
                             <p><Highlight text={c.requirementBody} /></p>
@@ -349,10 +376,10 @@ export const SalesLandingPage = () => {
                 </div>
             </section>
 
-            {/* ─── LOS DOS GRUPOS ───────────────────────────────── */}
+            {/* Los dos grupos */}
             <section className="sl-section sl-section--alt reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">{c.plansTitle}</h2>
+                    <SectionHead eyebrow={c.plansEyebrow} title={c.plansTitle} />
                     <p className="sl-section__intro"><Highlight text={c.plansIntro} /></p>
 
                     <div className="sl-plans">
@@ -367,34 +394,38 @@ export const SalesLandingPage = () => {
                 </div>
             </section>
 
-            {/* ─── TESTIMONIOS ──────────────────────────────────── */}
+            {/* Testimonios */}
             <section className="sl-section reveal">
                 <div className="sl-container">
-                    <h2 className="sl-section__title">Lo que dicen las alumnas</h2>
+                    <SectionHead eyebrow={c.testimonialsEyebrow} title={c.testimonialsTitle} />
                     <TestimonialSlider items={c.testimonials} />
                 </div>
             </section>
 
-            {/* ─── PARA QUIÉN ───────────────────────────────────── */}
+            {/* Para quién */}
             <section className="sl-section sl-section--alt reveal">
                 <div className="sl-container sl-container--narrow">
-                    <h2 className="sl-section__title">Esto es para ti si…</h2>
-                    <ul className="sl-list sl-list--yes">
+                    <SectionHead eyebrow={c.forWhomEyebrow} title={c.forWhomTitle} />
+                    <ul className="sl-list">
                         {c.forWhom.map((item) => (
-                            <li key={item}><Highlight text={item} /></li>
+                            <li key={item}>
+                                <span className="sl-win__tick" aria-hidden="true"><Check size={16} /></span>
+                                <span><Highlight text={item} /></span>
+                            </li>
                         ))}
                     </ul>
                 </div>
             </section>
 
-            {/* ─── CIERRE ───────────────────────────────────────── */}
+            {/* Cierre */}
             <section className="sl-close reveal">
                 <div className="sl-container sl-container--narrow">
                     <p className="sl-scarcity">
                         <span className="sl-scarcity__tag">Cupos limitados</span>
                         <Highlight text={c.scarcityNote} />
                     </p>
-                    <h2 className="sl-close__title">{c.closingHeadline}</h2>
+                    <p className="section-eyebrow">{c.closingEyebrow}</p>
+                    <h2 className="section-title sl-close__title"><Headline text={c.closingHeadline} /></h2>
                     <p className="sl-close__body"><Highlight text={c.closingBody} /></p>
                     {cta('close')}
                     <p className="sl-cta__hint">{c.ctaHint}</p>

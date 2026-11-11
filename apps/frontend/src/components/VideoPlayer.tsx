@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { TriangleAlert } from 'lucide-react';
 import { VideoProvider } from '@maris-nails/shared';
 import type { VideoGateway } from '../gateways/VideoGateway';
 import { playedSegments } from '../lib/watched-segments';
+import { inlineIconStyle } from './inlineIcon';
 
 interface VideoPlayerProps {
     title: string;
@@ -171,7 +173,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provi
                 padding: '2rem',
                 textAlign: 'center',
             }}>
-                ⚠️ {error}
+                <TriangleAlert size={18} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />
+                {error}
             </div>
         );
     }

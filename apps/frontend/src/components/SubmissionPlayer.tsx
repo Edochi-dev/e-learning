@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Camera, CircleCheck, Hourglass, PenLine } from 'lucide-react';
 import type { CorrectionGateway, AssignmentSubmission } from '../gateways/CorrectionGateway';
 import { API_URL } from '../config';
 import { ReviewAudioPlayer } from './ReviewAudioPlayer';
@@ -54,14 +55,14 @@ const HEIC_NAME = /\.hei[cf]$/i;
 
 const StatusBadge: React.FC<{ status: AssignmentSubmission['status'] }> = ({ status }) => {
     const config = {
-        pending: { icon: '⏳', label: 'En revisión', className: 'submission-badge--pending' },
-        approved: { icon: '✅', label: 'Aprobada', className: 'submission-badge--approved' },
-        rejected: { icon: '📝', label: 'Correcciones', className: 'submission-badge--rejected' },
+        pending: { Icon: Hourglass, label: 'En revisión', className: 'submission-badge--pending' },
+        approved: { Icon: CircleCheck, label: 'Aprobada', className: 'submission-badge--approved' },
+        rejected: { Icon: PenLine, label: 'Correcciones', className: 'submission-badge--rejected' },
     }[status];
 
     return (
         <span className={`submission-badge ${config.className}`}>
-            <span aria-hidden="true">{config.icon}</span>
+            <config.Icon size={14} strokeWidth={2} aria-hidden="true" />
             {config.label}
         </span>
     );
@@ -184,7 +185,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                 verde celebratorio con el audio de la profesora. */}
             {submission?.status === 'approved' && !isResubmitting ? (
                 <div className="submission-row submission-row--approved">
-                    <span className="submission-approved__icon" aria-hidden="true">✅</span>
+                    <CircleCheck className="submission-approved__icon" size={36} strokeWidth={1.5} aria-hidden="true" />
                     <h3>¡Aprobada!</h3>
                     <p className="submission-cell-text submission-cell-text--success">
                         Tu entrega fue aprobada. Esta lección quedó completada.
@@ -230,7 +231,7 @@ export const SubmissionPlayer: React.FC<SubmissionPlayerProps> = ({
                                     </>
                                 ) : (
                                     <div className="submission-file-dropzone">
-                                        <span className="submission-file-dropzone-icon" aria-hidden="true">📷</span>
+                                        <Camera className="submission-file-dropzone-icon" size={26} strokeWidth={1.6} aria-hidden="true" />
                                         <label htmlFor="submission-camera" className="btn-primary submission-file-option submission-file-option--camera">
                                             Tomar foto
                                         </label>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Draggable from 'react-draggable';
+import { Minus, Plus, TextAlignCenter, TextAlignStart } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 // Build legacy: el moderno usa Uint8Array.toHex, que navegadores no actualizados no tienen.
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
@@ -10,6 +11,7 @@ import { ptsToMm, ptsToPx } from '../lib/pdf-units';
 import {
     anchorFromLeft, clampBox, fitScale, isHexColor, leftEdge, realign, type Align, type Point,
 } from '../lib/certificate-design';
+import { inlineIconStyle } from './inlineIcon';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/legacy/build/pdf.worker.min.mjs',
@@ -138,7 +140,9 @@ const AlignToggle = ({ label, value, onChange, tone }: {
         <div className={`design-align design-align--${tone}`} role="group" aria-label={label}>
             {(['left', 'center'] as const).map(opt => (
                 <button key={opt} type="button" onClick={() => onChange(opt)} aria-pressed={value === opt}>
-                    {opt === 'left' ? '⇥ Izquierda' : '⇔ Centrado'}
+                    {opt === 'left'
+                        ? <><TextAlignStart size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Izquierda</>
+                        : <><TextAlignCenter size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Centrado</>}
                 </button>
             ))}
         </div>
@@ -441,12 +445,12 @@ export const TemplateDesignPicker: React.FC<TemplateDesignPickerProps> = ({
                     </label>
                     <div className="design-zoom" role="group" aria-label="Zoom">
                         <button type="button" className="btn-secondary btn-sm btn-icon" aria-label="Alejar"
-                            onClick={() => setZoom(z => Math.max(1, +(z - 0.25).toFixed(2)))} disabled={zoom <= 1}>−</button>
+                            onClick={() => setZoom(z => Math.max(1, +(z - 0.25).toFixed(2)))} disabled={zoom <= 1}><Minus size={16} strokeWidth={2} aria-hidden="true" /></button>
                         <button type="button" className="btn-secondary btn-sm" onClick={() => setZoom(1)} aria-pressed={zoom === 1}>
                             {zoom === 1 ? 'Ajustado' : `${Math.round(zoom * 100)}%`}
                         </button>
                         <button type="button" className="btn-secondary btn-sm btn-icon" aria-label="Acercar"
-                            onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}>+</button>
+                            onClick={() => setZoom(z => Math.min(4, +(z + 0.25).toFixed(2)))}><Plus size={16} strokeWidth={2} aria-hidden="true" /></button>
                     </div>
                     {preview ? (
                         <button type="button" className="btn-secondary btn-sm" onClick={() => setPreview(null)}>

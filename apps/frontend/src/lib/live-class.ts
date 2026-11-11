@@ -18,7 +18,7 @@ export function liveClassPhase(startsAt: Date, endsAt: Date, now: Date): LiveCla
 export function openClassLabel(startsAt: Date, now: Date): string {
     return now < startsAt
         ? `Empieza en ${formatCountdown(startsAt.getTime() - now.getTime())} · ya puedes entrar`
-        : '🔴 En vivo ahora';
+        : 'En vivo ahora';
 }
 
 /** "3 d 4 h", "2 h 05 min", "12:07" (under an hour, with seconds). */

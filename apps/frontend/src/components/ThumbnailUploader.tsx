@@ -1,5 +1,7 @@
 import { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import Cropper from 'react-easy-crop';
+import { ImagePlus, Minus, Plus, TriangleAlert, X } from 'lucide-react';
+import { inlineIconStyle } from './inlineIcon';
 import type { Area, Point } from 'react-easy-crop';
 
 // ─── Contrato expuesto al padre via ref ──────────────────────────────────────
@@ -179,7 +181,7 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
 
                     {/* Slider de zoom — el usuario también puede hacer pinch en móvil */}
                     <div className="thumbnail-crop__controls">
-                        <span className="thumbnail-crop__zoom-icon">−</span>
+                        <Minus className="thumbnail-crop__zoom-icon" size={16} strokeWidth={2} aria-hidden="true" />
                         <input
                             type="range"
                             min={1}
@@ -190,7 +192,7 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
                             className="thumbnail-crop__zoom-slider"
                             aria-label="Zoom de la miniatura"
                         />
-                        <span className="thumbnail-crop__zoom-icon">+</span>
+                        <Plus className="thumbnail-crop__zoom-icon" size={16} strokeWidth={2} aria-hidden="true" />
                     </div>
 
                     <button
@@ -198,7 +200,8 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
                         className="thumbnail-uploader__remove"
                         onClick={handleRemove}
                     >
-                        ✕ Quitar imagen
+                        <X size={14} strokeWidth={2} aria-hidden="true" style={inlineIconStyle} />
+                        Quitar imagen
                     </button>
                 </>
             ) : (
@@ -218,7 +221,7 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
                     onKeyDown={(e) => e.key === 'Enter' && inputRef.current?.click()}
                     aria-label="Área para subir miniatura"
                 >
-                    <span className="thumbnail-uploader__icon">🖼️</span>
+                    <ImagePlus className="thumbnail-uploader__icon" size={32} strokeWidth={1.5} aria-hidden="true" />
                     <p className="thumbnail-uploader__text">
                         Arrastra tu imagen aquí o{' '}
                         <span className="thumbnail-uploader__link">haz clic para seleccionar</span>
@@ -227,7 +230,7 @@ export const ThumbnailUploader = forwardRef<ThumbnailUploaderHandle>((_props, re
                 </div>
             )}
 
-            {error && <p className="thumbnail-uploader__error">⚠️ {error}</p>}
+            {error && <p className="thumbnail-uploader__error"><TriangleAlert size={14} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />{error}</p>}
 
             <input
                 ref={inputRef}

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { TriangleAlert } from 'lucide-react';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { useToast } from '../../components/Toast';
+import { inlineIconStyle } from '../../components/inlineIcon';
 import { PdfUploader } from '../../components/PdfUploader';
 
 interface Props {
@@ -149,15 +151,16 @@ export const EditCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page admin-page--narrow">
-            <Link to="/admin/certificados" className="back-link">← Volver a Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver a certificados</Link>
             <div className="admin-header">
-                <h1>Editar Plantilla</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Editar <em>plantilla</em></h1>
                 <p>Actualiza los datos de "{template.name}" o reemplaza su PDF base.</p>
             </div>
 
             {/* ── Banner de advertencia (siempre visible) ───────────────────── */}
             <div className="admin-notice" role="note">
-                <p className="admin-notice__title">⚠ Edición no destructiva</p>
+                <p className="admin-notice__title"><TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Edición no destructiva</p>
                 <p className="admin-notice__text">
                     La edición de la plantilla <strong>solo afecta a los certificados que generes a partir de ahora</strong>.
                     Los certificados ya emitidos con esta plantilla <strong>conservarán intacto su diseño original</strong>,

@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { ArrowLeft, ArrowRight, Check, ChevronLeft, ChevronRight, ClipboardList, ListOrdered, PenLine } from 'lucide-react';
 import { LessonType, VideoProvider } from '@maris-nails/shared';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
@@ -15,6 +16,7 @@ import { useToast } from '../components/Toast';
 import { enrollWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
 import { WatchProgress } from '../components/WatchProgress';
 import { liveClassPhase } from '../lib/live-class';
+import { LESSON_TYPE_LABEL } from '../lib/lesson-status';
 
 /**
  * CourseLearnPage — Página de ESTUDIO del curso.
@@ -366,9 +368,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                 aria-expanded={isSidebarOpen}
                 aria-controls="course-learn-sidebar"
             >
-                <span className="course-learn__sidebar-opener-chevron" aria-hidden="true">
-                    ‹
-                </span>
+                <ChevronLeft className="course-learn__sidebar-opener-chevron" size={18} strokeWidth={2} aria-hidden="true" />
                 <span className="course-learn__sidebar-opener-label">
                     Temario
                 </span>
@@ -378,7 +378,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
             <div className="course-learn__main">
                 <div className="course-learn__context">
                     <Link to={`/mis-cursos/${course.id}`} className="course-learn__back">
-                        <span aria-hidden="true">←</span>
+                        <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" style={{ flexShrink: 0 }} />
                         <span className="course-learn__course-title">{course.title}</span>
                     </Link>
                     <span className="course-learn__context-progress">
@@ -391,7 +391,8 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                         aria-expanded={isSidebarOpen}
                         aria-controls="course-learn-sidebar"
                     >
-                        ☰ Temario
+                        <ListOrdered size={16} strokeWidth={1.75} aria-hidden="true" />
+                        Temario
                         <span className="course-learn__context-toggle-count">
                             {completedLessonIds.size}/{course.lessons.length}
                         </span>
@@ -453,7 +454,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                                 onClick={() => handleLessonChange(prevLesson.id)}
                                 aria-label={`Lección anterior: ${prevLesson.title}`}
                             >
-                                <span className="course-learn__nav-btn-arrow" aria-hidden="true">←</span>
+                                <ArrowLeft className="course-learn__nav-btn-arrow" size={16} strokeWidth={1.75} aria-hidden="true" />
                                 <span className="course-learn__nav-btn-title">{prevLesson.title}</span>
                             </button>
                         )}
@@ -477,12 +478,12 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                             </button>
                         )}
                         {isExamLesson && isCurrentCompleted && (
-                            <span className="course-learn__complete-btn course-learn__complete-btn--done">
+                            <span className="course-learn__complete-btn course-learn__complete-btn--done course-learn__complete-btn--achieved">
                                 Aprobado
                             </span>
                         )}
                         {isCorrectionLesson && isCurrentCompleted && (
-                            <span className="course-learn__complete-btn course-learn__complete-btn--done">
+                            <span className="course-learn__complete-btn course-learn__complete-btn--done course-learn__complete-btn--achieved">
                                 Aprobada
                             </span>
                         )}
@@ -496,7 +497,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                                 aria-label={`Lección siguiente: ${nextLesson.title}`}
                             >
                                 <span className="course-learn__nav-btn-title">{nextLesson.title}</span>
-                                <span className="course-learn__nav-btn-arrow" aria-hidden="true">→</span>
+                                <ArrowRight className="course-learn__nav-btn-arrow" size={16} strokeWidth={1.75} aria-hidden="true" />
                             </button>
                         )}
                     </div>
@@ -504,6 +505,9 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
 
                 {/* Info de la lección actual */}
                 <div className="course-learn__lesson-info">
+                    <p className="section-eyebrow course-learn__eyebrow">
+                        Lección {activeLessonIndex + 1} · {LESSON_TYPE_LABEL[activeLesson.type]}
+                    </p>
                     <h1 className="course-learn__lesson-title">{activeLesson.title}</h1>
                     {activeLesson.description && (
                         <p className="course-learn__lesson-desc">{activeLesson.description}</p>
@@ -530,7 +534,7 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                         aria-label="Cerrar temario"
                         title="Cerrar temario"
                     >
-                        ›
+                        <ChevronRight size={18} strokeWidth={2} aria-hidden="true" />
                     </button>
                     <h3>Temario</h3>
                     <span className="course-learn__sidebar-count">
@@ -542,20 +546,21 @@ export const CourseLearnPage = ({ courseGateway, enrollmentGateway, videoGateway
                     {course.lessons.map((lesson, index) => {
                         const isActive = lesson.id === activeLesson.id;
                         const isCompleted = completedLessonIds.has(lesson.id);
+                        const isAchieved = isCompleted && lesson.type !== LessonType.CLASS;
 
                         return (
                             <button
                                 key={lesson.id}
-                                className={`course-learn__lesson-item ${isActive ? 'course-learn__lesson-item--active' : ''} ${isCompleted ? 'course-learn__lesson-item--completed' : ''}`}
+                                className={`course-learn__lesson-item ${isActive ? 'course-learn__lesson-item--active' : ''} ${isCompleted ? 'course-learn__lesson-item--completed' : ''} ${isAchieved ? 'course-learn__lesson-item--achieved' : ''}`}
                                 onClick={() => handleLessonChange(lesson.id)}
                             >
                                 <span className="course-learn__lesson-number">
                                     {isCompleted
-                                        ? '✓'
+                                        ? <Check size={14} strokeWidth={2.5} aria-hidden="true" />
                                         : lesson.type === LessonType.EXAM
-                                            ? '📝'
+                                            ? <ClipboardList size={14} strokeWidth={2} aria-hidden="true" />
                                             : lesson.type === LessonType.CORRECTION
-                                                ? '✏️'
+                                                ? <PenLine size={14} strokeWidth={2} aria-hidden="true" />
                                                 : index + 1}
                                 </span>
                                 <span className="course-learn__lesson-name">

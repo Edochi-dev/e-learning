@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { TriangleAlert } from 'lucide-react';
 import type { CertificateGateway, CertificateTemplate } from '../../gateways/CertificateGateway';
 import { TemplateDesignPicker } from '../../components/TemplateDesignPicker';
 import { useToast } from '../../components/Toast';
+import { inlineIconStyle } from '../../components/inlineIcon';
 
 interface Props {
     gateway: CertificateGateway;
@@ -112,7 +114,7 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
                 emitidos conservan su PDF y su templateSnapshot originales. */}
             <div className="admin-notice admin-notice--compact" role="note">
                 <p className="admin-notice__text">
-                    <strong>⚠ Edición no destructiva:</strong> solo cambia los certificados que generes a partir
+                    <strong><TriangleAlert size={16} strokeWidth={1.75} aria-hidden="true" style={inlineIconStyle} />Edición no destructiva:</strong> solo cambia los certificados que generes a partir
                     de ahora; los ya emitidos conservan su diseño original.
                 </p>
             </div>
