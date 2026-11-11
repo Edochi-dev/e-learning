@@ -120,9 +120,10 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver a certificados</Link>
             <div className="admin-header">
-                <h1>Nueva Plantilla de Certificado</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Nueva <em>plantilla</em></h1>
                 <p>Sube el PDF en blanco y posiciona el nombre y el QR arrastrándolos.</p>
             </div>
 

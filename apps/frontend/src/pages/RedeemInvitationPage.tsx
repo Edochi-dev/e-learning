@@ -182,8 +182,8 @@ export const RedeemInvitationPage = ({
     return (
         <div className="container invitation-page">
             <div className="invitation-card">
-                <p className="invitation-card__eyebrow">Tu invitación a</p>
-                <h1 className="invitation-card__course">{preview.course.title}</h1>
+                <p className="section-eyebrow">Tu invitación a</p>
+                <h1 className="invitation-card__course"><em>{preview.course.title}</em></h1>
 
                 {preview.course.thumbnailUrl && (
                     <img

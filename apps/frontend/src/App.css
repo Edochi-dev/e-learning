@@ -5753,18 +5753,20 @@ button.admin-course-students:disabled {
   gap: var(--space-4);
 }
 
-.invitation-card__eyebrow {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.85rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+.invitation-card__course {
+  margin: 0 0 var(--space-4);
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 
-.invitation-card__course {
-  margin: var(--space-2) 0 var(--space-4);
-  font-family: var(--font-heading);
-  color: var(--accent-text);
+.invitation-card__course em {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  background: var(--accent-paint);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  padding-right: 0.08em;
 }
 
 .invitation-card__thumb {

@@ -89,9 +89,10 @@ export const EditTemplateDesignPage: React.FC<Props> = ({ gateway }) => {
 
     return (
         <div className="admin-page">
-            <Link to="/admin/certificados" className="back-link">← Volver al Panel de Certificados</Link>
+            <Link to="/admin/certificados" className="back-link">← Volver a certificados</Link>
             <div className="admin-header">
-                <h1>Editar diseño</h1>
+                <p className="section-eyebrow">Certificados</p>
+                <h1>Editar <em>diseño</em></h1>
                 <p>Edita la posición, tipografía, tamaño, color y alineación de los elementos sobre "{template.name}".</p>
             </div>
 
