@@ -430,8 +430,11 @@ shadow) and `[data-theme='dark']` (charcoal). Dark mode is `[data-theme='dark']`
 `<html>`, persisted in localStorage. Fonts: `--font-heading` = Bodoni Moda, `--font-accent`
 = Playfair Display italic, `--font-body` = Montserrat (Google Fonts, loaded in
 `index.html` together with the families the certificate designer offers — don't drop
-those). The logo is `public/images/logo-mark.png` (fuchsia circle). The header comment of
-`App.css` says which token to use for what — read it before styling anything.
+those). The logo comes in two files: `public/images/logo-mark.png` (full fuchsia circle)
+for large placements (coming-soon, login and the other auth pages), and
+`public/images/logo-mark-m.png` (simplified "M" mark, legible at small sizes) for the
+header, footer and image placeholders (`BrandMark`). The header comment of `App.css` says
+which token to use for what — read it before styling anything.
 
 Rules (decided in issue #30, after the site drifted into "all white / all wine"):
 
