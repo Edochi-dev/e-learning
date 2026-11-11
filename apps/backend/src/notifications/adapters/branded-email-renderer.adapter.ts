@@ -8,26 +8,33 @@ import { html, SafeHtml } from '../templates/safe-html';
 import { fragmentToPlainText } from '../templates/plain-text';
 import { BRAND_LOGO } from '../templates/brand-assets';
 
-// Brand tokens from apps/frontend/src/App.css. Email clients ignore CSS
-// variables, so the values are copied here; keep them in sync.
+// Brand tokens from apps/frontend/src/App.css (A2 light theme). Email clients
+// ignore CSS variables, so the values are copied here; keep them in sync.
 const COLOR = {
-  bg: '#fdf8f5',
+  bg: '#f4f3f5',
   card: '#ffffff',
-  border: '#f3e6da',
-  text: '#2d1b14',
-  textSecondary: '#6b5347',
-  textMuted: '#9c8578',
-  primary: '#e84393',
-  gold: '#CD9E55',
+  border: '#e8e7e8',
+  text: '#1b1217',
+  textSecondary: '#4d434b',
+  textMuted: '#655a63',
+  // Rose as text; the fuchsia below is decorative only (fails contrast as text).
+  accentText: '#b0007a',
+  decor: '#ff00aa',
+  // Solid fill that carries white text (5.14:1).
+  button: '#d1008b',
 } as const;
 
-const FONT = `'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif`;
+// Web fonts (Bodoni, Montserrat) do not load in most email clients: Georgia
+// stands in for the Bodoni headings and Arial/Helvetica for the body.
+const FONT = `Arial, Helvetica, sans-serif`;
+const HEADING_FONT = `Georgia, 'Times New Roman', serif`;
 const BRAND_NAME = 'Maris Nails Academy';
 
 /**
- * Wraps content in the site's look: gold monogram, cream background, white
- * card and a rose pill button, all centered (the emails are short). Table layout and inline styles on purpose —
- * that is what Gmail and Outlook render reliably.
+ * Wraps content in the site's look: fuchsia monogram, soft grey background,
+ * white card and a rose button, all centered (the emails are short). Table
+ * layout and inline styles on purpose — that is what Gmail and Outlook render
+ * reliably.
  */
 @Injectable()
 export class BrandedEmailRenderer extends EmailRenderer {
@@ -57,10 +64,6 @@ export class BrandedEmailRenderer extends EmailRenderer {
           <meta name="color-scheme" content="light" />
           <meta name="supported-color-schemes" content="light" />
           <title>${subject}</title>
-          <link
-            href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap"
-            rel="stylesheet"
-          />
           <style>
             body {
               margin: 0;
@@ -74,7 +77,7 @@ export class BrandedEmailRenderer extends EmailRenderer {
               color: ${COLOR.text};
             }
             .content a {
-              color: ${COLOR.primary};
+              color: ${COLOR.accentText};
             }
             @media (max-width: 600px) {
               .card {
@@ -109,12 +112,13 @@ export class BrandedEmailRenderer extends EmailRenderer {
                         <img
                           src="cid:${BRAND_LOGO.cid}"
                           width="96"
+                          height="96"
                           alt="${BRAND_NAME}"
                           style="display:block;width:96px;height:auto;border:0;"
                         />
                       </a>
                       <div
-                        style="font-family:${FONT};font-size:12px;letter-spacing:3px;text-transform:uppercase;color:${COLOR.gold};padding-top:12px;"
+                        style="font-family:${FONT};font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:${COLOR.accentText};padding-top:12px;"
                       >
                         ${BRAND_NAME}
                       </div>
@@ -124,15 +128,15 @@ export class BrandedEmailRenderer extends EmailRenderer {
                     <td
                       class="card"
                       align="center"
-                      style="text-align:center;background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:20px;padding:40px 40px 32px;font-family:${FONT};color:${COLOR.textSecondary};font-size:16px;line-height:1.6;"
+                      style="text-align:center;background:${COLOR.card};border:1px solid ${COLOR.border};border-radius:18px;padding:40px 40px 32px;font-family:${FONT};color:${COLOR.textSecondary};font-size:16px;line-height:1.6;"
                     >
                       <h1
-                        style="margin:0;font-family:${FONT};font-size:24px;line-height:1.3;font-weight:700;color:${COLOR.text};"
+                        style="margin:0;font-family:${HEADING_FONT};font-size:28px;line-height:1.25;font-weight:400;color:${COLOR.text};"
                       >
                         ${content.heading}
                       </h1>
                       <div
-                        style="width:48px;height:3px;background:${COLOR.gold};border-radius:3px;margin:16px auto 24px;line-height:3px;font-size:0;"
+                        style="width:48px;height:3px;background:${COLOR.decor};border-radius:3px;margin:16px auto 24px;line-height:3px;font-size:0;"
                       >
                         &nbsp;
                       </div>
@@ -149,7 +153,7 @@ export class BrandedEmailRenderer extends EmailRenderer {
                       Recibiste este correo por tu cuenta en ${BRAND_NAME}.<br />
                       <a
                         href="${this.siteUrl}"
-                        style="color:${COLOR.gold};text-decoration:none;"
+                        style="color:${COLOR.accentText};text-decoration:none;"
                         >${siteLabel}</a
                       >
                       ${this.uniqueMarker()}
@@ -197,12 +201,12 @@ export class BrandedEmailRenderer extends EmailRenderer {
       <tr>
         <td
           align="center"
-          bgcolor="${COLOR.primary}"
-          style="border-radius:999px;"
+          bgcolor="${COLOR.button}"
+          style="border-radius:12px;"
         >
           <a
             href="${this.siteUrl + action.path}"
-            style="display:inline-block;padding:14px 32px;font-family:${FONT};font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;"
+            style="display:inline-block;padding:14px 32px;font-family:${FONT};font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;"
             >${action.label}</a
           >
         </td>
