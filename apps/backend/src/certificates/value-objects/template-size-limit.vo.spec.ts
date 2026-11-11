@@ -18,8 +18,8 @@ function rejection(uploaded: number, stored: number): string {
 }
 
 describe('assertTemplateWithinSizeLimit', () => {
-  it('el límite es 900 KB', () => {
-    expect(CERTIFICATE_TEMPLATE_MAX_BYTES).toBe(900 * 1024);
+  it('el límite es 1 MB', () => {
+    expect(CERTIFICATE_TEMPLATE_MAX_BYTES).toBe(1024 * 1024);
   });
 
   it('acepta una plantilla justo en el límite', () => {
@@ -42,9 +42,7 @@ describe('assertTemplateWithinSizeLimit', () => {
 
   it('rechaza con el peso subido, el límite y cómo exportarla más liviana', () => {
     const message = rejection(4.6 * MB, 4.6 * MB);
-    expect(message).toContain(
-      'La plantilla pesa 4,6 MB y el máximo es 900 KB.',
-    );
+    expect(message).toContain('La plantilla pesa 4,6 MB y el máximo es 1 MB.');
     expect(message).toContain('Canva');
     expect(message).toContain('Comprimir archivo');
     expect(message).not.toContain('después de optimizarla');
@@ -58,7 +56,7 @@ describe('assertTemplateWithinSizeLimit', () => {
 
   it('menciona el peso optimizado cuando la optimización ayudó pero no bastó', () => {
     expect(rejection(4.6 * MB, 4.5 * MB)).toContain(
-      'pesa 4,6 MB (4,5 MB después de optimizarla) y el máximo es 900 KB',
+      'pesa 4,6 MB (4,5 MB después de optimizarla) y el máximo es 1 MB',
     );
   });
 });

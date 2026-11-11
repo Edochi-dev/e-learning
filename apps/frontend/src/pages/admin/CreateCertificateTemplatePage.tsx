@@ -25,7 +25,7 @@ interface Props {
 
 // El servidor decide con el PDF ya optimizado; aquí solo se corta lo que ni vale la pena subir.
 const UPLOAD_CAP_BYTES = 10 * 1024 * 1024;
-const MAX_TEMPLATE_KB = CERTIFICATE_TEMPLATE_MAX_BYTES / 1024;
+const MAX_TEMPLATE_MB = CERTIFICATE_TEMPLATE_MAX_BYTES / 1024 / 1024;
 
 // Agrupa los formatos por tamaño de papel para el <optgroup> del selector
 const FORMAT_GROUPS = [
@@ -73,7 +73,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
     // round-trip inútil al backend si el archivo no encaja.
     const validateFile = async (selectedFile: File): Promise<string | null> => {
         if (selectedFile.size > UPLOAD_CAP_BYTES) {
-            return `El archivo pesa ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB y el máximo es ${MAX_TEMPLATE_KB} KB.`;
+            return `El archivo pesa ${(selectedFile.size / 1024 / 1024).toFixed(1)} MB y el máximo es ${MAX_TEMPLATE_MB} MB.`;
         }
 
         const format = PAPER_FORMATS.find(f => f.value === formPaperFormat);
@@ -168,7 +168,7 @@ export const CreateCertificateTemplatePage: React.FC<Props> = ({ gateway }) => {
                             onFileChange={handleFileChange}
                             error={fileError}
                             label="Archivo PDF (plantilla en blanco)"
-                            hint={`Máximo ${MAX_TEMPLATE_KB} KB · El tamaño del PDF debe coincidir con el formato seleccionado.`}
+                            hint={`Máximo ${MAX_TEMPLATE_MB} MB · El tamaño del PDF debe coincidir con el formato seleccionado.`}
                         />
                     </div>
 

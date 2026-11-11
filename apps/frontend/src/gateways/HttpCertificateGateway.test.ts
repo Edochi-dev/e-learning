@@ -33,7 +33,7 @@ describe('HttpCertificateGateway', () => {
     });
 
     it('uploadTemplate y updateTemplate muestran por qué el backend rechazó el PDF', async () => {
-        const message = 'La plantilla pesa 4,6 MB y el máximo es 900 KB. Expórtala de nuevo más liviana…';
+        const message = 'La plantilla pesa 4,6 MB y el máximo es 1 MB. Expórtala de nuevo más liviana…';
         const fetch = vi.fn().mockResolvedValue({
             ok: false,
             statusText: 'Payload Too Large',
