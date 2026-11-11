@@ -1,5 +1,6 @@
-import type { QuizResult, QuizAnswer, LastQuizAttemptResponse } from '@maris-nails/shared';
+import type { QuizResult, QuizAnswer, LastQuizAttemptResponse, UpcomingLiveClass, WatchProgressResult, CourseOverview } from '@maris-nails/shared';
 import type { EnrollmentGateway, EnrollmentWithProgress, CourseStudent } from './EnrollmentGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 /**
  * HttpEnrollmentGateway — Implementación concreta que habla con el backend via fetch().
@@ -12,13 +13,21 @@ import type { EnrollmentGateway, EnrollmentWithProgress, CourseStudent } from '.
  */
 export class HttpEnrollmentGateway implements EnrollmentGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
+    }
+
+    async getMyUpcomingLiveClasses(): Promise<UpcomingLiveClass[]> {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/me/live-classes`);
+        if (!response.ok) throw new Error('No se pudieron cargar tus próximas clases');
+        return response.json();
     }
 
     async getMyEnrollments(): Promise<EnrollmentWithProgress[]> {
-        const response = await fetch(`${this.baseUrl}/enrollments/me`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/me`, {
             credentials: 'include',
         });
 
@@ -46,7 +55,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     }
 
     async unenroll(enrollmentId: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/enrollments/${enrollmentId}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/${enrollmentId}`, {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -57,7 +66,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     }
 
     async markLessonComplete(lessonId: string, courseId: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/enrollments/me/progress`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/me/progress`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -73,7 +82,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         completedLessonIds: string[];
         watchProgress: Record<string, number>;
     }> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/enrollments/me/courses/${courseId}/progress`,
             { credentials: 'include' },
         );
@@ -84,19 +93,30 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
         return response.json();
     }
 
-    async saveWatchProgress(lessonId: string, courseId: string, percent: number): Promise<void> {
-        // Fire-and-forget: si falla (error de red, etc.) no interrumpimos la experiencia.
-        // El progreso se reintentará en el siguiente umbral del 5%.
-        fetch(`${this.baseUrl}/enrollments/me/watch-progress`, {
+    async saveWatchedSegments(lessonId: string, courseId: string, segments: number[]): Promise<WatchProgressResult> {
+        // keepalive: el último envío (al cerrar la pestaña o cambiar de lección)
+        // llega aunque la página ya no exista.
+        const res = await this.http.fetch(`${this.baseUrl}/enrollments/me/watch-progress`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ lessonId, courseId, percent }),
-        }).catch(() => { /* silencioso */ });
+            keepalive: true,
+            body: JSON.stringify({ lessonId, courseId, segments }),
+        });
+        if (!res.ok) throw new Error('No se pudo guardar el progreso del video');
+        return res.json();
+    }
+
+    async getCourseOverview(courseId: string): Promise<CourseOverview> {
+        const res = await this.http.fetch(`${this.baseUrl}/enrollments/me/courses/${courseId}/overview`, {
+            credentials: 'include',
+        });
+        if (!res.ok) throw new Error('No se pudo cargar tu avance en el curso');
+        return res.json();
     }
 
     async submitQuiz(lessonId: string, courseId: string, answers: QuizAnswer[]): Promise<QuizResult> {
-        const response = await fetch(`${this.baseUrl}/enrollments/me/quiz`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/me/quiz`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -116,7 +136,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     }
 
     async getLastQuizAttempt(lessonId: string, courseId: string): Promise<LastQuizAttemptResponse> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/enrollments/me/quiz/${lessonId}/last-attempt?courseId=${courseId}`,
             { credentials: 'include' },
         );
@@ -129,7 +149,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     // ── Administración ──
 
     async listCourseStudents(courseId: string): Promise<CourseStudent[]> {
-        const response = await fetch(`${this.baseUrl}/enrollments/course/${courseId}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/course/${courseId}`, {
             credentials: 'include',
         });
 
@@ -140,7 +160,7 @@ export class HttpEnrollmentGateway implements EnrollmentGateway {
     }
 
     async setEnrollmentExpiry(enrollmentId: string, expiresAt: string | null): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/enrollments/${enrollmentId}/expiry`, {
+        const response = await this.http.fetch(`${this.baseUrl}/enrollments/${enrollmentId}/expiry`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',

@@ -2,12 +2,10 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as webpush from 'web-push';
 import { PushSubscriptionGateway } from './gateways/push-subscription.gateway';
-
-export interface PushPayload {
-  title: string;
-  body: string;
-  url?: string;
-}
+import {
+  PushNotificationGateway,
+  PushPayload,
+} from './gateways/push-notification.gateway';
 
 /**
  * PushService — Envía notificaciones web-push a las suscripciones guardadas.
@@ -16,14 +14,19 @@ export interface PushPayload {
  * (isConfigured() = false) y no rompe nada — igual que el fallback de SMTP.
  */
 @Injectable()
-export class PushService implements OnModuleInit {
+export class PushService
+  extends PushNotificationGateway
+  implements OnModuleInit
+{
   private readonly logger = new Logger(PushService.name);
   private configured = false;
 
   constructor(
     private readonly config: ConfigService,
     private readonly gateway: PushSubscriptionGateway,
-  ) {}
+  ) {
+    super();
+  }
 
   onModuleInit(): void {
     const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY');

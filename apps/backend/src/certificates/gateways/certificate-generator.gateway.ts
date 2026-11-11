@@ -1,3 +1,5 @@
+import { DateStamp } from '../value-objects';
+
 export interface GenerateCertificateParams {
   /** Buffer del PDF de la plantilla (leído via FileStorageGateway) */
   templatePath: Buffer;
@@ -10,13 +12,7 @@ export interface GenerateCertificateParams {
   qrPosition: { x: number; y: number };
   qrSize: number;
   nameAlign: 'left' | 'center';
-  // Fecha de emisión (opcional — solo si la plantilla tiene showDate=true)
-  dateText?: string;
-  datePosition?: { x: number; y: number };
-  dateFontSize?: number;
-  dateColor?: string;
-  dateFontFamily?: string;
-  dateAlign?: 'left' | 'center';
+  date: DateStamp;
 }
 
 export abstract class CertificateGeneratorGateway {

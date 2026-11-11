@@ -3,12 +3,14 @@ import { DataSource } from 'typeorm';
 
 import { User } from '../users/entities/user.entity';
 import { PasswordResetToken } from '../users/entities/password-reset-token.entity';
+import { AuthSession } from '../users/entities/auth-session.entity';
 import { Course } from '../courses/entities/course.entity';
 import { Lesson } from '../courses/entities/lessons.entity';
 import { Enrollment } from '../enrollments/entities/enrollment.entity';
 import { LessonProgress } from '../progress/entities/lesson-progress.entity';
 import { CertificateTemplate } from '../certificates/entities/certificate-template.entity';
 import { Certificate } from '../certificates/entities/certificate.entity';
+import { CertificateNumberSequence } from '../certificates/entities/certificate-number-sequence.entity';
 import { Order } from '../orders/entities/order.entity';
 import { VideoLesson } from '../courses/entities/video-lesson.entity';
 import { ExamLesson } from '../courses/entities/exam-lesson.entity';
@@ -18,9 +20,14 @@ import { QuizOption } from '../courses/entities/quiz-option.entity';
 import { QuizAttempt } from '../enrollments/entities/quiz-attempt.entity';
 import { QuizAttemptAnswer } from '../enrollments/entities/quiz-attempt-answer.entity';
 import { AssignmentSubmission } from '../corrections/entities/assignment-submission.entity';
+import { CorrectionReview } from '../corrections/entities/correction-review.entity';
 import { NameChangeRequest } from '../name-change-requests/entities/name-change-request.entity';
 import { ScheduleEvent } from '../schedule/entities/schedule-event.entity';
 import { PushSubscription } from '../push/entities/push-subscription.entity';
+import { VideoAsset } from '../video-assets/entities/video-asset.entity';
+import { VideoAssetKey } from '../video-assets/entities/video-asset-key.entity';
+import { EmailOutboxMessage } from '../notifications/entities/email-outbox-message.entity';
+import { LiveClassReminder } from '../live-class-reminders/entities/live-class-reminder.entity';
 
 import { MIGRATIONS } from './migrations-registry';
 
@@ -36,6 +43,7 @@ export const AppDataSource = new DataSource({
   entities: [
     User,
     PasswordResetToken,
+    AuthSession,
     Course,
     Lesson,
     VideoLesson,
@@ -45,15 +53,21 @@ export const AppDataSource = new DataSource({
     LessonProgress,
     CertificateTemplate,
     Certificate,
+    CertificateNumberSequence,
     Order,
     QuizQuestion,
     QuizOption,
     QuizAttempt,
     QuizAttemptAnswer,
     AssignmentSubmission,
+    CorrectionReview,
     NameChangeRequest,
     ScheduleEvent,
     PushSubscription,
+    VideoAsset,
+    VideoAssetKey,
+    EmailOutboxMessage,
+    LiveClassReminder,
   ],
   migrations: MIGRATIONS,
 });

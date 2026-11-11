@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import type { CourseGateway } from '../gateways/CourseGateway';
 import { useCourses } from '../hooks/useCourses';
 import { useScrollReveal } from '../hooks/useScrollReveal';
@@ -7,12 +6,17 @@ import { useScrollReveal } from '../hooks/useScrollReveal';
 import { API_URL as BACKEND_URL } from '../config';
 import { COURSE_LEVEL_OPTIONS } from '../constants/courseLevels';
 import { SkeletonCourseCard } from '../components/Skeleton';
+import type { EnrollmentGateway } from '../gateways/EnrollmentGateway';
+import { useEnrolledCourseIds } from '../hooks/useEnrolledCourseIds';
+import { CourseCardLink } from '../components/CourseCardLink';
 
 interface CatalogPageProps {
     gateway: CourseGateway;
+    enrollmentGateway: EnrollmentGateway;
 }
 
-export const CatalogPage = ({ gateway }: CatalogPageProps) => {
+export const CatalogPage = ({ gateway, enrollmentGateway }: CatalogPageProps) => {
+    const enrolledIds = useEnrolledCourseIds(enrollmentGateway);
     const {
         courses, loading, error, page, totalPages, setPage,
         category, setCategory, level, setLevel, categories, setSearch,
@@ -135,9 +139,9 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                     <p className="catalog-featured__desc">
                                         {featured.description}
                                     </p>
-                                    <Link to={`/courses/${featured.id}`} className="btn-primary">
+                                    <CourseCardLink courseId={featured.id} enrolledIds={enrolledIds} className="btn-primary">
                                         Ver Programa Completo
-                                    </Link>
+                                    </CourseCardLink>
                                 </div>
                                 {/* aria-hidden="true": la imagen es decorativa porque el título
                                     ya está en el h2 adyacente — no aporta info extra al lector de pantalla */}
@@ -179,9 +183,9 @@ export const CatalogPage = ({ gateway }: CatalogPageProps) => {
                                                         ? `${course.lessons.length} ${course.lessons.length === 1 ? 'lección' : 'lecciones'}`
                                                         : 'Temario disponible'}
                                                 </span>
-                                                <Link to={`/courses/${course.id}`} className="btn-secondary">
+                                                <CourseCardLink courseId={course.id} enrolledIds={enrolledIds} className="btn-secondary">
                                                     Ver Programa
-                                                </Link>
+                                                </CourseCardLink>
                                             </div>
                                         </div>
                                     </article>

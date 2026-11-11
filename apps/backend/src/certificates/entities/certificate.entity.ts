@@ -87,6 +87,14 @@ export class Certificate {
   @JoinColumn({ name: 'userId' })
   user: User | null;
 
+  /**
+   * Date printed on the certificate (YYYY-MM-DD). May differ from `issuedAt`:
+   * in-person courses print certificates ahead of the delivery day. Show this
+   * one to users; `issuedAt` is the audit timestamp of the record.
+   */
+  @Column({ type: 'date' })
+  certificateDate: string;
+
   @CreateDateColumn()
   issuedAt: Date;
 }

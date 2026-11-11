@@ -55,8 +55,10 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
             // Pedimos al componente hijo el archivo ya recortado con Canvas.
             // Si el admin no subió imagen, getCroppedFile() devuelve null.
             const croppedFile = await thumbnailRef.current?.getCroppedFile() ?? null;
-            await courseGateway.create(formData, croppedFile ?? undefined);
-            navigate('/admin');
+            const created = await courseGateway.create(formData, croppedFile ?? undefined);
+            // A new course is a draft with no lessons: the editor is the next step.
+            toast.success('Curso creado como borrador. Agrega las lecciones y publícalo cuando esté listo.');
+            navigate(`/admin/courses/${created.id}/edit`);
         } catch (err: any) {
             toast.error(err.message || 'Error al crear el curso');
         } finally {
@@ -65,7 +67,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
     };
 
     return (
-        <div className="admin-page" style={{ maxWidth: '640px' }}>
+        <div className="admin-page admin-page--narrow">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
             <div className="admin-form">
@@ -162,7 +164,7 @@ export const CreateCoursePage: React.FC<CreateCoursePageProps> = ({ gateway: cou
                         <ThumbnailUploader ref={thumbnailRef} />
                     </div>
 
-                    <button type="submit" className="btn-primary" disabled={isLoading} style={{ width: '100%', marginTop: '0.5rem' }}>
+                    <button type="submit" className="btn-primary form-submit" disabled={isLoading}>
                         {isLoading ? 'Creando...' : 'Crear Curso'}
                     </button>
                 </form>

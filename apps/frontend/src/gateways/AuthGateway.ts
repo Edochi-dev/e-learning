@@ -9,6 +9,8 @@ export interface AuthGateway {
     /** Paso 2 del reset: aplica la nueva contraseña con el token del enlace. */
     resetPassword(token: string, newPassword: string): Promise<void>;
     logout(): Promise<void>;
+    /** Signs out every device, the current one included. */
+    revokeAllSessions(): Promise<void>;
 
     /**
      * Restaura la sesión del usuario preguntando al backend.

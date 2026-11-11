@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link, type Location } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '@maris-nails/shared';
@@ -12,6 +12,8 @@ export const LoginPage = () => {
     const [error, setError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
+    // Lo pone ProtectedRoute; viene del router, no de la URL, así que no sirve para redirigir fuera del sitio.
+    const from = (useLocation().state as { from?: Location } | null)?.from;
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -19,7 +21,11 @@ export const LoginPage = () => {
 
         try {
             const user = await login({ email, password });
-            navigate(user.role === UserRole.ADMIN ? '/admin' : '/');
+            if (from) {
+                navigate(`${from.pathname}${from.search}`, { replace: true });
+            } else {
+                navigate(user.role === UserRole.ADMIN ? '/admin' : '/mis-cursos');
+            }
         } catch {
             setError('Credenciales inválidas. Por favor intenta de nuevo.');
         }
@@ -53,13 +59,13 @@ export const LoginPage = () => {
         >
             {error && (
                 <div style={{
-                    background: 'linear-gradient(135deg, #fff0f0, #ffe8e8)',
-                    color: '#c0392b',
+                    background: 'var(--danger-soft)',
+                    color: 'var(--danger)',
                     padding: '0.85rem 1rem',
                     borderRadius: 'var(--radius-md)',
                     marginBottom: '1.25rem',
                     fontSize: '0.85rem',
-                    border: '1px solid rgba(192, 57, 43, 0.12)',
+                    border: '1px solid var(--danger-soft)',
                     fontWeight: 500,
                 }}>
                     ⚠️ {error}

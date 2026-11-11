@@ -1,3 +1,4 @@
+import { EnableUuidOssp1739999999999 } from './migrations/1739999999999-EnableUuidOssp';
 import { InitialSchema1740000000000 } from './migrations/1740000000000-InitialSchema';
 import { Migration1771952849166 } from './migrations/1771952849166-Migration';
 import { AddLessonOrder1771952849167 } from './migrations/1771952849167-AddLessonOrder';
@@ -34,6 +35,22 @@ import { AddLiveLessonSchedule1783300000000 } from './migrations/1783300000000-A
 import { AddPushSubscriptions1783400000000 } from './migrations/1783400000000-AddPushSubscriptions';
 import { AddCourseAccessDuration1783500000000 } from './migrations/1783500000000-AddCourseAccessDuration';
 import { AddCourseInvitations1783600000000 } from './migrations/1783600000000-AddCourseInvitations';
+import { AddCertificateDate1783700000000 } from './migrations/1783700000000-AddCertificateDate';
+import { AddCertificateNumberSequences1783800000000 } from './migrations/1783800000000-AddCertificateNumberSequences';
+import { RemoveCertificateDateToggle1783900000000 } from './migrations/1783900000000-RemoveCertificateDateToggle';
+import { FixBackfilledCertificateDates1784000000000 } from './migrations/1784000000000-FixBackfilledCertificateDates';
+import { AddMissingUuidDefaults1784100000000 } from './migrations/1784100000000-AddMissingUuidDefaults';
+import { AddVideoAssets1784200000000 } from './migrations/1784200000000-AddVideoAssets';
+import { AddAuthSessions1784300000000 } from './migrations/1784300000000-AddAuthSessions';
+import { AddCoursePublication1784400000000 } from './migrations/1784400000000-AddCoursePublication';
+import { LiveLessonInstants1784500000000 } from './migrations/1784500000000-LiveLessonInstants';
+import { OptionalLiveLessonVideo1784600000000 } from './migrations/1784600000000-OptionalLiveLessonVideo';
+import { AddEmailOutbox1784700000000 } from './migrations/1784700000000-AddEmailOutbox';
+import { AddUserAlertTopics1784800000000 } from './migrations/1784800000000-AddUserAlertTopics';
+import { AddCorrectionReviews1784900000000 } from './migrations/1784900000000-AddCorrectionReviews';
+import { AddWatchedSegments1785000000000 } from './migrations/1785000000000-AddWatchedSegments';
+import { SubmissionDatesAsInstants1785100000000 } from './migrations/1785100000000-SubmissionDatesAsInstants';
+import { AddLiveClassReminders1785200000000 } from './migrations/1785200000000-AddLiveClassReminders';
 
 /**
  * MIGRATIONS — Registro único y ordenado de todas las migraciones.
@@ -53,6 +70,7 @@ import { AddCourseInvitations1783600000000 } from './migrations/1783600000000-Ad
  * con el timestamp de cada una).
  */
 export const MIGRATIONS = [
+  EnableUuidOssp1739999999999,
   InitialSchema1740000000000,
   Migration1771952849166,
   AddLessonOrder1771952849167,
@@ -89,4 +107,20 @@ export const MIGRATIONS = [
   AddPushSubscriptions1783400000000,
   AddCourseAccessDuration1783500000000,
   AddCourseInvitations1783600000000,
+  AddCertificateDate1783700000000,
+  AddCertificateNumberSequences1783800000000,
+  RemoveCertificateDateToggle1783900000000,
+  FixBackfilledCertificateDates1784000000000,
+  AddMissingUuidDefaults1784100000000,
+  AddVideoAssets1784200000000,
+  AddAuthSessions1784300000000,
+  AddCoursePublication1784400000000,
+  LiveLessonInstants1784500000000,
+  OptionalLiveLessonVideo1784600000000,
+  AddEmailOutbox1784700000000,
+  AddUserAlertTopics1784800000000,
+  AddCorrectionReviews1784900000000,
+  AddWatchedSegments1785000000000,
+  SubmissionDatesAsInstants1785100000000,
+  AddLiveClassReminders1785200000000,
 ];

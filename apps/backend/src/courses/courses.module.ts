@@ -1,9 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CoursesController } from './courses.controller';
-import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { FindPublicCoursesUseCase } from './use-cases/find-public-courses.use-case';
+import { FindCoursesForAdminUseCase } from './use-cases/find-courses-for-admin.use-case';
+import { PublishCourseUseCase } from './use-cases/publish-course.use-case';
+import { UnpublishCourseUseCase } from './use-cases/unpublish-course.use-case';
+import { CourseUsageGateway } from './gateways/course-usage.gateway';
+import { CourseUsageRepository } from './course-usage.repository';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
-import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
+import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
+import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
@@ -29,6 +35,8 @@ import { StorageModule } from '../storage/storage.module';
 import { EnrollmentAccessModule } from '../enrollments/enrollment-access.module';
 import { EnrollmentGuard } from '../common/guards/enrollment.guard';
 import { ScheduleModule } from '../schedule/schedule.module';
+import { CourseOutlineGateway } from './gateways/course-outline.gateway';
+import { CourseOutlineRepository } from './course-outline.repository';
 
 /**
  * CoursesModule — El "pegamento" del módulo de cursos
@@ -59,10 +67,16 @@ import { ScheduleModule } from '../schedule/schedule.module';
   ],
   controllers: [CoursesController],
   providers: [
+    { provide: CourseOutlineGateway, useClass: CourseOutlineRepository },
     EnrollmentGuard,
-    FindAllCoursesUseCase,
+    FindPublicCoursesUseCase,
+    FindCoursesForAdminUseCase,
+    PublishCourseUseCase,
+    UnpublishCourseUseCase,
+    { provide: CourseUsageGateway, useClass: CourseUsageRepository },
     GetCourseCategoriesUseCase,
-    FindOneCourseUseCase,
+    FindPublicCourseUseCase,
+    FindCourseForAdminUseCase,
     CreateCourseUseCase,
     UpdateCourseUseCase,
     AddLessonUseCase,
@@ -83,6 +97,6 @@ import { ScheduleModule } from '../schedule/schedule.module';
       useClass: CoursesRepository,
     },
   ],
-  exports: [CourseGateway, LessonGateway],
+  exports: [CourseGateway, LessonGateway, CourseOutlineGateway],
 })
 export class CoursesModule {}

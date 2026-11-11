@@ -14,6 +14,7 @@ import {
   MaxFileSizeValidator,
   FileTypeValidator,
   HttpCode,
+  HttpStatus,
   DefaultValuePipe,
   ParseIntPipe,
   ParseUUIDPipe,
@@ -21,7 +22,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
-import { UserRole } from '@maris-nails/shared';
+import { UserRole, PublicCourse } from '@maris-nails/shared';
 import { Course } from './entities/course.entity';
 import { Lesson } from './entities/lessons.entity';
 import { PaginatedResult } from '../common/types/paginated-result.type';
@@ -29,9 +30,13 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
-import { FindAllCoursesUseCase } from './use-cases/find-all-courses.use-case';
+import { FindPublicCoursesUseCase } from './use-cases/find-public-courses.use-case';
+import { FindCoursesForAdminUseCase } from './use-cases/find-courses-for-admin.use-case';
+import { PublishCourseUseCase } from './use-cases/publish-course.use-case';
+import { UnpublishCourseUseCase } from './use-cases/unpublish-course.use-case';
 import { GetCourseCategoriesUseCase } from './use-cases/get-course-categories.use-case';
-import { FindOneCourseUseCase } from './use-cases/find-one-course.use-case';
+import { FindPublicCourseUseCase } from './use-cases/find-public-course.use-case';
+import { FindCourseForAdminUseCase } from './use-cases/find-course-for-admin.use-case';
 import { CreateCourseUseCase } from './use-cases/create-course.use-case';
 import { UpdateCourseUseCase } from './use-cases/update-course.use-case';
 import { AddLessonUseCase } from './use-cases/add-lesson.use-case';
@@ -64,9 +69,13 @@ import { Roles } from '../common/decorators/roles.decorator';
 @Controller('courses')
 export class CoursesController {
   constructor(
-    private readonly findAllCoursesUseCase: FindAllCoursesUseCase,
+    private readonly findPublicCoursesUseCase: FindPublicCoursesUseCase,
+    private readonly findCoursesForAdminUseCase: FindCoursesForAdminUseCase,
+    private readonly publishCourseUseCase: PublishCourseUseCase,
+    private readonly unpublishCourseUseCase: UnpublishCourseUseCase,
     private readonly getCourseCategoriesUseCase: GetCourseCategoriesUseCase,
-    private readonly findOneCourseUseCase: FindOneCourseUseCase,
+    private readonly findPublicCourseUseCase: FindPublicCourseUseCase,
+    private readonly findCourseForAdminUseCase: FindCourseForAdminUseCase,
     private readonly createCourseUseCase: CreateCourseUseCase,
     private readonly updateCourseUseCase: UpdateCourseUseCase,
     private readonly addLessonUseCase: AddLessonUseCase,
@@ -117,10 +126,30 @@ export class CoursesController {
     @Query('search') search?: string,
     @Query('category') category?: string,
     @Query('level') level?: string,
+  ): Promise<PaginatedResult<PublicCourse>> {
+    if (limit > 100)
+      throw new BadRequestException('El límite máximo es 100 por página');
+    return this.findPublicCoursesUseCase.execute(page, limit, {
+      search,
+      category,
+      level,
+    });
+  }
+
+  // Must stay above ':id', or 'admin' would be parsed as a course id.
+  @Get('admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async findAllForAdmin(
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(12), ParseIntPipe) limit: number,
+    @Query('search') search?: string,
+    @Query('category') category?: string,
+    @Query('level') level?: string,
   ): Promise<PaginatedResult<Course>> {
     if (limit > 100)
       throw new BadRequestException('El límite máximo es 100 por página');
-    return this.findAllCoursesUseCase.execute(page, limit, {
+    return this.findCoursesForAdminUseCase.execute(page, limit, {
       search,
       category,
       level,
@@ -133,9 +162,35 @@ export class CoursesController {
     return this.getCourseCategoriesUseCase.execute();
   }
 
+  // Public: answers and video URLs are stripped. The editor uses ':id/admin'.
   @Get(':id')
-  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<Course> {
-    return this.findOneCourseUseCase.execute(id);
+  async findOne(@Param('id', ParseUUIDPipe) id: string): Promise<PublicCourse> {
+    return this.findPublicCourseUseCase.execute(id);
+  }
+
+  @Post(':id/publish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async publish(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.publishCourseUseCase.execute(id);
+  }
+
+  @Post(':id/unpublish')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async unpublish(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
+    await this.unpublishCourseUseCase.execute(id);
+  }
+
+  @Get(':id/admin')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async findOneForAdmin(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<Course> {
+    return this.findCourseForAdminUseCase.execute(id);
   }
 
   @Patch(':id')
@@ -203,9 +258,7 @@ export class CoursesController {
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  async deleteThumbnail(
-    @Param('id', ParseUUIDPipe) id: string,
-  ): Promise<void> {
+  async deleteThumbnail(@Param('id', ParseUUIDPipe) id: string): Promise<void> {
     await this.deleteCourseThumbnailUseCase.execute(id);
   }
 

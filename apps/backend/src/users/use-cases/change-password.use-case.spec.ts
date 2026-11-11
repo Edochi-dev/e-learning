@@ -3,6 +3,7 @@ import { Test } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
 import { ChangePasswordUseCase } from './change-password.use-case';
 import { UserGateway } from '../gateways/user.gateway';
+import { AuthSessionGateway } from '../gateways/auth-session.gateway';
 import { User } from '../entities/user.entity';
 
 /**
@@ -30,8 +31,10 @@ const mockedBcrypt = bcrypt as jest.Mocked<typeof bcrypt>;
 describe('ChangePasswordUseCase', () => {
   let useCase: ChangePasswordUseCase;
   let userGateway: jest.Mocked<UserGateway>;
+  let sessions: jest.Mocked<AuthSessionGateway>;
 
   const userId = 'user-uuid-123';
+  const sessionId = 'session-actual';
 
   const fakeUser = {
     id: userId,
@@ -57,11 +60,16 @@ describe('ChangePasswordUseCase', () => {
             updatePassword: jest.fn(),
           },
         },
+        {
+          provide: AuthSessionGateway,
+          useValue: { revokeAllForUser: jest.fn() },
+        },
       ],
     }).compile();
 
     useCase = module.get(ChangePasswordUseCase);
     userGateway = module.get(UserGateway);
+    sessions = module.get(AuthSessionGateway);
 
     mockedBcrypt.genSalt.mockResolvedValue('new-salt' as never);
     mockedBcrypt.hash.mockResolvedValue('hashed-nueva-segura-456' as never);
@@ -81,12 +89,13 @@ describe('ChangePasswordUseCase', () => {
     userGateway.findOne.mockResolvedValue(null);
 
     await expect(
-      useCase.execute(userId, changePasswordDto),
+      useCase.execute(userId, sessionId, changePasswordDto),
     ).rejects.toThrow(NotFoundException);
 
     // Ni bcrypt ni updatePassword deben haber sido llamados
     expect(mockedBcrypt.compare).not.toHaveBeenCalled();
     expect(userGateway.updatePassword).not.toHaveBeenCalled();
+    expect(sessions.revokeAllForUser).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
@@ -102,11 +111,12 @@ describe('ChangePasswordUseCase', () => {
     mockedBcrypt.compare.mockResolvedValue(false as never);
 
     await expect(
-      useCase.execute(userId, changePasswordDto),
+      useCase.execute(userId, sessionId, changePasswordDto),
     ).rejects.toThrow(UnauthorizedException);
 
     // No debe intentar guardar la nueva contraseña
     expect(userGateway.updatePassword).not.toHaveBeenCalled();
+    expect(sessions.revokeAllForUser).not.toHaveBeenCalled();
   });
 
   // ──────────────────────────────────────────────────────────
@@ -123,7 +133,7 @@ describe('ChangePasswordUseCase', () => {
     userGateway.findOne.mockResolvedValue(fakeUser);
     mockedBcrypt.compare.mockResolvedValue(true as never);
 
-    await useCase.execute(userId, changePasswordDto);
+    await useCase.execute(userId, sessionId, changePasswordDto);
 
     // Debe hashear la NUEVA contraseña, no la actual
     expect(mockedBcrypt.hash).toHaveBeenCalledWith(
@@ -156,13 +166,22 @@ describe('ChangePasswordUseCase', () => {
 
     // execute retorna void — no debe lanzar ninguna excepción
     await expect(
-      useCase.execute(userId, changePasswordDto),
+      useCase.execute(userId, sessionId, changePasswordDto),
     ).resolves.toBeUndefined();
 
     // Verifica que bcrypt.compare recibe los argumentos correctos
     expect(mockedBcrypt.compare).toHaveBeenCalledWith(
-      'mi-password-actual',   // la contraseña actual del DTO
-      'hash-actual-en-bd',    // el hash guardado en la BD
+      'mi-password-actual', // la contraseña actual del DTO
+      'hash-actual-en-bd', // el hash guardado en la BD
     );
+  });
+
+  it('cierra las demás sesiones pero conserva la del dispositivo actual', async () => {
+    userGateway.findOne.mockResolvedValue(fakeUser);
+    mockedBcrypt.compare.mockResolvedValue(true as never);
+
+    await useCase.execute(userId, sessionId, changePasswordDto);
+
+    expect(sessions.revokeAllForUser).toHaveBeenCalledWith(userId, sessionId);
   });
 });

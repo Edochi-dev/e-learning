@@ -3,6 +3,7 @@ import { createHash } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { UserGateway } from '../gateways/user.gateway';
 import { PasswordResetTokenGateway } from '../gateways/password-reset-token.gateway';
+import { AuthSessionGateway } from '../gateways/auth-session.gateway';
 
 /**
  * ResetPasswordUseCase — Paso 2 del "olvidé mi contraseña".
@@ -16,6 +17,7 @@ export class ResetPasswordUseCase {
   constructor(
     private readonly userGateway: UserGateway,
     private readonly tokenGateway: PasswordResetTokenGateway,
+    private readonly sessions: AuthSessionGateway,
   ) {}
 
   async execute(token: string, newPassword: string): Promise<void> {
@@ -33,5 +35,7 @@ export class ResetPasswordUseCase {
 
     // Un solo uso: consumido, ya no sirve.
     await this.tokenGateway.markUsed(record.id);
+    // A reset usually means the password leaked: sign out every device.
+    await this.sessions.revokeAllForUser(record.userId);
   }
 }

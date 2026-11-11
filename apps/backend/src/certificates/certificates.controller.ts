@@ -30,9 +30,15 @@ import { EditCertificateTemplateDto } from './dto/edit-certificate-template.dto'
 import { UpdateTemplateDesignDto } from './dto/update-template-design.dto';
 import { GenerateCertificateBatchDto } from './dto/generate-certificate-batch.dto';
 import { DownloadCertificateBatchDto } from './dto/download-certificate-batch.dto';
+import { DeleteCertificateBatchDto } from './dto/delete-certificate-batch.dto';
+import { SearchCertificatesQueryDto } from './dto/search-certificates-query.dto';
 import { UploadCertificateTemplateUseCase } from './use-cases/upload-certificate-template.use-case';
 import { EditCertificateTemplateUseCase } from './use-cases/edit-certificate-template.use-case';
 import { UpdateTemplateDesignUseCase } from './use-cases/update-template-design.use-case';
+import { PreviewTemplateDesignUseCase } from './use-cases/preview-template-design.use-case';
+import { PreviewTemplateDesignDto } from './dto/preview-template-design.dto';
+import { GenerateBlankCertificatesUseCase } from './use-cases/generate-blank-certificates.use-case';
+import { GenerateBlankCertificatesDto } from './dto/generate-blank-certificates.dto';
 import { ListCertificateTemplatesUseCase } from './use-cases/list-certificate-templates.use-case';
 import { GetCertificateTemplateUseCase } from './use-cases/get-certificate-template.use-case';
 import { GenerateCertificateBatchUseCase } from './use-cases/generate-certificate-batch.use-case';
@@ -40,10 +46,12 @@ import { GetCertificateUseCase } from './use-cases/get-certificate.use-case';
 import { DownloadCertificateBatchUseCase } from './use-cases/download-certificate-batch.use-case';
 import { DeleteCertificateTemplateUseCase } from './use-cases/delete-certificate-template.use-case';
 import type { CertAction } from './use-cases/delete-certificate-template.use-case';
-import { DeleteCertificateUseCase } from './use-cases/delete-certificate.use-case';
+import { DeleteCertificateBatchUseCase } from './use-cases/delete-certificate-batch.use-case';
+import { SearchCertificatesUseCase } from './use-cases/search-certificates.use-case';
+import { ListCertificateCoursesUseCase } from './use-cases/list-certificate-courses.use-case';
 import { LookupCertificateUseCase } from './use-cases/lookup-certificate.use-case';
+import { LookupCertificateDto } from './dto/lookup-certificate.dto';
 import { GetMyCertificatesUseCase } from './use-cases/get-my-certificates.use-case';
-import { CertificateGateway } from './gateways/certificate.gateway';
 
 @Controller()
 export class CertificatesController {
@@ -51,14 +59,17 @@ export class CertificatesController {
     private readonly uploadTemplateUseCase: UploadCertificateTemplateUseCase,
     private readonly editTemplateUseCase: EditCertificateTemplateUseCase,
     private readonly updateDesignUseCase: UpdateTemplateDesignUseCase,
+    private readonly previewDesignUseCase: PreviewTemplateDesignUseCase,
+    private readonly generateBlankUseCase: GenerateBlankCertificatesUseCase,
     private readonly listTemplatesUseCase: ListCertificateTemplatesUseCase,
     private readonly getTemplateUseCase: GetCertificateTemplateUseCase,
     private readonly generateBatchUseCase: GenerateCertificateBatchUseCase,
     private readonly getCertificateUseCase: GetCertificateUseCase,
     private readonly downloadBatchUseCase: DownloadCertificateBatchUseCase,
-    private readonly certificateGateway: CertificateGateway,
     private readonly deleteTemplateUseCase: DeleteCertificateTemplateUseCase,
-    private readonly deleteCertificateUseCase: DeleteCertificateUseCase,
+    private readonly deleteCertificateBatchUseCase: DeleteCertificateBatchUseCase,
+    private readonly searchCertificatesUseCase: SearchCertificatesUseCase,
+    private readonly listCertificateCoursesUseCase: ListCertificateCoursesUseCase,
     private readonly lookupCertificateUseCase: LookupCertificateUseCase,
     private readonly getMyCertificatesUseCase: GetMyCertificatesUseCase,
   ) {}
@@ -107,6 +118,46 @@ export class CertificatesController {
     @Body() dto: UpdateTemplateDesignDto,
   ) {
     return this.updateDesignUseCase.execute(id, dto);
+  }
+
+  /**
+   * POST /admin/certificate-templates/:id/preview — PDF de muestra con el diseño
+   * aún sin guardar, dibujado igual que un certificado real. No persiste nada.
+   */
+  @Post('admin/certificate-templates/:id/preview')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async previewDesign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: PreviewTemplateDesignDto,
+    @Res() res: Response,
+  ) {
+    const pdf = await this.previewDesignUseCase.execute(id, dto);
+    res.set({ 'Content-Type': 'application/pdf', 'Cache-Control': 'no-store' });
+    res.send(pdf);
+  }
+
+  /**
+   * POST /admin/certificate-templates/:id/blank — copias de reserva con la
+   * fecha y sin nombre ni QR. No crea certificados ni consume números.
+   */
+  @Post('admin/certificate-templates/:id/blank')
+  @HttpCode(200)
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async generateBlank(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: GenerateBlankCertificatesDto,
+    @Res() res: Response,
+  ) {
+    const { pdf, filename } = await this.generateBlankUseCase.execute(id, dto);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+      'Cache-Control': 'no-store',
+    });
+    res.send(pdf);
   }
 
   /**
@@ -182,12 +233,15 @@ export class CertificatesController {
   @Get('admin/certificates')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  listCertificates(@Query('search') search?: string) {
-    const term = search?.trim().slice(0, 200);
-    if (term) {
-      return this.certificateGateway.search(term);
-    }
-    return this.certificateGateway.findAll();
+  searchCertificates(@Query() query: SearchCertificatesQueryDto) {
+    return this.searchCertificatesUseCase.execute(query.toCriteria());
+  }
+
+  @Get('admin/certificates/courses')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.ADMIN)
+  listCertificateCourses() {
+    return this.listCertificateCoursesUseCase.execute();
   }
 
   @Post('admin/certificates/download')
@@ -198,7 +252,7 @@ export class CertificatesController {
     @Body() dto: DownloadCertificateBatchDto,
     @Res() res: Response,
   ) {
-    const result = await this.downloadBatchUseCase.execute(dto.ids);
+    const result = await this.downloadBatchUseCase.execute(dto.ids, dto.layout);
 
     const contentType = result.isZip ? 'application/zip' : 'application/pdf';
     res.set({
@@ -208,12 +262,13 @@ export class CertificatesController {
     res.send(result.buffer);
   }
 
-  @Delete('admin/certificates/:id')
+  // POST, not DELETE: request bodies on DELETE are not reliably supported.
+  @Post('admin/certificates/delete')
   @HttpCode(204)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.ADMIN)
-  deleteCertificate(@Param('id', ParseUUIDPipe) id: string) {
-    return this.deleteCertificateUseCase.execute(id);
+  deleteCertificateBatch(@Body() dto: DeleteCertificateBatchDto) {
+    return this.deleteCertificateBatchUseCase.execute(dto.ids);
   }
 
   // ==========================================
@@ -235,8 +290,8 @@ export class CertificatesController {
   @Get('certificates/lookup')
   @UseGuards(ThrottlerGuard)
   @Throttle({ default: { ttl: 60000, limit: 20 } })
-  lookupCertificate(@Query('number') number: string) {
-    return this.lookupCertificateUseCase.execute(number ?? '');
+  lookupCertificate(@Query() query: LookupCertificateDto) {
+    return this.lookupCertificateUseCase.execute(query.number, query.name);
   }
 
   @Get('certificates/:id')

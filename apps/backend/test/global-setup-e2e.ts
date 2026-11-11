@@ -54,33 +54,9 @@ export default async function globalSetup(): Promise<void> {
       'DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;',
     );
 
-    // 2. Extensión uuid-ossp: dev/producción la tienen instalada (provee
-    //    uuid_generate_v4(), que varias migraciones usan como DEFAULT). Al no
-    //    crearla ninguna migración, hay que instalarla aquí en la DB fresca.
-    await dataSource.query('CREATE EXTENSION IF NOT EXISTS "uuid-ossp";');
-
-    // 3. Aplicar las MISMAS migraciones que producción → esquema idéntico.
+    // 2. Aplicar las MISMAS migraciones que producción → esquema idéntico.
+    //    La primera crea la extensión uuid-ossp que el resto necesita.
     await dataSource.runMigrations();
-
-    // 4. Parche de un bug latente: InitialSchema crea estas PK uuid como
-    //    NOT NULL SIN DEFAULT (con CREATE TABLE IF NOT EXISTS, que en dev fue
-    //    no-op porque las tablas ya existían de un synchronize previo con
-    //    default). En una DB fresca las columnas quedan sin default y no se
-    //    puede insertar nada. Les damos el default que la migración omitió.
-    //
-    //    ⚠️ Esto parchea SOLO la base de test. El bug sigue vivo en la
-    //    migración: un deploy limpio de producción no podría crear usuarios,
-    //    cursos ni lecciones. La corrección de fondo es una migración que
-    //    agregue estos defaults — pendiente, ver memoria del proyecto.
-    //
-    //    Las tablas hijas (video_lessons, exam_lessons, assignment_lessons)
-    //    NO necesitan default: su PK es @PrimaryColumn y hereda el id de la
-    //    lección padre, que TypeORM setea explícitamente. Correctas por diseño.
-    for (const table of ['users', 'courses', 'lessons']) {
-      await dataSource.query(
-        `ALTER TABLE "${table}" ALTER COLUMN "id" SET DEFAULT uuid_generate_v4();`,
-      );
-    }
   } finally {
     await dataSource.destroy();
   }

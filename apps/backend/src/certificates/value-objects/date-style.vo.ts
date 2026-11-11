@@ -5,7 +5,6 @@
  * un tipo que exista en runtime para el decorador @Column('jsonb').
  */
 export class DateStyle {
-  show: boolean;
   positionX: number;
   positionY: number;
   fontSize: number;
@@ -15,7 +14,6 @@ export class DateStyle {
 }
 
 export const DEFAULT_DATE_STYLE: DateStyle = {
-  show: true,
   positionX: 0,
   positionY: 0,
   fontSize: 18,

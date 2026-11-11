@@ -1,5 +1,5 @@
 import { useAuth } from '../context/AuthContext';
-import { UserRole } from '@maris-nails/shared';
+import { canSeePublicSite } from '../lib/public-site';
 import { ComingSoonPage } from '../pages/ComingSoonPage';
 
 interface ComingSoonGuardProps {
@@ -7,23 +7,15 @@ interface ComingSoonGuardProps {
 }
 
 /**
- * ComingSoonGuard
- *
- * Actúa como portero para las rutas públicas durante el modo "próximamente".
- *
- * Lógica:
- *  - ADMIN → ve la página real (puede evaluar cambios)
- *  - Cualquier otro usuario → ve la página de próximamente
- *
- * Esto nos permite tener el sitio "cerrado" para el público
- * sin bloquear al administrador que necesita revisar el progreso.
+ * Portero de las rutas públicas durante el modo "próximamente": muestra la
+ * página real a quien canSeePublicSite() deja pasar y "Próximamente" al resto.
  */
 export const ComingSoonGuard = ({ children }: ComingSoonGuardProps) => {
     const { user, isLoading } = useAuth();
 
     if (isLoading) return null;
 
-    if (user?.role === UserRole.ADMIN) {
+    if (canSeePublicSite(user)) {
         return <>{children}</>;
     }
 

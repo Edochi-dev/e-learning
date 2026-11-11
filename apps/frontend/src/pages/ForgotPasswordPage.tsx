@@ -45,12 +45,12 @@ export const ForgotPasswordPage = () => {
         >
             {sent ? (
                 <div style={{
-                    background: 'linear-gradient(135deg, #f0fff4, #e8fff0)',
-                    color: '#1a7f5a',
+                    background: 'var(--success-soft)',
+                    color: 'var(--success)',
                     padding: '1rem',
                     borderRadius: 'var(--radius-md)',
                     fontSize: '0.9rem',
-                    border: '1px solid rgba(26, 127, 90, 0.15)',
+                    border: '1px solid color-mix(in srgb, var(--success) 25%, transparent)',
                     textAlign: 'center',
                 }}>
                     Si ese correo está registrado, te enviamos un enlace para restablecer

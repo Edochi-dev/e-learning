@@ -10,7 +10,7 @@ import { LessonGateway } from '../../courses/gateways/lesson.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { ImageProcessorService } from '../../storage/services/image-processor.service';
-import { NotificationGateway } from '../../notifications/gateways/notification.gateway';
+import { PushNotificationGateway } from '../../push/gateways/push-notification.gateway';
 import { Lesson } from '../../courses/entities/lessons.entity';
 import { AssignmentSubmission } from '../entities/assignment-submission.entity';
 
@@ -21,7 +21,7 @@ describe('SubmitCorrectionUseCase', () => {
   let fileStorageGateway: jest.Mocked<FileStorageGateway>;
   let orphanFileCleaner: jest.Mocked<OrphanFileCleaner>;
   let imageProcessor: jest.Mocked<ImageProcessorService>;
-  let notificationGateway: jest.Mocked<NotificationGateway>;
+  let push: jest.Mocked<PushNotificationGateway>;
 
   const userId = 'student-uuid';
   const lessonId = 'lesson-uuid';
@@ -67,8 +67,8 @@ describe('SubmitCorrectionUseCase', () => {
           },
         },
         {
-          provide: NotificationGateway,
-          useValue: { sendEmail: jest.fn() },
+          provide: PushNotificationGateway,
+          useValue: { sendToAll: jest.fn() },
         },
       ],
     }).compile();
@@ -79,7 +79,7 @@ describe('SubmitCorrectionUseCase', () => {
     fileStorageGateway = module.get(FileStorageGateway);
     orphanFileCleaner = module.get(OrphanFileCleaner);
     imageProcessor = module.get(ImageProcessorService);
-    notificationGateway = module.get(NotificationGateway);
+    push = module.get(PushNotificationGateway);
   });
 
   // Nota: el enrollment check ahora lo hace EnrollmentGuard,
@@ -151,7 +151,9 @@ describe('SubmitCorrectionUseCase', () => {
       photoUrl: '/static/corrections/photo.jpg',
     });
     // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(notificationGateway.sendEmail).toHaveBeenCalled();
+    expect(push.sendToAll).toHaveBeenCalledWith(
+      expect.objectContaining({ url: '/admin/correcciones' }),
+    );
   });
 
   it('actualiza la submission existente en un re-envío y borra la foto vieja', async () => {

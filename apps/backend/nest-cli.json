@@ -6,7 +6,8 @@
     "deleteOutDir": true,
     "assets": [
       { "include": "certificates/fonts/**/*", "watchAssets": true },
-      { "include": "certificates/assets/**/*", "watchAssets": true }
+      { "include": "certificates/assets/**/*", "watchAssets": true },
+      { "include": "notifications/assets/**/*", "watchAssets": true }
     ]
   }
 }

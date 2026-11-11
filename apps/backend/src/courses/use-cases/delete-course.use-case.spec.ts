@@ -1,8 +1,9 @@
-import { NotFoundException } from '@nestjs/common';
+import { ConflictException, NotFoundException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { DeleteCourseUseCase } from './delete-course.use-case';
 import { CourseGateway } from '../gateways/course.gateway';
 import { LessonGateway } from '../gateways/lesson.gateway';
+import { CourseUsageGateway } from '../gateways/course-usage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 import { Course } from '../entities/course.entity';
 
@@ -22,6 +23,7 @@ describe('DeleteCourseUseCase', () => {
   let courseGateway: jest.Mocked<CourseGateway>;
   let lessonGateway: jest.Mocked<LessonGateway>;
   let orphanFileCleaner: jest.Mocked<OrphanFileCleaner>;
+  let courseUsage: jest.Mocked<CourseUsageGateway>;
 
   const courseId = 'course-uuid-123';
 
@@ -46,6 +48,12 @@ describe('DeleteCourseUseCase', () => {
           },
         },
         {
+          provide: CourseUsageGateway,
+          useValue: {
+            hasEnrollmentsOrOrders: jest.fn().mockResolvedValue(false),
+          },
+        },
+        {
           provide: OrphanFileCleaner,
           useValue: {
             deleteIfOrphan: jest.fn(),
@@ -58,6 +66,7 @@ describe('DeleteCourseUseCase', () => {
     courseGateway = module.get(CourseGateway);
     lessonGateway = module.get(LessonGateway);
     orphanFileCleaner = module.get(OrphanFileCleaner);
+    courseUsage = module.get(CourseUsageGateway);
   });
 
   it('lanza NotFoundException si el curso no existe', async () => {
@@ -159,5 +168,14 @@ describe('DeleteCourseUseCase', () => {
       '/static/thumbnails/portada.jpg',
     );
     expect(result).toBe(false);
+  });
+
+  it('no borra un curso con alumnas u órdenes y explica qué hacer', async () => {
+    courseGateway.findOne.mockResolvedValue({ id: 'c1', lessons: [] } as never);
+    courseUsage.hasEnrollmentsOrOrders.mockResolvedValue(true);
+
+    await expect(useCase.execute('c1')).rejects.toThrow(ConflictException);
+    expect(courseGateway.delete).not.toHaveBeenCalled();
+    expect(orphanFileCleaner.deleteIfOrphan).not.toHaveBeenCalled();
   });
 });

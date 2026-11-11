@@ -1,11 +1,14 @@
-import type { Course, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
+import type { Course, PublicCourse, Lesson, CreateLessonPayload, QuizQuestion, PaginatedResult } from '@maris-nails/shared';
 import type { CourseGateway, CourseFilters } from './CourseGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 export class HttpCourseGateway implements CourseGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     private async parseErrorMessage(response: Response, fallback: string): Promise<string> {
@@ -22,13 +25,22 @@ export class HttpCourseGateway implements CourseGateway {
     // Pide una página concreta al backend (?page&limit) y devuelve la respuesta
     // paginada COMPLETA (data + total + page + limit), para que el hook pueda
     // renderizar los controles de paginación.
-    async findAll(page = 1, limit = 12, filters?: CourseFilters): Promise<PaginatedResult<Course>> {
+    findAll(page = 1, limit = 12, filters?: CourseFilters): Promise<PaginatedResult<PublicCourse>> {
+        return this.list('/courses', page, limit, filters);
+    }
+
+    // The admin screens list every course on one page, hence the larger default.
+    findAllForAdmin(page = 1, limit = 100, filters?: CourseFilters): Promise<PaginatedResult<Course>> {
+        return this.list('/courses/admin', page, limit, filters);
+    }
+
+    private async list<T>(path: string, page: number, limit: number, filters?: CourseFilters): Promise<PaginatedResult<T>> {
         const params = new URLSearchParams({ page: String(page), limit: String(limit) });
         if (filters?.search) params.set('search', filters.search);
         if (filters?.category) params.set('category', filters.category);
         if (filters?.level) params.set('level', filters.level);
 
-        const response = await fetch(`${this.baseUrl}/courses?${params.toString()}`);
+        const response = await this.http.fetch(`${this.baseUrl}${path}?${params.toString()}`);
         if (!response.ok) {
             throw new Error(`Failed to fetch courses: ${response.statusText}`);
         }
@@ -36,15 +48,23 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async getCategories(): Promise<string[]> {
-        const response = await fetch(`${this.baseUrl}/courses/categories`);
+        const response = await this.http.fetch(`${this.baseUrl}/courses/categories`);
         if (!response.ok) {
             throw new Error(`Failed to fetch categories: ${response.statusText}`);
         }
         return response.json();
     }
 
-    async findOne(id: string): Promise<Course> {
-        const response = await fetch(`${this.baseUrl}/courses/${id}`);
+    async findOne(id: string): Promise<PublicCourse> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch course: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async findOneForAdmin(id: string): Promise<Course> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/admin`);
         if (!response.ok) {
             throw new Error(`Failed to fetch course: ${response.statusText}`);
         }
@@ -62,7 +82,7 @@ export class HttpCourseGateway implements CourseGateway {
             body.append('thumbnail', thumbnail);
         }
 
-        const response = await fetch(`${this.baseUrl}/courses`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses`, {
             method: 'POST',
             credentials: 'include',
             body,
@@ -75,7 +95,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async update(id: string, data: any): Promise<Course> {
-        const response = await fetch(`${this.baseUrl}/courses/${id}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -92,7 +112,7 @@ export class HttpCourseGateway implements CourseGateway {
         const body = new FormData();
         body.append('thumbnail', file);
 
-        const response = await fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
             method: 'PATCH',
             credentials: 'include',
             body,
@@ -105,7 +125,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async deleteThumbnail(id: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/thumbnail`, {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -115,8 +135,22 @@ export class HttpCourseGateway implements CourseGateway {
         }
     }
 
+    async publish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/publish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo publicar el curso'));
+        }
+    }
+
+    async unpublish(id: string): Promise<void> {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}/unpublish`, { method: 'POST' });
+        if (!response.ok) {
+            throw new Error(await this.parseErrorMessage(response, 'No se pudo despublicar el curso'));
+        }
+    }
+
     async delete(id: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/courses/${id}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${id}`, {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -130,7 +164,7 @@ export class HttpCourseGateway implements CourseGateway {
         const body = new FormData();
         body.append('image', file);
 
-        const response = await fetch(`${this.baseUrl}/courses/upload-reference-image`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/upload-reference-image`, {
             method: 'POST',
             credentials: 'include',
             body,
@@ -143,7 +177,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async addLesson(courseId: string, lesson: CreateLessonPayload): Promise<Lesson> {
-        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${courseId}/lessons`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -157,7 +191,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async removeLesson(courseId: string, lessonId: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
             method: 'DELETE',
             credentials: 'include',
         });
@@ -173,7 +207,7 @@ export class HttpCourseGateway implements CourseGateway {
      * El backend se encarga de limpiar archivos huérfanos si el videoUrl cambió.
      */
     async updateLesson(courseId: string, lessonId: string, data: any): Promise<Lesson> {
-        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${courseId}/lessons/${lessonId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -187,7 +221,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async reorderLessons(courseId: string, lessonIds: string[]): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/courses/${courseId}/lessons/reorder`, {
+        const response = await this.http.fetch(`${this.baseUrl}/courses/${courseId}/lessons/reorder`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -200,7 +234,7 @@ export class HttpCourseGateway implements CourseGateway {
     }
 
     async getQuizQuestions(courseId: string, lessonId: string): Promise<QuizQuestion[]> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/courses/${courseId}/lessons/${lessonId}/quiz`,
             { credentials: 'include' },
         );

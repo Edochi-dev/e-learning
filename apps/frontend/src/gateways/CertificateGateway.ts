@@ -27,7 +27,6 @@ export interface QrStyle {
 }
 
 export interface DateStyle {
-    show: boolean;
     positionX: number;
     positionY: number;
     fontSize: number;
@@ -80,7 +79,26 @@ export interface Certificate {
      */
     template: CertificateTemplate | null;
     filePath: string;
+    /** Set when the certificate is linked to a student account. */
+    userId: string | null;
+    /** Date printed on the certificate (YYYY-MM-DD). Show this, not `issuedAt`. */
+    certificateDate: string;
     issuedAt: string;
+}
+
+/** Every field is optional and they combine with AND. Dates are YYYY-MM-DD, inclusive. */
+export interface CertificateSearchFilters {
+    search?: string;
+    course?: string;
+    from?: string;
+    to?: string;
+    account?: 'linked' | 'unlinked';
+}
+
+/** A course that has issued certificates, keyed by the abbreviation frozen on them. */
+export interface CertificateCourse {
+    abbreviation: string;
+    name: string;
 }
 
 export interface GeneratedCertificateSummary {
@@ -101,6 +119,12 @@ export interface TemplateDesign {
     nameStyle: NameStyle;
     qrStyle: QrStyle;
     dateStyle: DateStyle;
+}
+
+/** Datos de muestra para la vista previa real (fecha ISO, YYYY-MM-DD). */
+export interface DesignSample {
+    sampleName: string;
+    sampleDate: string;
 }
 
 /**
@@ -131,10 +155,15 @@ export interface CertificateRecipient {
     userId?: string;
 }
 
+/** Several certificates: one PDF each inside a ZIP, or all as pages of one PDF for printing. */
+export type BundleLayout = 'separate' | 'merged';
+
 export interface CertificateGateway {
     // Admin
     uploadTemplate(name: string, courseAbbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate>;
     updateTemplateDesign(id: string, design: TemplateDesign): Promise<CertificateTemplate>;
+    /** PDF de muestra dibujado por el backend igual que un certificado real; no guarda nada. */
+    previewTemplateDesign(id: string, design: TemplateDesign, sample: DesignSample): Promise<Blob>;
     /**
      * Edita una plantilla existente (metadata y/u opcionalmente el PDF base).
      *
@@ -150,20 +179,30 @@ export interface CertificateGateway {
     updateTemplate(id: string, payload: EditTemplatePayload, file?: File): Promise<CertificateTemplate>;
     listTemplates(): Promise<CertificateTemplate[]>;
     getTemplate(id: string): Promise<CertificateTemplate>;
-    generateBatch(templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]>;
-    listCertificates(): Promise<Certificate[]>;
-    searchCertificates(query: string): Promise<Certificate[]>;
-    downloadBatch(ids: string[]): Promise<Blob>;
+    /** `certificateDate` (YYYY-MM-DD) is printed on every certificate of the batch. */
+    generateBatch(templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]>;
+    searchCertificates(filters: CertificateSearchFilters): Promise<Certificate[]>;
+    listCertificateCourses(): Promise<CertificateCourse[]>;
+    /** A single certificate always comes back as its own PDF; `layout` defaults to 'separate'. */
+    downloadBatch(ids: string[], layout?: BundleLayout): Promise<Blob>;
+    /** Template + date, no name or QR, `copies` pages in one PDF. Issues nothing. */
+    downloadBlankCertificates(templateId: string, certificateDate: string, copies: number): Promise<Blob>;
 
     deleteTemplate(id: string, certAction?: 'delete' | 'keep'): Promise<void>;
-    deleteCertificate(id: string): Promise<void>;
+    /** All or nothing: if any id no longer exists, nothing is deleted. */
+    deleteCertificates(ids: string[]): Promise<void>;
 
     // Alumno autenticado: sus propios certificados (los ligados a su cuenta).
     getMyCertificates(): Promise<Certificate[]>;
 
     // Público
     getCertificate(id: string): Promise<Certificate>;
-    lookupByNumber(certificateNumber: string): Promise<{ id: string }>;
+    /**
+     * Verifica un certificado. Exige el nombre del titular además del número:
+     * el número es correlativo y por sí solo permitía cosechar los nombres de
+     * las alumnas recorriendo el rango.
+     */
+    lookupByNumber(certificateNumber: string, recipientName: string): Promise<{ id: string }>;
 
     /**
      * Descarga el PDF de un certificado como Blob.

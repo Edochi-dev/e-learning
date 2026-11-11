@@ -7,6 +7,7 @@ import {
   CreateSubmissionData,
   UpdateSubmissionData,
 } from './gateways/correction.gateway';
+import { PendingCorrectionsGateway } from './gateways/pending-corrections.gateway';
 import { PaginatedResult } from '../common/types/paginated-result.type';
 
 /**
@@ -16,7 +17,9 @@ import { PaginatedResult } from '../common/types/paginated-result.type';
  * abstracto usando TypeORM como adaptador de persistencia.
  */
 @Injectable()
-export class CorrectionsRepository implements CorrectionGateway {
+export class CorrectionsRepository
+  implements CorrectionGateway, PendingCorrectionsGateway
+{
   constructor(
     @InjectRepository(AssignmentSubmission)
     private readonly submissionRepository: Repository<AssignmentSubmission>,
@@ -28,13 +31,16 @@ export class CorrectionsRepository implements CorrectionGateway {
   ): Promise<AssignmentSubmission | null> {
     return this.submissionRepository.findOne({
       where: { studentId, lessonId },
+      relations: ['reviews'],
+      order: { reviews: { reviewedAt: 'DESC' } },
     });
   }
 
   async findById(id: string): Promise<AssignmentSubmission | null> {
     return this.submissionRepository.findOne({
       where: { id },
-      relations: ['student', 'lesson', 'lesson.course'],
+      relations: ['student', 'lesson', 'lesson.course', 'reviews'],
+      order: { reviews: { reviewedAt: 'DESC' } },
     });
   }
 
@@ -63,11 +69,15 @@ export class CorrectionsRepository implements CorrectionGateway {
     return this.submissionRepository.save(submission);
   }
 
+  async countPending(): Promise<number> {
+    return this.submissionRepository.countBy({ status: 'pending' });
+  }
+
   async findPending(): Promise<AssignmentSubmission[]> {
     return this.submissionRepository.find({
       where: { status: 'pending' },
-      relations: ['student', 'lesson', 'lesson.course'],
-      order: { submittedAt: 'ASC' },
+      relations: ['student', 'lesson', 'lesson.course', 'reviews'],
+      order: { submittedAt: 'ASC', reviews: { reviewedAt: 'DESC' } },
     });
   }
 
@@ -98,7 +108,9 @@ export class CorrectionsRepository implements CorrectionGateway {
       .leftJoinAndSelect('sub.student', 'student')
       .leftJoinAndSelect('sub.lesson', 'lesson')
       .leftJoinAndSelect('lesson.course', 'course')
+      .leftJoinAndSelect('sub.reviews', 'review')
       .orderBy('sub.reviewedAt', 'DESC')
+      .addOrderBy('review.reviewedAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

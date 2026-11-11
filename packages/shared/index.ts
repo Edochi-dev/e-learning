@@ -33,11 +33,34 @@ export interface QuizQuestion {
 // Esto evita campos nullable sueltos que "solo aplican si type es X".
 
 export interface VideoLessonData {
-    videoUrl: string;
+    videoUrl?: string | null; // null en una clase en vivo hasta que se agrega su grabación
     duration?: string;       // Ej: "10:00", "1h 30m". Nullable porque las lecciones en vivo no tienen duración.
     isLive: boolean;
     liveStartsAt?: string;   // ISO 8601 — obligatorio cuando isLive (fecha/hora de la clase en vivo)
     liveEndsAt?: string;     // ISO 8601 — obligatorio cuando isLive
+}
+
+/** Where a lesson's video is served from; the only video detail public views expose. */
+export const VideoProvider = {
+    YOUTUBE: 'youtube',
+    HOSTED: 'hosted',
+} as const;
+
+export type VideoProvider = typeof VideoProvider[keyof typeof VideoProvider];
+
+/**
+ * How long before a live class its stream opens. The backend refuses the
+ * stream URL earlier and the student page shows the countdown until then.
+ */
+export const LIVE_JOIN_LEAD_MINUTES = 15;
+
+/** How long before a live class every enrolled student is emailed a reminder. */
+export const LIVE_REMINDER_LEAD_MINUTES = 60;
+
+/** VideoLessonData without the URL: the player asks the enrollment-checked endpoint for it. */
+export interface PublicVideoLessonData extends Omit<VideoLessonData, 'videoUrl'> {
+    /** Absent while there is nothing to play yet (a live class before its recording). */
+    provider?: VideoProvider;
 }
 
 export interface ExamLessonData {
@@ -67,6 +90,14 @@ export interface Lesson {
 }
 
 /**
+ * What GET /courses/:id returns to anyone. Never carries video URLs or quiz
+ * questions: those would hand paid content and exam answers to visitors.
+ */
+export interface PublicLesson extends Omit<Lesson, 'videoData' | 'questions'> {
+    videoData?: PublicVideoLessonData;
+}
+
+/**
  * CourseLevel — Nivel del curso, para clasificar y filtrar en el catálogo.
  * Mismo patrón "const + as const" que UserRole/LessonType/OrderStatus.
  */
@@ -89,7 +120,23 @@ export interface Course {
     level?: CourseLevel;    // Nivel: principiante / intermedio / avanzado
     accessDurationDays?: number | null; // null = acceso permanente
     features?: string[]; // Beneficios del curso ("Acceso de por vida", "Certificado", etc.)
+    publishedAt?: string | null; // null = borrador: fuera del catálogo y sin venta
     lessons: Lesson[];
+}
+
+/** A live class on a student's schedule, across all her active enrollments. */
+export interface UpcomingLiveClass {
+    courseId: string;
+    courseTitle: string;
+    lessonId: string;
+    lessonTitle: string;
+    liveStartsAt: string; // ISO instant
+    liveEndsAt: string;   // ISO instant
+}
+
+/** Public view of a course (see PublicLesson). The full Course is admin-only. */
+export interface PublicCourse extends Omit<Course, 'lessons' | 'publishedAt'> {
+    lessons: PublicLesson[];
 }
 
 // Este objeto define los roles permitidos en tu academia.
@@ -364,11 +411,27 @@ export const SubmissionStatus = {
 export type SubmissionStatus = typeof SubmissionStatus[keyof typeof SubmissionStatus];
 
 /**
+ * CorrectionReview — Una revisión de la profesora: su decisión y una nota de
+ * voz. Las revisiones anteriores a los audios no tienen audio; su texto viene
+ * en `transcript`.
+ */
+export interface CorrectionReview {
+    id: string;
+    decision: 'approved' | 'rejected';
+    hasAudio: boolean;
+    audioDurationSeconds: number | null;
+    audioExpiresAt: string | null;   // ISO 8601 — cuándo se borra el audio
+    transcript: string | null;
+    transcriptStatus: 'pending' | 'processing' | 'done' | 'failed' | 'unavailable';
+    reviewedAt: string;              // ISO 8601
+}
+
+/**
  * AssignmentSubmission — Entrega de una alumna para una lección tipo corrección.
  *
  * Una sola fila por (alumna, lección). Si la alumna re-envía, se sobreescribe
- * la foto y el status vuelve a PENDING. El feedback de la profesora se mantiene
- * como audit trail.
+ * la foto y el status vuelve a PENDING; cada revisión queda en `reviews`
+ * (la más reciente primero).
  */
 export interface AssignmentSubmission {
     id: string;
@@ -376,9 +439,9 @@ export interface AssignmentSubmission {
     studentId: string;
     photoUrl: string;
     status: SubmissionStatus;
-    feedback?: string;       // Texto de la profesora (obligatorio al revisar)
     submittedAt: string;     // ISO 8601 — cuándo se envió/re-envió
     reviewedAt?: string;     // ISO 8601 — cuándo la profesora revisó
+    reviews: CorrectionReview[];
 }
 
 // ─── Quiz Submission & Results ─────────────────────────────────────────
@@ -413,6 +476,56 @@ export interface QuizResultDetail {
     selectedOptionId: string;
     relatedLessonId?: string;
     relatedLessonTitle?: string;
+}
+
+/**
+ * Estado de una lección para la alumna en la portada del curso. Cada tipo de
+ * lección llega a él a su manera: una clase se ve, un quiz se aprueba, una
+ * práctica la aprueba la profesora.
+ */
+export const LessonStatus = {
+    NOT_STARTED: 'not_started',
+    IN_PROGRESS: 'in_progress',
+    IN_REVIEW: 'in_review',
+    NEEDS_CHANGES: 'needs_changes',
+    FAILED: 'failed',
+    COMPLETED: 'completed',
+} as const;
+
+export type LessonStatus = typeof LessonStatus[keyof typeof LessonStatus];
+
+export interface LessonOverview {
+    lessonId: string;
+    status: LessonStatus;
+    watchedPercent: number;
+}
+
+/** Estado de la alumna en un curso, para su portada. */
+export interface CourseOverview {
+    lessons: LessonOverview[];
+    completedLessons: number;
+    totalLessons: number;
+    progressPercent: number;
+    /** Por dónde seguir: la primera lección que espera algo de la alumna. */
+    nextLessonId: string | null;
+}
+
+/**
+ * Un video se divide en WATCH_SEGMENTS partes iguales (cada una, 1%). El
+ * progreso es la unión de las partes vistas en todas las sesiones.
+ */
+export const WATCH_SEGMENTS = 100;
+
+/** Con este porcentaje acumulado visto, una clase se completa sola. */
+export const AUTO_COMPLETE_WATCH_PERCENT = 95;
+
+/**
+ * WatchProgressResult — Respuesta al guardar segmentos vistos: el porcentaje
+ * acumulado de todas las sesiones y si con él la lección quedó completada.
+ */
+export interface WatchProgressResult {
+    watchedPercent: number;
+    lessonCompleted: boolean;
 }
 
 /**

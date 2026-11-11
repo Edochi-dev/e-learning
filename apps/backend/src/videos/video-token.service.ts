@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac } from 'crypto';
+import { createHmac, timingSafeEqual } from 'crypto';
 
 /**
  * VideoTokenService — Genera y valida tokens firmados para URLs de video
@@ -71,8 +71,14 @@ export class VideoTokenService {
       }
 
       // ¿La firma coincide?
-      const expectedSignature = this.createSignature(videoPath, expires);
-      if (signature !== expectedSignature) {
+      // Constant-time: `!==` stops at the first differing byte, which lets an
+      // attacker recover a valid signature byte by byte from response times.
+      const expected = Buffer.from(this.createSignature(videoPath, expires));
+      const given = Buffer.from(signature);
+      if (
+        given.length !== expected.length ||
+        !timingSafeEqual(given, expected)
+      ) {
         this.logger.warn(`Firma inválida para: ${videoPath}`);
         return false;
       }

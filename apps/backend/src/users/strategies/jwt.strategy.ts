@@ -4,20 +4,19 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import type { Request } from 'express';
 import { UserGateway } from '../gateways/user.gateway';
-import { User } from '../entities/user.entity';
+import { AuthSessionGateway } from '../gateways/auth-session.gateway';
+import { ACCESS_TOKEN_COOKIE } from '../auth-cookies';
+import { AuthenticatedUser, withSessionId } from '../authenticated-user';
 
-/**
- * Extrae el JWT de la cookie HttpOnly "access_token".
- * El browser la envía automáticamente en cada request (credentials: 'include').
- */
 function extractJwtFromCookie(req: Request): string | null {
-  return req?.cookies?.access_token ?? null;
+  return (req?.cookies?.[ACCESS_TOKEN_COOKIE] as string | undefined) ?? null;
 }
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly userGateway: UserGateway,
+    private readonly sessions: AuthSessionGateway,
     private readonly configService: ConfigService,
   ) {
     super({
@@ -27,11 +26,22 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: { sub: string; email: string }): Promise<User> {
+  // Checking the session on every request is what makes logout and password
+  // changes take effect immediately instead of when the access token expires.
+  async validate(payload: {
+    sub: string;
+    sid?: string;
+  }): Promise<AuthenticatedUser> {
+    if (
+      !payload.sid ||
+      !(await this.sessions.isActive(payload.sid, payload.sub))
+    ) {
+      throw new UnauthorizedException();
+    }
     const user = await this.userGateway.findOne(payload.sub);
     if (!user) {
       throw new UnauthorizedException();
     }
-    return user;
+    return withSessionId(user, payload.sid);
   }
 }

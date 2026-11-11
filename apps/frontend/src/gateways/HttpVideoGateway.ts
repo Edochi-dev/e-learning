@@ -1,14 +1,17 @@
 import type { VideoGateway, SignedUrlResponse } from './VideoGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 export class HttpVideoGateway implements VideoGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async getSignedUrl(lessonId: string): Promise<SignedUrlResponse> {
-        const res = await fetch(`${this.baseUrl}/videos/${lessonId}/signed-url`, {
+        const res = await this.http.fetch(`${this.baseUrl}/videos/${lessonId}/signed-url`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error('No se pudo obtener el video');

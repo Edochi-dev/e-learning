@@ -66,7 +66,6 @@ describe('EditCertificateTemplateUseCase', () => {
       backgroundColor: '#ffffff',
     },
     dateStyle: {
-      show: true,
       positionX: 100,
       positionY: 400,
       fontSize: 18,

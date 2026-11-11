@@ -100,6 +100,13 @@ If `npm run lint` was run by mistake and files outside the scope show up as modi
 revert them immediately with `git checkout HEAD -- <unrelated files>` before staging
 anything.
 
+### Line endings
+
+Every text file is **LF**, in the repository and on disk (`.gitattributes` sets
+`* text=auto eol=lf`; `.editorconfig` matches). CI rejects any text file stored with CRLF.
+If a diff shows a whole file as changed for a small edit, the line endings changed: check
+with `git diff --ignore-cr-at-eol --stat`, and fix with `git add --renormalize .`.
+
 ---
 
 ## Working instructions
@@ -116,8 +123,13 @@ anything.
 This repository is public and read by potential employers; a codebase narrating language
 and framework basics reads like a tutorial, not like production software.
 
-A comment earns its place only if it tells a maintainer something the code cannot:
+The goal is **concise, not absent**: comments must let the developer and Claude recognize
+at a glance what each piece does, without excessive explanation.
 
+Write:
+
+- A one- or two-line summary on a class or non-trivial method saying what it is and why
+  it exists, when the name alone does not tell you.
 - A non-obvious constraint (`this guard must run after AuthGuard, which populates req.user`).
 - A security invariant, phrased as a warning (`do not switch this to COMPLETED to unblock
   the flow — it would grant free access`).
@@ -126,7 +138,7 @@ A comment earns its place only if it tells a maintainer something the code canno
 
 Do **not** write:
 
-- Restatements of what the code plainly says.
+- Line-by-line narration of what the code plainly says.
 - Explanations of language or framework features (what `@ManyToOne` does, why
   `@PrimaryColumn` and not `@PrimaryGeneratedColumn`, how DI works).
 - Narrative history of a bug and its fix — that belongs in the commit message and the
@@ -134,7 +146,13 @@ Do **not** write:
 - Section banners and decorative ASCII separators inside a function body.
 
 Keep them short. If a comment needs more than about five lines, the explanation probably
-belongs in the chat, in the commit message, or in an issue.
+belongs in the chat, in the commit message, or in an issue. When trimming an existing
+over-long comment, **condense it to its summary — don't delete it outright**; keep warnings
+and invariants intact. `apps/backend/src/video-assets/` is a reference for the intended
+density.
+
+### Architecture principles
+
 - Always follow **pure** Clean Architecture — no shortcuts.
 - **The metric is architectural correctness, not file count.** Never dismiss a correct
   design as "over-engineering", and never trade correct design for implementation speed.
@@ -404,14 +422,37 @@ convention when adding new ones.
 
 ### Design system
 
-All tokens are CSS custom properties in `App.css`. Primary palette: **Rose Pink**
-(`--primary: #e84393`) + **gold** (`--gold: #CD9E55`). Dark mode via `[data-theme='dark']`
-on `<html>`, persisted in localStorage — every token is redefined there. Fonts:
-`--font-heading` = Kaushan Script, `--font-body` = DM Sans (loaded from Google Fonts in
-`index.html`).
+All colors are CSS custom properties defined in **two blocks at the top of `App.css`**:
+`:root` (light theme, "mixto": cream with a hint of rose, wine-dark text) and
+`[data-theme='dark']` (wine). Dark mode is `[data-theme='dark']` on `<html>`, persisted in
+localStorage. Fonts: `--font-heading` = Kaushan Script, `--font-body` = DM Sans (Google
+Fonts, loaded in `index.html`). The header comment of `App.css` says which token to use
+for what — read it before styling anything.
 
-When adding UI sections, extend `App.css` using the existing tokens — **never hardcoded
-colors**, since those would break dark mode.
+Rules (decided in issue #30, after the site drifted into "all white / all wine"):
+
+- **No color is written by hand outside those two token blocks** — not in `App.css`, not
+  in a component's `style={{}}`. A stray color ignores the theme and the palette.
+  Transparent tints are built from a token: `color-mix(in srgb, var(--danger) 15%, transparent)`.
+- **Pink as text is `--accent-text`, never `--primary`.** `--primary` fills (bars, dots,
+  borders); as text it fails contrast. Same for gold: `--gold-text` for text, `--gold`
+  for icons and fills.
+- Text on solid pink uses `--primary-strong` + `--text-on-primary`; text on a solid status
+  color (success/warning/danger) uses `--text-on-status`. In dark mode the status colors
+  are light, so white on them is unreadable.
+- **Buttons are `btn-primary`, `btn-secondary`, `btn-gold`, `btn-ghost`, `btn-danger`.**
+  A screen adds a class for layout only (padding, alignment), never its own colors.
+- **Hover only for mouse:** wrap `:hover` rules in `@media (hover: hover)` (iOS leaves
+  hover "stuck" after a tap). Anything tappable gets `:active` feedback; focus uses the
+  global `:focus-visible` ring.
+- Third-party brand colors (WhatsApp, Instagram) are tokens too (`--brand-*`). Colors that
+  are **data**, not theme (what gets printed on a certificate PDF), carry an inline
+  `// design-tokens: allow — <reason>` marker.
+
+Enforced in CI by `npm run check:tokens -w apps/frontend`
+(`apps/frontend/scripts/check-design-tokens.mjs`): it fails on any hex/`rgb()`/`hsl()`/
+`white`/`black` outside the token blocks. New colors go into the token blocks, in **both**
+themes, with a contrast of at least 4.5 for text.
 
 Motion and animation on this site are **intentional**: do not add a global
 `prefers-reduced-motion` rule that disables them unless explicitly asked.

@@ -79,6 +79,12 @@ export abstract class FileStorageGateway {
   ): Promise<string>;
 
   /**
+   * Replaces the contents of an existing file. Atomic: readers see either the
+   * old bytes or the new ones, never a partially written file.
+   */
+  abstract overwriteByUrl(url: string, buffer: Buffer): Promise<void>;
+
+  /**
    * Convierte una URL pública en la ruta relativa del storage.
    *
    * Ejemplo:

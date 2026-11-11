@@ -1,7 +1,10 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserGateway } from '../gateways/user.gateway';
-import { TokenGateway } from '../gateways/token.gateway';
+import {
+  AuthSessionService,
+  SessionTokens,
+} from '../services/auth-session.service';
 import { LoginUserDto } from '../dto/login-user.dto';
 import { User } from '../entities/user.entity';
 
@@ -9,10 +12,13 @@ import { User } from '../entities/user.entity';
 export class LoginUserUseCase {
   constructor(
     private readonly userGateway: UserGateway,
-    private readonly tokenGateway: TokenGateway,
+    private readonly sessionService: AuthSessionService,
   ) {}
 
-  async execute(dto: LoginUserDto): Promise<{ user: User; token: string }> {
+  async execute(
+    dto: LoginUserDto,
+    userAgent: string | null,
+  ): Promise<{ user: User; tokens: SessionTokens }> {
     const user = await this.userGateway.findByEmail(dto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -23,14 +29,7 @@ export class LoginUserUseCase {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = {
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      fullName: user.fullName,
-    };
-    const token = this.tokenGateway.sign(payload);
-
-    return { user, token };
+    const tokens = await this.sessionService.start(user, userAgent);
+    return { user, tokens };
   }
 }

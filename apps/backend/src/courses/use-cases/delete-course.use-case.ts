@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CourseGateway } from '../gateways/course.gateway';
 import { LessonGateway } from '../gateways/lesson.gateway';
+import { CourseUsageGateway } from '../gateways/course-usage.gateway';
 import { OrphanFileCleaner } from '../../storage/services/orphan-file-cleaner.service';
 
 /**
@@ -32,6 +37,7 @@ export class DeleteCourseUseCase {
   constructor(
     private readonly courseGateway: CourseGateway,
     private readonly lessonGateway: LessonGateway,
+    private readonly courseUsage: CourseUsageGateway,
     private readonly orphanFileCleaner: OrphanFileCleaner,
   ) {}
 
@@ -41,6 +47,15 @@ export class DeleteCourseUseCase {
 
     if (!course) {
       throw new NotFoundException(`Curso con id ${id} no encontrado`);
+    }
+
+    // The FKs are RESTRICT as well; this check only turns the database error
+    // into a message the teacher can act on.
+    if (await this.courseUsage.hasEnrollmentsOrOrders(id)) {
+      throw new ConflictException(
+        'Este curso tiene alumnas u órdenes registradas y no se puede borrar. ' +
+          'Despublícalo para sacarlo del catálogo.',
+      );
     }
 
     // Recopilar videoUrls únicos de todas las lecciones.

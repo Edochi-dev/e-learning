@@ -1,44 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CertificateGateway } from '../gateways/certificate.gateway';
-import { CertificateArchiveGateway } from '../gateways/certificate-archive.gateway';
+import { ArchiveFile } from '../gateways/certificate-archive.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
+import {
+  BundleLayout,
+  CertificateBundle,
+  CertificateBundler,
+} from '../services/certificate-bundler';
+import { ZipCertificateBundler } from '../services/zip-certificate-bundler';
+import { MergedPdfCertificateBundler } from '../services/merged-pdf-certificate-bundler';
 
-export interface DownloadResult {
-  buffer: Buffer;
-  filename: string;
-  isZip: boolean;
-}
+export type DownloadResult = CertificateBundle;
 
 /**
- * DownloadCertificateBatchUseCase
- *
- * Maneja la descarga de uno o varios certificados:
- * - Si ids.length === 1: devuelve el PDF directamente
- * - Si ids.length > 1:  devuelve un ZIP con todos los PDFs
- *
- * ¿Por qué esta lógica vive en el Use Case y no en el Controller?
- * Porque es una DECISIÓN DE NEGOCIO: "un certificado = descarga directa,
- * varios = descarga comprimida". El controller solo decide cómo enviar la respuesta HTTP.
- *
- * Ahora usa FileStorageGateway.readFileByUrl en lugar de acceder al filesystem
- * directamente. Así el Use Case no sabe si los PDFs viven en disco local o en S3.
+ * Descarga uno o varios certificados. Uno solo sale tal cual (su PDF
+ * original); varios se empaquetan según `layout`: un ZIP con un PDF por
+ * certificado, o un solo PDF con una página tras otra para imprimir.
  */
 @Injectable()
 export class DownloadCertificateBatchUseCase {
+  private readonly bundlers: Record<BundleLayout, CertificateBundler>;
+
   constructor(
     private readonly certificateGateway: CertificateGateway,
-    private readonly archiveGateway: CertificateArchiveGateway,
     private readonly fileStorageGateway: FileStorageGateway,
-  ) {}
+    zipBundler: ZipCertificateBundler,
+    mergedPdfBundler: MergedPdfCertificateBundler,
+  ) {
+    this.bundlers = { separate: zipBundler, merged: mergedPdfBundler };
+  }
 
-  async execute(ids: string[]): Promise<DownloadResult> {
-    const files: { filename: string; buffer: Buffer }[] = [];
+  async execute(
+    ids: string[],
+    layout: BundleLayout = 'separate',
+  ): Promise<DownloadResult> {
+    const files: ArchiveFile[] = [];
 
     for (const id of ids) {
       const cert = await this.certificateGateway.findOne(id);
       if (!cert) throw new NotFoundException(`Certificado ${id} no encontrado`);
 
-      // readFileByUrl maneja la conversión de URL → filesystem internamente
       const buffer = await this.fileStorageGateway.readFileByUrl(cert.filePath);
 
       const safeFilename =
@@ -58,7 +59,6 @@ export class DownloadCertificateBatchUseCase {
       };
     }
 
-    const zipBuffer = await this.archiveGateway.createZip(files);
-    return { buffer: zipBuffer, filename: 'certificados.zip', isZip: true };
+    return this.bundlers[layout].bundle(files);
   }
 }

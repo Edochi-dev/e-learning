@@ -1,5 +1,6 @@
 import type { Order } from '@maris-nails/shared';
 import type { OrderGateway, MyOrder } from './OrderGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 /**
  * HttpOrderGateway — Implementación concreta que habla con el backend via fetch().
@@ -12,13 +13,15 @@ import type { OrderGateway, MyOrder } from './OrderGateway';
  */
 export class HttpOrderGateway implements OrderGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async createOrder(courseId: string): Promise<Order> {
-        const response = await fetch(`${this.baseUrl}/orders/me`, {
+        const response = await this.http.fetch(`${this.baseUrl}/orders/me`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -34,7 +37,7 @@ export class HttpOrderGateway implements OrderGateway {
     }
 
     async getMyOrders(): Promise<MyOrder[]> {
-        const response = await fetch(`${this.baseUrl}/orders/me`, {
+        const response = await this.http.fetch(`${this.baseUrl}/orders/me`, {
             credentials: 'include',
         });
 

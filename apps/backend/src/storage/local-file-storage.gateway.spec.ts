@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { unlink, readFile, writeFile, mkdir } from 'fs/promises';
+import { unlink, readFile, writeFile, mkdir, rename } from 'fs/promises';
 import { LocalFileStorageGateway } from './local-file-storage.gateway';
 
 /**
@@ -24,6 +24,7 @@ jest.mock('fs/promises', () => ({
   writeFile: jest.fn(),
   mkdir: jest.fn(),
   readFile: jest.fn(),
+  rename: jest.fn(),
 }));
 
 const mockedExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
@@ -31,6 +32,7 @@ const mockedUnlink = unlink as jest.MockedFunction<typeof unlink>;
 const mockedReadFile = readFile as jest.MockedFunction<typeof readFile>;
 const mockedWriteFile = writeFile as jest.MockedFunction<typeof writeFile>;
 const mockedMkdir = mkdir as jest.MockedFunction<typeof mkdir>;
+const mockedRename = rename as jest.MockedFunction<typeof rename>;
 
 describe('LocalFileStorageGateway', () => {
   let gateway: LocalFileStorageGateway;
@@ -167,5 +169,44 @@ describe('LocalFileStorageGateway', () => {
 
     const writtenPath = mockedWriteFile.mock.calls[0][0] as string;
     expect(writtenPath).toContain('certificates/generated/abc.pdf');
+  });
+  // ──────────────────────────────────────────────────────────
+  // overwriteByUrl — reemplazo atómico de un archivo existente
+  // ──────────────────────────────────────────────────────────
+
+  describe('overwriteByUrl', () => {
+    const url = '/static/certificates/generated/abc.pdf';
+    const bytes = Buffer.from('nuevo');
+
+    it('escribe a un temporal y lo renombra sobre el original', async () => {
+      mockedExistsSync.mockReturnValue(true);
+
+      await gateway.overwriteByUrl(url, bytes);
+
+      const tempPath = mockedWriteFile.mock.calls[0][0] as string;
+      expect(mockedWriteFile.mock.calls[0][1]).toBe(bytes);
+      expect(tempPath).toMatch(
+        /certificates[\\/]generated[\\/]abc\.pdf\..+\.tmp$/,
+      );
+      const [from, to] = mockedRename.mock.calls[0] as [string, string];
+      expect(from).toBe(tempPath);
+      expect(to).toMatch(/certificates[\\/]generated[\\/]abc\.pdf$/);
+    });
+
+    it('rechaza URLs que no son archivos locales', async () => {
+      await expect(
+        gateway.overwriteByUrl('https://cdn.example.com/x.pdf', bytes),
+      ).rejects.toThrow('No es un archivo local');
+      expect(mockedWriteFile).not.toHaveBeenCalled();
+    });
+
+    it('no crea archivos nuevos: exige que el original exista', async () => {
+      mockedExistsSync.mockReturnValue(false);
+
+      await expect(gateway.overwriteByUrl(url, bytes)).rejects.toThrow(
+        'Archivo no encontrado',
+      );
+      expect(mockedWriteFile).not.toHaveBeenCalled();
+    });
   });
 });

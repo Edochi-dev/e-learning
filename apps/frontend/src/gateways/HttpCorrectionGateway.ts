@@ -1,9 +1,13 @@
 import type {
     CorrectionGateway,
     AssignmentSubmission,
+    CorrectionReview,
     CorrectionFilters,
     PaginatedSubmissions,
 } from './CorrectionGateway';
+import type { HttpClient } from '../http/HttpClient';
+import { recordingFileName } from '../lib/audio-recording';
+import { readOptionalJson } from '../http/read-optional-json';
 
 /**
  * HttpCorrectionGateway — Implementación HTTP del contrato de correcciones.
@@ -11,7 +15,8 @@ import type {
  * Endpoints del backend:
  *   GET    /corrections/pending      → listPending()
  *   GET    /corrections/history      → listHistory(filters)
- *   PATCH  /corrections/:id/review   → review(id, action, feedback)
+ *   PATCH  /corrections/:id/review   → review(id, action, audio)
+ *   GET    /corrections/reviews/:id/audio → getReviewAudio(id)
  *
  * Mismo patrón que HttpCertificateGateway:
  *   - credentials: 'include' → envía la cookie JWT
@@ -20,13 +25,15 @@ import type {
  */
 export class HttpCorrectionGateway implements CorrectionGateway {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async getById(submissionId: string): Promise<AssignmentSubmission> {
-        const res = await fetch(`${this.baseUrl}/corrections/${submissionId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/${submissionId}`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al cargar entrega: ${res.statusText}`);
@@ -34,7 +41,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     }
 
     async listPending(): Promise<AssignmentSubmission[]> {
-        const res = await fetch(`${this.baseUrl}/corrections/pending`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/pending`, {
             credentials: 'include',
         });
         if (!res.ok) throw new Error(`Error al listar pendientes: ${res.statusText}`);
@@ -53,7 +60,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
         const query = params.toString();
         const url = `${this.baseUrl}/corrections/history${query ? `?${query}` : ''}`;
 
-        const res = await fetch(url, { credentials: 'include' });
+        const res = await this.http.fetch(url, { credentials: 'include' });
         if (!res.ok) throw new Error(`Error al listar histórico: ${res.statusText}`);
         return res.json() as Promise<PaginatedSubmissions>;
     }
@@ -67,7 +74,7 @@ export class HttpCorrectionGateway implements CorrectionGateway {
 
         // courseId va como query param porque el EnrollmentGuard lo necesita
         // ANTES de que Multer parsee el body (guards corren antes que interceptors).
-        const res = await fetch(`${this.baseUrl}/corrections/submit?courseId=${courseId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/submit?courseId=${courseId}`, {
             method: 'POST',
             credentials: 'include',
             body,
@@ -80,16 +87,14 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     }
 
     async getMyStatus(lessonId: string): Promise<AssignmentSubmission | null> {
-        const res = await fetch(`${this.baseUrl}/corrections/me/${lessonId}`, {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/me/${lessonId}`, {
             credentials: 'include',
         });
         if (!res.ok) {
             if (res.status === 404) return null;
             throw new Error(`Error al consultar estado: ${res.statusText}`);
         }
-        const data = await res.json();
-        // El backend retorna null si no hay submission
-        return data ?? null;
+        return readOptionalJson<AssignmentSubmission>(res);
     }
 
     // ── Métodos de admin ───────────────────────────────────────────────
@@ -97,18 +102,37 @@ export class HttpCorrectionGateway implements CorrectionGateway {
     async review(
         submissionId: string,
         action: 'approve' | 'reject',
-        feedback: string,
-    ): Promise<AssignmentSubmission> {
-        const res = await fetch(`${this.baseUrl}/corrections/${submissionId}/review`, {
+        audio: Blob,
+    ): Promise<CorrectionReview> {
+        const body = new FormData();
+        body.append('action', action);
+        body.append('audio', audio, recordingFileName(audio.type));
+
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/${submissionId}/review`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ action, feedback }),
+            body,
         });
         if (!res.ok) {
             const errBody = await res.json().catch(() => ({})) as { message?: string };
-            throw new Error(errBody.message ?? `Error al revisar entrega: ${res.statusText}`);
+            throw new Error(errBody.message ?? `Error al enviar la revisión: ${res.statusText}`);
         }
-        return res.json() as Promise<AssignmentSubmission>;
+        return res.json() as Promise<CorrectionReview>;
+    }
+
+    // Se descarga como Blob a través del HttpClient (que renueva la sesión si
+    // venció) en vez de poner la URL en <audio src>, que no puede renovarla.
+    async getReviewAudio(reviewId: string): Promise<Blob> {
+        const res = await this.http.fetch(`${this.baseUrl}/corrections/reviews/${reviewId}/audio`, {
+            credentials: 'include',
+        });
+        if (!res.ok) {
+            throw new Error(
+                res.status === 403
+                    ? 'Este audio ya no está disponible.'
+                    : 'No pudimos cargar el audio.',
+            );
+        }
+        return res.blob();
     }
 }

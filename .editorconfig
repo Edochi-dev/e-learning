@@ -1,0 +1,7 @@
+# Editor defaults for every file in the monorepo. Line endings must match
+# .gitattributes (LF); CI rejects text files stored with CRLF.
+root = true
+
+[*]
+end_of_line = lf
+charset = utf-8

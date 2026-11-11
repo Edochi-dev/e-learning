@@ -6,6 +6,7 @@ import type {
     CreatedInvitation,
     RedeemInvitationData,
 } from './InvitationGateway';
+import type { HttpClient } from '../http/HttpClient';
 
 /** Extrae el mensaje que mandó el backend, o uno por defecto si no lo hay. */
 async function errorMessage(response: Response, fallback: string): Promise<string> {
@@ -28,13 +29,15 @@ export class HttpInvitationGateway
     implements StudentInvitationGateway, AdminInvitationGateway
 {
     private readonly baseUrl: string;
+    private readonly http: HttpClient;
 
-    constructor(baseUrl: string) {
+    constructor(baseUrl: string, http: HttpClient) {
         this.baseUrl = baseUrl;
+        this.http = http;
     }
 
     async getPreview(token: string): Promise<InvitationPreview> {
-        const response = await fetch(`${this.baseUrl}/invitations/${token}`);
+        const response = await this.http.fetch(`${this.baseUrl}/invitations/${token}`);
 
         if (!response.ok) {
             throw new Error(
@@ -45,7 +48,7 @@ export class HttpInvitationGateway
     }
 
     async redeem(token: string, data: RedeemInvitationData): Promise<void> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/invitations/${token}/redeem`,
             {
                 method: 'POST',
@@ -64,7 +67,7 @@ export class HttpInvitationGateway
     }
 
     async claim(token: string): Promise<{ courseId: string }> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/invitations/${token}/claim`,
             { method: 'POST', credentials: 'include' },
         );
@@ -84,7 +87,7 @@ export class HttpInvitationGateway
         labels: string[],
         validityDays?: number,
     ): Promise<CreatedInvitation[]> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/invitations/course/${courseId}`,
             {
                 method: 'POST',
@@ -107,7 +110,7 @@ export class HttpInvitationGateway
     }
 
     async list(courseId: string): Promise<CourseInvitationRow[]> {
-        const response = await fetch(
+        const response = await this.http.fetch(
             `${this.baseUrl}/invitations/course/${courseId}`,
             { credentials: 'include' },
         );
@@ -119,7 +122,7 @@ export class HttpInvitationGateway
     }
 
     async revoke(id: string): Promise<void> {
-        const response = await fetch(`${this.baseUrl}/invitations/${id}`, {
+        const response = await this.http.fetch(`${this.baseUrl}/invitations/${id}`, {
             method: 'DELETE',
             credentials: 'include',
         });

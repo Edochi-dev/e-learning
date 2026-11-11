@@ -4,6 +4,10 @@ import { useEnrollments } from '../hooks/useEnrollments';
 
 import { API_URL as BACKEND_URL } from '../config';
 import { SkeletonCourseCard } from '../components/Skeleton';
+import { UpcomingLiveClasses } from '../components/UpcomingLiveClasses';
+import { coursesInfoWhatsappUrl, renewWhatsappUrl } from '../lib/whatsapp';
+import { canSeePublicSite } from '../lib/public-site';
+import { useAuth } from '../context/AuthContext';
 
 interface MyCoursesPageProps {
     gateway: EnrollmentGateway;
@@ -34,6 +38,7 @@ const accessLabel = (daysRemaining: number | null): string => {
  */
 export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
     const { enrollments, loading, error } = useEnrollments(gateway);
+    const { user } = useAuth();
 
     if (loading) {
         return (
@@ -78,14 +83,27 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                 <p className="my-courses-page__subtitle">{subtitle()}</p>
             </div>
 
+            <UpcomingLiveClasses gateway={gateway} />
+
             {enrollments.length === 0 ? (
                 <div className="my-courses-page__empty">
                     <p className="my-courses-page__empty-icon">📚</p>
                     <h2>Empieza tu formación</h2>
-                    <p>Explora los cursos disponibles y encuentra el perfecto para ti.</p>
-                    <Link to="/cursos" className="btn-primary">
-                        Ver cursos
-                    </Link>
+                    {canSeePublicSite(user) ? (
+                        <>
+                            <p>Explora los cursos disponibles y encuentra el perfecto para ti.</p>
+                            <Link to="/cursos" className="btn-primary">
+                                Ver cursos
+                            </Link>
+                        </>
+                    ) : (
+                        <>
+                            <p>Escríbenos y te contamos qué cursos hay y cómo inscribirte.</p>
+                            <a href={coursesInfoWhatsappUrl()} target="_blank" rel="noopener noreferrer" className="btn-primary">
+                                Escribir por WhatsApp
+                            </a>
+                        </>
+                    )}
                 </div>
             ) : (
                 <div className="enrollment-grid">
@@ -155,31 +173,29 @@ export const MyCoursesPage = ({ gateway }: MyCoursesPageProps) => {
                                 {/* Aviso de vencimiento: explica y ofrece salida. */}
                                 {!enrollment.isActive && (
                                     <p className="enrollment-card__notice">
-                                        Tu acceso a este curso terminó. Tu progreso y tus
-                                        certificados se conservan: al renovar, sigues donde
-                                        lo dejaste.
+                                        Tu acceso terminó. Al renovar, sigues donde lo dejaste.
                                     </p>
                                 )}
 
                                 {/* CTA */}
+                                {/* La tarjeta lleva a la portada del curso: ahí la alumna
+                                    ve su avance y decide por dónde seguir. */}
                                 {enrollment.isActive ? (
                                     <Link
-                                        to={`/courses/${enrollment.course.id}/learn`}
-                                        className="enrollment-card__cta"
+                                        to={`/mis-cursos/${enrollment.course.id}`}
+                                        className="btn-primary enrollment-card__cta"
                                     >
-                                        {enrollment.progressPercent === 100
-                                            ? 'Repasar curso'
-                                            : enrollment.progressPercent > 0
-                                                ? 'Continuar →'
-                                                : 'Empezar →'}
+                                        Ir al curso →
                                     </Link>
                                 ) : (
-                                    <Link
-                                        to={`/courses/${enrollment.course.id}`}
-                                        className="enrollment-card__cta enrollment-card__cta--renew"
+                                    <a
+                                        href={renewWhatsappUrl(enrollment.course.title)}
+                                        className="btn-gold enrollment-card__cta"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                     >
                                         Renovar acceso
-                                    </Link>
+                                    </a>
                                 )}
                             </div>
                         </article>

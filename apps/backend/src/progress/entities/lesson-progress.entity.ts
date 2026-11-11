@@ -44,6 +44,15 @@ export class LessonProgress {
   @Column('float', { default: 0 })
   watchedPercent: number;
 
+  // Segmentos vistos (bit i = el i-ésimo 1% del video), unidos entre sesiones.
+  // watchedPercent se deriva de aquí al guardar.
+  @Column({
+    type: 'bit',
+    length: 100,
+    default: () => "repeat('0', 100)::bit(100)",
+  })
+  watchedSegments: string;
+
   // null = el alumno está en progreso pero aún no completó.
   // fecha = lección completada. Cambiamos de @CreateDateColumn a nullable
   // porque ahora creamos el registro ANTES de la compleción (al guardar watchedPercent).

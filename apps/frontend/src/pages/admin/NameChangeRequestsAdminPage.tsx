@@ -67,33 +67,27 @@ export const NameChangeRequestsAdminPage: React.FC<Props> = ({ gateway }) => {
                 <p>Aprueba o rechaza los cambios de nombre solicitados por los alumnos.</p>
             </div>
 
-            {loading && (
-                <div className="admin-card"><p style={{ margin: 0 }}>Cargando…</p></div>
-            )}
+            {loading && <p className="admin-section__status">Cargando…</p>}
 
             {!loading && error && (
-                <div className="admin-card">
-                    <p style={{ margin: 0 }}>No se pudieron cargar las solicitudes.</p>
-                </div>
+                <div className="alert alert-error" role="alert">No se pudieron cargar las solicitudes.</div>
             )}
 
             {!loading && !error && requests.length === 0 && (
-                <div className="admin-card">
-                    <p style={{ margin: 0 }}>No hay solicitudes pendientes. 🎉</p>
-                </div>
+                <div className="admin-empty">No hay solicitudes pendientes. 🎉</div>
             )}
 
             {!loading && !error && requests.length > 0 && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="request-list">
                     {requests.map((req) => (
-                        <div key={req.id} className="admin-card">
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                                <p style={{ margin: 0, fontSize: '1.05rem' }}>
+                        <div key={req.id} className="admin-card request-card">
+                            <div className="request-card__head">
+                                <p className="request-card__names">
                                     <strong>{req.currentName}</strong>
-                                    <span style={{ color: 'var(--text-muted)', margin: '0 0.5rem' }}>→</span>
-                                    <strong style={{ color: 'var(--primary)' }}>{req.requestedName}</strong>
+                                    <span className="request-card__arrow" aria-label="cambia a">→</span>
+                                    <strong className="request-card__new">{req.requestedName}</strong>
                                 </p>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                <span className="admin-row__meta">
                                     {new Date(req.createdAt).toLocaleDateString('es', {
                                         day: '2-digit', month: 'long', year: 'numeric',
                                     })}
@@ -101,30 +95,29 @@ export const NameChangeRequestsAdminPage: React.FC<Props> = ({ gateway }) => {
                             </div>
 
                             <textarea
-                                className="form-input"
+                                className="request-card__feedback"
                                 rows={2}
                                 placeholder="Motivo (obligatorio para rechazar, opcional al aprobar)"
                                 value={feedbacks[req.id] ?? ''}
                                 onChange={(e) => setFeedbacks((prev) => ({ ...prev, [req.id]: e.target.value }))}
-                                style={{ marginTop: '0.75rem', resize: 'vertical' }}
                             />
 
-                            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
+                            <div className="request-card__actions">
                                 <button
                                     type="button"
-                                    className="btn-primary"
-                                    onClick={() => handleReview(req.id, 'approve')}
-                                    disabled={busyId === req.id}
-                                >
-                                    Aprobar
-                                </button>
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
+                                    className="btn-danger btn-sm"
                                     onClick={() => handleReview(req.id, 'reject')}
                                     disabled={busyId === req.id}
                                 >
                                     Rechazar
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-success btn-sm"
+                                    onClick={() => handleReview(req.id, 'approve')}
+                                    disabled={busyId === req.id}
+                                >
+                                    Aprobar
                                 </button>
                             </div>
                         </div>

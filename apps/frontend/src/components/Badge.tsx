@@ -1,17 +1,15 @@
 import type { ReactNode } from 'react';
 
+/** Tono por significado: el color sale del sistema de diseño, no de la pantalla. */
+export type BadgeTone = 'success' | 'warning' | 'danger' | 'neutral' | 'rose' | 'gold';
+
 interface BadgeProps {
-    /** Variante visual — mapea a .badge-live / .badge-recorded (o base .badge). */
-    variant?: 'live' | 'recorded' | 'default';
+    tone?: BadgeTone;
     children: ReactNode;
     className?: string;
 }
 
-/**
- * Badge — Etiqueta corta (ej. "Clases en vivo" / "Grabadas"). Envuelve las
- * clases .badge existentes para reutilizarlas de forma consistente.
- */
-export const Badge = ({ variant = 'default', children, className = '' }: BadgeProps) => {
-    const variantClass = variant === 'default' ? '' : `badge-${variant}`;
-    return <span className={`badge ${variantClass} ${className}`}>{children}</span>;
-};
+/** Etiqueta corta de estado o tipo ("Publicado", "Borrador", "Examen"…). */
+export const Badge = ({ tone = 'neutral', children, className = '' }: BadgeProps) => (
+    <span className={`badge badge--${tone} ${className}`.trim()}>{children}</span>
+);

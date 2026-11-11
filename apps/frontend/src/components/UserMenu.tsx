@@ -1,7 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { UserRole } from '@maris-nails/shared';
 import { useAuth } from '../context/AuthContext';
+import { useLogout } from '../hooks/useLogout';
 import { UserAvatar } from './UserAvatar';
 
 /**
@@ -15,6 +16,7 @@ import { UserAvatar } from './UserAvatar';
  *   │ ana@email.com     │  ← email
  *   ├──────────────────┤
  *   │ 📚 Mis Cursos     │
+ *   │ 🎓 Mis Certificados│
  *   │ ⚙️  Mi Cuenta     │
  *   │ 🛡️ Panel Admin    │  ← solo si es ADMIN
  *   ├──────────────────┤
@@ -29,8 +31,8 @@ import { UserAvatar } from './UserAvatar';
  *   Al desmontar el componente, limpiamos el listener para evitar memory leaks.
  */
 export const UserMenu = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+    const { user } = useAuth();
+    const logout = useLogout();
     const [isOpen, setIsOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -58,13 +60,15 @@ export const UserMenu = () => {
     const handleLogout = () => {
         setIsOpen(false);
         logout();
-        navigate('/');
     };
 
     const handleNavigation = () => setIsOpen(false);
 
     return (
-        <div className="user-menu" ref={containerRef}>
+        <div
+            className={`user-menu${user.role === UserRole.STUDENT ? ' user-menu--student' : ''}`}
+            ref={containerRef}
+        >
             {/* Botón que abre/cierra el dropdown */}
             <button
                 className="user-menu__trigger"
@@ -99,6 +103,16 @@ export const UserMenu = () => {
                     >
                         <span className="user-menu__item-icon">📚</span>
                         <span>Mis Cursos</span>
+                    </Link>
+
+                    <Link
+                        to="/mis-certificados"
+                        className="user-menu__item"
+                        role="menuitem"
+                        onClick={handleNavigation}
+                    >
+                        <span className="user-menu__item-icon">🎓</span>
+                        <span>Mis Certificados</span>
                     </Link>
 
                     <Link

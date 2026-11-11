@@ -22,6 +22,7 @@ apps/backend/public/certificates/templates/
 apps/backend/public/corrections/
 apps/backend/public/videos/
 apps/backend/public/thumbnails/
+apps/backend/storage/
 
 # Certificados SSL (NUNCA subir a git)
 ssl/*.pem

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
+import { Trash2 } from 'lucide-react';
 import { useParams, Link } from 'react-router-dom';
 import { API_URL as BACKEND_URL } from '../../config';
 import { COURSE_LEVEL_OPTIONS } from '../../constants/courseLevels';
@@ -21,6 +22,9 @@ import {
 import { ThumbnailUploader, type ThumbnailUploaderHandle } from '../../components/ThumbnailUploader';
 import { QuizQuestionBuilder } from '../../components/QuizQuestionBuilder';
 import { useToast } from '../../components/Toast';
+import { ConfirmDialog } from '../../components/ConfirmDialog';
+import { Badge, type BadgeTone } from '../../components/Badge';
+import { LESSON_TYPE_LABEL } from '../../lib/lesson-status';
 import {
     DndContext,
     closestCenter,
@@ -38,6 +42,8 @@ import {
     useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { toLocalInputValue, withLiveInstants } from '../../lib/local-datetime';
+import { LiveScheduleFields } from '../../components/LiveScheduleFields';
 
 // ============================================================
 // Componente interno: SortableLessonItem
@@ -64,6 +70,35 @@ interface SortableLessonItemProps {
     onRemoveLesson: (id: string) => void;
     classLessons: Lesson[];
 }
+
+/** Tono de la etiqueta de cada tipo de lección. */
+const LESSON_TYPE_TONE: Record<LessonType, BadgeTone> = {
+    [LessonType.CLASS]: 'neutral',
+    [LessonType.EXAM]: 'gold',
+    [LessonType.CORRECTION]: 'rose',
+};
+
+/** Datos de cada tipo en su fila: un tipo nuevo es una entrada más, no otro if. */
+const LESSON_META: Record<LessonType, (lesson: Lesson) => React.ReactNode> = {
+    [LessonType.CLASS]: (lesson) => (
+        <>
+            <span>⏱ {lesson.videoData?.duration || '—'}</span>
+            <span className="admin-lesson-meta__url">🎬 {lesson.videoData?.videoUrl || 'Sin video'}</span>
+            <Badge tone={lesson.videoData?.isLive ? 'rose' : 'neutral'}>
+                {lesson.videoData?.isLive ? 'En vivo' : 'Grabado'}
+            </Badge>
+        </>
+    ),
+    [LessonType.EXAM]: (lesson) => (
+        <>
+            <span>✅ Mínimo para aprobar: {lesson.examData?.passingScore}</span>
+            <span>❓ {lesson.questions?.length ?? 0} preguntas</span>
+        </>
+    ),
+    [LessonType.CORRECTION]: (lesson) => (
+        <span>🖼 {lesson.assignmentData?.referenceImageUrl ? 'Con foto de referencia' : 'Sin foto de referencia'}</span>
+    ),
+};
 
 function SortableLessonItem({
     lesson, index, editingLessonId, editLessonForm,
@@ -94,15 +129,16 @@ function SortableLessonItem({
     };
 
     const isEditing = editingLessonId === lesson.id;
+    const lessonType = lesson.type ?? LessonType.CLASS;
 
     return (
         <div ref={setNodeRef} style={style} className={`admin-lesson-item ${isDragging ? 'is-dragging' : ''}`}>
             {isEditing ? (
-                <form onSubmit={onUpdateLesson} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
+                <form onSubmit={onUpdateLesson} className="lesson-edit-form">
+                    <div className="form-group">
                         <input type="text" name="title" value={editLessonForm.title} onChange={onEditChange} placeholder="Título" required />
                     </div>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
+                    <div className="form-group">
                         <textarea name="description" value={editLessonForm.description} onChange={onEditChange} placeholder="Descripción" rows={2} required />
                     </div>
                     {/*
@@ -113,31 +149,32 @@ function SortableLessonItem({
                     */}
                     {editLessonForm.type === LessonType.CLASS && (
                         <>
-                            <div className="checkbox-group" style={{ marginBottom: '0.5rem' }}>
+                            <div className="checkbox-group">
                                 <input type="checkbox" id={`edit-isLive-${lesson.id}`} name="isLive" checked={!!editLessonForm.isLive} onChange={onEditChange} />
                                 <label htmlFor={`edit-isLive-${lesson.id}`}>¿Es en vivo?</label>
                             </div>
-                            {editLessonForm.isLive && (
-                                <div className="form-row live-schedule-row">
-                                    <label>Inicio (en vivo)
-                                        <input type="datetime-local" name="liveStartsAt" value={editLessonForm.liveStartsAt ?? ''} onChange={onEditChange} required />
-                                    </label>
-                                    <label>Fin (en vivo)
-                                        <input type="datetime-local" name="liveEndsAt" value={editLessonForm.liveEndsAt ?? ''} onChange={onEditChange} required />
-                                    </label>
+                            {editLessonForm.isLive ? (
+                                <>
+                                    <LiveScheduleFields
+                                        liveStartsAt={editLessonForm.liveStartsAt}
+                                        liveEndsAt={editLessonForm.liveEndsAt}
+                                        onChange={onEditFormUpdate}
+                                    />
+                                    <div className="form-row">
+                                        <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="Grabación (opcional, agrégala después de la clase)" />
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="form-row">
+                                    <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
+                                    <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="URL del Video" required />
                                 </div>
                             )}
-                            <div className="form-row">
-                                {!editLessonForm.isLive && (
-                                    <input type="text" name="duration" value={editLessonForm.duration ?? ''} onChange={onEditChange} placeholder="Duración" required />
-                                )}
-                                <input type="text" name="videoUrl" value={editLessonForm.videoUrl ?? ''} onChange={onEditChange} placeholder="URL del Video" required />
-                            </div>
                         </>
                     )}
                     {editLessonForm.type === LessonType.EXAM && (
                         <>
-                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                            <div className="form-group">
                                 <label>Respuestas correctas para aprobar</label>
                                 <input
                                     type="number"
@@ -147,7 +184,7 @@ function SortableLessonItem({
                                     required
                                 />
                             </div>
-                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                            <div className="form-group">
                                 <label>Preguntas del examen</label>
                                 <QuizQuestionBuilder
                                     questions={editLessonForm.questions ?? []}
@@ -159,7 +196,7 @@ function SortableLessonItem({
                     )}
                     {editLessonForm.type === LessonType.CORRECTION && (
                         <>
-                            <div className="form-group" style={{ marginBottom: '0.5rem' }}>
+                            <div className="form-group">
                                 <label>Instrucciones para la alumna</label>
                                 <textarea
                                     name="instructions"
@@ -173,10 +210,10 @@ function SortableLessonItem({
                         </>
                     )}
                     <div className="admin-actions">
-                        <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
-                            {isSubmittingLesson ? 'Guardando...' : '💾 Guardar'}
+                        <button type="button" onClick={onCancelEditing} className="btn-secondary btn-sm">Cancelar</button>
+                        <button type="submit" disabled={isSubmittingLesson} className="btn-primary btn-sm">
+                            {isSubmittingLesson ? 'Guardando...' : 'Guardar'}
                         </button>
-                        <button type="button" onClick={onCancelEditing} className="btn-cancel">Cancelar</button>
                     </div>
                 </form>
             ) : (
@@ -195,31 +232,21 @@ function SortableLessonItem({
                     <div className="admin-lesson-info">
                         <h4>
                             {index + 1}. {lesson.title}
-                            <span className={`lesson-type-badge ${lesson.type === LessonType.EXAM ? 'exam' : 'class'}`}>
-                                {lesson.type === LessonType.EXAM ? '📝 Examen' : '🎬 Clase'}
-                            </span>
+                            <Badge tone={LESSON_TYPE_TONE[lessonType]}>{LESSON_TYPE_LABEL[lessonType]}</Badge>
                         </h4>
                         <p>{lesson.description}</p>
-                        <div className="admin-lesson-meta">
-                            {lesson.type === LessonType.EXAM ? (
-                                <>
-                                    <span>✅ Mínimo para aprobar: {lesson.examData?.passingScore}</span>
-                                    <span>❓ {lesson.questions?.length ?? 0} preguntas</span>
-                                </>
-                            ) : (
-                                <>
-                                    <span>⏱ {lesson.videoData?.duration}</span>
-                                    <span>🎬 {lesson.videoData?.videoUrl}</span>
-                                    <span className={`lesson-mode-badge ${lesson.videoData?.isLive ? 'live' : 'recorded'}`}>
-                                        {lesson.videoData?.isLive ? '🔴 En vivo' : '📼 Grabado'}
-                                    </span>
-                                </>
-                            )}
-                        </div>
+                        <div className="admin-lesson-meta">{LESSON_META[lessonType](lesson)}</div>
                     </div>
                     <div className="admin-actions">
-                        <button onClick={() => onStartEditing(lesson)} className="btn-edit">✏️ Editar</button>
-                        <button onClick={() => onRemoveLesson(lesson.id)} className="btn-delete">Eliminar</button>
+                        <button type="button" onClick={() => onStartEditing(lesson)} className="btn-secondary btn-sm">Editar</button>
+                        <button
+                            type="button"
+                            onClick={() => onRemoveLesson(lesson.id)}
+                            className="btn-danger btn-sm btn-icon"
+                            aria-label={`Eliminar ${lesson.title}`}
+                        >
+                            <Trash2 size={15} strokeWidth={2} aria-hidden />
+                        </button>
                     </div>
                 </div>
             )}
@@ -282,9 +309,8 @@ const toUpdateClassForm = (lesson: Lesson): UpdateClassLessonPayload => ({
     videoUrl: lesson.videoData?.videoUrl ?? '',
     duration: lesson.videoData?.duration ?? '',
     isLive: lesson.videoData?.isLive ?? false,
-    // ISO -> "YYYY-MM-DDTHH:MM" para el input datetime-local.
-    liveStartsAt: lesson.videoData?.liveStartsAt?.slice(0, 16) ?? '',
-    liveEndsAt: lesson.videoData?.liveEndsAt?.slice(0, 16) ?? '',
+    liveStartsAt: lesson.videoData?.liveStartsAt ? toLocalInputValue(lesson.videoData.liveStartsAt) : '',
+    liveEndsAt: lesson.videoData?.liveEndsAt ? toLocalInputValue(lesson.videoData.liveEndsAt) : '',
 });
 
 const toUpdateExamForm = (lesson: Lesson): UpdateExamLessonPayload => ({
@@ -394,7 +420,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
         if (!courseId) return;
         try {
             setIsLoading(true);
-            const data = await courseGateway.findOne(courseId);
+            const data = await courseGateway.findOneForAdmin(courseId);
             setCourse(data);
             setLessons(data.lessons ?? []);
             setCourseForm({
@@ -601,7 +627,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                 payload = { ...payload, referenceImageUrl: url };
             }
 
-            await courseGateway.addLesson(courseId, payload);
+            await courseGateway.addLesson(courseId, withLiveInstants(payload));
             setLessonForm(emptyClassLesson());
             setReferenceImageFile(null);
             setIsAddingLesson(false);
@@ -616,17 +642,24 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
     // --- Handlers de lecciones: ELIMINAR ---
 
-    const handleRemoveLesson = async (lessonId: string) => {
-        if (!courseId) return;
-        if (!window.confirm('¿Estás seguro de que quieres eliminar esta lección?')) return;
+    // Eliminar pide confirmación en un ConfirmDialog (foco en Cancelar).
+    const [removingLessonId, setRemovingLessonId] = useState<string | null>(null);
+    const [isRemovingLesson, setIsRemovingLesson] = useState(false);
 
+    const handleRemoveLesson = (lessonId: string) => setRemovingLessonId(lessonId);
 
+    const confirmRemoveLesson = async () => {
+        if (!courseId || !removingLessonId) return;
+        setIsRemovingLesson(true);
         try {
-            await courseGateway.removeLesson(courseId, lessonId);
+            await courseGateway.removeLesson(courseId, removingLessonId);
             toast.success('Lección eliminada.');
+            setRemovingLessonId(null);
             await loadCourse();
         } catch (err: unknown) {
             toast.error(err instanceof Error ? err.message : 'Error al eliminar la lección');
+        } finally {
+            setIsRemovingLesson(false);
         }
     };
 
@@ -664,7 +697,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
 
         try {
-            await courseGateway.updateLesson(courseId, editingLessonId, editLessonForm);
+            await courseGateway.updateLesson(courseId, editingLessonId, withLiveInstants(editLessonForm));
             setEditingLessonId(null);
             toast.success('¡Lección actualizada!');
             await loadCourse();
@@ -686,7 +719,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
     }
 
     return (
-        <div className="admin-page" style={{ maxWidth: '1100px' }}>
+        <div className="admin-page">
             <Link to="/admin/cursos" className="back-link">← Volver a Cursos</Link>
 
 
@@ -744,23 +777,21 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     {/* Editor de features (beneficios del curso) */}
                     <div className="form-group">
                         <label>Beneficios del curso</label>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0 0 0.75rem' }}>
+                        <p className="form-hint feature-hint">
                             Aparecen en la card de compra. Ej: "Acceso de por vida", "Certificado al completar".
                         </p>
                         {(courseForm.features ?? []).map((feature, i) => (
-                            <div key={i} style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                            <div key={i} className="feature-row">
                                 <input
                                     type="text"
                                     value={feature}
                                     onChange={(e) => handleFeatureChange(i, e.target.value)}
                                     placeholder={`Beneficio ${i + 1}`}
-                                    style={{ flex: 1 }}
                                 />
                                 <button
                                     type="button"
                                     onClick={() => removeFeature(i)}
-                                    className="btn-secondary"
-                                    style={{ padding: '0.4rem 0.75rem', fontSize: '0.85rem' }}
+                                    className="btn-secondary btn-sm"
                                 >
                                     Quitar
                                 </button>
@@ -769,14 +800,13 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                         <button
                             type="button"
                             onClick={addFeature}
-                            className="btn-secondary"
-                            style={{ fontSize: '0.85rem', marginTop: '0.25rem' }}
+                            className="btn-secondary btn-sm"
                         >
                             + Agregar beneficio
                         </button>
                     </div>
 
-                    <button type="submit" disabled={isSubmittingCourse} className="btn-primary" style={{ width: '100%', marginTop: '0.5rem' }}>
+                    <button type="submit" disabled={isSubmittingCourse} className="btn-primary form-submit">
                         {isSubmittingCourse ? 'Guardando...' : 'Guardar Cambios del Curso'}
                     </button>
                 </form>
@@ -784,33 +814,28 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
             {/* Sección 2: Gestión de miniatura */}
             <div className="admin-form">
-                <h2 style={{ marginBottom: '0.25rem' }}>Miniatura del curso</h2>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                <h2 className="admin-form__title">Miniatura del curso</h2>
+                <p className="admin-form-subtitle">
                     Imagen de portada que aparece en el catálogo. Proporción 16:9 recomendada.
                 </p>
 
                 {/* Preview de la miniatura actual */}
                 {course.thumbnailUrl && (
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Miniatura actual:</p>
-                        <div style={{ position: 'relative', display: 'inline-block' }}>
-                            <img
-                                src={`${BACKEND_URL}${course.thumbnailUrl}`}
-                                alt="Miniatura actual"
-                                style={{ width: '100%', maxWidth: '320px', borderRadius: 'var(--radius-md)', display: 'block' }}
-                            />
-                        </div>
-                        <div style={{ marginTop: '0.75rem' }}>
-                            <button
-                                type="button"
-                                onClick={handleDeleteThumbnail}
-                                disabled={isDeletingThumbnail}
-                                className="btn-cancel"
-                                style={{ fontSize: '0.85rem' }}
-                            >
-                                {isDeletingThumbnail ? 'Eliminando...' : 'Eliminar miniatura'}
-                            </button>
-                        </div>
+                    <div className="thumb-current">
+                        <p className="form-hint">Miniatura actual:</p>
+                        <img
+                            src={`${BACKEND_URL}${course.thumbnailUrl}`}
+                            alt="Miniatura actual"
+                            className="thumb-current__img"
+                        />
+                        <button
+                            type="button"
+                            onClick={handleDeleteThumbnail}
+                            disabled={isDeletingThumbnail}
+                            className="btn-danger btn-sm"
+                        >
+                            {isDeletingThumbnail ? 'Eliminando...' : 'Eliminar miniatura'}
+                        </button>
                     </div>
                 )}
 
@@ -821,8 +846,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     type="button"
                     onClick={handleUpdateThumbnail}
                     disabled={isSubmittingThumbnail}
-                    className="btn-primary"
-                    style={{ width: '100%' }}
+                    className="btn-primary form-submit"
                 >
                     {isSubmittingThumbnail ? 'Subiendo...' : course.thumbnailUrl ? 'Reemplazar miniatura' : 'Subir miniatura'}
                 </button>
@@ -831,8 +855,8 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
             </div>{/* cierre de edit-course-top-row */}
 
             {/* Sección 4: Lista de lecciones con drag-and-drop */}
-            <div className="admin-section" style={{ marginTop: '2.5rem' }}>
-                <h2>Lecciones ({lessons.length})</h2>
+            <section className="admin-section">
+                <h2 className="admin-section__title">Lecciones ({lessons.length})</h2>
                 {lessons.length === 0 ? (
                     <div className="admin-empty">Este curso aún no tiene lecciones.</div>
                 ) : (
@@ -879,7 +903,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                         </SortableContext>
                     </DndContext>
                 )}
-            </div>
+            </section>
 
             {/* Sección 5: Panel colapsable para agregar lección */}
             <div className="admin-section">
@@ -896,7 +920,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
 
                 {/* Formulario — solo visible cuando isAddingLesson es true */}
                 <div className={`add-lesson-panel ${isAddingLesson ? 'open' : ''}`}>
-                    <div className="admin-form" style={{ marginTop: '1rem' }}>
+                    <div className="admin-form add-lesson-form">
                         <form onSubmit={handleAddLesson}>
                             {/* Selector de tipo */}
                             <div className="form-group">
@@ -959,7 +983,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                             onChange={(e) => setReferenceImageFile(e.target.files?.[0] ?? null)}
                                             required={!lessonForm.referenceImageUrl}
                                         />
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                                        <p className="form-hint">
                                             Foto del resultado esperado. JPG, PNG o WebP, máx 5 MB.
                                         </p>
                                     </div>
@@ -972,30 +996,30 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                             <label htmlFor="lesson-isLive">¿Es una lección en vivo?</label>
                                         </div>
                                     </div>
-                                    {lessonForm.isLive && (
-                                        <div className="form-row live-schedule-row" style={{ marginBottom: '1.25rem' }}>
-                                            <div>
-                                                <label htmlFor="lesson-liveStartsAt">Inicio (en vivo)</label>
-                                                <input type="datetime-local" id="lesson-liveStartsAt" name="liveStartsAt" value={lessonForm.liveStartsAt ?? ''} onChange={handleLessonChange} required />
-                                            </div>
-                                            <div>
-                                                <label htmlFor="lesson-liveEndsAt">Fin (en vivo)</label>
-                                                <input type="datetime-local" id="lesson-liveEndsAt" name="liveEndsAt" value={lessonForm.liveEndsAt ?? ''} onChange={handleLessonChange} required />
-                                            </div>
+                                    {lessonForm.isLive ? (
+                                        <div className="form-group">
+                                            <LiveScheduleFields
+                                                liveStartsAt={lessonForm.liveStartsAt}
+                                                liveEndsAt={lessonForm.liveEndsAt}
+                                                onChange={patch => setLessonForm(prev => ({ ...prev, ...patch }))}
+                                            />
+                                            <p className="form-hint">
+                                                La clase se transmite desde la plataforma. La grabación se agrega
+                                                editando la lección cuando termine.
+                                            </p>
                                         </div>
-                                    )}
-                                    <div className="form-row" style={{ marginBottom: '1.25rem' }}>
-                                        {!lessonForm.isLive && (
+                                    ) : (
+                                        <div className="form-row form-group">
                                             <div>
                                                 <label htmlFor="lesson-duration">Duración</label>
                                                 <input type="text" id="lesson-duration" name="duration" value={lessonForm.duration} onChange={handleLessonChange} placeholder="Ej: 15:00" />
                                             </div>
-                                        )}
-                                        <div>
-                                            <label htmlFor="lesson-videoUrl">URL del Video</label>
-                                            <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
+                                            <div>
+                                                <label htmlFor="lesson-videoUrl">URL del Video</label>
+                                                <input type="text" id="lesson-videoUrl" name="videoUrl" value={lessonForm.videoUrl} onChange={handleLessonChange} required placeholder="https://... o ruta local" />
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
                                 </>
                             ) : (
                                 <>
@@ -1022,7 +1046,7 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                                 </>
                             )}
 
-                            <button type="submit" disabled={isSubmittingLesson} className="btn-primary" style={{ width: '100%' }}>
+                            <button type="submit" disabled={isSubmittingLesson} className="btn-primary form-submit">
                                 {isSubmittingLesson
                                     ? 'Agregando...'
                                     : lessonForm.type === LessonType.EXAM
@@ -1035,6 +1059,21 @@ export const EditCoursePage: React.FC<EditCoursePageProps> = ({ gateway: courseG
                     </div>
                 </div>
             </div>
+            {removingLessonId && (
+                <ConfirmDialog
+                    title="¿Eliminar lección?"
+                    confirmLabel="Eliminar"
+                    busyLabel="Eliminando…"
+                    busy={isRemovingLesson}
+                    onConfirm={confirmRemoveLesson}
+                    onCancel={() => setRemovingLessonId(null)}
+                >
+                    <p className="confirm-dialog__text">
+                        Se eliminará <strong>{lessons.find(l => l.id === removingLessonId)?.title}</strong> y
+                        su contenido. Esta acción no se puede deshacer.
+                    </p>
+                </ConfirmDialog>
+            )}
         </div>
     );
 };

@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   Post,
+  Headers,
   Req,
   Res,
   UseGuards,
@@ -18,7 +19,8 @@ import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { InvitationPreview, UserRole } from '@maris-nails/shared';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { TokenGateway } from '../users/gateways/token.gateway';
+import { AuthSessionService } from '../users/services/auth-session.service';
+import { setSessionCookies } from '../users/auth-cookies';
 import { User } from '../users/entities/user.entity';
 import { CreateInvitationsDto } from './dto/create-invitations.dto';
 import { RedeemInvitationDto } from './dto/redeem-invitation.dto';
@@ -35,15 +37,6 @@ import {
   CourseInvitationRow,
 } from './use-cases/list-course-invitations.use-case';
 
-/** Misma cookie que el login: quien canjea queda con la sesión ya iniciada. */
-const COOKIE_OPTIONS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'lax' as const,
-  path: '/',
-  maxAge: 60 * 60 * 1000,
-};
-
 @Controller('invitations')
 export class InvitationsController {
   constructor(
@@ -53,7 +46,7 @@ export class InvitationsController {
     private readonly claimInvitationUseCase: ClaimInvitationUseCase,
     private readonly revokeInvitationUseCase: RevokeInvitationUseCase,
     private readonly listCourseInvitationsUseCase: ListCourseInvitationsUseCase,
-    private readonly tokenGateway: TokenGateway,
+    private readonly sessionService: AuthSessionService,
   ) {}
 
   // ── Administración ─────────────────────────────────────────────────────
@@ -122,6 +115,7 @@ export class InvitationsController {
   async redeem(
     @Param('token') token: string,
     @Body() dto: RedeemInvitationDto,
+    @Headers('user-agent') userAgent: string | undefined,
     @Res({ passthrough: true }) res: Response,
   ): Promise<{ user: User }> {
     const user = await this.redeemInvitationUseCase.execute({
@@ -131,13 +125,10 @@ export class InvitationsController {
 
     // Sesión iniciada al instante: obligarla a escribir otra vez la contraseña
     // que acaba de elegir sería fricción sin ninguna ganancia.
-    const jwt = this.tokenGateway.sign({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      fullName: user.fullName,
-    });
-    res.cookie('access_token', jwt, COOKIE_OPTIONS);
+    setSessionCookies(
+      res,
+      await this.sessionService.start(user, userAgent ?? null),
+    );
 
     return { user };
   }

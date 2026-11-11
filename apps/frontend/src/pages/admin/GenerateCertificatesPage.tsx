@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary, CertificateRecipient } from '../../gateways/CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary, CertificateRecipient, BundleLayout } from '../../gateways/CertificateGateway';
 import type { AuthGateway } from '../../gateways/AuthGateway';
 import type { User } from '@maris-nails/shared';
 import { useToast } from '../../components/Toast';
+import { parseCalendarDate, todayCalendarDate } from '../../lib/calendar-date';
+import { saveBlob } from '../../lib/save-blob';
 
 interface Props {
     gateway: CertificateGateway;
@@ -14,6 +16,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState('');
     const [namesText, setNamesText] = useState('');
+    const [certificateDate, setCertificateDate] = useState(todayCalendarDate);
     const [generated, setGenerated] = useState<GeneratedCertificateSummary[]>([]);
     const [selected, setSelected] = useState<Set<string>>(new Set());
     const [loading, setLoading] = useState(false);
@@ -75,7 +78,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
     }, [authGateway]);
 
     const handleGenerate = async () => {
-        if (!selectedTemplateId || recipientCount === 0) return;
+        if (!selectedTemplateId || recipientCount === 0 || !certificateDate) return;
 
         // Combinamos: nombres libres (sin userId) + alumnos elegidos (con userId).
         const recipients: CertificateRecipient[] = [
@@ -85,7 +88,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
 
         setLoading(true);
         try {
-            const result = await gateway.generateBatch(selectedTemplateId, recipients);
+            const result = await gateway.generateBatch(selectedTemplateId, recipients, certificateDate);
             setGenerated(result);
             setSelected(new Set(result.map(c => c.id)));
         } catch (err) {
@@ -104,19 +107,17 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
         });
     };
 
-    const handleDownload = async () => {
+    // Unidos: presenciales, se imprimen de una vez. Separados: online, uno por alumna.
+    const handleDownload = async (layout: BundleLayout) => {
         if (selected.size === 0) return;
         setLoading(true);
         try {
             const ids = Array.from(selected);
-            const blob = await gateway.downloadBatch(ids);
-            const filename = ids.length === 1 ? 'certificado.pdf' : 'certificados.zip';
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 100);
+            const blob = await gateway.downloadBatch(ids, layout);
+            const filename = ids.length === 1
+                ? 'certificado.pdf'
+                : layout === 'merged' ? 'certificados.pdf' : 'certificados.zip';
+            saveBlob(blob, filename);
         } catch (err) {
             toast.error(err instanceof Error ? err.message : 'Error al descargar');
         } finally {
@@ -132,11 +133,11 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 <p>Selecciona una plantilla, ingresa los nombres y genera los PDFs.</p>
             </div>
 
-            <div className="admin-card" style={{ maxWidth: '640px' }}>
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Plantilla</label>
+            <div className="admin-card admin-card--narrow">
+                <div className="form-group">
+                    <label htmlFor="gen-template">Plantilla</label>
                     <select
-                        className="form-input"
+                        id="gen-template"
                         value={selectedTemplateId}
                         onChange={e => setSelectedTemplateId(e.target.value)}
                     >
@@ -148,25 +149,39 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                         ))}
                     </select>
                     {templates.length === 0 && (
-                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
-                            No hay plantillas. <a href="/admin/certificados/plantillas/nueva">Sube una primero.</a>
+                        <p className="form-hint">
+                            No hay plantillas. <Link to="/admin/certificados/plantillas/nueva">Sube una primero.</Link>
                         </p>
                     )}
                 </div>
 
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">
-                        Nombres libres (uno por línea)
-                    </label>
+                <div className="form-group">
+                    <label htmlFor="certificate-date">Fecha del certificado</label>
+                    <input
+                        id="certificate-date"
+                        type="date"
+                        value={certificateDate}
+                        onChange={e => setCertificateDate(e.target.value)}
+                        required
+                    />
+                    <p className="form-hint">
+                        {certificateDate
+                            ? `Se imprimirá ${parseCalendarDate(certificateDate).toLocaleDateString('es-MX', { day: 'numeric', month: 'long', year: 'numeric' })}. Cámbiala para certificados impresos por adelantado.`
+                            : 'Elige la fecha que se imprimirá en los certificados.'}
+                    </p>
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="gen-names">Nombres libres (uno por línea)</label>
                     <textarea
-                        className="form-input"
+                        id="gen-names"
+                        className="input-code"
                         rows={6}
                         placeholder={"Ana García\nBeatriz López\nCarolina Martínez"}
                         value={namesText}
                         onChange={e => setNamesText(e.target.value)}
-                        style={{ fontFamily: 'monospace', resize: 'vertical' }}
                     />
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                    <p className="form-hint">
                         {freeNames.length} nombre(s) sin cuenta · no aparecerán en "mis certificados"
                     </p>
                 </div>
@@ -174,8 +189,8 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 {/* Vinculación híbrida: buscar alumnos registrados para que el
                     certificado quede ligado a su cuenta. Solo buscador (typeahead):
                     con muchos alumnos, listar a todos no tendría sentido. */}
-                <div style={{ marginBottom: '1.5rem' }}>
-                    <label className="form-label">Vincular a alumnos registrados (opcional)</label>
+                <div className="form-group">
+                    <label htmlFor="gen-user-search">Vincular a alumnos registrados (opcional)</label>
                     <div className="user-picker">
                         <div className="user-picker__search">
                             <svg
@@ -192,6 +207,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
                             </svg>
                             <input
+                                id="gen-user-search"
                                 type="search"
                                 className="user-picker__input"
                                 placeholder="Buscar alumno por nombre o email…"
@@ -239,7 +255,7 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                                     </span>
                                 ))}
                             </div>
-                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                            <p className="form-hint">
                                 {pickedUsers.length} alumno(s) vinculado(s)
                             </p>
                         </>
@@ -247,43 +263,66 @@ export const GenerateCertificatesPage: React.FC<Props> = ({ gateway, authGateway
                 </div>
 
                 <button
+                    type="button"
                     className="btn-primary"
                     onClick={handleGenerate}
-                    disabled={loading || !selectedTemplateId || recipientCount === 0}
+                    disabled={loading || !selectedTemplateId || recipientCount === 0 || !certificateDate}
                 >
                     {loading ? 'Generando...' : `Generar Certificados (${recipientCount})`}
                 </button>
             </div>
 
             {generated.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                        <h2>Certificados generados ({generated.length})</h2>
-                        <button
-                            className="btn-primary"
-                            onClick={handleDownload}
-                            disabled={loading || selected.size === 0}
-                        >
-                            {loading ? 'Descargando...' : `Descargar ${selected.size > 1 ? `(${selected.size}) ZIP` : 'PDF'}`}
-                        </button>
+                <section className="admin-section">
+                    <div className="admin-section__head">
+                        <h2 className="admin-section__title">Certificados generados ({generated.length})</h2>
+                        {selected.size > 1 ? (
+                            <div className="admin-section__actions">
+                                <button
+                                    type="button"
+                                    className="btn-primary btn-sm"
+                                    onClick={() => handleDownload('merged')}
+                                    disabled={loading}
+                                >
+                                    {`Un PDF para imprimir (${selected.size})`}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="btn-secondary btn-sm"
+                                    onClick={() => handleDownload('separate')}
+                                    disabled={loading}
+                                >
+                                    {`Separados en ZIP (${selected.size})`}
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="btn-primary btn-sm"
+                                onClick={() => handleDownload('separate')}
+                                disabled={loading || selected.size === 0}
+                            >
+                                {loading ? 'Descargando...' : 'Descargar PDF'}
+                            </button>
+                        )}
                     </div>
 
-                    <div className="admin-course-links">
+                    <div className="admin-list">
                         {generated.map(cert => (
-                            <div key={cert.id} className="admin-course-row" style={{ cursor: 'pointer' }} onClick={() => toggleSelect(cert.id)}>
-                                <input
-                                    type="checkbox"
-                                    checked={selected.has(cert.id)}
-                                    onChange={() => toggleSelect(cert.id)}
-                                    onClick={e => e.stopPropagation()}
-                                    style={{ marginRight: '0.75rem', accentColor: 'var(--primary)' }}
-                                />
-                                <span className="admin-course-link-title">{cert.recipientName}</span>
-                                <span className="admin-course-link-meta" style={{ fontFamily: 'monospace' }}>{cert.certificateNumber}</span>
-                            </div>
+                            <label key={cert.id} className="admin-row admin-row--selectable">
+                                <span className="admin-row__main admin-row__main--check">
+                                    <input
+                                        type="checkbox"
+                                        checked={selected.has(cert.id)}
+                                        onChange={() => toggleSelect(cert.id)}
+                                    />
+                                    <span className="admin-row__title">{cert.recipientName}</span>
+                                </span>
+                                <span className="admin-row__meta admin-row__meta--code">{cert.certificateNumber}</span>
+                            </label>
                         ))}
                     </div>
-                </div>
+                </section>
             )}
         </div>
     );

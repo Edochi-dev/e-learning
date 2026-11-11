@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCertificateSummary, CertificateRecipient } from '../gateways/CertificateGateway';
+import type { CertificateGateway, CertificateTemplate, GeneratedCertificateSummary, CertificateRecipient } from '../gateways/CertificateGateway';
+import { saveBlob } from '../lib/save-blob';
 
 /**
  * useCertificates — Hook para las páginas de admin de certificados
@@ -10,7 +11,6 @@ import type { CertificateGateway, CertificateTemplate, Certificate, GeneratedCer
  */
 export const useCertificates = (gateway: CertificateGateway) => {
     const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
-    const [certificates, setCertificates] = useState<Certificate[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -27,54 +27,19 @@ export const useCertificates = (gateway: CertificateGateway) => {
         }
     }, [gateway]);
 
-    const loadCertificates = useCallback(async () => {
-        try {
-            setLoading(true);
-            const data = await gateway.listCertificates();
-            setCertificates(data);
-            setError(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al cargar certificados');
-        } finally {
-            setLoading(false);
-        }
-    }, [gateway]);
-
-    const searchCertificates = useCallback(async (query: string) => {
-        try {
-            setLoading(true);
-            const data = query.trim()
-                ? await gateway.searchCertificates(query.trim())
-                : await gateway.listCertificates();
-            setCertificates(data);
-            setError(null);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al buscar certificados');
-        } finally {
-            setLoading(false);
-        }
-    }, [gateway]);
-
     const uploadTemplate = async (name: string, abbreviation: string, paperFormat: string, file: File): Promise<CertificateTemplate> => {
         const template = await gateway.uploadTemplate(name, abbreviation, paperFormat, file);
         setTemplates(prev => [template, ...prev]);
         return template;
     };
 
-    const generateBatch = async (templateId: string, recipients: CertificateRecipient[]): Promise<GeneratedCertificateSummary[]> => {
-        return gateway.generateBatch(templateId, recipients);
+    const generateBatch = async (templateId: string, recipients: CertificateRecipient[], certificateDate: string): Promise<GeneratedCertificateSummary[]> => {
+        return gateway.generateBatch(templateId, recipients, certificateDate);
     };
 
     const downloadBatch = async (ids: string[]): Promise<void> => {
         const blob = await gateway.downloadBatch(ids);
-        const isSingle = ids.length === 1;
-        const filename = isSingle ? 'certificado.pdf' : 'certificados.zip';
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 100);
+        saveBlob(blob, ids.length === 1 ? 'certificado.pdf' : 'certificados.zip');
     };
 
     useEffect(() => {
@@ -83,12 +48,9 @@ export const useCertificates = (gateway: CertificateGateway) => {
 
     return {
         templates,
-        certificates,
         loading,
         error,
         loadTemplates,
-        loadCertificates,
-        searchCertificates,
         uploadTemplate,
         generateBatch,
         downloadBatch,

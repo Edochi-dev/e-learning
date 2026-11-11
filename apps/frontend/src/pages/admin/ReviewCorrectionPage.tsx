@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { CorrectionGateway, AssignmentSubmission } from '../../gateways/CorrectionGateway';
 import { API_URL } from '../../config';
+import { VoiceReviewRecorder } from '../../components/VoiceReviewRecorder';
+import { ReviewHistory } from '../../components/ReviewHistory';
 
 /**
  * ReviewCorrectionPage — Cola de revisión por curso (flujo tipo Tinder).
@@ -16,7 +18,7 @@ import { API_URL } from '../../config';
  * Flujo:
  *   1. Carga listPending() y filtra por courseId (client-side)
  *   2. Muestra la primera submission de la cola
- *   3. La profesora escribe feedback + Aprobar/Rechazar
+ *   3. La profesora toca Aprobar/Rechazar y graba una nota de voz
  *   4. Se llama a review() → se quita de la cola → aparece la siguiente
  *   5. Cola vacía → "¡Todas revisadas!" → link a /admin/correcciones
  */
@@ -41,11 +43,10 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
     const [queue, setQueue] = useState<AssignmentSubmission[]>([]);
     const [totalCount, setTotalCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const [feedback, setFeedback] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [courseTitle, setCourseTitle] = useState('');
-    const [photoFailed, setPhotoFailed] = useState(false);
+    // Guarda qué entrega tuvo la foto rota: al pasar a la siguiente se limpia solo.
+    const [failedPhotoId, setFailedPhotoId] = useState<string | null>(null);
 
     useEffect(() => {
         if (!courseId) return;
@@ -67,34 +68,23 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
     const currentId = current?.id;
     const reviewedCount = totalCount - queue.length;
 
-    // Resetear estado de foto rota al cambiar de submission
-    useEffect(() => {
-        setPhotoFailed(false);
-    }, [currentId]);
+    const photoFailed = currentId !== undefined && failedPhotoId === currentId;
 
-    const handleReview = useCallback(async (action: 'approve' | 'reject') => {
-        if (!current || !feedback.trim()) return;
-        setIsSubmitting(true);
+    // Si falla, el error sube al grabador, que conserva el audio para reintentar.
+    const handleReview = useCallback(async (action: 'approve' | 'reject', audio: Blob) => {
+        if (!current) return;
         setError(null);
-
-        try {
-            await gateway.review(current.id, action, feedback.trim());
-            // Quitar de la cola → la siguiente aparece automáticamente
-            setQueue((prev) => prev.slice(1));
-            setFeedback('');
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al enviar revisión');
-        } finally {
-            setIsSubmitting(false);
-        }
-    }, [current, feedback, gateway]);
+        await gateway.review(current.id, action, audio);
+        // Quitar de la cola → la siguiente aparece automáticamente
+        setQueue((prev) => prev.slice(1));
+    }, [current, gateway]);
 
     // ── Loading ────────────────────────────────────────────────────────
     if (isLoading) {
         return (
             <div className="admin-page">
                 <Link to="/admin/correcciones" className="back-link">← Volver a Correcciones</Link>
-                <p style={{ color: 'var(--text-muted)', marginTop: '2rem' }}>Cargando entregas...</p>
+                <p className="admin-section admin-section__status">Cargando entregas...</p>
             </div>
         );
     }
@@ -112,7 +102,7 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
                             ? `Revisaste ${totalCount} entrega${totalCount !== 1 ? 's' : ''} de ${courseTitle}.`
                             : 'No hay entregas pendientes en este curso.'}
                     </p>
-                    <Link to="/admin/correcciones" className="btn-primary" style={{ marginTop: '1rem', display: 'inline-block' }}>
+                    <Link to="/admin/correcciones" className="btn-primary review-done__cta">
                         Volver a Correcciones
                     </Link>
                 </div>
@@ -126,7 +116,6 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
         ? `${API_URL}${assignmentData.referenceImageUrl}`
         : null;
     const studentPhotoUrl = `${API_URL}${current.photoUrl}`;
-    const canSubmit = feedback.trim().length > 0 && !isSubmitting;
 
     return (
         <div className="admin-page">
@@ -146,16 +135,16 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
             </div>
 
             {error && (
-                <div style={{ color: '#ef4444', marginBottom: '1rem', fontWeight: 500 }}>
+                <div className="alert alert-error" role="alert">
                     {error}
                 </div>
             )}
 
             {/* Info de la alumna y lección */}
             <div className="review-meta">
-                <strong>{current.student.name}</strong>
-                <span style={{ color: 'var(--text-muted)' }}> — {current.lesson.title}</span>
-                <span className="admin-course-link-meta" style={{ display: 'block', marginTop: '0.25rem' }}>
+                <strong>{current.student.fullName}</strong>
+                <span className="review-meta__lesson"> — {current.lesson.title}</span>
+                <span className="review-meta__date">
                     Enviado el {formatDate(current.submittedAt)}
                 </span>
             </div>
@@ -177,21 +166,21 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
                     <div className="review-image-block">
                         <h3>Entrega de la alumna</h3>
                         {photoFailed ? (
-                            <p style={{ color: 'var(--text-muted)', padding: '2rem', textAlign: 'center' }}>
+                            <p className="review-image-missing">
                                 Foto no disponible
                             </p>
                         ) : (
                             <img
                                 src={studentPhotoUrl}
-                                alt={`Entrega de ${current.student.name}`}
+                                alt={`Entrega de ${current.student.fullName}`}
                                 className="review-image"
-                                onError={() => setPhotoFailed(true)}
+                                onError={() => setFailedPhotoId(current.id)}
                             />
                         )}
                     </div>
                 </div>
 
-                {/* ── Columna derecha: instrucciones + feedback ────────── */}
+                {/* ── Columna derecha: instrucciones + revisión por voz ── */}
                 <div className="review-panel">
                     {assignmentData?.instructions && (
                         <div className="review-section">
@@ -200,32 +189,16 @@ export const ReviewCorrectionPage: React.FC<Props> = ({ gateway }) => {
                         </div>
                     )}
 
-                    <div className="review-section">
-                        <h3>Tu feedback</h3>
-                        <textarea
-                            className="review-textarea"
-                            placeholder="Escribe tu retroalimentación aquí... (obligatorio)"
-                            value={feedback}
-                            onChange={(e) => setFeedback(e.target.value)}
-                            rows={5}
-                        />
-                    </div>
+                    <ReviewHistory
+                        reviews={current.reviews}
+                        gateway={gateway}
+                        label="Tus revisiones anteriores de esta entrega"
+                    />
 
-                    <div className="review-actions">
-                        <button
-                            className="review-btn review-btn--reject"
-                            disabled={!canSubmit}
-                            onClick={() => handleReview('reject')}
-                        >
-                            {isSubmitting ? '...' : 'Rechazar'}
-                        </button>
-                        <button
-                            className="review-btn review-btn--approve"
-                            disabled={!canSubmit}
-                            onClick={() => handleReview('approve')}
-                        >
-                            {isSubmitting ? '...' : 'Aprobar'}
-                        </button>
+                    <div className="review-section">
+                        <h3>Tu revisión</h3>
+                        {/* key: cada entrega nueva arranca con el grabador limpio */}
+                        <VoiceReviewRecorder key={current.id} onSubmit={handleReview} />
                     </div>
                 </div>
             </div>

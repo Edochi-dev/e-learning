@@ -1,85 +1,96 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { VideoProvider } from '@maris-nails/shared';
 import type { VideoGateway } from '../gateways/VideoGateway';
+import { playedSegments } from '../lib/watched-segments';
 
 interface VideoPlayerProps {
-    src: string;
     title: string;
-    lessonId?: string;           // Si se pasa, pide URL firmada al backend
-    videoGateway?: VideoGateway; // Gateway para obtener URLs firmadas
-    onWatchProgress?: (percent: number) => void;  // Callback: 0-100
+    lessonId: string;
+    provider: VideoProvider;
+    videoGateway: VideoGateway;
+    /** Segmentos vistos en esta sesión; `flush` = momento de guardarlos ya (pausa, fin). */
+    onWatchedSegments?: (segments: number[], flush: boolean) => void;
 }
 
 /**
- * VideoPlayer — Reproductor de video protegido
- *
- * Soporta 3 modos:
- * 1. YouTube/Vimeo → iframe (ya están protegidos por ellos)
- * 2. Video local con lessonId → pide URL firmada al backend
- * 3. Video externo sin lessonId → reproduce directo (fallback)
+ * Plays a lesson's video. The URL never travels with the course data: it is
+ * requested per lesson from the enrollment-checked signed-url endpoint, which
+ * returns an embeddable link for YouTube and a signed stream for hosted files.
  */
-export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, videoGateway, onWatchProgress }) => {
+export const VideoPlayer: React.FC<VideoPlayerProps> = ({ title, lessonId, provider, videoGateway, onWatchedSegments }) => {
     const [videoSrc, setVideoSrc] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // ── Tracking de progreso ──────────────────────────────────────────────────
-    // Guardamos en un Set los segundos enteros que el usuario realmente vio.
-    // Usamos useRef (no useState) porque no necesitamos re-renderizar al acumular
-    // segundos — solo importa el valor final cuando llamamos onWatchProgress.
-    const watchedSecondsRef = useRef<Set<number>>(new Set());
-    const prevTimeRef = useRef<number>(0);
+    // Segmentos vistos en la lección, acumulados: renovar el enlace cambia el
+    // src y el navegador reinicia `played`, pero lo ya visto no se pierde.
+    const watchedRef = useRef<Set<number>>(new Set());
+    const reportedCountRef = useRef(0);
 
-    // Resetear el tracking cada vez que cambia la lección
+    // El enlace firmado vence (VIDEO_TOKEN_EXPIRY_HOURS) y el servidor valida cada
+    // tramo que pide el video: tras una pausa larga, el siguiente tramo falla.
+    const resumeRef = useRef<{ time: number; play: boolean } | null>(null);
+    const renewalsRef = useRef<number[]>([]);
+
     useEffect(() => {
-        watchedSecondsRef.current = new Set();
-        prevTimeRef.current = 0;
-        onWatchProgress?.(0);
-    }, [lessonId, onWatchProgress]);
+        watchedRef.current = new Set();
+        reportedCountRef.current = 0;
+        resumeRef.current = null;
+        renewalsRef.current = [];
+    }, [lessonId]);
+
+    const report = useCallback((video: HTMLVideoElement, flush: boolean) => {
+        for (const s of playedSegments(video.played, video.duration)) watchedRef.current.add(s);
+        const size = watchedRef.current.size;
+        if (size > reportedCountRef.current || (flush && size > 0)) {
+            reportedCountRef.current = size;
+            onWatchedSegments?.([...watchedRef.current].sort((a, b) => a - b), flush);
+        }
+    }, [onWatchedSegments]);
+
+    // Pide un enlace nuevo y retoma en el mismo segundo. Con tope: un archivo
+    // realmente dañado no debe quedar renovando en bucle.
+    const handleMediaError = useCallback(async (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const video = e.currentTarget;
+        const now = Date.now();
+        renewalsRef.current = renewalsRef.current.filter((t) => now - t < 60_000);
+        if (renewalsRef.current.length >= 2) {
+            setError('No se pudo reproducir el video. Revisa tu conexión y recarga la página.');
+            return;
+        }
+        renewalsRef.current.push(now);
+        report(video, true);
+        resumeRef.current = { time: video.currentTime, play: !video.paused };
+        try {
+            const { url } = await videoGateway.getSignedUrl(lessonId);
+            setVideoSrc(url);
+        } catch {
+            setError('Error al cargar el video. Intenta de nuevo.');
+        }
+    }, [lessonId, videoGateway, report]);
+
+    const handleLoadedMetadata = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+        const resume = resumeRef.current;
+        if (!resume) return;
+        resumeRef.current = null;
+        const video = e.currentTarget;
+        video.currentTime = resume.time;
+        if (resume.play) video.play().catch(() => { /* el navegador exige un toque: queda en pausa */ });
+    }, []);
 
     const handleTimeUpdate = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-        const video = e.currentTarget;
-        const current = video.currentTime;
-        const duration = video.duration;
-        if (!duration || duration === 0) return;
+        report(e.currentTarget, false);
+    }, [report]);
 
-        // Solo acreditamos el segundo si el avance fue "natural" (≤ 2 segundos).
-        // Un salto mayor indica que el usuario hizo scrubbing: no se acredita.
-        const delta = current - prevTimeRef.current;
-        if (delta > 0 && delta <= 2) {
-            watchedSecondsRef.current.add(Math.floor(current));
-        }
-        prevTimeRef.current = current;
+    const handleFlush = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
+        report(e.currentTarget, true);
+    }, [report]);
 
-        const percent = Math.min(100, (watchedSecondsRef.current.size / Math.floor(duration)) * 100);
-        onWatchProgress?.(percent);
-    }, [onWatchProgress]);
-
-    const handleEnded = useCallback((e: React.SyntheticEvent<HTMLVideoElement>) => {
-        // Al terminar el video acreditamos el último segundo explícitamente
-        // y reportamos 100% para cubrir videos muy cortos.
-        const video = e.currentTarget;
-        watchedSecondsRef.current.add(Math.floor(video.duration));
-        onWatchProgress?.(100);
-    }, [onWatchProgress]);
-
-    // 1. Detectar si es YouTube
-    const isYoutube = src.includes('youtube.com') || src.includes('youtu.be');
+    const isYoutube = provider === VideoProvider.YOUTUBE;
 
     useEffect(() => {
-        // Si es YouTube o no tiene lessonId, usar src directo
-        if (isYoutube || !lessonId) {
-            setVideoSrc(src);
-            return;
-        }
-
-        // Si no hay gateway, no podemos pedir URL firmada
-        if (!videoGateway) {
-            setVideoSrc(src);
-            return;
-        }
-
-        // Si es un video local, pedir URL firmada via gateway
         let cancelled = false;
+        setVideoSrc(null);
 
         const fetchSignedUrl = async () => {
             setLoading(true);
@@ -89,9 +100,6 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
 
                 if (cancelled) return;
 
-                // Si es URL externa (YouTube, etc.), usar directamente.
-                // Si es URL local firmada (/videos/stream?...), el gateway
-                // ya sabe cómo construir la URL completa.
                 setVideoSrc(data.url);
             } catch (err) {
                 if (cancelled) return;
@@ -104,21 +112,21 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
 
         fetchSignedUrl();
         return () => { cancelled = true; };
-    }, [lessonId, src, isYoutube, videoGateway]);
+    }, [lessonId, videoGateway]);
 
-    if (isYoutube) {
+    if (isYoutube && videoSrc) {
         return (
             <div className="video-player-container" style={{
                 position: 'relative',
                 paddingBottom: '56.25%', /* 16:9 Aspect Ratio */
                 height: 0,
-                backgroundColor: '#000',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 overflow: 'hidden',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+                boxShadow: 'var(--shadow-md)'
             }}>
                 <iframe
-                    src={videoSrc || src}
+                    src={videoSrc}
                     title={title}
                     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
@@ -133,13 +141,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
         return (
             <div className="video-player-container" style={{
                 width: '100%',
-                backgroundColor: '#000',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 aspectRatio: '16/9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#fff',
+                color: 'var(--text-on-primary)',
                 fontSize: '1.1rem',
             }}>
                 Cargando video...
@@ -152,13 +160,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
         return (
             <div className="video-player-container" style={{
                 width: '100%',
-                backgroundColor: '#1a1a2e',
+                backgroundColor: 'var(--media-bg)',
                 borderRadius: '16px',
                 aspectRatio: '16/9',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#e74c3c',
+                color: 'var(--danger)',
                 fontSize: '1rem',
                 padding: '2rem',
                 textAlign: 'center',
@@ -173,10 +181,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
         <div className="video-player-container" style={{
             position: 'relative',
             width: '100%',
-            backgroundColor: '#000',
+            backgroundColor: 'var(--media-bg)',
             borderRadius: '16px',
             overflow: 'hidden',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            boxShadow: 'var(--shadow-md)',
             aspectRatio: '16/9'
         }}>
             <video
@@ -186,7 +194,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, title, lessonId, 
                 disablePictureInPicture
                 onContextMenu={(e) => e.preventDefault()}
                 onTimeUpdate={handleTimeUpdate}
-                onEnded={handleEnded}
+                onPause={handleFlush}
+                onEnded={handleFlush}
+                onError={handleMediaError}
+                onLoadedMetadata={handleLoadedMetadata}
                 style={{ width: '100%', height: '100%', display: 'block' }}
                 title={title}
             >

@@ -2,12 +2,13 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { CertificateGateway } from '../gateways/certificate.gateway';
+import { CertificateNumberSequenceGateway } from '../gateways/certificate-number-sequence.gateway';
 import { CertificateTemplateGateway } from '../gateways/certificate-template.gateway';
-import { CertificateGeneratorGateway } from '../gateways/certificate-generator.gateway';
-import { QrCodeGateway } from '../gateways/qr-code.gateway';
 import { FileStorageGateway } from '../../storage/gateways/file-storage.gateway';
 import { Certificate } from '../entities/certificate.entity';
 import { GenerateCertificateBatchDto } from '../dto/generate-certificate-batch.dto';
+import { CertificateDate } from '../value-objects';
+import { CertificateRenderer } from '../services/certificate-renderer';
 
 export interface GeneratedCertificateSummary {
   id: string;
@@ -21,10 +22,10 @@ export interface GeneratedCertificateSummary {
  * Orquesta la generación de múltiples certificados a partir de una lista de nombres.
  * Por cada nombre:
  *  1. Calcula el número de certificado (ej. MR-00003)
- *  2. Genera el QR que apunta a la página de verificación pública
- *  3. Genera el PDF con el nombre y el QR superpuestos en la plantilla
- *  4. Guarda el PDF en disco via FileStorageGateway
- *  5. Persiste el registro en la base de datos
+ *  2. Dibuja el certificado con CertificateRenderer (QR a la verificación
+ *     pública, nombre y fecha sobre la plantilla)
+ *  3. Guarda el PDF en disco via FileStorageGateway
+ *  4. Persiste el registro en la base de datos
  *
  * IMPORTANTE: Este use case usa ConfigService para obtener FRONTEND_URL.
  * El QR debe apuntar al FRONTEND (donde vive la página de verificación),
@@ -40,9 +41,9 @@ export interface GeneratedCertificateSummary {
 export class GenerateCertificateBatchUseCase {
   constructor(
     private readonly certificateGateway: CertificateGateway,
+    private readonly numberSequenceGateway: CertificateNumberSequenceGateway,
     private readonly templateGateway: CertificateTemplateGateway,
-    private readonly generatorGateway: CertificateGeneratorGateway,
-    private readonly qrGateway: QrCodeGateway,
+    private readonly renderer: CertificateRenderer,
     private readonly fileStorageGateway: FileStorageGateway,
     private readonly configService: ConfigService,
   ) {}
@@ -64,71 +65,35 @@ export class GenerateCertificateBatchUseCase {
       'FRONTEND_URL',
       'http://localhost:5173',
     );
+    // One date for the whole batch: every certificate printed together carries the same day.
+    const certificateDate = CertificateDate.fromIso(dto.certificateDate);
+
     const results: GeneratedCertificateSummary[] = [];
 
     for (const recipient of dto.recipients) {
       const trimmedName = recipient.name.trim();
       if (!trimmedName) continue;
 
-      // 1. Calcular el número correlativo de este certificado
-      const count = await this.certificateGateway.countByAbbreviation(
+      // 1. Reservar el número correlativo de este certificado
+      const sequenceNumber = await this.numberSequenceGateway.next(
         template.courseAbbreviation,
       );
-      const certificateNumber = `${template.courseAbbreviation}-${String(count + 1).padStart(5, '0')}`;
+      const certificateNumber = `${template.courseAbbreviation}-${String(sequenceNumber).padStart(5, '0')}`;
 
       // 2. Generar UUID que será el ID del certificado y la URL de verificación
       const certId = randomUUID();
       const verificationUrl = `${frontendUrl}/certificados/${certId}`;
 
-      // 3. Generar QR apuntando a la URL de verificación.
-      // El tamaño en pixels se calcula para 300 DPI:
-      // qrSize está en puntos PDF (1pt = 1/72 pulgada). A 300 DPI: pixels = (pts/72)*300
-      const pixelSize = Math.ceil((template.qrStyle.size / 72) * 300);
-      const qrBuffer = await this.qrGateway.generate(
-        verificationUrl,
-        pixelSize,
-        {
-          foregroundColor: template.qrStyle.foregroundColor,
-          backgroundColor: template.qrStyle.backgroundColor,
-        },
-      );
-
-      // Fecha de emisión en formato DD/MM/YYYY.
-      // Se genera en el momento exacto de creación de cada certificado.
-      const now = new Date();
-      const dd = String(now.getDate()).padStart(2, '0');
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const yyyy = now.getFullYear();
-      const dateText = `${dd}/${mm}/${yyyy}`;
-
-      // 4. Generar el PDF con nombre, QR y (opcionalmente) fecha superpuestos
-      const { nameStyle, qrStyle, dateStyle } = template;
-
-      const pdfBuffer = await this.generatorGateway.generate({
-        templatePath: templateBuffer,
+      // 3. QR + nombre + fecha sobre la plantilla (el mismo render que la vista previa)
+      const pdfBuffer = await this.renderer.render({
+        templatePdf: templateBuffer,
+        design: template,
         recipientName: trimmedName,
-        qrBuffer,
-        namePosition: { x: nameStyle.positionX, y: nameStyle.positionY },
-        fontSize: nameStyle.fontSize,
-        nameColor: nameStyle.color,
-        fontFamily: nameStyle.fontFamily ?? 'Helvetica',
-        nameAlign: nameStyle.align ?? 'left',
-        qrPosition: { x: qrStyle.positionX, y: qrStyle.positionY },
-        qrSize: qrStyle.size,
-        ...(dateStyle.show && {
-          dateText,
-          datePosition: {
-            x: dateStyle.positionX,
-            y: dateStyle.positionY,
-          },
-          dateFontSize: dateStyle.fontSize,
-          dateColor: dateStyle.color,
-          dateFontFamily: dateStyle.fontFamily,
-          dateAlign: dateStyle.align ?? 'left',
-        }),
+        verificationUrl,
+        date: certificateDate,
       });
 
-      // 5. Guardar el PDF generado via FileStorageGateway
+      // 4. Guardar el PDF generado via FileStorageGateway
       const filename = `${certId}.pdf`;
       const filePath = await this.fileStorageGateway.saveBuffer(
         pdfBuffer,
@@ -136,7 +101,7 @@ export class GenerateCertificateBatchUseCase {
         filename,
       );
 
-      // 6. Persistir en la base de datos
+      // 5. Persistir en la base de datos
       //
       // CONGELAR el snapshot de plantilla AHORA: una vez que esta fila se
       // inserta, los metadatos `templateSnapshot` se quedan inmutables. Si
@@ -154,6 +119,7 @@ export class GenerateCertificateBatchUseCase {
           paperFormat: template.paperFormat,
         },
         filePath,
+        certificateDate: certificateDate.toIso(),
         // Vínculo opcional al alumno (modo híbrido): null si es un nombre libre.
         userId: recipient.userId ?? null,
       } as Partial<Certificate>);

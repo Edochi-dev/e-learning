@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { join, extname } from 'path';
-import { unlink, writeFile, mkdir, readFile } from 'fs/promises';
+import { unlink, writeFile, mkdir, readFile, rename } from 'fs/promises';
 import { existsSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { FileStorageGateway } from './gateways/file-storage.gateway';
@@ -155,6 +155,24 @@ export class LocalFileStorageGateway implements FileStorageGateway {
 
     this.logger.log(`Buffer guardado: ${destPath}`);
     return `${this.STATIC_PREFIX}${folder}/${filename}`;
+  }
+
+  async overwriteByUrl(url: string, buffer: Buffer): Promise<void> {
+    if (!this.isLocalFile(url)) {
+      throw new Error(`No es un archivo local: ${url}`);
+    }
+    const absolutePath = join(
+      this.publicDir,
+      url.replace(this.STATIC_PREFIX, ''),
+    );
+    if (!existsSync(absolutePath)) {
+      throw new Error(`Archivo no encontrado: ${absolutePath}`);
+    }
+
+    // rename() within one directory is atomic on POSIX filesystems.
+    const tempPath = `${absolutePath}.${randomUUID()}.tmp`;
+    await writeFile(tempPath, buffer);
+    await rename(tempPath, absolutePath);
   }
 
   /**

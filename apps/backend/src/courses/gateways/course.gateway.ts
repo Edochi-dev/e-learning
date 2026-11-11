@@ -43,6 +43,7 @@ export interface CourseFilters {
   // string crudo del query param: si no es un nivel válido, simplemente no
   // coincide con ningún curso (no hace falta validarlo aquí).
   level?: string;
+  publishedOnly?: boolean;
 }
 
 /**
@@ -83,13 +84,15 @@ export abstract class CourseGateway {
   ): Promise<PaginatedResult<Course>>;
 
   /** Categorías distintas presentes en los cursos (para el filtro del catálogo). */
-  abstract findDistinctCategories(): Promise<string[]>;
+  abstract findDistinctCategories(publishedOnly: boolean): Promise<string[]>;
 
   abstract findOne(id: string): Promise<Course | null>;
 
   abstract update(id: string, data: UpdateCourseData): Promise<Course>;
 
   abstract delete(id: string): Promise<void>;
+
+  abstract setPublishedAt(id: string, publishedAt: Date | null): Promise<void>;
 
   /**
    * ¿Algún curso usa esta thumbnailUrl? Útil DESPUÉS de borrar el curso,

@@ -17,7 +17,7 @@ describe('HttpCourseGateway', () => {
   let gateway: HttpCourseGateway;
 
   beforeEach(() => {
-    gateway = new HttpCourseGateway(baseUrl);
+    gateway = new HttpCourseGateway(baseUrl, { fetch: (...args) => fetch(...args) });
   });
 
   afterEach(() => {
