@@ -11,7 +11,10 @@ set -e
 #    psql -h localhost -p 5432 -U marisnails -d marisnails_db < backups/archivo.sql
 # ============================================================
 
-PROJECT_DIR="/home/cerberus/e-learning"
+# Overrides solo para ejercitar el script contra un árbol y una BD de prueba.
+# Sin ellos, los valores del servidor.
+PROJECT_DIR="${PROJECT_DIR:-/home/cerberus/e-learning}"
+PG_CONTAINER="${PG_CONTAINER:-mn_postgres}"
 BACKUP_DIR="$PROJECT_DIR/backups"
 ENV_FILE="$PROJECT_DIR/apps/backend/.env"
 
@@ -36,16 +39,22 @@ echo "  BACKUP: Creando respaldo de la base de datos..."
 echo "============================================"
 echo "  Archivo: $BACKUP_FILE"
 
-docker exec mn_postgres pg_dump \
-    -U "$DB_USER" \
-    -d "$DB_NAME" \
-    --clean \
-    --if-exists \
-    > "$BACKUP_FILE"
+# Un pg_dump que falla a medias deja un .sql truncado con nombre de respaldo
+# válido; se borra para que nadie lo restaure ni cuente en la rotación.
+if ! docker exec "$PG_CONTAINER" pg_dump \
+        -U "$DB_USER" \
+        -d "$DB_NAME" \
+        --clean \
+        --if-exists \
+        > "$BACKUP_FILE"; then
+    echo "ERROR: pg_dump falló. Abortando deploy."
+    rm -f "$BACKUP_FILE"
+    exit 1
+fi
 
-# Verificar que el backup no esté vacío
-if [ ! -s "$BACKUP_FILE" ]; then
-    echo "ERROR: El backup está vacío. Abortando deploy."
+# pg_dump escribe esta línea al terminar: sin ella, el volcado está cortado.
+if [ ! -s "$BACKUP_FILE" ] || ! tail -n 5 "$BACKUP_FILE" | grep -q '^-- PostgreSQL database dump complete'; then
+    echo "ERROR: El backup está vacío o incompleto. Abortando deploy."
     rm -f "$BACKUP_FILE"
     exit 1
 fi
@@ -76,7 +85,21 @@ fi
 echo "============================================"
 echo "  BACKUP: Respaldando archivos subidos..."
 echo "============================================"
-"$PROJECT_DIR/backup-files.sh"
+# El código 3 es "la copia local está hecha, la externa falló". Eso no es razón
+# para abortar un despliegue: lo que protege al deploy es la copia local, y esa
+# existe. Cualquier otro fallo sí significa que no hay respaldo, y entonces no
+# se toca nada.
+BACKUP_FILES_STATUS=0
+"$PROJECT_DIR/backup-files.sh" || BACKUP_FILES_STATUS=$?
+
+if [ "$BACKUP_FILES_STATUS" -eq 3 ]; then
+    echo ""
+    echo "  AVISO: la copia externa falló; se continúa con el despliegue."
+elif [ "$BACKUP_FILES_STATUS" -ne 0 ]; then
+    echo ""
+    echo "  ERROR: no se pudo respaldar los archivos subidos. Abortando."
+    exit 1
+fi
 echo ""
 
 # ============================================================
@@ -156,5 +179,5 @@ echo "  Deploy complete!"
 echo "  Backup guardado en: $BACKUP_FILE"
 echo ""
 echo "  Si algo salió mal, restaura con:"
-echo "    docker exec -i mn_postgres psql -U $DB_USER -d $DB_NAME < $BACKUP_FILE"
+echo "    docker exec -i $PG_CONTAINER psql -U $DB_USER -d $DB_NAME < $BACKUP_FILE"
 echo "============================================"

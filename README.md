@@ -223,8 +223,9 @@ npm run test               # Vitest
 
 `deploy.sh` runs on the server and performs, in order:
 
-1. `pg_dump` backup of the database (aborts the deploy if the dump is empty; keeps the 10
-   most recent under `backups/`)
+1. `pg_dump` backup of the database (aborts the deploy if the dump fails, is empty or is
+   truncated; keeps the 10 most recent under `backups/`), then `backup-files.sh` for the
+   uploaded files — see [Backups](#backups)
 2. `git pull origin main`
 3. `npm ci` **once, from the monorepo root** — never per-app. A stray local `node_modules`
    inside `apps/backend/` or `apps/frontend/` once made npm treat that folder as a
@@ -246,6 +247,62 @@ than in production.
 
 SSL certificates live in `ssl/` and are git-ignored, as are `backups/` and every real
 `.env`.
+
+---
+
+## Backups
+
+Two different things need saving, and only one of them is in the database.
+
+**The database** is dumped by `deploy.sh` (`pg_dump`, ten most recent kept). It aborts the
+deploy if `pg_dump` fails, or if the dump is empty or lacks the
+`-- PostgreSQL database dump complete` line `pg_dump` writes last (a truncated dump); in
+every case the bad file is deleted so it can never be mistaken for a backup.
+
+**The uploaded files** live only on disk: `apps/backend/public` (issued certificates, the
+templates they are generated from, correction photos, thumbnails) and `apps/backend/storage`
+(correction audio, video sources; `storage/hls` is skipped because it is regenerated from the
+sources). `backup-files.sh` snapshots each one into its own root under
+`~/backups-marisnails/` (`files/` and `storage/`) with `rsync --link-dest`, so files identical
+to the previous snapshot are hardlinked rather than copied and ten snapshots cost about as much
+as one. It refuses to run when a source is missing or empty (an empty `storage/` is fine until
+its first snapshot), and verifies the file count before moving the `latest` pointer, so a
+half-finished copy never becomes the base of the next snapshot.
+
+Set `RCLONE_REMOTE` to also push the newest snapshots off-site, to `$RCLONE_REMOTE/files` and
+`$RCLONE_REMOTE/storage`. It uses `rclone copy`, never `sync`: sync would replicate a local
+wipe to the remote and destroy the very copy meant to survive it.
+
+Exit codes matter, because `deploy.sh` reads them: `0` all good, `3` the local snapshot is
+fine but the off-site copy failed (a deploy continues — what protects the deploy is the local
+copy; this includes `RCLONE_REMOTE` set with no `rclone` installed), anything else means there
+is no backup and the deploy aborts.
+
+**Verification.** `verify-backup.sh` compares both snapshots against their live sources byte
+by byte with `cmp`, and checks each off-site copy by hash with `rclone check --one-way`. Counting
+files proves there are 751 things, not that those things are the certificates. It also
+asserts that each backed-up file has its **own inode**: sharing one with the original would
+mean a single copy of the data under two names, where corrupting the original corrupts the
+backup in the same act. Files present only in the source (issued since the snapshot) or only
+in the snapshot (deleted since) are reported, not treated as failures. Exit codes: `0` the
+backup restores, `1` differences (corrupt or shared-inode file, off-site copy incomplete),
+`2` it could not be verified (no snapshot, empty snapshot, `rclone` missing).
+
+```bash
+./verify-backup.sh        # every file
+./verify-backup.sh 200    # random sample of 200 per folder
+```
+
+Both scripts honour `PROJECT_DIR` and `BACKUP_BASE` overrides, and `deploy.sh` honours
+`PROJECT_DIR` and `PG_CONTAINER` (default `mn_postgres`), so they can be exercised against a
+throwaway tree and database instead of real data.
+
+Suggested crontab on the server:
+
+```cron
+0 3 * * * RCLONE_REMOTE="gdrive:marisnails-backup" /home/cerberus/e-learning/backup-files.sh >> $HOME/backup-files.log 2>&1
+0 4 * * 0 RCLONE_REMOTE="gdrive:marisnails-backup" /home/cerberus/e-learning/verify-backup.sh 200 >> $HOME/backup-verify.log 2>&1
+```
 
 ---
 

@@ -135,20 +135,42 @@ if [ -z "$RCLONE_REMOTE" ]; then
 fi
 
 if ! command -v rclone >/dev/null 2>&1; then
-    echo "  AVISO: RCLONE_REMOTE está definido pero rclone no está instalado."
-    echo "         La copia local SÍ se hizo. Revisa la copia externa."
-    exit 0
+    echo "  ERROR: RCLONE_REMOTE está definido pero rclone no está instalado."
+    echo "         La copia local SÍ se hizo, pero NO existe copia externa."
+    echo "============================================"
+    exit 3
 fi
+
+# --progress redibuja una línea en bucle con secuencias de terminal: útil a
+# mano, basura dentro del log del cron.
+PROGRESS=()
+[ -t 1 ] && PROGRESS=(--progress)
 
 # `copy`, NO `sync`: sync replica los borrados, así que un origen vacío o
 # corrupto arrasaría también la copia remota. Se sube solo el último snapshot
 # porque Google Drive no tiene hardlinks.
+#
+# El fallo se atrapa a mano en vez de dejarlo a `set -e`: el script sale con 3
+# ("local hecha, externa no") y dice por qué, en vez de cortar el log a medias.
+REMOTE_FAILED=()
 for name in files storage; do
     latest="$BACKUP_BASE/$name/latest"
     [ -e "$latest" ] || continue
     echo "  Subiendo $name a $RCLONE_REMOTE/$name ..."
-    rclone copy "$latest/" "$RCLONE_REMOTE/$name/" --progress --stats-one-line
+    if ! rclone copy "$latest/" "$RCLONE_REMOTE/$name/" \
+            "${PROGRESS[@]}" --stats-one-line --retries 3; then
+        REMOTE_FAILED+=("$name")
+    fi
 done
+
+if [ "${#REMOTE_FAILED[@]}" -gt 0 ]; then
+    echo ""
+    echo "  ERROR: la copia externa a $RCLONE_REMOTE FALLÓ para: ${REMOTE_FAILED[*]}"
+    echo "         La copia LOCAL sí quedó hecha y verificada en $BACKUP_BASE,"
+    echo "         pero hoy NO existe copia completa fuera de este disco."
+    echo "============================================"
+    exit 3
+fi
 
 echo "  Copia externa completada."
 echo "============================================"
