@@ -31,7 +31,7 @@ export const SiteLayout = () => {
             <header className="header">
                 <div className="container nav">
                     <Link to={homePathFor(user)} className="logo">
-                        <img src="/images/logo.png" alt="" className="logo__img" />
+                        <img src="/images/logo-mark-m.png" alt="" className="logo__img" />
                         <span className="logo__name"><em>Mari's Nails Academy</em></span>
                     </Link>
                     {showSections && <SiteSectionLinks sections={sections} />}

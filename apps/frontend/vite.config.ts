@@ -33,13 +33,13 @@ export default defineConfig(({ mode }) => ({
     // Las llamadas al API son a otro origen, así que el SW no las intercepta.
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon.png'],
+      includeAssets: ['favicon.png', 'apple-touch-icon.png'],
       manifest: {
         name: "Mari's Nails Academy",
         short_name: "Mari's Nails",
         description: 'Formación profesional en uñas.',
-        theme_color: '#e84393',
-        background_color: '#f8ede6',
+        theme_color: '#d1008b',
+        background_color: '#f4f3f5',
         display: 'standalone',
         start_url: '/',
         icons: [

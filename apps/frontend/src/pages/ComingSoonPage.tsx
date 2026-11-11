@@ -12,7 +12,7 @@ export const ComingSoonPage = () => {
         <div className="coming-soon">
             <div className="coming-soon__card">
                 <img
-                    src="/images/logo.png"
+                    src="/images/logo-mark.png"
                     alt="Mari's Nails Academy"
                     className="coming-soon__badge"
                 />
