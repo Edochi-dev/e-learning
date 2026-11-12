@@ -128,9 +128,9 @@
   --body-glow:
     radial-gradient(ellipse 60% 45% at 100% 0%, rgba(255, 0, 170, 0.07) 0%, transparent 60%),
     linear-gradient(118deg, #f8f7f9 0%, #efeef1 26%, #f9f8fa 44%, #ecebef 70%, #f5f4f6 100%);
-  /* Tela satinada que ondula sobre --body-glow (body::before/::after): pliegues
-     de luz y sombra en gris, dos capas que derivan a distinto ritmo. Los
-     gradientes se escriben una vez; cada tema solo cambia los dos tonos. */
+  /* Tela satinada sobre --body-glow (body::before): pliegues de luz y sombra
+     en gris, dos tramas cruzadas. Los gradientes se escriben una vez; cada
+     tema solo cambia los dos tonos. */
   --satin-fold-light: rgba(255, 255, 255, 0.75);
   --satin-fold-shadow: rgba(27, 18, 23, 0.02);
   --satin-wave-a: linear-gradient(106deg,
@@ -377,47 +377,15 @@ body {
   transition: background-color 0.4s var(--ease-out), color 0.4s var(--ease-out);
 }
 
-/* Tela satinada: dos capas fijas detrás del contenido. Solo se anima transform
-   (compositor), nunca background-position ni filtros: es barato en teléfonos.
-   El margen negativo cubre el borde al desplazarse/rotar; al ser fixed no
-   genera scroll. */
-body::before,
-body::after {
+/* Tela satinada: una capa fija y QUIETA detrás del contenido (decisión de la
+   profe: textura de tela, sin movimiento). Al ser fixed no genera scroll. */
+body::before {
   content: '';
   position: fixed;
-  inset: -12%;
+  inset: 0;
   z-index: -1;
   pointer-events: none;
-  will-change: transform;
-}
-
-body::before {
-  background: var(--satin-wave-a);
-  animation: satin-drift-a 29s ease-in-out infinite alternate;
-}
-
-body::after {
-  background: var(--satin-wave-b);
-  animation: satin-drift-b 37s ease-in-out infinite alternate;
-}
-
-@keyframes satin-drift-a {
-  from { transform: translate3d(-3%, -1%, 0) rotate(-0.8deg) scale(1.02); }
-  to { transform: translate3d(3%, 1.5%, 0) rotate(0.8deg) scale(1.07); }
-}
-
-@keyframes satin-drift-b {
-  from { transform: translate3d(3%, 2%, 0) rotate(0.7deg) scale(1.06); }
-  to { transform: translate3d(-3%, -1%, 0) rotate(-0.9deg) scale(1.01); }
-}
-
-/* Excepción acotada: solo esta capa a pantalla completa queda quieta si el
-   sistema pide menos movimiento (el resto de animaciones del sitio no cambia). */
-@media (prefers-reduced-motion: reduce) {
-  body::before,
-  body::after {
-    animation: none;
-  }
+  background: var(--satin-wave-a), var(--satin-wave-b);
 }
 
 h1,
