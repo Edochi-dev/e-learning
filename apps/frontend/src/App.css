@@ -63,7 +63,7 @@
   --gold-light: var(--gold-300);
   --gold-dark: var(--gold-600);
   --gold-glow: rgba(205, 158, 85, 0.3);
-  --gold-text: #7a5a1f;
+  --gold-text: #725318;
   --btn-gold: linear-gradient(135deg, var(--gold-300), var(--gold-500));
   /* Texto legible sobre fondo dorado. El dorado es claro en ambos temas,
      por eso este token NO se sobreescribe en dark: siempre es oscuro. */
@@ -83,7 +83,7 @@
   /* Texto: tinta casi negra con un tinte vino. */
   --text-primary: #1b1217;
   --text-secondary: #4d434b;
-  --text-muted: #655a63;
+  --text-muted: #5f545d;
   --title: #1b1217;
 
   /* Estados: error vino, aviso dorado. */
@@ -137,12 +137,12 @@
   /* Satinado plata: bandas en diagonal + un reflejo fucsia en la esquina. */
   --body-glow:
     radial-gradient(ellipse 60% 45% at 100% 0%, rgba(255, 0, 170, 0.07) 0%, transparent 60%),
-    linear-gradient(118deg, #f8f7f9 0%, #efeef1 26%, #f9f8fa 44%, #ecebef 70%, #f5f4f6 100%);
+    linear-gradient(118deg, #fbfafc 0%, #f5f4f7 26%, #fcfbfd 44%, #f3f2f5 70%, #faf9fb 100%);
   /* Tela satinada sobre --body-glow (body::before): pliegues de luz y sombra
      en gris, dos tramas cruzadas. Los gradientes se escriben una vez; cada
      tema solo cambia los dos tonos. */
   --satin-fold-light: rgba(255, 255, 255, 0.75);
-  --satin-fold-shadow: rgba(27, 18, 23, 0.02);
+  --satin-fold-shadow: rgba(27, 18, 23, 0.07);
   --satin-wave-a: linear-gradient(106deg,
       transparent 6%, var(--satin-fold-shadow) 15%, var(--satin-fold-light) 21%, transparent 31%,
       var(--satin-fold-shadow) 47%, var(--satin-fold-light) 54%, transparent 66%,
